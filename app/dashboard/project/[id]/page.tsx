@@ -226,7 +226,7 @@ await supabase
         `progress to ${progress}%`,
     },
   ]);
-  fetchMilestones();
+  
 };
 const assignMilestone = async (
   
@@ -246,7 +246,7 @@ const assignMilestone = async (
     return;
   }
 
-  fetchMilestones();
+  
 };
 const approveMilestone = async (
   milestoneId: string
@@ -283,7 +283,7 @@ const approveMilestone = async (
       },
     ]);
 
-  fetchMilestones();
+  
 };
 const reopenMilestone = async (
   milestoneId: string
@@ -319,7 +319,7 @@ const reopenMilestone = async (
       },
     ]);
 
-  fetchMilestones();
+  
 };
   const fetchMembers = async () => {
 
