@@ -33,12 +33,14 @@ const [memberEmail, setMemberEmail] =
   useEffect(() => {
 
   const initialize = async () => {
-    await fetchProject();
-    await fetchUpdates();
-    await fetchImages();
-    await fetchMilestones();
-    await fetchMembers();
-    await fetchLogs();
+    await Promise.all([
+  fetchProject(),
+  fetchUpdates(),
+  fetchImages(),
+  fetchMilestones(),
+  fetchMembers(),
+  fetchLogs(),
+]);
   };
 
   initialize();
@@ -73,16 +75,16 @@ const [memberEmail, setMemberEmail] =
   )
 
   .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "project_members",
-    },
-    () => {
-      fetchMembers();
-    }
-  )
+  "postgres_changes",
+  {
+    event: "*",
+    schema: "public",
+    table: "project_members",
+  },
+  () => {
+    fetchMembers();
+  }
+)
 
   .on(
     "postgres_changes",
@@ -125,7 +127,13 @@ const [memberEmail, setMemberEmail] =
       supabase.removeChannel(channel);
     };
   }, []);
+const getCurrentUser = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
+  return user;
+};
   const fetchProject = async () => {
     const { data } = await supabase
       .from("projects")
@@ -323,16 +331,35 @@ const reopenMilestone = async (
 };
   const fetchMembers = async () => {
 
-  const { data, error } =
+  const user = await getCurrentUser();
+
+  if (!user) {
+    console.log("NO USER");
+    return;
+  }
+
+  setCurrentUserId(user.id);
+
+  const { data: projectData, error: projectError } =
     await supabase
-      .from("project_members")
-      .select(`
-  *,
-  profiles (
-    email
-  )
-`)
-      .eq("project_id", id);
+      .from("projects")
+      .select("user_id")
+      .eq("id", id)
+      .single();
+
+  if (projectError || !projectData) {
+    console.log(projectError);
+    return;
+  }
+
+  const isOwner =
+    projectData.user_id === user.id;
+
+  const { data, error } =
+  await supabase
+    .from("project_members")
+    .select("*")
+    .eq("project_id", id);
 
   if (error) {
     console.log(error);
@@ -360,25 +387,27 @@ const reopenMilestone = async (
         }
       )
     );
-const {
-  data: { user },
-} = await supabase.auth.getUser();
-setCurrentUserId(user?.id || "");
 
-const currentMember =
-  enrichedMembers.find(
-    (member) =>
-      member.user_id === user?.id
-  );
+  const currentMember =
+    enrichedMembers.find(
+      (member) =>
+        member.user_id === user.id
+    );
 
-if (project?.owner_id === user?.id) {
-  setCurrentRole("owner");
-} else {
-  setCurrentRole(
-    currentMember?.role || "viewer"
-  );
-}
+  if (isOwner) {
+    setCurrentRole("owner");
+  } else {
+    setCurrentRole(
+      currentMember?.role || "viewer"
+    );
+  }
+
   setMembers(enrichedMembers);
+
+  console.log("ROLE:", isOwner
+    ? "owner"
+    : currentMember?.role || "viewer"
+  );
 };
 const fetchLogs = async () => {
 
@@ -633,7 +662,12 @@ await supabase
   if (!project) {
     return <div className="p-5">Loading...</div>;
   }
+const canEdit =
+  currentRole === "owner" ||
+  currentRole === "editor";
 
+const isOwner =
+  currentRole === "owner";
   return (
     <div className="p-5">
       {project.cover_image && (
@@ -667,8 +701,7 @@ await supabase
     <input
       type="number"
       disabled={
-  currentRole !== "owner" &&
-  currentRole !== "editor"
+ !canEdit
 }
       value={progressInput}
       onChange={(e) =>
@@ -684,12 +717,10 @@ await supabase
     <button
   onClick={updateProgress}
   disabled={
-  currentRole !== "owner" &&
-  currentRole !== "editor"
+  !canEdit
 }
   className={`px-4 py-2 rounded ${
-    currentRole === "owner" ||
-currentRole === "editor"
+    canEdit
       ? "bg-white text-black"
       : "bg-gray-700 text-gray-400 cursor-not-allowed"
   }`}
@@ -718,12 +749,10 @@ currentRole === "editor"
   <button
   onClick={addUpdate}
   disabled={
-  currentRole !== "owner" &&
-  currentRole !== "editor"
+  !canEdit
 }
   className={`mt-3 px-4 py-2 rounded ${
-    currentRole === "owner" ||
-currentRole === "editor"
+   canEdit
       ? "bg-white text-black"
       : "bg-gray-700 text-gray-400 cursor-not-allowed"
   }`}
@@ -731,7 +760,7 @@ currentRole === "editor"
   Post Update
 </button>
 </div>
-{currentRole === "owner" && (
+{isOwner && (
 <div className="mt-5">
 
   <input
@@ -753,7 +782,7 @@ currentRole === "editor"
 
 </div>
 )}
-      {(currentRole === "owner" ||
+      {(isOwner ||
   currentRole === "editor") && (
 
   <div className="mt-5">
@@ -799,8 +828,7 @@ currentRole === "editor"
             <select
 
 disabled={
-  currentRole !== "owner" &&
-  currentRole !== "editor"
+  !canEdit
 }
 
   value={milestone.assigned_to || ""}
@@ -841,10 +869,7 @@ disabled={
 
 </select>
 {!milestone.approved &&
-(
-  currentRole === "owner" ||
-  currentRole === "editor"
-) && (
+canEdit && (
   <button
 
     onClick={() =>
@@ -868,7 +893,7 @@ disabled={
   
 )}
 {milestone.approved &&
-  currentRole === "owner" && (
+  isOwner && (
 
   <button
 
@@ -913,7 +938,25 @@ disabled={
   )
 }
     value={milestone.progress}
-    onBlur={(e) =>
+
+onChange={(e) => {
+
+  const updatedProgress =
+    Number(e.target.value);
+
+  setMilestones((prev) =>
+    prev.map((m) =>
+      m.id === milestone.id
+        ? {
+            ...m,
+            progress: updatedProgress,
+          }
+        : m
+    )
+  );
+}}
+
+onBlur={(e) =>
   updateMilestoneProgress(
     milestone.id,
     Number(e.target.value)
@@ -1049,7 +1092,7 @@ disabled={
     <p className="mt-2 text-sm break-all">
       {image.file_name}
     </p>
-    {(currentRole === "owner" ||
+    {(isOwner ||
   currentRole === "editor") && (
 
   <button
