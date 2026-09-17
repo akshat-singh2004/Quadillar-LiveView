@@ -1,0 +1,3 @@
+import { PanoramaViewer360 } from "@/components/site/PanoramaViewer360";
+
+export default function TourPage() { return <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}><div style={{ maxWidth: 1450, margin: "0 auto" }}><header style={{ marginBottom: 24 }}><div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase" }}>Site reality capture / progress evidence</div><h1 style={{ margin: "8px 0 0", fontSize: 38 }}>360° virtual site walk</h1><p style={{ color: "#94a3b8", marginTop: 8 }}>Compare the same spatial coordinate from bare concrete through MEP installation.</p></header><PanoramaViewer360 /></div></main>; }

@@ -1,0 +1,6 @@
+"use client";
+
+export function HeavyRiggingSafetyWidget() {
+  const cranes = [{ name: "TC-01", load: 8.4, wind: 31 }, { name: "TC-02", load: 5.8, wind: 39 }, { name: "TC-03", load: 2.2, wind: 26 }];
+  return <section className="surface-shell mt-6 px-5 py-4"><div className="flex items-center justify-between gap-3"><div><div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Site Crane Rigging Status</div><div className="mt-2 text-sm text-neutral-300">Live hook loads and mast wind telemetry</div></div><a href="/site/cranes" className="text-[11px] font-medium tracking-[0.12em] text-sky-300 uppercase no-underline">Open radar →</a></div><div className="mt-4 grid gap-2 md:grid-cols-3">{cranes.map((crane) => <div key={crane.name} className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2"><div><div className="text-sm font-medium text-neutral-200">{crane.name}</div><div className="mt-1 text-[11px] font-mono text-neutral-500">Hook {crane.load} MT</div></div><span className={crane.wind >= 38 ? "text-[11px] font-medium text-red-300" : "text-[11px] font-medium text-emerald-300"}>{crane.wind >= 38 ? "WIND LOCKOUT" : `${crane.wind} km/h`}</span></div>)}</div></section>;
+}

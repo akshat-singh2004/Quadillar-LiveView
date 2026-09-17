@@ -1,0 +1,3 @@
+import { WebXRSpatialViewport } from "@/components/viewer/WebXRSpatialViewport";
+
+export default function VrWalkthroughPage() { return <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}><div style={{ maxWidth: 1400, margin: "0 auto" }}><header style={{ marginBottom: 24 }}><div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase" }}>BIM / immersive coordination</div><h1 style={{ margin: "8px 0 0", fontSize: 38 }}>WebXR 1:1 scale walkthrough</h1><p style={{ color: "#94a3b8", marginTop: 8 }}>Review model surfaces, place spatial notes, and bring remote attendees into the same coordination room.</p></header><WebXRSpatialViewport /></div></main>; }

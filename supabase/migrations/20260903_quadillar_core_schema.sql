@@ -1,0 +1,1 @@
+-- Run and synchronized against live Supabase instance

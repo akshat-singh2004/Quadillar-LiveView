@@ -1,0 +1,9 @@
+"use client";
+
+export function HandoverSafetyKpiWidget() {
+  const differential = 20;
+  const inspected = 82;
+  const deSnagged = 68;
+  const handedOver = 46;
+  return <section className="mt-6 grid gap-3 md:grid-cols-2"><div className="surface-shell px-5 py-4"><div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Mass Concrete Thermal Gradient</div><div className="mt-3 flex items-end justify-between gap-3"><div className="text-3xl font-medium text-red-300">ΔT {differential}°C</div><span className="rounded-full bg-red-500/10 px-2.5 py-1 text-[10px] font-medium text-red-300">ACTION WATCH</span></div><div className="mt-2 text-[11px] font-mono text-neutral-500">Core-to-surface differential · cracking trigger ≥ 20°C</div><a href="/quality/maturity" className="mt-3 inline-block text-[11px] font-medium tracking-[0.12em] text-sky-300 uppercase no-underline">Open maturity monitor →</a></div><div className="surface-shell px-5 py-4"><div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Customer Possession Trajectory</div><div className="mt-3 flex items-center gap-5"><div className="grid h-20 w-20 place-items-center rounded-full" style={{ background: `conic-gradient(#34d399 ${handedOver}%, rgba(255,255,255,.08) 0)` }}><div className="grid h-14 w-14 place-items-center rounded-full bg-neutral-950 text-lg font-medium">{handedOver}%</div></div><div className="text-[11px] font-mono text-neutral-400"><div><span className="text-sky-300">{inspected}%</span> inspected</div><div><span className="text-emerald-300">{deSnagged}%</span> de-snagged</div><div><span className="text-cyan-300">{handedOver}%</span> handed over</div></div></div><a href="/handover/possession" className="mt-3 inline-block text-[11px] font-medium tracking-[0.12em] text-sky-300 uppercase no-underline">Open possession console →</a></div></section>;
+}
