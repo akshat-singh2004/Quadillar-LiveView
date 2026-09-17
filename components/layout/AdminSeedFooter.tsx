@@ -1,0 +1,4 @@
+"use client";
+
+import { useState } from "react";
+export function AdminSeedFooter() { const [status, setStatus] = useState(""); const seed = async () => { setStatus("Seeding..."); const response = await fetch("/api/seed", { method: "POST" }); setStatus(response.ok ? "Full demo database seeded" : "Seed failed"); }; return <footer style={{ marginTop: "auto", padding: "18px 24px", borderTop: "1px solid rgba(255,255,255,.06)", color: "#94a3b8", display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", fontSize: 12 }}><span>Admin / development controls</span><span>{status}</span><button type="button" onClick={seed} style={{ border: "1px solid rgba(251,191,36,.4)", background: "rgba(251,191,36,.1)", color: "#fde68a", borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontWeight: 800 }}>Reset & Seed Full Demo Database</button></footer>; }

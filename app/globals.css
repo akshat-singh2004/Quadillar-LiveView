@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+:root {
+  --background: #09090b;
+  --foreground: #f5f5f5;
+  --muted: #a1a1aa;
+  --panel: rgba(24, 24, 27, 0.72);
+  --panel-strong: rgba(17, 17, 19, 0.88);
+  --border: rgba(255, 255, 255, 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent 28%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), "SF Pro Display", "Segoe UI", sans-serif;
+  letter-spacing: -0.01em;
+}
+
+@keyframes radar-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+.radar-pulse { animation: radar-pulse 1.2s ease-in-out infinite; }
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+a {
+  transition: all 0.2s ease-out;
+}
+
+button:hover,
+a:hover {
+  transform: translateY(-1px);
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@layer utilities {
+  .surface-shell {
+    @apply rounded-2xl border border-white/[0.06] bg-neutral-900/40 backdrop-blur-xl;
+  }
+
+  .surface-subtle {
+    @apply rounded-2xl border border-white/[0.04] bg-white/[0.015] backdrop-blur-xl;
+  }
+}
+/* --- Apple OS Surface & Interaction Tokens --- */
+:root {
+  --apple-canvas: #FBFBFD;
+  --apple-border: rgba(0, 0, 0, 0.06);
+  --apple-card: #FFFFFF;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --apple-canvas: #09090B;
+    --apple-border: rgba(255, 255, 255, 0.08);
+    --apple-card: #121215;
+  }
+}
+
+/* Global Background & Typography Baseline */
+body {
+  background-color: var(--apple-canvas);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reusable Apple UI Utility Classes */
+.apple-card {
+  background-color: var(--apple-card);
+  border: 1px solid var(--apple-border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.apple-glass {
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--apple-border);
+}
+
+.apple-btn-primary {
+  background-color: #18181B;
+  color: #FFFFFF;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  height: 2.25rem;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.apple-btn-primary:hover {
+  background-color: #27272A;
+}
+.apple-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.apple-btn-secondary {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #27272A;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  height: 2.25rem;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.apple-btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+.apple-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

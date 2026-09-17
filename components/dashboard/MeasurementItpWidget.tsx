@@ -1,0 +1,11 @@
+"use client";
+
+export function MeasurementItpWidget() {
+  const certified = 7;
+  const total = 9;
+  const holdPoints = 1;
+  const upcomingHolds = 2;
+  const mbPercent = Math.round((certified / total) * 100);
+  const holdAngle = Math.round(((upcomingHolds - holdPoints) / upcomingHolds) * 360);
+  return <section className="mt-6 grid gap-3 md:grid-cols-2"><div className="surface-shell px-5 py-4"><div className="flex items-center justify-between gap-3"><div><div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">e-MB Quantity Takeoff Verification</div><div className="mt-2 text-sm text-neutral-300">Field measurements jointly certified this week</div></div><a href="/finance/measurement-book" className="text-[11px] font-medium tracking-[0.12em] text-sky-300 uppercase no-underline">Open e-MB</a></div><div className="mt-5 flex items-center gap-4"><div className="text-3xl font-medium text-cyan-300">{mbPercent}%</div><div className="flex-1"><div className="h-2 overflow-hidden rounded-full bg-white/[0.08]"><div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" style={{ width: `${mbPercent}%` }} /></div><div className="mt-2 text-[11px] font-mono text-neutral-500">{certified} of {total} entries contractor + PMC verified</div></div></div></div><div className="surface-shell px-5 py-4"><div className="flex items-center justify-between gap-3"><div><div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Active ITP Stage-Gate Clearance</div><div className="mt-2 text-sm text-neutral-300">Mandatory holds before concrete pours</div></div><a href="/quality/itp" className="text-[11px] font-medium tracking-[0.12em] text-sky-300 uppercase no-underline">Open ITP</a></div><div className="mt-4 flex items-center gap-5"><div className="relative h-20 w-20 rounded-full" style={{ background: `conic-gradient(#f59e0b 0deg ${holdAngle}deg, #ef4444 ${holdAngle}deg 360deg)` }}><div className="absolute inset-2 grid place-items-center rounded-full bg-[#09090b] text-lg font-medium text-neutral-100">{holdPoints}</div></div><div className="grid gap-2 text-xs"><span className="text-red-300">● {holdPoints} active hold</span><span className="text-amber-300">{upcomingHolds} upcoming before pour</span></div></div></div></section>;
+}
