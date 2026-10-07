@@ -332,7 +332,7 @@ export default function ContractorPortalPage() {
 
             <div className="mt-4 pt-3 border-t border-zinc-800/60 flex items-center justify-between text-[11px] text-zinc-500">
               <span>SLA Target: 48h consultant reply</span>
-              <Link href="/drawings" className="text-cyan-400 hover:text-cyan-300 font-semibold">
+              <Link href="/drawings/redlines" className="text-cyan-400 hover:text-cyan-300 font-semibold">
                 Open Drawing Viewer →
               </Link>
             </div>

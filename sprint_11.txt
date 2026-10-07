@@ -1,0 +1,70 @@
+=== SPRINT 11 CODE BUNDLE ===
+
+================================================================================
+FILE_START: app/site/reality-capture/page.tsx
+================================================================================
+import { fetchRealityCaptures } from "@/app/lib/services";
+import { BeforeAfterSlider } from "@/components/viewer/BeforeAfterSlider";
+
+export default async function RealityCapturePage() {
+  const captures = await fetchRealityCaptures("GOMTI-NAGAR-PH1-FITOUT");
+  return <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}><div style={{ maxWidth: 1300, margin: "0 auto", display: "grid", gap: 22 }}><header><div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase" }}>Quadillar LiveView / Reality Capture</div><h1 style={{ margin: "8px 0 0", fontSize: 40 }}>360° Site Reality & Progress Compare</h1><p style={{ margin: "10px 0 0", color: "#94a3b8" }}>Scrub weekly captures, compare construction progress, and review panoramic site evidence by zone.</p></header><section style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 22, padding: 20 }}><BeforeAfterSlider captures={captures} /></section></div></main>;
+}
+
+================================================================================
+FILE_END: app/site/reality-capture/page.tsx
+================================================================================
+
+================================================================================
+FILE_START: app/site/weather/page.tsx
+================================================================================
+import { MicroclimateGauges } from "@/components/site/MicroclimateGauges";
+
+export default function SiteWeatherPage() {
+  return (
+    <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: "28px 24px 60px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 24 }}>
+        <header>
+          <div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase" }}>Quadillar LiveView / Site Weather</div>
+          <h1 style={{ margin: "10px 0 0", fontSize: 42, letterSpacing: "-0.05em" }}>Microclimate & Weather Delay Logging</h1>
+        </header>
+
+        <section style={{ border: "1px solid rgba(148,163,184,0.18)", borderRadius: 22, padding: 20, background: "rgba(15,23,42,0.82)" }}>
+          <MicroclimateGauges />
+        </section>
+      </div>
+    </main>
+  );
+}
+
+================================================================================
+FILE_END: app/site/weather/page.tsx
+================================================================================
+
+================================================================================
+FILE_START: app/site/inventory/page.tsx
+================================================================================
+import React from 'react';
+import { MaterialInwardTable } from '@/components/site/MaterialInwardTable';
+
+export default function SiteInventoryPage() {
+  return (
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 p-6 sm:p-8 font-sans">
+      <div className="max-w-[1650px] mx-auto space-y-6">
+        <header className="border-b border-zinc-800 pb-4 font-mono">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">
+            MATERIAL CONTROL • GATE INWARD & WEIGHBRIDGE TELEMETRY
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            Site Store Inventory & Gate Register
+          </h1>
+        </header>
+
+        <MaterialInwardTable />
+      </div>
+    </main>
+  );
+}
+================================================================================
+FILE_END: app/site/inventory/page.tsx
+================================================================================

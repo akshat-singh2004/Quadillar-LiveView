@@ -2,7 +2,7 @@ import { hasSupabaseConfig, supabase } from "@/app/lib/supabase";
 
 export async function seedFullProjectDemo() {
   const project = {
-    id: "proj-1",
+    id: "GOMTI-NAGAR-PH1-FITOUT",
     name: "Quadillar Residential Tower 01",
     appointing_party: "Quadillar Real Estate Developers",
     lead_gc: "Apex Infrastructure Ltd.",
@@ -14,26 +14,26 @@ export async function seedFullProjectDemo() {
   const tables = [
     { name: "projects", rows: [project] },
     { name: "cde_items", conflict: "id", rows: [
-      { id: "cde-demo-1", project_id: "proj-1", title: "GFC Structural Grid - Level 02", container: "CDE/Project/Structural", state: "Published", status: "Approved", revision: 3, is_latest: true, approved: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), submitted_by: "Structural Lead", metadata: { uniclass: "EF_20_10", retentionPeriodMet: true } },
-      { id: "cde-demo-2", project_id: "proj-1", title: "MEP Coordination GFC Pack", container: "CDE/Project/MEP", state: "Published", status: "Approved", revision: 2, is_latest: true, approved: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), submitted_by: "MEP Lead", metadata: { uniclass: "Pr_70_65", retentionPeriodMet: true } },
+      { id: "cde-demo-1", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "GFC Structural Grid - Level 02", container: "CDE/Project/Structural", state: "Published", status: "Approved", revision: 3, is_latest: true, approved: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), submitted_by: "Structural Lead", metadata: { uniclass: "EF_20_10", retentionPeriodMet: true } },
+      { id: "cde-demo-2", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "MEP Coordination GFC Pack", container: "CDE/Project/MEP", state: "Published", status: "Approved", revision: 2, is_latest: true, approved: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), submitted_by: "MEP Lead", metadata: { uniclass: "Pr_70_65", retentionPeriodMet: true } },
     ] },
     { name: "rfis", conflict: "id", rows: [
-      { id: "rfi-demo-101", project_id: "proj-1", title: "Curtain wall anchor detail", description: "Clarify anchor capacity at façade edge panel.", submitted_by: "Site Engineer", submitted_at: new Date().toISOString(), due_at: new Date(Date.now() + 3600000 * 24).toISOString(), current_owner: "Design Consultant", ball_in_court: "Consultant", status: "PendingResponse", contract_impact: "CostAndTime", risk_score: 80 },
-      { id: "rfi-demo-102", project_id: "proj-1", title: "MEP sleeve penetration", description: "Confirm sleeve layout at plant room wall.", submitted_by: "Site Engineer", submitted_at: new Date().toISOString(), due_at: new Date(Date.now() + 3600000 * 16).toISOString(), current_owner: "MEP Consultant", ball_in_court: "Consultant", status: "Open", contract_impact: "Time", risk_score: 66 },
-      { id: "rfi-demo-103", project_id: "proj-1", title: "Concrete pour sequence", description: "Confirm pour sequence for slab strips.", submitted_by: "Site Engineer", submitted_at: new Date().toISOString(), due_at: new Date(Date.now() + 3600000 * 30).toISOString(), current_owner: "Structural Engineer", ball_in_court: "Designer", status: "PendingResponse", contract_impact: "Cost", risk_score: 58 },
+      { id: "rfi-demo-101", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "Curtain wall anchor detail", description: "Clarify anchor capacity at façade edge panel.", submitted_by: "Site Engineer", submitted_at: new Date().toISOString(), due_at: new Date(Date.now() + 3600000 * 24).toISOString(), current_owner: "Design Consultant", ball_in_court: "Consultant", status: "PendingResponse", contract_impact: "CostAndTime", risk_score: 80 },
+      { id: "rfi-demo-102", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "MEP sleeve penetration", description: "Confirm sleeve layout at plant room wall.", submitted_by: "Site Engineer", submitted_at: new Date().toISOString(), due_at: new Date(Date.now() + 3600000 * 16).toISOString(), current_owner: "MEP Consultant", ball_in_court: "Consultant", status: "Open", contract_impact: "Time", risk_score: 66 },
+      { id: "rfi-demo-103", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "Concrete pour sequence", description: "Confirm pour sequence for slab strips.", submitted_by: "Site Engineer", submitted_at: new Date().toISOString(), due_at: new Date(Date.now() + 3600000 * 30).toISOString(), current_owner: "Structural Engineer", ball_in_court: "Designer", status: "PendingResponse", contract_impact: "Cost", risk_score: 58 },
     ] },
     { name: "change_orders", conflict: "id", rows: [
-      { id: "co-demo-1", project_id: "proj-1", title: "Facade Interface Revision", description: "Additional glazing interface adjustment.", rfc_id: "rfc-demo-1", status: "AwaitingApproval", amount: 1450000, time_impact_days: 10, created_at: new Date().toISOString(), approval_due_at: new Date(Date.now() + 3600000 * 72).toISOString() },
-      { id: "co-demo-2", project_id: "proj-1", title: "Roof Access Route Amendment", description: "Temporary access route change for crane lift sequencing.", rfc_id: "rfc-demo-2", status: "AwaitingApproval", amount: 820000, time_impact_days: 4, created_at: new Date().toISOString(), approval_due_at: new Date(Date.now() + 3600000 * 48).toISOString() },
+      { id: "co-demo-1", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "Facade Interface Revision", description: "Additional glazing interface adjustment.", rfc_id: "rfc-demo-1", status: "AwaitingApproval", amount: 1450000, time_impact_days: 10, created_at: new Date().toISOString(), approval_due_at: new Date(Date.now() + 3600000 * 72).toISOString() },
+      { id: "co-demo-2", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "Roof Access Route Amendment", description: "Temporary access route change for crane lift sequencing.", rfc_id: "rfc-demo-2", status: "AwaitingApproval", amount: 820000, time_impact_days: 4, created_at: new Date().toISOString(), approval_due_at: new Date(Date.now() + 3600000 * 48).toISOString() },
     ] },
     { name: "custom_milestones", conflict: "milestone_id", rows: [
-      { milestone_id: "ms-001", project_id: "proj-1", title: "Core Shell Structural Completion", description: "Complete the reinforced concrete core shell and obtain consultant signoff.", sequence_order: 1, target_completion_date: "2026-09-15", allocated_budget_inr: 4200000, status: "In_Progress" },
-      { milestone_id: "ms-002", project_id: "proj-1", title: "MEP Rough-in Ready for Inspection", description: "Coordinate the MEP rough-in and complete mandatory testing gates.", sequence_order: 2, target_completion_date: "2026-09-30", allocated_budget_inr: 3100000, status: "Under_Verification" },
+      { milestone_id: "ms-001", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "Core Shell Structural Completion", description: "Complete the reinforced concrete core shell and obtain consultant signoff.", sequence_order: 1, target_completion_date: "2026-09-15", allocated_budget_inr: 4200000, status: "In_Progress" },
+      { milestone_id: "ms-002", project_id: "GOMTI-NAGAR-PH1-FITOUT", title: "MEP Rough-in Ready for Inspection", description: "Coordinate the MEP rough-in and complete mandatory testing gates.", sequence_order: 2, target_completion_date: "2026-09-30", allocated_budget_inr: 3100000, status: "Under_Verification" },
     ] },
     { name: "contractor_milestone_allocations", conflict: "allocation_id", rows: [
-      { allocation_id: "alloc-001", project_id: "proj-1", milestone_id: "ms-001", contractor_name: "Narmada Concrete Works", trade_specialization: "Concrete", assigned_contract_value_inr: 2100000, performance_status: "Active_On_Site" },
-      { allocation_id: "alloc-002", project_id: "proj-1", milestone_id: "ms-001", contractor_name: "Metro Structural Consultants", trade_specialization: "Structural Design", assigned_contract_value_inr: 600000, performance_status: "Mobilized" },
-      { allocation_id: "alloc-003", project_id: "proj-1", milestone_id: "ms-002", contractor_name: "Sundar MEP Services", trade_specialization: "MEP", assigned_contract_value_inr: 1850000, performance_status: "Active_On_Site" },
+      { allocation_id: "alloc-001", project_id: "GOMTI-NAGAR-PH1-FITOUT", milestone_id: "ms-001", contractor_name: "Narmada Concrete Works", trade_specialization: "Concrete", assigned_contract_value_inr: 2100000, performance_status: "Active_On_Site" },
+      { allocation_id: "alloc-002", project_id: "GOMTI-NAGAR-PH1-FITOUT", milestone_id: "ms-001", contractor_name: "Metro Structural Consultants", trade_specialization: "Structural Design", assigned_contract_value_inr: 600000, performance_status: "Mobilized" },
+      { allocation_id: "alloc-003", project_id: "GOMTI-NAGAR-PH1-FITOUT", milestone_id: "ms-002", contractor_name: "Sundar MEP Services", trade_specialization: "MEP", assigned_contract_value_inr: 1850000, performance_status: "Active_On_Site" },
     ] },
     { name: "material_testing_logs", rows: [
       { id: "mat-demo-1", project_id: "proj-demo-01", grade: "M25", target_strength_mpa: 25, seven_day_strength: 16.5, twenty_eight_day_strength: 31.1, status: "Pass", tested_at: new Date().toISOString() },

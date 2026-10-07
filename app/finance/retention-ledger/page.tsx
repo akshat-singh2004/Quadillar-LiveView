@@ -97,7 +97,7 @@ function normalizeRetention(d: any): RetentionRecord {
 
   return {
     id: d?.id ?? `ret-${Date.now()}`,
-    project_id: d?.project_id ?? "proj-default",
+    project_id: d?.project_id ?? "GOMTI-NAGAR-PH1-FITOUT",
     security_code: d?.security_code ?? `RET-${Date.now().toString().slice(-4)}`,
     contractor_name: d?.contractor_name ?? "Executing Contractor",
     trade_package: d?.trade_package ?? "Civil & Superstructure",
@@ -134,7 +134,7 @@ export default function CanonicalRetentionLedgerPage() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";

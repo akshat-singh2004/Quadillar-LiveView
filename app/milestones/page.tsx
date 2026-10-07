@@ -71,7 +71,7 @@ export default function GovernedMilestonesPage() {
   const [loading, setLoading] = useState(true);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";
@@ -99,148 +99,8 @@ export default function GovernedMilestonesPage() {
       if (data && data.length > 0) {
         setMilestones(data as GovernedMilestone[]);
       } else {
-        setMilestones(
-          tier === "RESIDENTIAL"
-            ? [
-                {
-                  id: "ms-res-01",
-                  project_id: projectId,
-                  sequence_number: 1,
-                  sequence_label: "SEQUENCE 01",
-                  title: "Civil Chasing & Electrical Conduit First-Fix",
-                  work_scope: "Wall chasing, junction boxes, and concealed conduit runs.",
-                  trade_name: "Avadh MEP Solutions",
-                  contractor_name: "Avadh MEP Solutions",
-                  contractor_allocated_inr: 85000,
-                  total_milestone_value_inr: 120000,
-                  target_date: "2026-08-30",
-                  status: "IN_PROGRESS",
-                  hold_gates: [
-                    {
-                      id: "hg-1",
-                      name: "Plumbing Pressure Check",
-                      is_mandatory: true,
-                      status: "PENDING",
-                      spec_ref: "Hold-point: 10-bar pneumatic test on CPVC lines.",
-                    },
-                    {
-                      id: "hg-2",
-                      name: "Consultant Conduit Sign-off",
-                      is_mandatory: true,
-                      status: "PENDING",
-                      spec_ref: "Architect sign-off on concealed conduit locations.",
-                    },
-                  ],
-                  financial_condition_cleared: false,
-                },
-                {
-                  id: "ms-res-02",
-                  project_id: projectId,
-                  sequence_number: 2,
-                  sequence_label: "SEQUENCE 02",
-                  title: "Custom Millwork & Carcass Assembly",
-                  work_scope: "HDHMR modular frames, carcass assembly, and hinge alignment.",
-                  trade_name: "Royal Woodworkers & Interiors",
-                  contractor_name: "Royal Woodworkers & Interiors",
-                  contractor_allocated_inr: 190000,
-                  total_milestone_value_inr: 280000,
-                  target_date: "2026-09-28",
-                  status: "READY_FOR_SUBMISSION",
-                  hold_gates: [
-                    {
-                      id: "hg-3",
-                      name: "Boilo HDHMR Batch Verification",
-                      is_mandatory: true,
-                      status: "VERIFIED",
-                      verified_by: "Principal Architect",
-                      verified_at: "2026-09-10T12:00:00Z",
-                      spec_ref: "IS 12406 moisture-resistance test cleared.",
-                    },
-                    {
-                      id: "hg-4",
-                      name: "Carcass Squareness & Laser Level",
-                      is_mandatory: true,
-                      status: "VERIFIED",
-                      verified_by: "Principal Architect",
-                      verified_at: "2026-09-11T14:30:00Z",
-                      spec_ref: "Laser plumb verification within ±1.0mm.",
-                    },
-                  ],
-                  financial_condition_cleared: true,
-                },
-              ]
-            : [
-                {
-                  id: "ms-twr-01",
-                  project_id: projectId,
-                  sequence_number: 1,
-                  sequence_label: "SEQUENCE 01",
-                  title: "Raft Foundation M40 Casting & Waterproofing",
-                  work_scope: "2400 m³ continuous pour, thermocouple sensors, membrane installation.",
-                  trade_name: "Civil & Superstructure",
-                  contractor_name: "Narmada Concrete Works",
-                  contractor_allocated_inr: 9800000,
-                  total_milestone_value_inr: 12500000,
-                  target_date: "2026-06-15",
-                  status: "CERTIFIED_RELEASED",
-                  hold_gates: [
-                    {
-                      id: "hg-t1",
-                      name: "Rebar Cover & Chair Verification",
-                      is_mandatory: true,
-                      status: "VERIFIED",
-                      verified_by: "Resident SEOR",
-                      verified_at: "2026-06-10T08:00:00Z",
-                      spec_ref: "IS 456 cover block compliance verified.",
-                    },
-                    {
-                      id: "hg-t2",
-                      name: "Thermal Gradient Simulation Cleared",
-                      is_mandatory: true,
-                      status: "VERIFIED",
-                      verified_by: "Principal Architect",
-                      verified_at: "2026-06-12T16:00:00Z",
-                      spec_ref: "Core-to-surface delta < 20°C verified.",
-                    },
-                  ],
-                  financial_condition_cleared: true,
-                  certified_by: "Principal Architect",
-                  certified_at: "2026-06-16T10:00:00Z",
-                },
-                {
-                  id: "ms-twr-02",
-                  project_id: projectId,
-                  sequence_number: 2,
-                  sequence_label: "SEQUENCE 02",
-                  title: "Levels 01-04 Shear Core & PT Deck Pouring",
-                  work_scope: "Post-tensioned slab tendons, ducting alignment, and concrete casting.",
-                  trade_name: "Civil & Superstructure",
-                  contractor_name: "Narmada Concrete Works",
-                  contractor_allocated_inr: 11200000,
-                  total_milestone_value_inr: 14500000,
-                  target_date: "2026-09-30",
-                  status: "IN_PROGRESS",
-                  hold_gates: [
-                    {
-                      id: "hg-t3",
-                      name: "PT Tendon Profile Clearance",
-                      is_mandatory: true,
-                      status: "PENDING",
-                      spec_ref: "Specialty PT consultant physical inspection.",
-                    },
-                    {
-                      id: "hg-t4",
-                      name: "Formwork Stripping Cube Strength (IS 456)",
-                      is_mandatory: true,
-                      status: "PENDING",
-                      spec_ref: "70% 28d strength (28 N/mm²) required prior to deck release.",
-                    },
-                  ],
-                  financial_condition_cleared: false,
-                },
-              ]
-        );
-      }
+        setMilestones([]);
+    }
     } catch {
       // Local fallback
     } finally {
@@ -345,6 +205,7 @@ export default function GovernedMilestonesPage() {
     setActionInProgress(null);
   };
 
+  
   if (loading) {
     return (
       <div className="flex h-[80vh] items-center justify-center text-xs font-mono text-zinc-500">
@@ -353,6 +214,7 @@ export default function GovernedMilestonesPage() {
       </div>
     );
   }
+  
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 px-4 py-8 sm:px-6 lg:px-8">

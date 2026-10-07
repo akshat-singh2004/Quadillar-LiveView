@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import type { ReraQuarterlyProgressReport, StatutoryApproval } from "@/types/construction";
 
 const badgeStyle: Record<string, { bg: string; border: string; text: string; pulse?: string }> = {
@@ -25,42 +25,33 @@ function calculateApprovalState(approval: StatutoryApproval): { label: string; t
   return { label: "Sanctioned & Active", tone: "active", daysText: `${diffDays} days left` };
 }
 
-function buildDefaultQpr(projectName: string, projectCode: string, quarterLabel: string): ReraQuarterlyProgressReport {
-  return {
-    projectName,
-    projectCode,
-    quarterLabel,
-    approvedProgress: 92.5,
-    actualProgress: 89.6,
-    soldInventoryUnits: 64,
-    unsoldInventoryUnits: 18,
-    constructionCostIncurred: 126500000,
-    summary: "Actual physical progress remains below the approved RERA baseline by 2.9%. Sales inventory is 64 units sold and 18 unsold. Construction cost incurred totals INR 12.65 Cr.",
-    formOneSummary: "Form 1 — Progress summary: The project has achieved 89.6% actual physical progress against a sanctioned 92.5% baseline. Progress variance is tracked under RERA schedule compliance and remains subject to consultant review.",
-    formTwoSummary: "Form 2 — Inventory and cost summary: 64 units sold, 18 unsold, and INR 12.65 Cr has been incurred against committed project cost. All cost and sales data have been reconciled to the latest project ledger and sales register.",
-    signedBy: "A. Mehta | Project Director",
-    signedAt: new Date().toISOString(),
-  };
-}
-
-export function RERAReportGenerator({
-  approvals,
-  projectName = "Project 01 / Core Shell",
-  projectCode = "P01-CORE",
-  quarterLabel = "Q3 FY2026",
-}: {
+interface RERAReportGeneratorProps {
   approvals: StatutoryApproval[];
   projectName?: string;
   projectCode?: string;
   quarterLabel?: string;
-}) {
-  const [report, setReport] = useState<ReraQuarterlyProgressReport>(() => buildDefaultQpr(projectName, projectCode, quarterLabel));
+  actualProgress?: number;
+  constructionCostIncurred?: number;
+  contractValue?: number;
+}
 
-  const timeline = useMemo(() => approvals.map((approval) => ({ ...approval, state: calculateApprovalState(approval) })), [approvals]);
+export function RERAReportGenerator({
+  approvals,
+  projectName = "Gomti Nagar Extension Commercial Hub Ph-1",
+  projectCode = "GOMTI-PH1",
+  quarterLabel = "Q3 FY2026-27",
+  actualProgress = 89.6,
+  constructionCostIncurred = 45000000,
+  contractValue = 450000000,
+}: RERAReportGeneratorProps) {
+  const [report, setReport] = useState<ReraQuarterlyProgressReport>(() => {
+    const formattedCost = new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(constructionCostIncurred);
 
-  const autoGenerate = () => {
-    const actualProgress = Math.max(0, Math.min(100, Number(((approvals.reduce((sum, item) => sum + item.progressPercent, 0) / Math.max(1, approvals.length)) || 0).toFixed(1))));
-    const nextReport = {
+    return {
       projectName,
       projectCode,
       quarterLabel,
@@ -68,11 +59,41 @@ export function RERAReportGenerator({
       actualProgress,
       soldInventoryUnits: 64,
       unsoldInventoryUnits: 18,
-      constructionCostIncurred: 126500000,
-      summary: `Actual physical progress is ${actualProgress}% against the approved RERA sanction baseline of 92.5%. The project has 64 units sold, 18 units unsold, and capital incurred of INR 12.65 Cr.`,
-      formOneSummary: `Form 1 — Progress summary: Actual site progress of ${actualProgress}% has been measured against the sanctioned RERA target of 92.5% for ${quarterLabel}. Variance is documented and subject to regular monitoring.`,
-      formTwoSummary: `Form 2 — Inventory and cost summary: The project currently records 64 sold units, 18 unsold units, and construction cost incurred of INR ${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(126500000)}.`,
-      signedBy: "A. Mehta | Project Director",
+      constructionCostIncurred,
+      summary: `Actual physical progress is ${actualProgress}% against the approved RERA baseline of 92.5%. Capital incurred to date totals ${formattedCost} against the sanctioned contract sum.`,
+      formOneSummary: `Form 1 — Architectural Progress Certification: The project has achieved ${actualProgress}% actual measured site progress against sanctioned drawings for ${quarterLabel}. All structural stages remain under certified supervision.`,
+      formTwoSummary: `Form 2 — Financial & Inventory Certification: Total certified construction expenditure stands at ${formattedCost}. Escrow withdrawals comply strictly with Section 4(2)(l)(D) of the RERA Act.`,
+      signedBy: "Principal Architect / Certified SEOR",
+      signedAt: new Date().toISOString(),
+    };
+  });
+
+  const timeline = useMemo(() => approvals.map((approval) => ({ ...approval, state: calculateApprovalState(approval) })), [approvals]);
+
+  const autoGenerate = () => {
+    const avgApprovalProgress = approvals.length > 0
+      ? Number((approvals.reduce((sum, item) => sum + (item.progressPercent || 0), 0) / approvals.length).toFixed(1))
+      : actualProgress;
+
+    const formattedCost = new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(constructionCostIncurred);
+
+    const nextReport: ReraQuarterlyProgressReport = {
+      projectName,
+      projectCode,
+      quarterLabel,
+      approvedProgress: 92.5,
+      actualProgress: avgApprovalProgress,
+      soldInventoryUnits: 64,
+      unsoldInventoryUnits: 18,
+      constructionCostIncurred,
+      summary: `Actual physical progress is ${avgApprovalProgress}% against the approved RERA sanction baseline of 92.5%. Certified construction expenditure totals ${formattedCost}.`,
+      formOneSummary: `Form 1 — Architectural Progress Certification: Measured physical progress of ${avgApprovalProgress}% reported for ${quarterLabel}. Inspection records and cube tests conform to approved structural drawings.`,
+      formTwoSummary: `Form 2 — Financial & Inventory Certification: Certified expenditure is ${formattedCost} out of contract baseline ₹${(contractValue / 10000000).toFixed(2)} Cr.`,
+      signedBy: "Principal Architect / Certified SEOR",
       signedAt: new Date().toISOString(),
     };
 
@@ -81,29 +102,37 @@ export function RERAReportGenerator({
 
   return (
     <div className="space-y-6">
-      <section className="surface-shell p-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-5 shadow-xl">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-zinc-800 pb-4">
           <div>
-            <div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Approval timeline</div>
-            <h2 className="mt-2 text-2xl font-medium tracking-tight text-neutral-100">Municipal & statutory compliance</h2>
+            <div className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
+              Statutory Approvals Timeline • UP RERA Compliance
+            </div>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-white uppercase">
+              Municipal &amp; Environmental Clearances
+            </h2>
           </div>
-          <button type="button" onClick={autoGenerate} className="rounded-full border border-sky-400/30 bg-sky-500/10 px-4 py-2 text-[11px] font-medium tracking-[0.12em] text-sky-200 uppercase transition-all duration-200 hover:bg-sky-500/20">
-            Auto-Generate RERA QPR
+          <button
+            type="button"
+            onClick={autoGenerate}
+            className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 px-4 py-2 text-xs font-bold text-cyan-300 uppercase transition cursor-pointer"
+          >
+            Auto-Generate RERA QPR from Live Data
           </button>
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
           {timeline.map((approval) => {
             const tone = badgeStyle[approval.state.tone];
             return (
-              <div key={approval.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+              <div key={approval.id} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-[11px] font-mono tracking-[0.14em] text-neutral-400 uppercase">{approval.approvalType}</div>
-                    <div className="mt-3 text-lg font-medium tracking-tight text-neutral-100">{approval.authority}</div>
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase font-bold">{approval.approvalType}</div>
+                    <div className="mt-1 text-sm font-bold text-white">{approval.authority}</div>
                   </div>
                   <span
-                    className="rounded-full border px-2 py-1 text-[10px] font-medium tracking-[0.12em] uppercase"
+                    className="rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap"
                     style={{
                       background: tone.bg,
                       borderColor: tone.border,
@@ -115,23 +144,23 @@ export function RERAReportGenerator({
                   </span>
                 </div>
 
-                <div className="mt-4 space-y-3 text-sm text-neutral-300">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-neutral-400">Reference</span>
-                    <span className="font-medium text-neutral-200">{approval.referenceNumber}</span>
+                <div className="space-y-1.5 text-xs text-zinc-300 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-500">Ref:</span>
+                    <span className="font-mono text-zinc-200">{approval.referenceNumber}</span>
                   </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-neutral-400">Valid until</span>
-                    <span className="font-medium text-neutral-200">{new Date(approval.validUntil).toLocaleDateString("en-IN")}</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-500">Valid Until:</span>
+                    <span className="font-mono text-zinc-200">{new Date(approval.validUntil).toLocaleDateString("en-IN")}</span>
                   </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-neutral-400">Progress</span>
-                    <span className="font-medium text-neutral-200">{approval.progressPercent}%</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-500">Execution Score:</span>
+                    <span className="font-mono text-emerald-400 font-bold">{approval.progressPercent}%</span>
                   </div>
                 </div>
 
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[0.06]">
-                  <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400" style={{ width: `${approval.progressPercent}%` }} />
+                <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+                  <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" style={{ width: `${approval.progressPercent}%` }} />
                 </div>
               </div>
             );
@@ -139,49 +168,59 @@ export function RERAReportGenerator({
         </div>
       </section>
 
-      <section className="surface-shell p-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-5 shadow-xl space-y-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-zinc-800 pb-4">
           <div>
-            <div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Quarterly reporting</div>
-            <h3 className="mt-2 text-2xl font-medium tracking-tight text-neutral-100">RERA QPR (Form 1 & Form 2)</h3>
+            <div className="text-[10px] font-mono tracking-widest text-emerald-400 uppercase font-bold">
+              Quarterly Filing Engine
+            </div>
+            <h3 className="mt-1 text-xl font-bold tracking-tight text-white uppercase">
+              RERA QPR Filing (Form 1 Architect &amp; Form 2 Financial)
+            </h3>
           </div>
-          <button type="button" onClick={() => window.print()} className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-[11px] font-medium tracking-[0.12em] text-emerald-200 uppercase transition-all duration-200 hover:bg-emerald-500/20">
-            Export signed summary
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-bold uppercase transition cursor-pointer shadow-lg shadow-emerald-950/40"
+          >
+            Export Signed RERA Dossier (PDF)
           </button>
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <div className="text-[11px] font-mono tracking-[0.12em] text-neutral-400 uppercase">Approved baseline</div>
-            <div className="mt-3 text-3xl font-medium tracking-tight text-neutral-100">{report.approvedProgress}%</div>
+        <div className="grid gap-4 sm:grid-cols-3 font-mono">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <span className="text-[10px] text-zinc-500 uppercase block font-bold">Approved Baseline</span>
+            <div className="mt-2 text-2xl font-bold text-white tabular-nums">{report.approvedProgress}%</div>
           </div>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <div className="text-[11px] font-mono tracking-[0.12em] text-neutral-400 uppercase">Actual physical progress</div>
-            <div className="mt-3 text-3xl font-medium tracking-tight text-neutral-100">{report.actualProgress}%</div>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <span className="text-[10px] text-zinc-500 uppercase block font-bold">Actual Measured Progress</span>
+            <div className="mt-2 text-2xl font-bold text-cyan-400 tabular-nums">{report.actualProgress}%</div>
           </div>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <div className="text-[11px] font-mono tracking-[0.12em] text-neutral-400 uppercase">Construction cost incurred</div>
-            <div className="mt-3 text-2xl font-medium tracking-tight text-neutral-100">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(report.constructionCostIncurred)}</div>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Form 1</div>
-            <p className="mt-3 text-sm leading-6 text-neutral-300">{report.formOneSummary}</p>
-          </div>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Form 2</div>
-            <p className="mt-3 text-sm leading-6 text-neutral-300">{report.formTwoSummary}</p>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <span className="text-[10px] text-zinc-500 uppercase block font-bold">Certified Capital Spend</span>
+            <div className="mt-2 text-xl font-bold text-emerald-400 tabular-nums truncate">
+              {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(report.constructionCostIncurred)}
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-white/[0.06] bg-neutral-950/70 p-4">
-          <div className="text-[11px] font-medium tracking-[0.14em] text-neutral-400 uppercase">Submission summary</div>
-          <p className="mt-3 text-sm leading-6 text-neutral-300">{report.summary}</p>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4 text-[11px] font-mono tracking-[0.12em] text-neutral-400">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4 space-y-2">
+            <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold block">Form 1 Certification Summary</span>
+            <p className="text-xs leading-relaxed text-zinc-300 font-sans">{report.formOneSummary}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4 space-y-2">
+            <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold block">Form 2 Financial Summary</span>
+            <p className="text-xs leading-relaxed text-zinc-300 font-sans">{report.formTwoSummary}</p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
+          <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold block">Executive Attestation Record</span>
+          <p className="text-xs leading-relaxed text-zinc-300 font-sans">{report.summary}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 pt-3 text-[10px] font-mono text-zinc-500">
             <span>{report.projectCode} • {report.quarterLabel}</span>
-            <span>Signed by {report.signedBy}</span>
+            <span className="text-zinc-300">Certified by: <strong>{report.signedBy}</strong></span>
             <span>{new Date(report.signedAt).toLocaleDateString("en-IN")}</span>
           </div>
         </div>
@@ -189,3 +228,5 @@ export function RERAReportGenerator({
     </div>
   );
 }
+
+export default RERAReportGenerator;

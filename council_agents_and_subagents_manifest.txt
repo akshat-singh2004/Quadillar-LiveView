@@ -1,0 +1,1162 @@
+========================================================================================
+QUADILLAR DIGITAL GOVERNANCE COUNCIL: AGENTS & SUB-AGENTS COMPLETE CODEBASE MANIFEST
+Generated at: 2026-10-05T08:46:23.538Z | Target: sprint_agents_manifest.txt
+Standards Enforced: IS 456, CIRIA C766, ASTM C1074, CPWD GCC Cl. 10CC/42, BOCW Act 1996
+Total Files Captured: 27
+========================================================================================
+
+========================================================================================
+FILE: lib\agents\aegis.ts
+LINES: 248
+========================================================================================
+import { createClient } from "@supabase/supabase-js";
+import { CubeStatisticalAcceptanceEngine, CubeSpecimen } from "./sub-agents/aegis/cube-statistics";
+import { RebarCoverDurabilityAuditor, EnvironmentalExposure } from "./sub-agents/aegis/rebar-cover";
+import { HermesAgent } from "./hermes";
+
+export interface NCRIssuancePayload {
+  projectId: string;
+  ncrNumber?: string;
+  title?: string;
+  description: string;
+  gridLocation?: string;
+  locationGrid?: string;
+  locationZone?: string;
+  structuralGrid?: string;
+  statutoryClause?: string;
+  ifcGuid?: string;
+  severity: "CRITICAL" | "MAJOR" | "MINOR" | "OBSERVATION" | string;
+  withholdingAmountInr?: number;
+  financialLienInr?: number;
+  clauseRef?: string;
+  rootCauseCategory?: string;
+  assignedContractor?: string;
+  identifiedBy?: string;
+  correctiveActionRequired?: string;
+  [key: string]: unknown;
+}
+
+export interface SpatialLockoutCheckResult {
+  isLocked: boolean;
+  activeNcrCount: number;
+  reasons: string[];
+  ncrs: any[];
+  ncrNumber?: string;
+  lockReason?: string;
+}
+
+export interface NCRIssuanceResult {
+  success: boolean;
+  data?: any;
+  ncrId: string;
+  ncrNumber: string;
+  spatialLocked: boolean;
+  financialLienInr: number;
+  cryptographicHash: string;
+  auditBlockId: string;
+  error?: string;
+}
+
+export interface NCRClosureResult {
+  success: boolean;
+  data?: any;
+  auditBlockId?: string;
+  error?: string;
+}
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("Missing Supabase credentials for Agent Aegis.");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export class AegisAgent {
+  // --- SUB-AGENT DELEGATIONS ---
+  static adjudicateCompressiveBatch(targetFckMpa: number, specimens: CubeSpecimen[]) {
+    return CubeStatisticalAcceptanceEngine.evaluateBatch(targetFckMpa, specimens);
+  }
+
+  static verifyCoverBlock(exposure: EnvironmentalExposure, memberType: "SLAB" | "BEAM" | "COLUMN" | "FOOTING", installedMm: number) {
+    return RebarCoverDurabilityAuditor.auditCoverBlockInstallation({ exposure, memberType, installedCoverMm: installedMm });
+  }
+
+  // --- SPATIAL QUALITY LOCKOUT GATE ---
+  static async checkSpatialLockout(
+    projectId: string,
+    ifcGuid?: string,
+    locationGrid?: string
+  ): Promise<SpatialLockoutCheckResult> {
+    const supabase = getSupabase();
+
+    let query = supabase
+      .from("quality_ncr_register")
+      .select("*")
+      .eq("project_id", projectId)
+      .neq("status", "CLOSED");
+
+    if (locationGrid) {
+      query = query.or(`grid_location.ilike.%${locationGrid}%,location_zone.ilike.%${locationGrid}%`);
+    }
+
+    const { data: ncrs, error } = await query;
+    if (error) {
+      console.warn("[Aegis Spatial Check Notice]:", error.message);
+      return { isLocked: false, activeNcrCount: 0, reasons: [], ncrs: [] };
+    }
+
+    const activeNcrs = ncrs || [];
+    const isLocked = activeNcrs.length > 0;
+    const reasons = activeNcrs.map(
+      (n: any) => `IS 456 HOLD: Active ${n.severity} NCR [${n.ncr_number}] on grid [${n.grid_location || n.location_zone || "Zone"}]: ${n.issue_description || n.title || "Quality defect"}`
+    );
+
+    const primaryNcr = activeNcrs[0];
+
+    return {
+      isLocked,
+      activeNcrCount: activeNcrs.length,
+      reasons,
+      ncrs: activeNcrs,
+      ncrNumber: primaryNcr?.ncr_number || undefined,
+      lockReason: reasons[0] || undefined,
+    };
+  }
+
+  // --- STATUTORY NCR ISSUANCE ENGINE ---
+  static async issueNCR(payload: NCRIssuancePayload): Promise<NCRIssuanceResult> {
+    try {
+      const supabase = getSupabase();
+      const ncrNumber = payload.ncrNumber || `NCR-${Date.now().toString().slice(-6)}`;
+      const grid = payload.structuralGrid || payload.gridLocation || payload.locationGrid || payload.locationZone || "Site Axis";
+      const clause = payload.statutoryClause || payload.clauseRef || "IS 456:2000 Cl. 10.2";
+      const lien = Number(payload.financialLienInr || payload.withholdingAmountInr || 50000);
+      const isCritical = payload.severity === "CRITICAL" || payload.severity === "MAJOR";
+
+      const { data, error } = await supabase
+        .from("quality_ncr_register")
+        .insert({
+          project_id: payload.projectId,
+          ncr_number: ncrNumber,
+          title: payload.title || `Structural Non-Conformance: ${grid}`,
+          severity: payload.severity,
+          issue_description: payload.description,
+          grid_location: grid,
+          ifc_guid: payload.ifcGuid || null,
+          clause_reference: clause,
+          withholding_amount_inr: lien,
+          status: "OPEN_UNDER_RECTIFICATION",
+          issued_by: payload.identifiedBy || "Agent Aegis (Structural Quality Governor)",
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const seal = await HermesAgent.notarizeTransaction({
+        projectId: payload.projectId,
+        actionTitle: `Aegis Statutory NCR Issued: ${ncrNumber} [${payload.severity}]`,
+        actionCategory: "QUALITY_IS456_NCR_ISSUED",
+        moduleRef: ncrNumber,
+        details: { ...payload } as Record<string, unknown>,
+        signatoryName: "Agent Aegis (Structural Quality Governor)",
+        signatoryRole: "Autonomous Materials Adjudicator",
+        severity: "critical",
+      });
+
+      return {
+        success: true,
+        data,
+        ncrId: String(data.id),
+        ncrNumber,
+        spatialLocked: isCritical,
+        financialLienInr: lien,
+        cryptographicHash: seal.blockHash,
+        auditBlockId: seal.id || seal.blockHash,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || "Failed to issue NCR.",
+        ncrId: "",
+        ncrNumber: "",
+        spatialLocked: false,
+        financialLienInr: 0,
+        cryptographicHash: "",
+        auditBlockId: "",
+      };
+    }
+  }
+
+  // --- STATUTORY NCR CLOSEOUT ENGINE ---
+  static async closeNCR(params: {
+    ncrId: string;
+    projectId?: string;
+    closedBy?: string;
+    rectificationNotes?: string;
+    verificationEvidenceUrl?: string;
+    [key: string]: unknown;
+  }): Promise<NCRClosureResult> {
+    try {
+      const supabase = getSupabase();
+
+      const { data, error } = await supabase
+        .from("quality_ncr_register")
+        .update({
+          status: "CLOSED",
+          withholding_amount_inr: 0,
+          closed_at: new Date().toISOString(),
+          closure_remarks: params.rectificationNotes || "Rectification verified by SEOR.",
+        })
+        .eq("id", params.ncrId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const pId = params.projectId || data?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
+
+      const seal = await HermesAgent.notarizeTransaction({
+        projectId: pId,
+        actionTitle: `Aegis NCR Closed & Quality Lien Released: ${data?.ncr_number || params.ncrId}`,
+        actionCategory: "QUALITY_IS456_NCR_CLOSED",
+        moduleRef: String(params.ncrId),
+        details: { ...params } as Record<string, unknown>,
+        signatoryName: params.closedBy || "Agent Aegis (Structural Quality Governor)",
+        signatoryRole: "Autonomous Materials Adjudicator",
+        severity: "verified",
+      });
+
+      return {
+        success: true,
+        data,
+        auditBlockId: seal.id || seal.blockHash,
+      };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "Failed to close NCR." };
+    }
+  }
+
+  static async notarizeStructuralQualityHold(params: {
+    projectId: string;
+    pourCardId: string;
+    reason: string;
+    details: Record<string, unknown>;
+  }) {
+    return HermesAgent.notarizeTransaction({
+      projectId: params.projectId,
+      actionTitle: `Aegis Structural Quality Hold: ${params.reason}`,
+      actionCategory: "QUALITY_IS456_HOLD",
+      moduleRef: params.pourCardId,
+      details: params.details,
+      signatoryName: "Agent Aegis (Structural Quality Governor)",
+      signatoryRole: "Autonomous IS 456 Auditor",
+      severity: "critical",
+    });
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\ananke.ts
+LINES: 47
+========================================================================================
+import { OeeFleetEngine } from "./sub-agents/ananke/oee-engine";
+import { HermesAgent } from "./hermes";
+
+export class AnankeAgent {
+  static evaluateAssetTelematics(params: {
+    assetCode: string;
+    category: string;
+    plannedOperatingHours: number;
+    actualOperatingHours: number;
+    idlingHours: number;
+    fuelConsumedLiters: number;
+    oemRatedFuelBurnLph: number;
+    outputVolumeM3: number;
+    targetVolumeM3: number;
+    fitnessExpiryDateIso: string;
+  }) {
+    const oee = OeeFleetEngine.compute(
+      params.actualOperatingHours,
+      params.plannedOperatingHours,
+      params.outputVolumeM3,
+      params.targetVolumeM3
+    );
+
+    const effectiveHours = Math.max(0.5, params.actualOperatingHours);
+    const burnRate = params.fuelConsumedLiters / effectiveHours;
+    const fuelVariancePct = params.oemRatedFuelBurnLph > 0
+      ? parseFloat((((burnRate - params.oemRatedFuelBurnLph) / params.oemRatedFuelBurnLph) * 100).toFixed(1))
+      : 0;
+
+    const isFitnessExpired = new Date(params.fitnessExpiryDateIso).getTime() < Date.now();
+    const isFuelPilferageFlagged = fuelVariancePct > 15.0;
+
+    let operationalStatus: "ONLINE" | "GROUNDED_SAFETY_HOLD" | "MAINTENANCE_FLAG" = "ONLINE";
+    if (isFitnessExpired) operationalStatus = "GROUNDED_SAFETY_HOLD";
+    else if (isFuelPilferageFlagged) operationalStatus = "MAINTENANCE_FLAG";
+
+    return {
+      assetCode: params.assetCode,
+      overallOeePct: oee,
+      fuelVariancePct,
+      isFuelPilferageFlagged,
+      isFitnessExpired,
+      operationalStatus,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\argus.ts
+LINES: 9
+========================================================================================
+import { MicroclimateWeatherAuditor } from "./sub-agents/argus/weather-auditor";
+import { HermesAgent } from "./hermes";
+
+export class ArgusAgent {
+  static evaluateMicroclimate(params: { windSpeedKmh: number; rainfallRateMmh: number; temperatureC: number }) {
+    return MicroclimateWeatherAuditor.evaluate(params.windSpeedKmh, params.rainfallRateMmh, params.temperatureC);
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\chronos.ts
+LINES: 90
+========================================================================================
+import { createClient } from "@supabase/supabase-js";
+import { CpmTopologicalSortEngine, ScheduleActivity } from "./sub-agents/chronos/cpm-engine";
+import { HermesAgent } from "./hermes";
+
+export interface HindranceImpactAssessment {
+  hindranceId?: string;
+  hindranceNumber: string;
+  impactedActivityIds: string[];
+  criticalPathDelayDays: number;
+  criticalPathImpacted: boolean;
+  consumedFloatDays: number;
+  projectCompletionSlippageDays: number;
+  suggestedClauseRef: string;
+  newProjectFinishDate?: string;
+  scheduleVarianceDays: number;
+  recommendations: string[];
+}
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("Missing Supabase credentials for Agent Chronos.");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export class ChronosAgent {
+  // --- SUB-AGENT DELEGATION ---
+  static analyzeCriticalPath(activities: ScheduleActivity[]) {
+    return CpmTopologicalSortEngine.computeCriticalPathFloat(activities);
+  }
+
+  // --- SCHEDULE GRAPH SOLVER ---
+  static async solveScheduleGraph(projectId: string) {
+    const supabase = getSupabase();
+
+    const nodes: ScheduleActivity[] = [
+      { id: "ACT-01", durationDays: 14, predecessors: [] },
+      { id: "ACT-02", durationDays: 21, predecessors: ["ACT-01"] },
+      { id: "ACT-03", durationDays: 30, predecessors: ["ACT-02"] },
+      { id: "ACT-04", durationDays: 18, predecessors: ["ACT-03"] },
+    ];
+
+    const result = CpmTopologicalSortEngine.computeCriticalPathFloat(nodes);
+
+    return {
+      nodes,
+      result: {
+        ...result,
+        criticalPathTaskIds: result.criticalActivityIds,
+      },
+    };
+  }
+
+  // --- HINDRANCE & DELAY FLOAT IMPACT ASSESSOR ---
+  static async assessHindranceImpact(params: {
+    projectId: string;
+    hindranceDays?: number;
+    delayDays?: number;
+    weatherDelay?: boolean;
+    hindranceId?: string;
+    hindranceNumber?: string;
+    [key: string]: unknown;
+  }): Promise<HindranceImpactAssessment> {
+    const days = Number(params.hindranceDays || params.delayDays || 1);
+    const criticalDelay = parseFloat(days.toFixed(1));
+    const hindranceCode = params.hindranceNumber || `HND-${Date.now().toString().slice(-6)}`;
+    const isCriticalPath = criticalDelay > 0;
+
+    const finishDate = new Date();
+    finishDate.setDate(finishDate.getDate() + Math.round(criticalDelay));
+
+    return {
+      hindranceId: params.hindranceId,
+      hindranceNumber: hindranceCode,
+      impactedActivityIds: ["ACT-02", "ACT-03"],
+      criticalPathDelayDays: criticalDelay,
+      criticalPathImpacted: isCriticalPath,
+      consumedFloatDays: criticalDelay,
+      projectCompletionSlippageDays: criticalDelay,
+      suggestedClauseRef: "CPWD GCC Cl. 5 / FIDIC Cl. 8.4",
+      newProjectFinishDate: finishDate.toISOString().slice(0, 10),
+      scheduleVarianceDays: criticalDelay,
+      recommendations: [
+        `Submit formal CPWD GCC Clause 5 / FIDIC Clause 8.4 notice within 28 days.`,
+        `Mobilize second shift crew to absorb ${criticalDelay}d negative float on critical path.`,
+      ],
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\daedalus.ts
+LINES: 32
+========================================================================================
+import { NurseSaulIntegrator } from "./sub-agents/daedalus/nurse-saul";
+import { CiriaThermalStrainAuditor } from "./sub-agents/daedalus/ciria-thermal";
+import { HermesAgent } from "./hermes";
+
+export class DaedalusAgent {
+  static evaluateHydrationKinetics(params: {
+    coreTempC: number;
+    surfaceTempC: number;
+    targetFckMpa: number;
+    hoursSincePour: number;
+    ambientTempC: number;
+  }) {
+    const maturity = NurseSaulIntegrator.computeMaturityIndex(params.coreTempC, params.surfaceTempC, params.hoursSincePour);
+    const estimatedStrengthMpa = NurseSaulIntegrator.estimateStrengthMpa(maturity, params.targetFckMpa);
+    const thermal = CiriaThermalStrainAuditor.evaluateThermalGradient(params.coreTempC, params.surfaceTempC);
+
+    const strippingPermitted = estimatedStrengthMpa >= params.targetFckMpa * 0.70 && thermal.isGradientSafe && thermal.isDefSafe;
+
+    return {
+      coreTempC: params.coreTempC,
+      surfaceTempC: params.surfaceTempC,
+      differentialTempC: thermal.deltaT,
+      isDefRisk: !thermal.isDefSafe,
+      isThermalCrackRisk: !thermal.isGradientSafe,
+      maturityIndexCdegHours: maturity,
+      estimatedStrengthMpa,
+      strippingPermitted,
+      verdict: thermal.verdict,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\hermes.ts
+LINES: 84
+========================================================================================
+import crypto from "crypto";
+import { createClient } from "@supabase/supabase-js";
+
+export interface AuditRecordPayload {
+  projectId: string;
+  actionTitle: string;
+  actionCategory: string;
+  moduleRef: string;
+  details: Record<string, unknown>;
+  signatoryName: string;
+  signatoryRole: string;
+  severity: "info" | "warning" | "critical" | "verified";
+}
+
+export interface ChainedAuditBlock {
+  id?: string;
+  blockHash: string;
+  sha256Hash: string;
+  hash: string;
+  previousHash: string;
+  timestamp: string;
+  payload: AuditRecordPayload;
+}
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("Missing Supabase credentials for Agent Hermes.");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export class HermesAgent {
+  static async notarizeTransaction(payload: AuditRecordPayload): Promise<{
+    blockHash: string;
+    sha256Hash: string;
+    hash: string;
+    id?: string;
+  }> {
+    const supabase = getSupabase();
+    const timestamp = new Date().toISOString();
+
+    const { data: latest } = await supabase
+      .from("immutable_audit_logs")
+      .select("merkle_root_hash, id")
+      .eq("project_id", payload.projectId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const previousHash = latest?.merkle_root_hash || "GENESIS_BLOCK_00000000000000000000000000000000";
+    const serialized = JSON.stringify({ previousHash, timestamp, payload });
+    const blockHash = crypto.createHash("sha256").update(serialized).digest("hex");
+
+    const { data, error } = await supabase
+      .from("immutable_audit_logs")
+      .insert({
+        project_id: payload.projectId,
+        action_title: payload.actionTitle,
+        action_category: payload.actionCategory,
+        module_ref: payload.moduleRef,
+        details: payload.details,
+        signatory_name: payload.signatoryName,
+        signatory_role: payload.signatoryRole,
+        severity: payload.severity,
+        merkle_root_hash: blockHash,
+        previous_block_hash: previousHash,
+        created_at: timestamp,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.warn("[Hermes Notarization Notice]: Failed to commit block:", error.message);
+    }
+
+    return {
+      blockHash,
+      sha256Hash: blockHash,
+      hash: blockHash,
+      id: data?.id,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\index.ts
+LINES: 36
+========================================================================================
+// 11 Executive Governors
+export { HermesAgent, type AuditRecordPayload, type ChainedAuditBlock } from "./hermes";
+export {
+  AegisAgent,
+  type NCRIssuancePayload,
+  type SpatialLockoutCheckResult,
+  type NCRIssuanceResult,
+  type NCRClosureResult,
+} from "./aegis";
+export { DaedalusAgent } from "./daedalus";
+export { MidasAgent } from "./midas";
+export { VulcanAgent } from "./vulcan";
+export { PlutusAgent } from "./plutus";
+export { ChronosAgent, type HindranceImpactAssessment } from "./chronos";
+export { ThemisAgent } from "./themis";
+export { ArgusAgent } from "./argus";
+export { AnankeAgent } from "./ananke";
+export { MinervaAgent } from "./minerva";
+
+// 15 Worker Sub-Agents
+export { CubeStatisticalAcceptanceEngine } from "./sub-agents/aegis/cube-statistics";
+export { RebarCoverDurabilityAuditor } from "./sub-agents/aegis/rebar-cover";
+export { NurseSaulIntegrator } from "./sub-agents/daedalus/nurse-saul";
+export { CiriaThermalStrainAuditor } from "./sub-agents/daedalus/ciria-thermal";
+export { CpwdClause10CCEscalator } from "./sub-agents/midas/cpwd-escalation";
+export { StatutoryTaxWithholdingAuditor } from "./sub-agents/midas/tax-withholding";
+export { CuttingStock1DBilletOptimizer } from "./sub-agents/vulcan/cutting-stock";
+export { Clause42PenalRecoveryEngine } from "./sub-agents/vulcan/clause42-reconciler";
+export { BiometricAntiPassbackReconciler } from "./sub-agents/plutus/turnstile-reconciler";
+export { StatutoryMinWageTierAuditor } from "./sub-agents/plutus/bocw-wages";
+export { CpmTopologicalSortEngine } from "./sub-agents/chronos/cpm-engine";
+export { LiquidatedDamagesCalculator } from "./sub-agents/themis/ld-calculator";
+export { MicroclimateWeatherAuditor } from "./sub-agents/argus/weather-auditor";
+export { OeeFleetEngine } from "./sub-agents/ananke/oee-engine";
+export { AabbCollisionDetector } from "./sub-agents/minerva/aabb-collision";
+
+
+========================================================================================
+FILE: lib\agents\midas.ts
+LINES: 19
+========================================================================================
+import { CpwdClause10CCEscalator } from "./sub-agents/midas/cpwd-escalation";
+import { StatutoryTaxWithholdingAuditor } from "./sub-agents/midas/tax-withholding";
+import { HermesAgent } from "./hermes";
+
+export class MidasAgent {
+  static calculateEscalation(grossWorkDoneR: number, baseL0: number, currentLi: number) {
+    return CpwdClause10CCEscalator.calculateLaborEscalation({
+      grossWorkDoneR,
+      laborComponentPct: 25,
+      baseLaborIndexL0: baseL0,
+      currentLaborIndexLi: currentLi,
+    });
+  }
+
+  static applyBillingWaterfall(grossValuationInr: number) {
+    return StatutoryTaxWithholdingAuditor.computeDeductions(grossValuationInr);
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\minerva.ts
+LINES: 9
+========================================================================================
+import { AabbCollisionDetector, BoundingBox3D } from "./sub-agents/minerva/aabb-collision";
+import { HermesAgent } from "./hermes";
+
+export class MinervaAgent {
+  static testClash(boxA: BoundingBox3D, boxB: BoundingBox3D, clearanceM = 0.05) {
+    return AabbCollisionDetector.checkCollision(boxA, boxB, clearanceM);
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\plutus.ts
+LINES: 14
+========================================================================================
+import { BiometricAntiPassbackReconciler } from "./sub-agents/plutus/turnstile-reconciler";
+import { StatutoryMinWageTierAuditor } from "./sub-agents/plutus/bocw-wages";
+import { HermesAgent } from "./hermes";
+
+export class PlutusAgent {
+  static auditMuster(claimedPins: string[], punchedPins: string[]) {
+    return BiometricAntiPassbackReconciler.reconcileTurnstileLogs(punchedPins, claimedPins);
+  }
+
+  static verifyMinimumWage(tier: "SKILLED" | "SEMI_SKILLED" | "UNSKILLED", paidWage: number) {
+    return StatutoryMinWageTierAuditor.auditWageCompliance(tier, paidWage);
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\aegis\cube-statistics.ts
+LINES: 68
+========================================================================================
+export interface CubeSpecimen {
+  sampleId: string;
+  ageDays: number;
+  failureLoadKn: number;
+  crossSectionAreaMm2: number; // Standard 150x150 mm = 22500 mm²
+}
+
+export interface StatisticalAcceptanceProof {
+  characteristicTargetMpa: number;
+  sampleCount: number;
+  individualStrengthsMpa: number[];
+  meanStrengthMpa: number;
+  standardDeviationMpa: number;
+  table11Criterion1Met: boolean; // f_mean >= f_ck + 0.825 * sigma (or f_ck + 3)
+  table11Criterion2Met: boolean; // f_min >= f_ck - 3
+  isBatchAccepted: boolean;
+  mathematicalProof: string;
+}
+
+export class CubeStatisticalAcceptanceEngine {
+  /**
+   * IS 456:2000 Clause 15.4 / Table 11 Statistical Acceptance Criteria:
+   * 1. Mean strength of 4 non-overlapping consecutive test results:
+   *    f_mean >= f_ck + 0.825 * standard_deviation OR f_ck + 3.0 N/mm² (whichever is greater)
+   * 2. Any individual test result:
+   *    f_ind >= f_ck - 3.0 N/mm² (for M15 and above)
+   */
+  static evaluateBatch(targetFckMpa: number, cubes: CubeSpecimen[]): StatisticalAcceptanceProof {
+    const strengths = cubes.map((c) =>
+      parseFloat(((c.failureLoadKn * 1000) / c.crossSectionAreaMm2).toFixed(2))
+    );
+
+    const n = strengths.length;
+    if (n < 3) {
+      throw new Error("IS 456 Cl. 15.2.2 requires a minimum statistical set of 3 test specimens.");
+    }
+
+    const mean = strengths.reduce((a, b) => a + b, 0) / n;
+    const variance = strengths.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n - 1);
+    const standardDeviation = Math.sqrt(variance);
+
+    const criterion1Threshold = Math.max(targetFckMpa + 0.825 * standardDeviation, targetFckMpa + 3.0);
+    const criterion1Met = mean >= criterion1Threshold;
+
+    const minAllowableIndividual = targetFckMpa - 3.0;
+    const minStrength = Math.min(...strengths);
+    const criterion2Met = strengths.every((s) => s >= minAllowableIndividual);
+
+    const isBatchAccepted = criterion1Met && criterion2Met;
+
+    const proof = `f_mean=${mean.toFixed(2)} MPa (req >= ${criterion1Threshold.toFixed(2)}) | ` +
+      `f_min=${minStrength.toFixed(2)} MPa (req >= ${minAllowableIndividual.toFixed(2)}) | ` +
+      `sigma=${standardDeviation.toFixed(2)} MPa`;
+
+    return {
+      characteristicTargetMpa: targetFckMpa,
+      sampleCount: n,
+      individualStrengthsMpa: strengths,
+      meanStrengthMpa: parseFloat(mean.toFixed(2)),
+      standardDeviationMpa: parseFloat(standardDeviation.toFixed(2)),
+      table11Criterion1Met: criterion1Met,
+      table11Criterion2Met: criterion2Met,
+      isBatchAccepted,
+      mathematicalProof: proof,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\aegis\rebar-cover.ts
+LINES: 38
+========================================================================================
+export type EnvironmentalExposure = "MILD" | "MODERATE" | "SEVERE" | "VERY_SEVERE" | "EXTREME";
+
+export class RebarCoverDurabilityAuditor {
+  /**
+   * IS 456:2000 Table 16 Nominal Cover to Meet Durability Requirements
+   */
+  static getRequiredNominalCoverMm(exposure: EnvironmentalExposure, memberType: "SLAB" | "BEAM" | "COLUMN" | "FOOTING"): number {
+    let baseCoverMm = 20;
+    switch (exposure) {
+      case "MILD": baseCoverMm = 20; break;
+      case "MODERATE": baseCoverMm = 30; break;
+      case "SEVERE": baseCoverMm = 45; break;
+      case "VERY_SEVERE": baseCoverMm = 50; break;
+      case "EXTREME": baseCoverMm = 75; break;
+    }
+
+    if (memberType === "COLUMN") return Math.max(baseCoverMm, 40);
+    if (memberType === "BEAM") return Math.max(baseCoverMm, 25);
+    if (memberType === "FOOTING") return Math.max(baseCoverMm, 50);
+    return baseCoverMm;
+  }
+
+  static auditCoverBlockInstallation(params: {
+    exposure: EnvironmentalExposure;
+    memberType: "SLAB" | "BEAM" | "COLUMN" | "FOOTING";
+    installedCoverMm: number;
+  }): { compliant: boolean; requiredMm: number; installedMm: number; deltaMm: number } {
+    const requiredMm = this.getRequiredNominalCoverMm(params.exposure, params.memberType);
+    const compliant = params.installedCoverMm >= requiredMm;
+    return {
+      compliant,
+      requiredMm,
+      installedMm: params.installedCoverMm,
+      deltaMm: params.installedCoverMm - requiredMm,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\ananke\oee-engine.ts
+LINES: 8
+========================================================================================
+export class OeeFleetEngine {
+  static compute(operatingHours: number, plannedHours: number, actualOutput: number, targetOutput: number): number {
+    const availability = plannedHours > 0 ? Math.min(1.0, operatingHours / plannedHours) : 0;
+    const performance = targetOutput > 0 ? Math.min(1.0, actualOutput / targetOutput) : 1.0;
+    return parseFloat((availability * performance * 100).toFixed(1));
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\argus\weather-auditor.ts
+LINES: 13
+========================================================================================
+export class MicroclimateWeatherAuditor {
+  static evaluate(windSpeedKmh: number, rainfallRateMmh: number, tempC: number): {
+    permitted: boolean;
+    reasons: string[];
+  } {
+    const reasons: string[] = [];
+    if (windSpeedKmh > 38.0) reasons.push(`HIGH WIND STOPPAGE: Gusts ${windSpeedKmh} km/h exceed 38 km/h crane cutoff (IS 13367).`);
+    if (rainfallRateMmh > 5.0) reasons.push(`PRECIPITATION STOPPAGE: Rain ${rainfallRateMmh} mm/h exceeds concreting limits.`);
+    if (tempC > 40.0) reasons.push(`HOT WEATHER HOLD: Ambient ${tempC}°C requires ice-slurry batching (IS 456 Cl. 13.3).`);
+    return { permitted: reasons.length === 0, reasons };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\chronos\cpm-engine.ts
+LINES: 29
+========================================================================================
+export interface ScheduleActivity {
+  id: string;
+  durationDays: number;
+  predecessors: string[];
+}
+
+export class CpmTopologicalSortEngine {
+  static computeCriticalPathFloat(activities: ScheduleActivity[]): {
+    projectDurationDays: number;
+    criticalActivityIds: string[];
+  } {
+    const earlyFinish = new Map<string, number>();
+
+    activities.forEach((act) => {
+      let maxPredEf = 0;
+      act.predecessors.forEach((pid) => {
+        maxPredEf = Math.max(maxPredEf, earlyFinish.get(pid) || 0);
+      });
+      earlyFinish.set(act.id, maxPredEf + act.durationDays);
+    });
+
+    const projectDuration = Math.max(...Array.from(earlyFinish.values()), 0);
+    return {
+      projectDurationDays: projectDuration,
+      criticalActivityIds: activities.map((a) => a.id),
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\daedalus\ciria-thermal.ts
+LINES: 27
+========================================================================================
+export class CiriaThermalStrainAuditor {
+  /**
+   * CIRIA C766 Early Thermal Contraction Cracking Evaluation:
+   * Restrained strain epsilon_r = alpha_c * T_1 * R
+   * Maximum allowable core-surface thermal gradient <= 20.0°C
+   */
+  static evaluateThermalGradient(coreTempC: number, surfaceTempC: number): {
+    deltaT: number;
+    isGradientSafe: boolean;
+    isDefSafe: boolean;
+    verdict: string;
+  } {
+    const deltaT = parseFloat(Math.abs(coreTempC - surfaceTempC).toFixed(1));
+    const isGradientSafe = deltaT <= 20.0;
+    const isDefSafe = coreTempC <= 70.0;
+
+    let verdict = "THERMAL STABLE: Gradient within CIRIA C766 limits.";
+    if (!isDefSafe) {
+      verdict = `CRITICAL DEF ALERT: Core ${coreTempC}°C exceeds 70°C maximum limit. Delayed Ettringite Formation risk.`;
+    } else if (!isGradientSafe) {
+      verdict = `THERMAL CRACK BREACH: Core-surface delta ${deltaT}°C exceeds 20°C limit. Add insulation blankets.`;
+    }
+
+    return { deltaT, isGradientSafe, isDefSafe, verdict };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\daedalus\nurse-saul.ts
+LINES: 21
+========================================================================================
+export class NurseSaulIntegrator {
+  /**
+   * ASTM C1074 Nurse-Saul Temperature-Time Factor:
+   * M(t) = sum (T_i - T_0) * delta_t_i with datum T_0 = -10°C
+   */
+  static computeMaturityIndex(coreTempC: number, surfaceTempC: number, hoursElapsed: number): number {
+    const avgTemp = (coreTempC + surfaceTempC) / 2;
+    const datum = -10.0;
+    return Math.max(0, Math.round((avgTemp - datum) * hoursElapsed));
+  }
+
+  /**
+   * Plowman Logarithmic Compressive Strength Derivation:
+   * f_c = f_ck * (log10(M) / 3.8) bounded by 1.15 * f_ck
+   */
+  static estimateStrengthMpa(maturityIndex: number, targetFckMpa: number): number {
+    const normalizedProgress = Math.log10(Math.max(10, maturityIndex)) / 3.8;
+    return parseFloat(Math.min(targetFckMpa * 1.15, targetFckMpa * normalizedProgress).toFixed(2));
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\midas\cpwd-escalation.ts
+LINES: 18
+========================================================================================
+export class CpwdClause10CCEscalator {
+  /**
+   * CPWD Works Manual Clause 10CC Price Variation Formula:
+   * V_l = 0.85 * (P_l / 100) * R * (L_i - L_0) / L_0
+   */
+  static calculateLaborEscalation(params: {
+    grossWorkDoneR: number;
+    laborComponentPct: number; // Typically 25% for civil building works
+    baseLaborIndexL0: number;
+    currentLaborIndexLi: number;
+  }): number {
+    if (params.baseLaborIndexL0 <= 0) return 0;
+    const factor = (params.currentLaborIndexLi - params.baseLaborIndexL0) / params.baseLaborIndexL0;
+    const escalation = 0.85 * (params.laborComponentPct / 100) * params.grossWorkDoneR * factor;
+    return parseFloat(Math.max(0, escalation).toFixed(2));
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\midas\tax-withholding.ts
+LINES: 34
+========================================================================================
+export class StatutoryTaxWithholdingAuditor {
+  /**
+   * Standard 5-tier statutory commercial deduction waterfall:
+   * 1. 5% Retention Escrow (CPWD Cl. 1A / FIDIC Cl. 14.3)
+   * 2. 1% BOCW Welfare Cess (BOCW Act 1996)
+   * 3. 2% GST TDS (Section 51 CGST Act)
+   * 4. 2% Income Tax TDS (Section 194C IT Act)
+   */
+  static computeDeductions(grossValuationInr: number): {
+    retentionInr: number;
+    bocwCessInr: number;
+    gstTdsInr: number;
+    incomeTaxTdsInr: number;
+    totalStatutoryDeductionsInr: number;
+    netPayableInr: number;
+  } {
+    const retentionInr = Math.round(grossValuationInr * 0.05);
+    const bocwCessInr = Math.round(grossValuationInr * 0.01);
+    const gstTdsInr = Math.round(grossValuationInr * 0.02);
+    const incomeTaxTdsInr = Math.round(grossValuationInr * 0.02);
+    const totalStatutoryDeductionsInr = retentionInr + bocwCessInr + gstTdsInr + incomeTaxTdsInr;
+    const netPayableInr = Math.max(0, grossValuationInr - totalStatutoryDeductionsInr);
+
+    return {
+      retentionInr,
+      bocwCessInr,
+      gstTdsInr,
+      incomeTaxTdsInr,
+      totalStatutoryDeductionsInr,
+      netPayableInr,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\minerva\aabb-collision.ts
+LINES: 19
+========================================================================================
+export interface BoundingBox3D {
+  minX: number; maxX: number;
+  minY: number; maxY: number;
+  minZ: number; maxZ: number;
+}
+
+export class AabbCollisionDetector {
+  static checkCollision(boxA: BoundingBox3D, boxB: BoundingBox3D, clearanceM = 0.05): boolean {
+    return (
+      boxA.minX - clearanceM <= boxB.maxX &&
+      boxA.maxX + clearanceM >= boxB.minX &&
+      boxA.minY - clearanceM <= boxB.maxY &&
+      boxA.maxX + clearanceM >= boxB.minY &&
+      boxA.minZ - clearanceM <= boxB.maxZ &&
+      boxA.maxZ + clearanceM >= boxB.minZ
+    );
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\plutus\bocw-wages.ts
+LINES: 14
+========================================================================================
+export class StatutoryMinWageTierAuditor {
+  static getStatutoryFloorWageInr(tier: "SKILLED" | "SEMI_SKILLED" | "UNSKILLED"): number {
+    switch (tier) {
+      case "SKILLED": return 850;
+      case "SEMI_SKILLED": return 720;
+      case "UNSKILLED": return 580;
+    }
+  }
+
+  static auditWageCompliance(tier: "SKILLED" | "SEMI_SKILLED" | "UNSKILLED", paidWageInr: number): boolean {
+    return paidWageInr >= this.getStatutoryFloorWageInr(tier);
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\plutus\turnstile-reconciler.ts
+LINES: 19
+========================================================================================
+export class BiometricAntiPassbackReconciler {
+  static reconcileTurnstileLogs(
+    punchedPins: string[],
+    claimedPins: string[],
+    dailyRateInr = 750
+  ): { ghostCount: number; ghostDebitInr: number; verifiedCount: number } {
+    const punchSet = new Set(punchedPins);
+    const ghostWorkers = claimedPins.filter((pin) => !punchSet.has(pin));
+    const ghostCount = ghostWorkers.length;
+    const ghostDebitInr = ghostCount * dailyRateInr;
+
+    return {
+      ghostCount,
+      ghostDebitInr,
+      verifiedCount: claimedPins.length - ghostCount,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\themis\ld-calculator.ts
+LINES: 15
+========================================================================================
+export class LiquidatedDamagesCalculator {
+  /**
+   * CPWD GCC Clause 2 Liquidated Damages:
+   * 1.0% per week of unexcused delay, capped strictly at 10.0% of contract baseline.
+   */
+  static compute(contractBaselineInr: number, delayDays: number): { ldInr: number; isCapped: boolean } {
+    if (delayDays <= 0) return { ldInr: 0, isCapped: false };
+    const weeks = delayDays / 7.0;
+    const computedLd = Math.round(contractBaselineInr * (weeks * 0.01));
+    const cap = Math.round(contractBaselineInr * 0.10);
+    const isCapped = computedLd >= cap;
+    return { ldInr: Math.min(computedLd, cap), isCapped };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\vulcan\clause42-reconciler.ts
+LINES: 26
+========================================================================================
+export class Clause42PenalRecoveryEngine {
+  /**
+   * CPWD GCC Clause 42 Material Reconciliation:
+   * Theoretical vs. Actual Inward consumption.
+   * Permissible variation: Steel (+3%), Cement (+2%).
+   * Excess wastage charged at 2x stipulated penal rate.
+   */
+  static evaluateReconciliation(params: {
+    material: "STEEL" | "CEMENT";
+    theoreticalQty: number;
+    actualQty: number;
+    stipulatedRateInr: number;
+  }): { excessQty: number; penalDebitInr: number; isWithinTolerance: boolean } {
+    const tolerancePct = params.material === "STEEL" ? 0.03 : 0.02;
+    const permissibleCeiling = params.theoreticalQty * (1 + tolerancePct);
+    const excessQty = Math.max(0, params.actualQty - permissibleCeiling);
+    const penalDebitInr = Math.round(excessQty * (params.stipulatedRateInr * 2.0));
+
+    return {
+      excessQty: parseFloat(excessQty.toFixed(3)),
+      penalDebitInr,
+      isWithinTolerance: excessQty === 0,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\sub-agents\vulcan\cutting-stock.ts
+LINES: 50
+========================================================================================
+export class CuttingStock1DBilletOptimizer {
+  static getUnitWeightKgPerM(diameterMm: number): number {
+    return parseFloat(((diameterMm * diameterMm) / 162.2).toFixed(3));
+  }
+
+  static optimize12mBillets(cutLengthsM: number[]): {
+    billetsNeeded: number;
+    totalWasteM: number;
+    salvagedM: number;
+    trueScrapPct: number;
+    isCompliant: boolean;
+  } {
+    const stockLengthM = 12.0;
+    const sorted = [...cutLengthsM].sort((a, b) => b - a);
+    const bins: number[] = [];
+
+    sorted.forEach((cut) => {
+      let placed = false;
+      for (let i = 0; i < bins.length; i++) {
+        if (bins[i] + cut <= stockLengthM) {
+          bins[i] = parseFloat((bins[i] + cut).toFixed(3));
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) bins.push(cut);
+    });
+
+    const billetsNeeded = bins.length;
+    const totalStockM = billetsNeeded * stockLengthM;
+    let totalWasteM = 0;
+    let salvagedM = 0;
+
+    bins.forEach((used) => {
+      const offcut = stockLengthM - used;
+      if (offcut >= 1.5) salvagedM += offcut;
+      else totalWasteM += offcut;
+    });
+
+    const trueScrapPct = totalStockM > 0 ? parseFloat(((totalWasteM / totalStockM) * 100).toFixed(2)) : 0;
+    return {
+      billetsNeeded,
+      totalWasteM: parseFloat(totalWasteM.toFixed(3)),
+      salvagedM: parseFloat(salvagedM.toFixed(3)),
+      trueScrapPct,
+      isCompliant: trueScrapPct <= 3.0,
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\themis.ts
+LINES: 14
+========================================================================================
+import { LiquidatedDamagesCalculator } from "./sub-agents/themis/ld-calculator";
+import { HermesAgent } from "./hermes";
+
+export class ThemisAgent {
+  static computeLiquidatedDamages(params: { contractBaselineInr: number; unexcusedDelayDays: number }) {
+    const res = LiquidatedDamagesCalculator.compute(params.contractBaselineInr, params.unexcusedDelayDays);
+    return {
+      computedLdInr: res.ldInr,
+      isCappedAtTenPercent: res.isCapped,
+      verdict: res.ldInr > 0 ? `Liquidated damages of ₹${res.ldInr.toLocaleString("en-IN")} assessed per CPWD Cl. 2.` : "Zero liquidated damages.",
+    };
+  }
+}
+
+
+========================================================================================
+FILE: lib\agents\vulcan.ts
+LINES: 19
+========================================================================================
+import { CuttingStock1DBilletOptimizer } from "./sub-agents/vulcan/cutting-stock";
+import { Clause42PenalRecoveryEngine } from "./sub-agents/vulcan/clause42-reconciler";
+import { HermesAgent } from "./hermes";
+
+export class VulcanAgent {
+  static optimizeRebarNesting(cutLengthsM: number[]) {
+    return CuttingStock1DBilletOptimizer.optimize12mBillets(cutLengthsM);
+  }
+
+  static reconcileMaterials(params: { material: "STEEL" | "CEMENT"; theoretical: number; actual: number; rate: number }) {
+    return Clause42PenalRecoveryEngine.evaluateReconciliation({
+      material: params.material,
+      theoreticalQty: params.theoretical,
+      actualQty: params.actual,
+      stipulatedRateInr: params.rate,
+    });
+  }
+}
+
+

@@ -20,7 +20,7 @@ export function QRCodeGenerator({ onTagCreated }: Props) {
   const [entityType, setEntityType] = useState<SiteQrEntityType>("GRID_LOCATION");
   const [saving, setSaving] = useState(false);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
 
   const handleCreateTag = async (e: React.FormEvent) => {
     e.preventDefault();

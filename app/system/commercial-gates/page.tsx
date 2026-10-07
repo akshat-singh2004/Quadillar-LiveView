@@ -85,7 +85,7 @@ export default function CanonicalCommercialGatesPage() {
   const [simulationRunning, setSimulationRunning] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const loadAuditLogs = useCallback(async () => {

@@ -82,7 +82,7 @@ export interface CloseoutArchiveRecord {
 function normalizeCloseout(d: any): CloseoutArchiveRecord {
   return {
     id: d?.id ?? `cls-${Date.now()}`,
-    project_id: d?.project_id ?? "proj-default",
+    project_id: d?.project_id ?? "GOMTI-NAGAR-PH1-FITOUT",
     closeout_reference_no: d?.closeout_reference_no ?? `CLS-${Date.now().toString().slice(-4)}`,
     work_order_ref: d?.work_order_ref ?? "WO-01",
     contractor_name: d?.contractor_name ?? "Executing Contractor",
@@ -115,7 +115,7 @@ export default function CanonicalCloseoutHandoverPage() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";
@@ -476,6 +476,13 @@ export default function CanonicalCloseoutHandoverPage() {
               <Printer className="w-3.5 h-3.5" />
               <span>Print Completion Report</span>
             </button>
+            <Link
+              href="/closeout/vendor-archive"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold transition"
+            >
+              <Award className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Vendor Rating &amp; Archive</span>
+            </Link>
             <Link
               href="/finance/final-bill"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold transition"

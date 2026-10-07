@@ -26,7 +26,7 @@ export function SafetyIncidentTable({ initialIncidents }: { initialIncidents: Sa
   };
 
   const reportIncident = () => {
-    const incident: SafetyIncidentRecord = { id: `hse-${Date.now()}`, projectId: "proj-1", incidentDate: new Date().toISOString(), type: reportForm.type, title: reportForm.title || "New site safety report", description: reportForm.description || "No description provided.", location: reportForm.location || "Site-wide", reportedBy: "Current user", severity: reportForm.severity, status: "Reported", createdAt: new Date().toISOString() };
+    const incident: SafetyIncidentRecord = { id: `hse-${Date.now()}`, projectId: "GOMTI-NAGAR-PH1-FITOUT", incidentDate: new Date().toISOString(), type: reportForm.type, title: reportForm.title || "New site safety report", description: reportForm.description || "No description provided.", location: reportForm.location || "Site-wide", reportedBy: "Current user", severity: reportForm.severity, status: "Reported", createdAt: new Date().toISOString() };
     setIncidents((current) => [incident, ...current]);
     setReporting(false);
     setReportForm({ type: "Near Miss", title: "", description: "", location: "", severity: "Medium" });

@@ -1,20 +1,22 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+export interface LaborRosterTableProps {
+  initialRoster?: any[];
+  projectId?: string;
+  [key: string]: any;
+}
+import React, { useEffect, useState, useMemo, useCallback, useTransition } from "react";
 import {
   Activity,
   AlertTriangle,
-  ArrowRight,
   Banknote,
   CheckCircle2,
   Clock,
   HardHat,
   Plus,
   RefreshCw,
-  TrendingDown,
-  TrendingUp,
   Users,
-  Zap
+  Loader2,
 } from "lucide-react";
 import {
   Bar,
@@ -24,10 +26,11 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
 } from "recharts";
 import { supabase } from "@/app/lib/supabase";
 import { useActiveRole } from "@/context/RoleContext";
+import { addLaborRosterEntry, syncRosterEntriesToDPR } from "@/app/actions/labor-actions";
 
 export interface LaborRosterItem {
   id: string;
@@ -50,23 +53,26 @@ function formatInr(val: number) {
   return `₹${Number(val).toLocaleString("en-IN")}`;
 }
 
-export function LaborRosterTable() {
-  const { project, tier, role } = useActiveRole();
+export function LaborRosterTable({ initialRoster = [], projectId: propProjectId, ...props }: LaborRosterTableProps) {
+  const { project, tier } = useActiveRole();
+  const projectId = propProjectId || project?.id || "GOMTI-NAGAR-PH1-FITOUT";
+
   const [roster, setRoster] = useState<LaborRosterItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Form State for Adding New Roster Entries
   const [form, setForm] = useState({
     trade: tier === "RESIDENTIAL" ? "Master Joinery Carpenters" : "Rebar Steel Fixers",
-    contractor_name: tier === "RESIDENTIAL" ? "Royal Woodworks" : "Narmada Concrete Works",
-    planned_headcount: 10,
+    contractor_name: tier === "RESIDENTIAL" ? "Royal Woodworks" : "Falcon Structural RCC Works",
+    planned_headcount: 12,
     actual_headcount: 10,
     wage_rate_per_day: 1050,
     overtime_hours: 0,
-    target_output_unit: tier === "RESIDENTIAL" ? "units" : "sqm",
-    target_output_qty: 100,
-    achieved_output_qty: 95,
+    target_output_unit: "MT",
+    target_output_qty: 4.5,
+    achieved_output_qty: 4.2,
   });
 
   const loadRoster = useCallback(async () => {
@@ -74,31 +80,35 @@ export function LaborRosterTable() {
       const { data } = await supabase
         .from("labor_roster_entries")
         .select("*")
-        .eq("project_id", project.id)
+        .eq("project_id", projectId)
         .order("created_at", { ascending: true });
 
       if (data) setRoster(data as LaborRosterItem[]);
     } catch {
-      // Fallback gracefully
+      // Graceful error trap
     } finally {
       setLoading(false);
     }
-  }, [project.id]);
+  }, [projectId]);
 
   useEffect(() => {
     void loadRoster();
 
     const channel = supabase
-      .channel(`labor_realtime_${project.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "labor_roster_entries" }, () => void loadRoster())
+      .channel(`labor_realtime_${projectId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "labor_roster_entries", filter: `project_id=eq.${projectId}` },
+        () => void loadRoster()
+      )
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [project.id, loadRoster]);
+  }, [projectId, loadRoster]);
 
-  // Correct Statutory Overtime & Daily Cash Burn Math
+  // Overtime & Daily Cash Burn Math per CPWD Labor Regulations
   const metrics = useMemo(() => {
     const totalActual = roster.reduce((sum, i) => sum + Number(i.actual_headcount), 0);
     const totalPlanned = roster.reduce((sum, i) => sum + Number(i.planned_headcount), 0);
@@ -112,14 +122,16 @@ export function LaborRosterTable() {
     }, 0);
 
     // True Productivity (Achieved Output vs Target Output)
-    const avgYield = roster.length > 0
-      ? roster.reduce((sum, i) => {
-          const ratio = Number(i.target_output_qty) > 0 
-            ? (Number(i.achieved_output_qty) / Number(i.target_output_qty)) * 100 
-            : 100;
-          return sum + ratio;
-        }, 0) / roster.length
-      : 100;
+    const avgYield =
+      roster.length > 0
+        ? roster.reduce((sum, i) => {
+            const ratio =
+              Number(i.target_output_qty) > 0
+                ? (Number(i.achieved_output_qty) / Number(i.target_output_qty)) * 100
+                : 100;
+            return sum + ratio;
+          }, 0) / roster.length
+        : 100;
 
     const allSynced = roster.length > 0 && roster.every((i) => i.synced_to_dpr);
 
@@ -134,41 +146,45 @@ export function LaborRosterTable() {
     }));
   }, [roster]);
 
-  // Handle Form Submission
-  const handleAddRoster = async (e: React.FormEvent) => {
+  const handleAddRoster = (e: React.FormEvent) => {
     e.preventDefault();
-    setActionInProgress("adding");
+    startTransition(async () => {
+      const res = await addLaborRosterEntry({
+        projectId,
+        workDate: new Date().toISOString().slice(0, 10),
+        trade: form.trade,
+        contractorName: form.contractor_name,
+        plannedHeadcount: form.planned_headcount,
+        actualHeadcount: form.actual_headcount,
+        wageRatePerDay: form.wage_rate_per_day,
+        overtimeHours: form.overtime_hours,
+        targetOutputUnit: form.target_output_unit,
+        targetOutputQty: form.target_output_qty,
+        achievedOutputQty: form.achieved_output_qty,
+      });
 
-    await supabase.from("labor_roster_entries").insert([{
-      project_id: project.id,
-      work_date: new Date().toISOString().slice(0, 10),
-      trade: form.trade,
-      contractor_name: form.contractor_name,
-      planned_headcount: form.planned_headcount,
-      actual_headcount: form.actual_headcount,
-      wage_rate_per_day: form.wage_rate_per_day,
-      overtime_hours: form.overtime_hours,
-      target_output_unit: form.target_output_unit,
-      target_output_qty: form.target_output_qty,
-      achieved_output_qty: form.achieved_output_qty,
-      synced_to_dpr: false,
-    }]);
-
-    await loadRoster();
-    setActionInProgress(null);
+      if (res.success) {
+        setFeedback({ type: "success", text: `Trade gang [${form.trade}] appended to site muster.` });
+        await loadRoster();
+      } else {
+        setFeedback({ type: "error", text: res.error || "Failed to add trade gang." });
+      }
+    });
   };
 
-  // Real Atomic DPR Sync
-  const handleSyncToDpr = async () => {
-    setActionInProgress("syncing");
-
-    await supabase
-      .from("labor_roster_entries")
-      .update({ synced_to_dpr: true })
-      .eq("project_id", project.id);
-
-    await loadRoster();
-    setActionInProgress(null);
+  const handleSyncToDpr = () => {
+    startTransition(async () => {
+      const res = await syncRosterEntriesToDPR(projectId);
+      if (res.success) {
+        setFeedback({
+          type: "success",
+          text: `Synchronized ${res.syncedCount} muster lines to official DPR (Hermes sealed).`,
+        });
+        await loadRoster();
+      } else {
+        setFeedback({ type: "error", text: res.error || "Failed to sync muster." });
+      }
+    });
   };
 
   if (loading) {
@@ -181,8 +197,29 @@ export function LaborRosterTable() {
   }
 
   return (
-    <div className="space-y-6">
-      
+    <div className="space-y-6 font-mono text-xs select-none">
+      {feedback && (
+        <div
+          className={`p-3 border flex items-center justify-between gap-2 ${
+            feedback.type === "success"
+              ? "bg-emerald-950/80 border-emerald-800 text-emerald-300"
+              : "bg-rose-950/80 border-rose-800 text-rose-300"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {feedback.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-rose-400" />
+            )}
+            <span>{feedback.text}</span>
+          </div>
+          <button onClick={() => setFeedback(null)} className="text-zinc-500 hover:text-zinc-200 uppercase text-[10px]">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* TOP 3 VITAL METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -194,14 +231,20 @@ export function LaborRosterTable() {
             {metrics.totalActual} <span className="text-xs text-zinc-500 font-sans">/ {metrics.totalPlanned} planned</span>
           </div>
           <div className="text-[11px] text-zinc-400 mt-1 flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${metrics.totalActual >= metrics.totalPlanned ? "bg-emerald-400" : "bg-amber-400"}`} />
-            <span>{((metrics.totalActual / Math.max(metrics.totalPlanned, 1)) * 100).toFixed(0)}% attendance fulfillment</span>
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                metrics.totalActual >= metrics.totalPlanned ? "bg-emerald-400" : "bg-amber-400"
+              }`}
+            />
+            <span>
+              {((metrics.totalActual / Math.max(metrics.totalPlanned, 1)) * 100).toFixed(0)}% attendance fulfillment
+            </span>
           </div>
         </div>
 
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between text-zinc-400 text-xs">
-            <span>Daily Wage & Overtime Burn</span>
+            <span>Daily Wage &amp; Overtime Burn</span>
             <Banknote className="w-4 h-4 text-rose-400" />
           </div>
           <div className="mt-2 text-2xl font-extrabold font-mono text-rose-400">
@@ -226,10 +269,9 @@ export function LaborRosterTable() {
         </div>
       </div>
 
-      {/* 2-COLUMN SPLIT: RECHARTS CHART (LEFT) vs DAILY MUSTER INTAKE (RIGHT) */}
+      {/* 2-COLUMN SPLIT: RECHARTS (LEFT) vs DAILY MUSTER INTAKE (RIGHT) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* LEFT: MUSTER BAR CHART (7 cols) */}
+        {/* LEFT: MUSTER BAR CHART */}
         <div className="lg:col-span-7 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -261,7 +303,7 @@ export function LaborRosterTable() {
           </div>
         </div>
 
-        {/* RIGHT: DAILY MUSTER INTAKE FORM (5 cols) */}
+        {/* RIGHT: DAILY MUSTER INTAKE FORM */}
         <div className="lg:col-span-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3 border-b border-zinc-800/80 pb-3">
@@ -342,6 +384,7 @@ export function LaborRosterTable() {
                   <input
                     type="number"
                     min="0"
+                    step="0.1"
                     value={form.target_output_qty}
                     onChange={(e) => setForm({ ...form, target_output_qty: Number(e.target.value) })}
                     className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
@@ -352,6 +395,7 @@ export function LaborRosterTable() {
                   <input
                     type="number"
                     min="0"
+                    step="0.1"
                     value={form.achieved_output_qty}
                     onChange={(e) => setForm({ ...form, achieved_output_qty: Number(e.target.value) })}
                     className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
@@ -361,10 +405,11 @@ export function LaborRosterTable() {
 
               <button
                 type="submit"
-                disabled={actionInProgress === "adding"}
-                className="w-full mt-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 py-2 text-xs font-bold text-zinc-950 transition shadow-sm"
+                disabled={isPending}
+                className="w-full mt-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 py-2 text-xs font-bold text-white transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                + Append Gang Roster
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>+ Append Gang Roster</span>
               </button>
             </form>
           </div>
@@ -372,9 +417,9 @@ export function LaborRosterTable() {
           <div className="mt-4 pt-3 border-t border-zinc-800">
             <button
               type="button"
-              disabled={metrics.allSynced || actionInProgress === "syncing"}
+              disabled={metrics.allSynced || isPending}
               onClick={handleSyncToDpr}
-              className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+              className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                 metrics.allSynced
                   ? "bg-zinc-900 border border-zinc-800 text-emerald-400 cursor-default"
                   : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950/50"
@@ -385,7 +430,6 @@ export function LaborRosterTable() {
             </button>
           </div>
         </div>
-
       </div>
 
       {/* DETAILED GANG PRODUCTIVITY & YIELD LEDGER */}
@@ -394,7 +438,7 @@ export function LaborRosterTable() {
           <div className="flex items-center gap-2">
             <HardHat className="w-4 h-4 text-cyan-400" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-              Governed Trade Gang Performance & Yield Ledger
+              Governed Trade Gang Performance &amp; Yield Ledger
             </h2>
           </div>
           <span className="text-[11px] font-mono text-zinc-500">
@@ -417,57 +461,75 @@ export function LaborRosterTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/60 font-mono text-zinc-300">
-              {roster.map((item) => {
-                const hourlyRate = Number(item.wage_rate_per_day) / 8;
-                const totalItemBurn = (Number(item.actual_headcount) * Number(item.wage_rate_per_day)) + (Number(item.overtime_hours) * hourlyRate * 1.5);
-                const yieldPct = Number(item.target_output_qty) > 0 ? (Number(item.achieved_output_qty) / Number(item.target_output_qty)) * 100 : 100;
+              {roster.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-zinc-600 font-sans">
+                    Zero muster logs recorded for this project shift.
+                  </td>
+                </tr>
+              ) : (
+                roster.map((item) => {
+                  const hourlyRate = Number(item.wage_rate_per_day) / 8;
+                  const totalItemBurn =
+                    Number(item.actual_headcount) * Number(item.wage_rate_per_day) +
+                    Number(item.overtime_hours) * hourlyRate * 1.5;
+                  const yieldPct =
+                    Number(item.target_output_qty) > 0
+                      ? (Number(item.achieved_output_qty) / Number(item.target_output_qty)) * 100
+                      : 100;
 
-                return (
-                  <tr key={item.id} className="hover:bg-zinc-900/40 transition">
-                    <td className="px-5 py-3.5 font-sans font-bold text-white">
-                      {item.trade}
-                    </td>
-                    <td className="px-5 py-3.5 font-sans text-zinc-400">
-                      {item.contractor_name}
-                    </td>
-                    <td className="px-5 py-3.5 text-center">
-                      <span className="font-bold text-white">{item.actual_headcount}</span>
-                      <span className="text-zinc-500"> / {item.planned_headcount}</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-right text-zinc-400">
-                      ₹{Number(item.wage_rate_per_day).toLocaleString("en-IN")}
-                    </td>
-                    <td className="px-5 py-3.5 text-right text-amber-400">
-                      {item.overtime_hours}h
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-bold text-rose-400">
-                      ₹{Math.round(totalItemBurn).toLocaleString("en-IN")}
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-bold">
-                      <span className={yieldPct >= 100 ? "text-emerald-400" : yieldPct >= 85 ? "text-amber-400" : "text-rose-400"}>
-                        {yieldPct.toFixed(1)}%
-                      </span>
-                      <span className="text-[10px] text-zinc-500 block font-normal">
-                        {item.achieved_output_qty}/{item.target_output_qty} {item.target_output_unit}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-center">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        item.synced_to_dpr 
-                          ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50" 
-                          : "bg-amber-950 text-amber-400 border border-amber-800/50"
-                      }`}>
-                        {item.synced_to_dpr ? "Synced" : "Draft"}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={item.id} className="hover:bg-zinc-900/40 transition">
+                      <td className="px-5 py-3.5 font-sans font-bold text-white">{item.trade}</td>
+                      <td className="px-5 py-3.5 font-sans text-zinc-400">{item.contractor_name}</td>
+                      <td className="px-5 py-3.5 text-center">
+                        <span className="font-bold text-white">{item.actual_headcount}</span>
+                        <span className="text-zinc-500"> / {item.planned_headcount}</span>
+                      </td>
+                      <td className="px-5 py-3.5 text-right text-zinc-400">
+                        ₹{Number(item.wage_rate_per_day).toLocaleString("en-IN")}
+                      </td>
+                      <td className="px-5 py-3.5 text-right text-amber-400">{item.overtime_hours}h</td>
+                      <td className="px-5 py-3.5 text-right font-bold text-rose-400">
+                        ₹{Math.round(totalItemBurn).toLocaleString("en-IN")}
+                      </td>
+                      <td className="px-5 py-3.5 text-right font-bold">
+                        <span
+                          className={
+                            yieldPct >= 100
+                              ? "text-emerald-400"
+                              : yieldPct >= 85
+                              ? "text-amber-400"
+                              : "text-rose-400"
+                          }
+                        >
+                          {yieldPct.toFixed(1)}%
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block font-normal">
+                          {item.achieved_output_qty}/{item.target_output_qty} {item.target_output_unit}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-center">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            item.synced_to_dpr
+                              ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
+                              : "bg-amber-950 text-amber-400 border border-amber-800/50"
+                          }`}
+                        >
+                          {item.synced_to_dpr ? "Synced" : "Draft"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
   );
 }
+
+export default LaborRosterTable;

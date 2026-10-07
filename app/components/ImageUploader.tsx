@@ -1,110 +1,27 @@
-"use client";
-
-import { useState } from "react";
-import { uploadImage } from "@/app/lib/uploadImages";
-import { supabase } from "@/app/lib/supabase";
-
-interface Props {
-  projectId: string;
-  milestones: any[];
-}
-
-export default function ImageUploader({
-  projectId,
-  milestones,
-}: Props) {
-  const [loading, setLoading] = useState(false);
-const [
-  selectedMilestone,
-  setSelectedMilestone,
-] = useState("");
-  async function handleUpload(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
+'use client';
+import React, { useState } from 'react';
+import { validateSiteEvidence, ValidatedEvidencePayload } from '@/lib/security/exifGeofenceValidator';
+import { Camera, CheckCircle2, ShieldAlert, Loader2 } from 'lucide-react';
+export const ImageUploader: React.FC<any> = ({ onEvidenceValidated, sanctionedCoordinates = { latitude: 26.8467, longitude: 80.9462, radiusMeters: 500 } }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState<ValidatedEvidencePayload | null>(null);
+  const handleFile = async (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsProcessing(true);
     try {
-      setLoading(true);
-
-      const file = event.target.files?.[0];
-
-      if (!file) return;
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        alert("User not authenticated");
-        return;
-      }
-
-      await uploadImage(
-  file,
-  projectId,
-  user.id,
-  selectedMilestone
-);
-
-      alert("Image uploaded successfully");
-    } catch (error) {
-      console.error(error);
-      alert("Upload failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
+      const v = await validateSiteEvidence(file, sanctionedCoordinates);
+      setResult(v);
+      if (v.valid) onEvidenceValidated(v, file);
+    } catch {
+      setResult({ valid: false, sha256Hash: 'ERR', capturedAt: new Date().toISOString() });
+    } finally { setIsProcessing(false); }
+  };
   return (
-    <div className="mt-5">
-      <select
-
-  value={selectedMilestone}
-
-  onChange={(e) =>
-    setSelectedMilestone(
-      e.target.value
-    )
-  }
-
-  className="
-    mb-3
-    bg-zinc-800
-    border
-    border-zinc-700
-    rounded
-    px-2
-    py-1
-  "
->
-
-  <option value="">
-    Select Milestone
-  </option>
-
-  {milestones.map((milestone) => (
-
-    <option
-      key={milestone.id}
-      value={milestone.id}
-    >
-      {milestone.title}
-    </option>
-
-  ))}
-
-</select>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleUpload}
-        disabled={loading}
-      />
-
-      {loading && (
-        <p className="mt-2">
-          Uploading...
-        </p>
-      )}
-    </div>
+    <label className="block border-2 border-dashed border-neutral-800 p-4 text-center cursor-pointer">
+      <input type="file" accept="image/*" capture="environment" onChange={handleFile} className="hidden" />
+      <div className="text-xs text-neutral-300 font-mono">Upload Geofenced Site Photo</div>
+    </label>
   );
-  
-}
+};
+export default ImageUploader;

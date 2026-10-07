@@ -125,7 +125,7 @@ function normalizeAdvanceLedger(d: any): AdvanceLedgerRecord {
 
   return {
     id: d?.id ?? `adv-${Date.now()}`,
-    project_id: d?.project_id ?? "proj-default",
+    project_id: d?.project_id ?? "GOMTI-NAGAR-PH1-FITOUT",
     advance_sanction_ref: d?.advance_sanction_ref ?? `ADV-${Date.now().toString().slice(-4)}`,
     work_order_ref: d?.work_order_ref ?? "WO-01",
     contractor_name: d?.contractor_name ?? "Executing Contractor",
@@ -165,7 +165,7 @@ export default function CanonicalAdvanceRecoveryPage() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";

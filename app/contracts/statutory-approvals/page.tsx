@@ -114,7 +114,7 @@ function normalizePermit(d: any): StatutoryPermitRecord {
 
   return {
     id: d?.id ?? `permit-${Date.now()}`,
-    project_id: d?.project_id ?? "proj-default",
+    project_id: d?.project_id ?? "GOMTI-NAGAR-PH1-FITOUT",
     permit_reference_no: d?.permit_reference_no ?? `PERM-${Date.now().toString().slice(-4)}`,
     authority_type: (d?.authority_type as StatutoryAuthorityType) ?? "MUNICIPAL_DEVELOPMENT_AUTHORITY",
     permit_title: d?.permit_title ?? "Municipal Building Sanction Clearance",
@@ -153,7 +153,7 @@ export default function CanonicalStatutoryApprovalsPage() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";

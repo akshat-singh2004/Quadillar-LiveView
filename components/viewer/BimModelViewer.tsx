@@ -1,177 +1,252 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import type { BimClashRecord, BimSensorBinding, ProjectScheduleTask } from "@/types/construction";
+import React, { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+import { Box, Layers, Scissors, Info, CheckCircle2 } from 'lucide-react';
 
-export interface BimModelViewerProps {
-  clashes: BimClashRecord[];
-  tasks?: ProjectScheduleTask[];
-  sensorBindings?: BimSensorBinding[];
-  focusTarget?: { x: number; y: number; z: number } | null;
-  onSelect?: (clash: BimClashRecord) => void;
-  playbackTime?: number;
-  showPlaybackControls?: boolean;
+interface BimViewerProps {
+  modelUrl?: string;
+  projectId?: string;
+  [key: string]: any;
+  modelName?: string;
+  onElementSelected?: (elementData: SelectedElementData) => void;
 }
 
-export function BimModelViewer({ clashes, tasks = [], sensorBindings = [], focusTarget = null, onSelect, playbackTime: controlledPlaybackTime, showPlaybackControls = true }: BimModelViewerProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(clashes[0]?.id ?? null);
-  const [selectedSensorId, setSelectedSensorId] = useState<string | null>(null);
-  const [camera, setCamera] = useState({ yaw: 18, pitch: 30, zoom: 1 });
-  const scheduleBounds = useMemo(() => {
-    const dates = tasks.flatMap((task) => [Date.parse(task.baselineStart), Date.parse(task.baselineFinish)]).filter(Number.isFinite);
-    const start = Math.min(...dates, Date.now());
-    const finish = Math.max(...dates, start + 86400000);
-    return { start, finish };
-  }, [tasks]);
-  const [playbackTime, setPlaybackTime] = useState(scheduleBounds.start);
-  const effectivePlaybackTime = controlledPlaybackTime ?? playbackTime;
+export interface SelectedElementData {
+  guid: string;
+  name: string;
+  elementName?: string;
+  category: string;
+  mixDesign?: string;
+  structuralGrid: string;
+  rebarSchedule: string;
+}
+
+export const BimModelViewer: React.FC<BimViewerProps> = ({
+  modelName = 'GFC-Tower-A-Structural-LOD350.ifc',
+  onElementSelected,
+}) => {
+  const mountRef = useRef<HTMLDivElement>(null);
+  const [selectedElement, setSelectedElement] = useState<SelectedElementData | null>(null);
+  const [clipHeight, setClipHeight] = useState<number>(100);
+  const [activeDiscipline, setActiveDiscipline] = useState<'STRUCTURAL' | 'ALL'>('STRUCTURAL');
 
   useEffect(() => {
-    if (!focusTarget) return;
-    const targetYaw = 18 + (focusTarget.x / 100) * 32;
-    const targetPitch = 18 + (focusTarget.z / 12) * 25;
-    let frame = 0;
-    const animate = () => {
-      frame += 1;
-      setCamera((current) => ({
-        yaw: current.yaw + (targetYaw - current.yaw) * 0.12,
-        pitch: current.pitch + (targetPitch - current.pitch) * 0.12,
-        zoom: current.zoom + (1.3 - current.zoom) * 0.12,
-      }));
-      if (frame < 18) requestAnimationFrame(animate);
-    };
-    const id = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(id);
-  }, [focusTarget]);
+    if (!mountRef.current) return;
 
-  const activeClash = useMemo(
-    () => clashes.find((clash) => clash.id === selectedId) ?? clashes[0] ?? null,
-    [clashes, selectedId],
-  );
-  const visibleTasks = tasks.filter((task) => Date.parse(task.baselineStart) <= effectivePlaybackTime);
-  const playbackDate = new Date(effectivePlaybackTime).toISOString().slice(0, 10);
-  const elementColor = (task?: ProjectScheduleTask) => {
-    if (!task) return "rgba(125,211,252,0.5)";
-    if (task.status === "Delayed") return "#ef4444";
-    if (task.status === "Complete" || task.actualFinish || effectivePlaybackTime >= Date.parse(task.baselineFinish)) return "#14b8a6";
-    return "#facc15";
-  };
-  const sensorBinding = (index: number) => sensorBindings[index % Math.max(sensorBindings.length, 1)];
+    const width = mountRef.current.clientWidth;
+    const height = mountRef.current.clientHeight;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#080a0f');
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(24, 20, 24);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.localClippingEnabled = true;
+
+    mountRef.current.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(30, 50, 20);
+    scene.add(dirLight);
+
+    const grid = new THREE.GridHelper(40, 20, 0x10b981, 0x262626);
+    grid.position.y = -0.01;
+    scene.add(grid);
+
+    const elementsGroup = new THREE.Group();
+    const raycastableMeshes: THREE.Mesh[] = [];
+
+    const columnGeo = new THREE.BoxGeometry(0.6, 4.0, 0.6);
+    const beamGeoX = new THREE.BoxGeometry(6.0, 0.5, 0.4);
+    const beamGeoZ = new THREE.BoxGeometry(0.4, 0.5, 6.0);
+    const slabGeo = new THREE.BoxGeometry(18, 0.2, 18);
+
+    const concreteMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      roughness: 0.7,
+      metalness: 0.1,
+    });
+
+    const highlightMat = new THREE.MeshStandardMaterial({
+      color: 0x10b981,
+      roughness: 0.3,
+      emissive: 0x064e3b,
+    });
+
+    for (let floor = 0; floor < 3; floor++) {
+      const yOffset = floor * 4;
+
+      const slab = new THREE.Mesh(slabGeo, concreteMat.clone());
+      slab.position.set(6, yOffset + 4, 6);
+      elementsGroup.add(slab);
+
+      for (let x = 0; x <= 2; x++) {
+        for (let z = 0; z <= 2; z++) {
+          const colX = x * 6;
+          const colZ = z * 6;
+
+          const col = new THREE.Mesh(columnGeo, concreteMat.clone());
+          col.position.set(colX, yOffset + 2, colZ);
+          const colData: SelectedElementData = {
+            guid: `IFC_COL_L${floor + 1}_${String.fromCharCode(65 + x)}${z + 1}`,
+            name: `Column C${floor * 9 + x * 3 + z + 1}`,
+            elementName: `Column C${floor * 9 + x * 3 + z + 1}`,
+            category: 'IfcColumn',
+            structuralGrid: `Grid ${String.fromCharCode(65 + x)}-${z + 1}`,
+            mixDesign: 'M35 Self-Compacting Concrete (IS 456)',
+            rebarSchedule: '8-T25 Fe550D Verticals + 8mm @ 100c/c Stirrups',
+          };
+          col.userData = colData;
+          elementsGroup.add(col);
+          raycastableMeshes.push(col);
+
+          if (x < 2) {
+            const beamX = new THREE.Mesh(beamGeoX, concreteMat.clone());
+            beamX.position.set(colX + 3, yOffset + 3.8, colZ);
+            elementsGroup.add(beamX);
+          }
+          if (z < 2) {
+            const beamZ = new THREE.Mesh(beamGeoZ, concreteMat.clone());
+            beamZ.position.set(colX, yOffset + 3.8, colZ + 3);
+            elementsGroup.add(beamZ);
+          }
+        }
+      }
+    }
+
+    scene.add(elementsGroup);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(raycastableMeshes);
+
+      raycastableMeshes.forEach((mesh) => {
+        mesh.material = concreteMat;
+      });
+
+      if (intersects.length > 0) {
+        const clickedMesh = intersects[0].object as THREE.Mesh;
+        clickedMesh.material = highlightMat;
+        const data = clickedMesh.userData as SelectedElementData;
+        setSelectedElement(data);
+        if (onElementSelected) onElementSelected(data);
+      } else {
+        setSelectedElement(null);
+      }
+    };
+
+    renderer.domElement.addEventListener('pointerdown', handlePointerDown);
+
+    let angle = 0.8;
+    let reqId: number;
+
+    const animate = () => {
+      reqId = requestAnimationFrame(animate);
+      angle += 0.0015;
+      camera.position.x = 22 * Math.cos(angle);
+      camera.position.z = 22 * Math.sin(angle);
+      camera.lookAt(6, 4, 6);
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    return () => {
+      cancelAnimationFrame(reqId);
+      renderer.domElement.removeEventListener('pointerdown', handlePointerDown);
+      renderer.dispose();
+      if (mountRef.current) {
+        mountRef.current.innerHTML = '';
+      }
+    };
+  }, []);
 
   return (
-    <div style={{ display: "grid", gap: 20, gridTemplateColumns: "1.3fr 0.7fr", color: "#e2e8f0" }}>
-      <div style={{ position: "relative", minHeight: 440, background: "radial-gradient(circle at top, rgba(59,130,246,0.18), rgba(15,23,42,0.92) 42%)", border: "1px solid rgba(148,163,184,0.18)", borderRadius: 24, overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 18, border: "1px solid rgba(148,163,184,0.18)", borderRadius: 18, transform: `perspective(1000px) rotateX(${camera.pitch}deg) rotateY(${camera.yaw}deg) scale(${camera.zoom})`, transition: "transform 200ms ease-out" }}>
-          {[{ left: "12%", top: "18%", width: "28%", height: "44%" }, { left: "46%", top: "22%", width: "34%", height: "46%" }, { left: "28%", top: "66%", width: "42%", height: "16%" }].map((element, index) => {
-            const task = visibleTasks[index % Math.max(visibleTasks.length, 1)];
-            const binding = sensorBinding(index);
-            const sensor = binding?.sensor;
-            const sensorColor = sensor?.status === "Critical" ? "#ef4444" : sensor?.status === "Watch" ? "#f59e0b" : "#22d3ee";
-            const color = elementColor(task);
-            return <button type="button" key={`${element.left}-${element.top}`} title={task ? `${task.title} · ${task.status}` : "Planned future element"} onClick={() => setSelectedSensorId(binding?.elementId ?? null)} style={{ position: "absolute", ...element, border: `2px solid ${sensor ? sensorColor : color}`, background: `${sensor ? sensorColor : color}1a`, boxShadow: sensor?.status === "Critical" ? `0 0 28px ${sensorColor}` : sensor?.status === "Watch" ? `0 0 18px ${sensorColor}` : task?.status === "In Progress" ? "0 0 22px #f59e0b" : "none", borderRadius: 18, cursor: sensor ? "pointer" : "default", opacity: task ? 0.9 : 0.1 }} />;
-          })}
+    <div className="relative w-full h-[650px] bg-neutral-950 border border-neutral-800 rounded-lg overflow-hidden flex flex-col font-mono">
+      <div className="h-10 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-4 z-10">
+        <div className="flex items-center gap-3">
+          <Box className="w-4 h-4 text-emerald-400" />
+          <span className="text-xs font-semibold text-neutral-200">{modelName}</span>
+          <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded">
+            LOD 350 PARAMETRIC
+          </span>
         </div>
-        {focusTarget && (
-          <div
-            style={{
-              position: "absolute",
-              left: `${Math.min(85, Math.max(10, 20 + (focusTarget.x / 100) * 56))}%`,
-              top: `${Math.min(80, Math.max(12, 18 + (focusTarget.y / 100) * 54))}%`,
-              transform: "translate(-50%, -50%)",
-              width: 120,
-              height: 120,
-              borderRadius: "50%",
-              border: "1px solid rgba(239,68,68,0.8)",
-              background: "rgba(239,68,68,0.12)",
-              boxShadow: "0 0 0 12px rgba(239,68,68,0.08), 0 0 40px rgba(239,68,68,0.3)",
-              zIndex: 1,
-            }}
-          />
-        )}
-        {selectedSensorId && (() => { const binding = sensorBindings.find((item) => item.elementId === selectedSensorId); if (!binding) return null; return <div style={{ position: "absolute", right: 18, top: 18, width: 220, padding: 14, background: "rgba(2,6,23,.94)", border: "1px solid rgba(103,232,249,.35)", borderRadius: 14, zIndex: 2 }}><div style={{ color: "#67e8f9", fontSize: 11, textTransform: "uppercase" }}>{binding.sensor.metric}</div><strong style={{ display: "block", marginTop: 8, fontSize: 22 }}>{binding.sensor.value} {binding.sensor.unit}</strong><div style={{ marginTop: 6, color: "#cbd5e1", fontSize: 12 }}>{binding.sensor.location} · {binding.sensor.status}</div><svg viewBox="0 0 120 40" width="100%" height="40" style={{ marginTop: 10 }}><polyline points={binding.sensor.trend.map((value, index) => `${index * 20},${38 - value / Math.max(...binding.sensor.trend, 1) * 30}`).join(" ")} fill="none" stroke="#67e8f9" strokeWidth="2" /></svg><button type="button" onClick={() => setSelectedSensorId(null)} style={{ marginTop: 8, background: "transparent", border: 0, color: "#94a3b8", cursor: "pointer" }}>Close HUD</button></div>; })()}
 
-        {clashes.map((clash) => {
-          const isActive = activeClash?.id === clash.id;
-          const color = clash.severity === "Critical" ? "#ef4444" : clash.severity === "Moderate" ? "#f59e0b" : "#60a5fa";
-          const left = 12 + ((clash.x % 80) + 8) * 0.9;
-          const top = 18 + ((clash.y % 60) + 8) * 1.1;
-
-          return (
-            <button
-              key={clash.id}
-              type="button"
-              onClick={() => {
-                setSelectedId(clash.id);
-                onSelect?.(clash);
-              }}
-              style={{
-                position: "absolute",
-                left: `${Math.min(85, Math.max(8, left))}%`,
-                top: `${Math.min(80, Math.max(12, top))}%`,
-                transform: "translate(-50%, -50%)",
-                width: isActive ? 26 : 18,
-                height: isActive ? 26 : 18,
-                borderRadius: "999px",
-                border: `2px solid ${color}`,
-                background: color,
-                boxShadow: isActive ? `0 0 0 10px ${color}33` : `0 0 0 6px ${color}22`,
-                cursor: "pointer",
-              }}
-              title={`${clash.title} (${clash.severity})`}
-            />
-          );
-        })}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveDiscipline(activeDiscipline === 'STRUCTURAL' ? 'ALL' : 'STRUCTURAL')}
+            className="flex items-center gap-1.5 text-xs text-neutral-300 bg-neutral-800 px-2.5 py-1 rounded border border-neutral-700 hover:border-neutral-500"
+          >
+            <Layers className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{activeDiscipline}</span>
+          </button>
+        </div>
       </div>
 
-      <aside style={{ background: "rgba(15,23,42,0.82)", border: "1px solid rgba(148,163,184,0.18)", borderRadius: 20, padding: 18 }}>
-        {tasks.length > 0 && showPlaybackControls && <div style={{ marginBottom: 18, borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 18 }}>
-          <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>4D schedule playback</div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 12 }}><span>{playbackDate}</span><span>{visibleTasks.length}/{tasks.length} active</span></div>
-          <input type="range" min={scheduleBounds.start} max={scheduleBounds.finish} value={Math.min(effectivePlaybackTime, scheduleBounds.finish)} onChange={(event) => setPlaybackTime(Number(event.target.value))} aria-label="4D BIM playback date" style={{ width: "100%", marginTop: 12 }} />
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12, fontSize: 11 }}><span style={{ color: "#14b8a6" }}>● Complete</span><span style={{ color: "#facc15" }}>● In Progress</span><span style={{ color: "#ef4444" }}>● Delayed</span></div>
-        </div>}
-        <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Clash feed</div>
-        <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
-          {clashes.map((clash) => (
-            <button
-              key={clash.id}
-              type="button"
-              onClick={() => {
-                setSelectedId(clash.id);
-                onSelect?.(clash);
-              }}
-              style={{
-                width: "100%",
-                textAlign: "left",
-                borderRadius: 14,
-                border: activeClash?.id === clash.id ? "1px solid rgba(125,211,252,0.4)" : "1px solid rgba(148,163,184,0.12)",
-                background: activeClash?.id === clash.id ? "rgba(59,130,246,0.08)" : "rgba(15,23,42,0.7)",
-                padding: 12,
-                color: "#e2e8f0",
-                cursor: "pointer",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
-                <span style={{ fontWeight: 700 }}>{clash.title}</span>
-                <span style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: clash.severity === "Critical" ? "#fca5a5" : clash.severity === "Moderate" ? "#fbbf24" : "#93c5fd" }}>{clash.severity}</span>
-              </div>
-              <div style={{ marginTop: 8, fontSize: 12, color: "#cbd5e1" }}>{clash.discipline} • {clash.location ?? "Unassigned"}</div>
-            </button>
-          ))}
-        </div>
+      <div ref={mountRef} className="relative flex-1 cursor-grab active:cursor-grabbing" />
 
-        {activeClash && (
-          <div style={{ marginTop: 18, borderTop: "1px solid rgba(148,163,184,0.18)", paddingTop: 18 }}>
-            <div style={{ color: "#94a3b8", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase" }}>Selected clash</div>
-            <div style={{ marginTop: 10, fontSize: 18, fontWeight: 700 }}>{activeClash.title}</div>
-            <p style={{ margin: "8px 0 0", color: "#cbd5e1", lineHeight: 1.5 }}>{activeClash.description}</p>
-            <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
-              <div style={{ color: "#94a3b8", fontSize: 12 }}>Status: <span style={{ color: "#f8fafc" }}>{activeClash.status}</span></div>
-              <div style={{ color: "#94a3b8", fontSize: 12 }}>Coordinates: <span style={{ color: "#f8fafc" }}>{activeClash.x}, {activeClash.y}, {activeClash.z}</span></div>
+      {selectedElement && (
+        <div className="absolute top-14 right-4 w-80 bg-neutral-900/95 backdrop-blur-md border border-neutral-700 rounded-lg p-4 shadow-2xl z-20">
+          <div className="flex items-center justify-between border-b border-neutral-800 pb-2 mb-3">
+            <span className="text-xs font-bold text-neutral-200 flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              {selectedElement.name}
+            </span>
+            <span className="text-[10px] text-neutral-500">{selectedElement.category}</span>
+          </div>
+
+          <div className="space-y-2 text-xs">
+            <div>
+              <span className="text-neutral-500 block text-[10px]">IFC GUID</span>
+              <span className="text-emerald-400 font-mono text-[11px] break-all">{selectedElement.guid}</span>
+            </div>
+            <div>
+              <span className="text-neutral-500 block text-[10px]">SPATIAL GRID</span>
+              <span className="text-neutral-200">{selectedElement.structuralGrid}</span>
+            </div>
+            <div>
+              <span className="text-neutral-500 block text-[10px]">SANCTIONED MIX DESIGN</span>
+              <span className="text-neutral-200">{selectedElement.mixDesign}</span>
+            </div>
+            <div>
+              <span className="text-neutral-500 block text-[10px]">BAR BENDING SCHEDULE (BBS)</span>
+              <span className="text-neutral-300 text-[11px]">{selectedElement.rebarSchedule}</span>
             </div>
           </div>
-        )}
-      </aside>
+        </div>
+      )}
+
+      <div className="absolute bottom-4 left-4 bg-neutral-900/90 border border-neutral-800 rounded px-3 py-2 flex items-center gap-3 z-10">
+        <Scissors className="w-3.5 h-3.5 text-neutral-400" />
+        <span className="text-[11px] text-neutral-400">PLAN CUT (Z):</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={clipHeight}
+          onChange={(e) => setClipHeight(Number(e.target.value))}
+          className="w-28 accent-emerald-500 cursor-pointer"
+        />
+        <span className="text-[11px] text-emerald-400">{clipHeight}%</span>
+      </div>
     </div>
   );
-}
+};
+
+export default BimModelViewer;

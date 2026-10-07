@@ -30,7 +30,7 @@ export default function SiteQrPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"ALL" | "GRID_LOCATION" | "POUR_BATCH" | "ASSET_AIM">("ALL");
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const loadTags = useCallback(async () => {

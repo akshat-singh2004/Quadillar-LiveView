@@ -1,470 +1,505 @@
-"use client";
-
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React from "react";
 import Link from "next/link";
 import {
-  Activity,
-  AlertOctagon,
+  TrendingUp,
+  TrendingDown,
   AlertTriangle,
-  ArrowRight,
-  Banknote,
-  Boxes,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Coins,
-  Cpu,
-  DollarSign,
-  Download,
-  Eye,
-  FileCheck,
-  FileSpreadsheet,
-  FileText,
-  Filter,
-  Flame,
-  Gavel,
-  HardHat,
-  Layers,
-  LayoutDashboard,
-  Lock,
-  MinusCircle,
-  Percent,
-  Plus,
-  Printer,
-  Receipt,
-  RefreshCw,
-  Scale,
-  Search,
-  Shield,
+  AlertOctagon,
   ShieldAlert,
   ShieldCheck,
-  TrendingDown,
-  TrendingUp,
-  Truck,
-  Unlock,
-  Users,
-  Video,
-  Wrench,
-  X,
-  Zap
+  Activity,
+  Layers,
+  Clock,
+  ArrowUpRight,
+  ArrowDownRight,
+  ChevronRight,
+  FileSpreadsheet,
 } from "lucide-react";
-import { supabase } from "@/app/lib/supabase";
-import { useActiveRole } from "@/context/RoleContext";
 
-export type ExecutiveRiskLevel =
-  | "STABLE_GREEN"
-  | "WATCHLIST_AMBER"
-  | "CRITICAL_RED_HOLD"
-  | "COMMERCIAL_DISPUTE_ESCALATED";
+// ---------------------------------------------------------------------------
+// Server Component: Executive Portfolio & EVM Telemetry Dashboard
+// ---------------------------------------------------------------------------
 
-export interface ExecutiveHealthRecord {
-  id: string;
-  project_id: string;
-  snapshot_date: string;
-  composite_health_score: number;
-  financial_burn_rate_pct: number;
-  quality_compliance_pct: number;
-  safety_index_pct: number;
-  schedule_variance_days: number;
-  risk_classification: ExecutiveRiskLevel;
-  total_open_blockers: number;
-  executive_summary: string;
-  generated_by: string;
-  created_at?: string;
-}
+export default function ExecutiveDashboardPage() {
+  // EVM Master Parameter Metrics (Consolidated Portfolio)
+  const earnedValue = 371000000; // ₹37.10 Cr
+  const actualCost = 403200000; // ₹40.32 Cr
+  const plannedValue = 353300000; // ₹35.33 Cr
+  const budgetAtCompletion = 1450000000; // ₹145.00 Cr
 
-function formatInr(val: number) {
-  if (Math.abs(val) >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (Math.abs(val) >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
-  return `₹${Math.round(val || 0).toLocaleString("en-IN")}`;
-}
+  // Cost Performance Index (CPI) = EV / AC
+  const cpi = earnedValue / actualCost; // 0.92 (Over budget)
+  // Schedule Performance Index (SPI) = EV / PV
+  const spi = earnedValue / plannedValue; // 1.05 (Ahead of schedule)
 
-export default function CanonicalExecutiveDashboardPage() {
-  const { project, role, tier } = useActiveRole();
-  const [snapshot, setSnapshot] = useState<ExecutiveHealthRecord | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
-  const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
-
-  const loadExecutiveSnapshot = useCallback(async () => {
-    try {
-      const { data } = await (supabase as any)
-        .from("project_executive_health_snapshots")
-        .select("*")
-        .eq("project_id", projectId)
-        .order("snapshot_date", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data) {
-        setSnapshot(data as ExecutiveHealthRecord);
-      } else {
-        const defaultSnap: ExecutiveHealthRecord = {
-          id: `exec-${Date.now()}`,
-          project_id: projectId,
-          snapshot_date: new Date().toISOString().slice(0, 10),
-          composite_health_score: tier === "RESIDENTIAL" ? 92.5 : 84.0,
-          financial_burn_rate_pct: 78.4,
-          quality_compliance_pct: 96.2,
-          safety_index_pct: 98.0,
-          schedule_variance_days: tier === "RESIDENTIAL" ? 2 : 5,
-          risk_classification: "STABLE_GREEN",
-          total_open_blockers: 2,
-          executive_summary:
-            tier === "RESIDENTIAL"
-              ? "Residential interior joinery and MEP package proceeding within budget and on critical path schedule."
-              : "Tower A superstructure proceeding on schedule. Level 08 core wall poured. Retention escrow and RA billing fully reconciled.",
-          generated_by: "Quadillar LiveView Executive AI",
-        };
-        setSnapshot(defaultSnap);
-      }
-    } catch {
-      // Local fallback
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, tier]);
-
-  useEffect(() => {
-    void loadExecutiveSnapshot();
-  }, [loadExecutiveSnapshot]);
-
-  // Recalculate Health Score from Live Engine Data
-  const handleRefreshExecutiveTelemetry = async () => {
-    setActionInProgress("refresh_telemetry");
-    await new Promise((r) => setTimeout(r, 800));
-
-    if (snapshot) {
-      const updated = {
-        ...snapshot,
-        composite_health_score: Number((82 + Math.random() * 12).toFixed(1)),
-        total_open_blockers: Math.floor(1 + Math.random() * 3),
-      };
-      setSnapshot(updated);
-    }
-
-    setFeedbackMessage("Executive health scoring and risk matrix successfully resynchronized.");
-    setTimeout(() => setFeedbackMessage(null), 3500);
-    setActionInProgress(null);
-  };
-
-  // Statutory CPWD Form 28 / Executive Progress Report Print
-  const handlePrintExecutiveReport = () => {
-    const printWin = window.open("", "_blank", "width=1050,height=900");
-    if (!printWin) return;
-
-    printWin.document.write(`<!doctype html>
-<html>
-<head>
-  <title>Executive Health Score &amp; Risk Telemetry Report — ${projectName}</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 32px; color: #09090b; font-size: 11px; line-height: 1.5; }
-    .header { border-bottom: 2px solid #09090b; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; }
-    .title { font-size: 20px; font-weight: 800; margin: 0; }
-    .meta { font-size: 11px; font-family: monospace; color: #52525b; margin-top: 4px; }
-    .badge { display: inline-block; padding: 5px 12px; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 11px; }
-    .green { background: #dcfce7; color: #15803d; border: 1px solid #22c55e; }
-    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-    th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
-    th { background: #f8fafc; font-size: 10px; text-transform: uppercase; }
-    .tar { text-align: right; font-family: monospace; }
-    .tac { text-align: center; font-family: monospace; }
-    .box { border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-top: 14px; background: #fafafa; }
-    .footer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 54px; border-top: 1px solid #cbd5e1; padding-top: 16px; }
-    .sig { border-top: 1px dashed #09090b; padding-top: 4px; margin-top: 40px; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #0284c7;">Quadillar LiveView · CPWD Works Manual Section 15 / Executive Progress Dossier</div>
-      <h1 class="title">Executive Health Score &amp; Risk Matrix Report</h1>
-      <div class="meta">Snapshot Date: ${snapshot?.snapshot_date} · Project: ${projectName} (${projectId})</div>
-    </div>
-    <span class="badge green">${snapshot?.risk_classification.replace(/_/g, " ")}</span>
-  </div>
-
-  <table>
-    <tr><th>Composite Project Health Score</th><td><strong>${snapshot?.composite_health_score}% Viability</strong></td><th>Risk Status Tier</th><td><strong>${snapshot?.risk_classification}</strong></td></tr>
-    <tr><th>Financial Burn Rate</th><td>${snapshot?.financial_burn_rate_pct}% of Budget</td><th>Quality Compliance Score</th><td>${snapshot?.quality_compliance_pct}% IS 456 Pass</td></tr>
-    <tr><th>Safety &amp; PTW Index</th><td>${snapshot?.safety_index_pct}% Zero Incidents</td><th>Schedule Float Variance</th><td><strong>+${snapshot?.schedule_variance_days} Days</strong></td></tr>
-  </table>
-
-  <div class="box">
-    <div style="font-weight: bold; text-transform: uppercase; font-size: 10px; color: #475569; margin-bottom: 4px;">Executive Summary &amp; Strategic Risk Assessment</div>
-    <div style="font-size: 12px; font-weight: 500;">${snapshot?.executive_summary}</div>
-  </div>
-
-  <div class="footer">
-    <div>
-      <div>Lead Quantity Surveyor / Finance</div>
-      <div style="color: #64748b;">Financial burn rate reconciled.</div>
-      <div class="sig">Finance Audit Seal</div>
-    </div>
-    <div>
-      <div>Resident SEOR / Project Lead</div>
-      <div style="color: #64748b;">Quality &amp; schedule float verified.</div>
-      <div class="sig">Engineer Sanction Seal</div>
-    </div>
-    <div>
-      <div>Employer Project Director</div>
-      <div style="color: #64748b;">Executive governance cleared.</div>
-      <div class="sig">Project Director Approval</div>
-    </div>
-  </div>
-</body>
-</html>`);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => printWin.print(), 250);
-  };
-
-  if (loading || !snapshot) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center text-xs font-mono text-zinc-500">
-        <Clock className="w-4 h-4 mr-2 animate-spin text-cyan-400" />
-        INITIALIZING EXECUTIVE COMMAND CENTER &amp; RISK HEALTH ENGINE...
-      </div>
-    );
-  }
+  const isCpiOverBudget = cpi < 1.0;
+  const isSpiAhead = spi >= 1.0;
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1600px] space-y-6">
-        
-        {/* TOP TITLE BAR */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-5 gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-[11px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
-              <span>Executive Analytics · FIDIC Clause 20 / CPWD Works Manual Section 15</span>
-              <span>·</span>
-              <span className="text-zinc-400">{projectName}</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
-              Executive Health Scoring &amp; Automated Risk Matrix
-            </h1>
-            <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
-              Unified stakeholder intelligence dashboard. Aggregates quality, safety, financial burn rates, and schedule float into a composite health score with automated risk tier classification.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={handlePrintExecutiveReport}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold transition"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Executive Dossier</span>
-            </button>
-            <button
-              type="button"
-              disabled={actionInProgress === "refresh_telemetry"}
-              onClick={() => void handleRefreshExecutiveTelemetry()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs transition shadow-md shadow-cyan-950/50 font-mono"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${actionInProgress === "refresh_telemetry" ? "animate-spin" : ""}`} />
-              <span>Refresh Health Telemetry</span>
-            </button>
-          </div>
-        </div>
-
-        {/* FEEDBACK BANNER */}
-        {feedbackMessage && (
-          <div className="p-3 rounded-xl bg-cyan-950/80 border border-cyan-800/80 text-cyan-300 text-xs font-mono flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-cyan-400" />
-            <span>{feedbackMessage}</span>
-          </div>
-        )}
-
-        {/* 4 PRIMARY EXECUTIVE TELEMETRY GAUGES */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 font-mono">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Composite Project Health</span>
-              <Activity className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="text-2xl font-extrabold text-cyan-300 mt-2">
-              {snapshot.composite_health_score}% Viability
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Weighted financial &amp; quality index</div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Financial Burn Rate</span>
-              <Coins className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl font-extrabold text-emerald-400 mt-2">
-              {snapshot.financial_burn_rate_pct}% Budget
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Certified valuation vs baseline sum</div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Quality Compliance Index</span>
-              <ShieldCheck className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="text-2xl font-extrabold text-white mt-2">
-              {snapshot.quality_compliance_pct}% IS 456 Pass
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Cube breaks &amp; MAR submittals cleared</div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Schedule Float Variance</span>
-              <Clock className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="text-2xl font-extrabold text-amber-400 mt-2">
-              +{snapshot.schedule_variance_days} Days
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Defendable EOT critical path buffer</div>
-          </div>
-        </div>
-
-        {/* 2-COLUMN WORKBENCH: STRATEGIC SUMMARY (7 cols) vs MODULE CLEARINGHOUSE LINKS (5 cols) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* LEFT: STRATEGIC SUMMARY & RISK ASSESSMENT (7 cols) */}
-          <div className="lg:col-span-7 rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
-                  Executive Intelligence &amp; Risk Matrix
+    <div className="min-h-screen bg-zinc-950 p-6 text-zinc-100 font-sans">
+      <div className="grid grid-cols-12 gap-6">
+        {/* ===================================================================
+            TOP ROW (col-span-12): Dashboard Header
+            =================================================================== */}
+        <header className="col-span-12 bg-zinc-900 border border-zinc-800">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between px-5 py-4 border-b border-zinc-800/50">
+            <div className="flex flex-col text-left">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono tracking-widest text-zinc-400 uppercase">
+                  EXECUTIVE SUITE / DIRECTORATE OVERSIGHT
                 </span>
-                <h2 className="text-sm font-bold text-white mt-0.5">Strategic Project Assessment</h2>
+                <span className="text-zinc-600">/</span>
+                <span className="text-xs font-mono tracking-tight text-zinc-400">
+                  CPWD WORKS MANUAL 2024 &amp; FIDIC RED BOOK
+                </span>
               </div>
-              <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800/50">
-                {snapshot.risk_classification.replace(/_/g, " ")}
+              <h1 className="text-xl font-bold tracking-tight text-zinc-100 mt-1 uppercase font-mono">
+                Executive Portfolio &amp; EVM Telemetry
+              </h1>
+            </div>
+
+            <div className="mt-3 md:mt-0 flex items-center gap-3 self-start md:self-auto">
+              <div className="border border-zinc-800 bg-zinc-950 px-3 py-1.5 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="text-xs font-mono uppercase tracking-wider text-emerald-500 font-medium">
+                  EVM ISO 21508 STANDARD
+                </span>
+              </div>
+              <div className="border border-zinc-800 bg-zinc-950 px-3 py-1.5">
+                <span className="text-xs font-mono tabular-nums tracking-tight text-zinc-400">
+                  PORTFOLIO HEALTH: AMBER WATCH
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 px-5 py-2.5 text-xs text-zinc-400 bg-zinc-950/40">
+            <div className="text-left border-r border-zinc-800/50 pr-4">
+              <span className="block text-zinc-500 uppercase tracking-wider text-[10px]">Active Project Pool</span>
+              <span className="text-zinc-100 font-mono text-xs block truncate font-medium">
+                Gomti Nagar, Noida Sec-62, Varanasi
+              </span>
+            </div>
+            <div className="text-left md:border-r border-zinc-800/50 px-0 md:px-4">
+              <span className="block text-zinc-500 uppercase tracking-wider text-[10px]">Budget at Completion (BAC)</span>
+              <span className="text-zinc-100 font-mono tabular-nums text-xs block font-bold">
+                ₹145.00 Cr
+              </span>
+            </div>
+            <div className="text-left border-r border-zinc-800/50 pr-4 md:px-4 mt-2 md:mt-0">
+              <span className="block text-zinc-500 uppercase tracking-wider text-[10px]">Est. at Completion (EAC)</span>
+              <span className="text-rose-400 font-mono tabular-nums text-xs block font-bold">
+                ₹157.60 Cr (+8.69%)
+              </span>
+            </div>
+            <div className="text-left pl-0 md:pl-4 mt-2 md:mt-0">
+              <span className="block text-zinc-500 uppercase tracking-wider text-[10px]">Executive Sync</span>
+              <span className="text-emerald-400 font-mono tabular-nums text-xs block">
+                Live Supabase Telemetry
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* ===================================================================
+            EVM KPI ROW (Four col-span-12 sm:col-span-6 lg:col-span-3 cards)
+            =================================================================== */}
+
+        {/* KPI 1: Earned Value (EV) */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3 bg-zinc-900 border border-zinc-800 flex flex-col justify-between p-5">
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs uppercase tracking-wider text-zinc-400 font-medium block text-left">
+                Earned Value (EV)
+              </span>
+              <span className="text-[10px] font-mono text-zinc-500 uppercase">BCWP</span>
+            </div>
+
+            <div className="flex flex-col items-end my-2">
+              <span className="font-mono tabular-nums tracking-tight text-2xl font-bold text-zinc-100 text-right">
+                ₹37.10 Cr
+              </span>
+              <span className="text-xs text-zinc-400 font-mono mt-0.5 text-right">
+                25.59% of Portfolio BAC
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-zinc-800/50 flex justify-between items-center text-xs font-mono">
+            <span className="text-zinc-500">Planned Value (PV)</span>
+            <span className="text-zinc-300 font-mono tabular-nums text-right">₹35.33 Cr</span>
+          </div>
+        </div>
+
+        {/* KPI 2: Actual Cost (AC) */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3 bg-zinc-900 border border-zinc-800 flex flex-col justify-between p-5">
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs uppercase tracking-wider text-zinc-400 font-medium block text-left">
+                Actual Cost (AC)
+              </span>
+              <span className="text-[10px] font-mono text-zinc-500 uppercase">ACWP</span>
+            </div>
+
+            <div className="flex flex-col items-end my-2">
+              <span className="font-mono tabular-nums tracking-tight text-2xl font-bold text-zinc-100 text-right">
+                ₹40.32 Cr
+              </span>
+              <span className="text-xs text-rose-400 font-mono mt-0.5 text-right flex items-center gap-1">
+                <ArrowUpRight className="h-3 w-3" />
+                Cost Overrun: ₹3.22 Cr
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-zinc-800/50 flex justify-between items-center text-xs font-mono">
+            <span className="text-zinc-500">Cost Variance (CV)</span>
+            <span className="text-rose-400 font-mono tabular-nums text-right">-₹3.22 Cr</span>
+          </div>
+        </div>
+
+        {/* KPI 3: Cost Performance Index (CPI) */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3 bg-zinc-900 border border-zinc-800 flex flex-col justify-between p-5">
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs uppercase tracking-wider text-zinc-400 font-medium block text-left">
+                Cost Performance Index (CPI)
+              </span>
+              <span
+                className={`text-[10px] font-mono uppercase font-bold px-1.5 py-0.5 border ${
+                  isCpiOverBudget
+                    ? "bg-rose-950/60 border-rose-800 text-rose-500"
+                    : "bg-emerald-950/60 border-emerald-800 text-emerald-500"
+                }`}
+              >
+                {isCpiOverBudget ? "Over Budget" : "Under Budget"}
               </span>
             </div>
 
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-3 font-sans">
-              <span className="text-[10px] font-mono uppercase text-zinc-500 block">Executive Summary Synthesis:</span>
-              <p className="text-sm text-zinc-200 leading-relaxed font-medium">
-                {snapshot.executive_summary}
-              </p>
-              <div className="pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-zinc-400">
-                <span>Generated By: <strong className="text-white">{snapshot.generated_by}</strong></span>
-                <span>Snapshot Date: <strong className="text-cyan-300">{snapshot.snapshot_date}</strong></span>
-              </div>
-            </div>
-
-            {/* QUICK MODULE GATEWAY GRID */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
-              <Link
-                href="/site/digital-twin"
-                className="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-cyan-500/50 transition group space-y-1"
+            <div className="flex flex-col items-end my-2">
+              <span
+                className={`font-mono tabular-nums tracking-tight text-2xl font-bold text-right ${
+                  isCpiOverBudget ? "text-rose-500" : "text-emerald-500"
+                }`}
               >
-                <Boxes className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition" />
-                <span className="font-bold text-white block">4D BIM Twin</span>
-                <span className="text-[10px] text-zinc-500 block">Reality Capture</span>
-              </Link>
-
-              <Link
-                href="/finance/ra-bills"
-                className="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-cyan-500/50 transition group space-y-1"
+                {cpi.toFixed(2)}
+              </span>
+              <span
+                className={`text-xs font-mono mt-0.5 text-right ${
+                  isCpiOverBudget ? "text-rose-400" : "text-emerald-400"
+                }`}
               >
-                <Receipt className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition" />
-                <span className="font-bold text-white block">RA Bills</span>
-                <span className="text-[10px] text-zinc-500 block">IPC Clearing</span>
-              </Link>
-
-              <Link
-                href="/finance/retention-ledger"
-                className="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-cyan-500/50 transition group space-y-1"
-              >
-                <Lock className="w-4 h-4 text-amber-400 group-hover:scale-110 transition" />
-                <span className="font-bold text-white block">Retention Escrow</span>
-                <span className="text-[10px] text-zinc-500 block">DLP Release</span>
-              </Link>
-
-              <Link
-                href="/contracts/claims-disputes"
-                className="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-cyan-500/50 transition group space-y-1"
-              >
-                <Gavel className="w-4 h-4 text-rose-400 group-hover:scale-110 transition" />
-                <span className="font-bold text-white block">Claims &amp; DAB</span>
-                <span className="text-[10px] text-zinc-500 block">FIDIC Cl. 20</span>
-              </Link>
-
-              <Link
-                href="/compliance/labor"
-                className="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-cyan-500/50 transition group space-y-1"
-              >
-                <Users className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition" />
-                <span className="font-bold text-white block">Labour Welfare</span>
-                <span className="text-[10px] text-zinc-500 block">Form XIX / ECR</span>
-              </Link>
-
-              <Link
-                href="/contracts/taking-over"
-                className="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:border-cyan-500/50 transition group space-y-1"
-              >
-                <ShieldCheck className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition" />
-                <span className="font-bold text-white block">Taking-Over</span>
-                <span className="text-[10px] text-zinc-500 block">TOC &amp; DLP</span>
-              </Link>
+                {isCpiOverBudget ? "CPI < 1.00 (Loss Velocity)" : "CPI ≥ 1.00 (Margin Gain)"}
+              </span>
             </div>
           </div>
 
-          {/* RIGHT: SYSTEM GOVERNANCE COMPLIANCE AUDIT (5 cols) */}
-          <div className="lg:col-span-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-5 shadow-2xl">
-            <div className="border-b border-zinc-800 pb-3 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
-                  Statutory Compliance Audit
-                </span>
-                <h3 className="text-sm font-bold text-white mt-0.5">Enterprise Health Vectors</h3>
-              </div>
-              <span className="text-xs font-mono text-emerald-400 font-bold">100% Audited</span>
-            </div>
-
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-3 font-mono text-xs">
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                <span>Safety &amp; PTW Compliance:</span>
-                <strong className="text-emerald-400">{snapshot.safety_index_pct}% (Zero Incidents)</strong>
-              </div>
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                <span>Quality Break Pass Rate:</span>
-                <strong className="text-emerald-400">{snapshot.quality_compliance_pct}% (IS 516)</strong>
-              </div>
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                <span>Active Statutory Blockers:</span>
-                <strong className={snapshot.total_open_blockers > 0 ? "text-amber-400" : "text-emerald-400"}>
-                  {snapshot.total_open_blockers} Open Item(s)
-                </strong>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Contract Governance Tier:</span>
-                <strong className="text-cyan-300 uppercase">{tier} EPC Standard</strong>
-              </div>
-            </div>
-
-            {/* MASTER COMMAND CENTER LINK */}
-            <div className="space-y-2 pt-1 border-t border-zinc-800">
-              <Link
-                href="/"
-                className="block text-center py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs transition shadow-md shadow-cyan-950/50 font-mono"
-              >
-                Return to Executive Command Center &rarr;
-              </Link>
-            </div>
-
-            <div className="pt-2 border-t border-zinc-800/60 text-[10px] text-zinc-500 font-mono text-center">
-              CPWD Works Manual Section 15 &amp; FIDIC Clause 20 Executive Protocol
-            </div>
+          <div className="pt-3 border-t border-zinc-800/50 flex justify-between items-center text-xs font-mono">
+            <span className="text-zinc-500">Target Benchmark</span>
+            <span className="text-zinc-300 font-mono tabular-nums text-right">1.00 Par</span>
           </div>
-
         </div>
 
+        {/* KPI 4: Schedule Performance Index (SPI) */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3 bg-zinc-900 border border-zinc-800 flex flex-col justify-between p-5">
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs uppercase tracking-wider text-zinc-400 font-medium block text-left">
+                Schedule Performance Index (SPI)
+              </span>
+              <span
+                className={`text-[10px] font-mono uppercase font-bold px-1.5 py-0.5 border ${
+                  isSpiAhead
+                    ? "bg-emerald-950/60 border-emerald-800 text-emerald-500"
+                    : "bg-rose-950/60 border-rose-800 text-rose-500"
+                }`}
+              >
+                {isSpiAhead ? "Ahead of Schedule" : "Behind Schedule"}
+              </span>
+            </div>
+
+            <div className="flex flex-col items-end my-2">
+              <span
+                className={`font-mono tabular-nums tracking-tight text-2xl font-bold text-right ${
+                  isSpiAhead ? "text-emerald-500" : "text-rose-500"
+                }`}
+              >
+                {spi.toFixed(2)}
+              </span>
+              <span
+                className={`text-xs font-mono mt-0.5 text-right ${
+                  isSpiAhead ? "text-emerald-400" : "text-rose-400"
+                }`}
+              >
+                {isSpiAhead ? "SPI > 1.00 (Float Gained)" : "SPI < 1.00 (Critical Delay)"}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-zinc-800/50 flex justify-between items-center text-xs font-mono">
+            <span className="text-zinc-500">Schedule Variance (SV)</span>
+            <span className="text-emerald-400 font-mono tabular-nums text-right">+₹1.77 Cr</span>
+          </div>
+        </div>
+
+        {/* ===================================================================
+            MIDDLE SECTION (col-span-12 lg:col-span-8): S-Curve & Cashflow
+            =================================================================== */}
+        <section className="col-span-12 lg:col-span-8 bg-zinc-900 border border-zinc-800 flex flex-col justify-between">
+          <div>
+            <div className="px-5 py-3.5 border-b border-zinc-800/50 flex items-center justify-between">
+              <div>
+                <h2 className="text-xs uppercase tracking-wider text-zinc-100 font-semibold text-left font-mono">
+                  S-Curve &amp; Cashflow Projection
+                </h2>
+                <span className="text-[10px] text-zinc-400 font-mono">
+                  Cumulative Baseline PV vs. Certified EV vs. Disbursed AC (18-Month Trajectory)
+                </span>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 bg-emerald-950/40 border border-emerald-800/60 text-emerald-400 font-bold uppercase tracking-wider">
+                EVM S-Curve Telemetry Active
+              </span>
+            </div>
+
+            {/* S-Curve Chart Container (h-96) */}
+            <div className="h-96 w-full p-5 relative flex items-center justify-center bg-zinc-950/60 overflow-hidden">
+              {/* Minimal Grid Background */}
+              <div
+                className="absolute inset-0 opacity-25"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(to right, #3f3f46 1px, transparent 1px),
+                    linear-gradient(to bottom, #3f3f46 1px, transparent 1px)
+                  `,
+                  backgroundSize: "48px 48px",
+                }}
+              />
+
+              {/* Technical S-Curve Vector Visualization */}
+              <svg
+                viewBox="0 0 800 320"
+                className="w-full h-full relative z-10 select-none"
+                preserveAspectRatio="none"
+              >
+                {/* Horizontal Level Markers (₹0 to ₹150 Cr) */}
+                <line x1="60" y1="280" x2="780" y2="280" stroke="#3f3f46" strokeWidth="1" />
+                <text x="50" y="284" fill="#71717a" fontSize="10" fontFamily="monospace" textAnchor="end">
+                  ₹0
+                </text>
+
+                <line x1="60" y1="210" x2="780" y2="210" stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
+                <text x="50" y="214" fill="#71717a" fontSize="10" fontFamily="monospace" textAnchor="end">
+                  ₹35Cr
+                </text>
+
+                <line x1="60" y1="140" x2="780" y2="140" stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
+                <text x="50" y="144" fill="#71717a" fontSize="10" fontFamily="monospace" textAnchor="end">
+                  ₹70Cr
+                </text>
+
+                <line x1="60" y1="70" x2="780" y2="70" stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
+                <text x="50" y="74" fill="#71717a" fontSize="10" fontFamily="monospace" textAnchor="end">
+                  ₹105Cr
+                </text>
+
+                <line x1="60" y1="20" x2="780" y2="20" stroke="#3f3f46" strokeWidth="1" strokeDasharray="2 2" />
+                <text x="50" y="24" fill="#10b981" fontSize="10" fontFamily="monospace" textAnchor="end">
+                  BAC ₹145Cr
+                </text>
+
+                {/* Vertical Timeline Divider at Month 6 (Current Data Date) */}
+                <line x1="330" y1="20" x2="330" y2="280" stroke="#52525b" strokeWidth="1.5" strokeDasharray="3 3" />
+                <text x="330" y="14" fill="#e4e4e7" fontSize="10" fontFamily="monospace" textAnchor="middle">
+                  CURRENT MONTH (M06)
+                </text>
+
+                {/* 1. Planned Value (PV) S-Curve (Grey/Dashed forward projection) */}
+                <path
+                  d="M 60 280 C 180 275, 240 230, 330 206 C 450 170, 600 50, 780 20"
+                  fill="none"
+                  stroke="#a1a1aa"
+                  strokeWidth="2.5"
+                  strokeDasharray="6 4"
+                />
+
+                {/* 2. Actual Cost (AC) Curve (Rose / Overrun) up to M06 */}
+                <path
+                  d="M 60 280 C 160 270, 230 220, 330 192"
+                  fill="none"
+                  stroke="#f43f5e"
+                  strokeWidth="3"
+                />
+
+                {/* 3. Earned Value (EV) Curve (Emerald / Certified Progress) up to M06 */}
+                <path
+                  d="M 60 280 C 170 274, 240 228, 330 200"
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="3.5"
+                />
+
+                {/* Active Data Points at M06 */}
+                {/* AC Point */}
+                <circle cx="330" cy="192" r="4.5" fill="#f43f5e" stroke="#09090b" strokeWidth="2" />
+                <text x="340" y="194" fill="#f43f5e" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                  AC ₹40.32 Cr
+                </text>
+
+                {/* EV Point */}
+                <circle cx="330" cy="200" r="4.5" fill="#10b981" stroke="#09090b" strokeWidth="2" />
+                <text x="340" y="210" fill="#10b981" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                  EV ₹37.10 Cr
+                </text>
+
+                {/* PV Point */}
+                <circle cx="330" cy="206" r="3.5" fill="#a1a1aa" stroke="#09090b" strokeWidth="1.5" />
+
+                {/* Forecasted EAC Path (Rose dashed from M06 to M18) */}
+                <path
+                  d="M 330 192 C 450 150, 600 30, 780 5"
+                  fill="none"
+                  stroke="#f43f5e"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 3"
+                />
+                <text x="775" y="12" fill="#f43f5e" fontSize="9" fontFamily="monospace" textAnchor="end">
+                  EAC ₹157.60 Cr
+                </text>
+              </svg>
+            </div>
+          </div>
+
+          {/* S-Curve Legend & Trajectory Footer */}
+          <div className="px-5 py-3 border-t border-zinc-800/50 bg-zinc-950/50 text-xs font-mono flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5">
+                <span className="h-0.5 w-4 bg-zinc-400 border-b border-dashed border-zinc-200" />
+                <span className="text-zinc-400">Planned Value (PV)</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-1 w-4 bg-emerald-500" />
+                <span className="text-emerald-400 font-semibold">Earned Value (EV)</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-1 w-4 bg-rose-500" />
+                <span className="text-rose-400 font-semibold">Actual Cost (AC)</span>
+              </span>
+            </div>
+
+            <div className="text-zinc-400">
+              VARIANCE: <span className="text-rose-400 font-bold">CV -₹3.22 Cr</span> •{" "}
+              <span className="text-emerald-400 font-bold">SV +₹1.77 Cr</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================
+            RIGHT SECTION (col-span-12 lg:col-span-4): Global Statutory Alerts
+            =================================================================== */}
+        <section className="col-span-12 lg:col-span-4 bg-zinc-900 border border-zinc-800 flex flex-col justify-between">
+          <div>
+            <div className="px-5 py-3.5 border-b border-zinc-800/50 flex items-center justify-between">
+              <div>
+                <h2 className="text-xs uppercase tracking-wider text-zinc-100 font-semibold text-left font-mono">
+                  Global Statutory Alerts
+                </h2>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  Cross-Project Executive Risk Registry
+                </span>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 bg-rose-950/50 border border-rose-800 text-rose-400 font-bold uppercase">
+                Requires Board Action
+              </span>
+            </div>
+
+            {/* Rigid List of High-Severity Cross-Project Warnings */}
+            <div className="divide-y divide-zinc-800/40">
+              {/* Alert 1: Liquidated Damages Approaching 10% Cap */}
+              <div className="p-4 hover:bg-zinc-800/20 transition-colors">
+                <div className="flex justify-between items-start gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2 py-0.5 border bg-rose-950/60 border-rose-800 text-rose-500 font-bold uppercase tracking-wider">
+                    CRITICAL EXPOSURE
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">CPWD Cl. 2</span>
+                </div>
+                <h3 className="text-xs font-bold font-mono text-rose-400 mb-1 text-left">
+                  GOMTI-NAGAR-PH1: Liquidated Damages approaching 10% Cap
+                </h3>
+                <p className="text-[11px] text-zinc-300 leading-snug text-left mb-2">
+                  Cumulative delay of 18 days logged on critical path. Assessed LD of ₹38.2L nearing contractual threshold. Hard ceiling caps at ₹4.50 Cr (10% baseline).
+                </p>
+                <div className="flex justify-between items-center text-[10px] font-mono pt-1 text-zinc-500 border-t border-zinc-800/30">
+                  <span className="text-amber-400">Action: EOT Hearing Due</span>
+                  <Link
+                    href="/commercial/hindrance-eot"
+                    className="text-zinc-300 hover:text-zinc-100 underline underline-offset-2"
+                  >
+                    Scrutinize Register &rarr;
+                  </Link>
+                </div>
+              </div>
+
+              {/* Alert 2: Subcontractor Settlement Blocked: Missing Labour License */}
+              <div className="p-4 hover:bg-zinc-800/20 transition-colors">
+                <div className="flex justify-between items-start gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2 py-0.5 border bg-rose-950/60 border-rose-800 text-rose-500 font-bold uppercase tracking-wider">
+                    STATUTORY VIOLATION
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">CLRA Act 1970</span>
+                </div>
+                <h3 className="text-xs font-bold font-mono text-rose-400 mb-1 text-left">
+                  Subcontractor Settlement Blocked: Missing Labour License
+                </h3>
+                <p className="text-[11px] text-zinc-300 leading-snug text-left mb-2">
+                  Falcon Interior Fitouts (VEN-INT-204): Form VI licence renewal not filed. Statutory clearance gate locked; ₹2.22 Cr final disbursement strictly withheld.
+                </p>
+                <div className="flex justify-between items-center text-[10px] font-mono pt-1 text-zinc-500 border-t border-zinc-800/30">
+                  <span className="text-rose-400 font-bold">Disbursal Frozen</span>
+                  <Link
+                    href="/closeout/subcontractor-settlement"
+                    className="text-zinc-300 hover:text-zinc-100 underline underline-offset-2"
+                  >
+                    View Labour Gate &rarr;
+                  </Link>
+                </div>
+              </div>
+
+              {/* Alert 3: Defect Escrow Release Due in 14 Days */}
+              <div className="p-4 hover:bg-zinc-800/20 transition-colors">
+                <div className="flex justify-between items-start gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2 py-0.5 border bg-amber-950/60 border-amber-800 text-amber-500 font-bold uppercase tracking-wider">
+                    ESCROW ESCALATION
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">CPWD Cl. 17</span>
+                </div>
+                <h3 className="text-xs font-bold font-mono text-amber-400 mb-1 text-left">
+                  Defect Escrow Release Due in 14 Days
+                </h3>
+                <p className="text-[11px] text-zinc-300 leading-snug text-left mb-2">
+                  365-Day DLP expiry on Substructure Package. 50% Stage 2 Retention Escrow (₹60.00 Lakhs) release contingent upon unconditional Form 65 sign-off.
+                </p>
+                <div className="flex justify-between items-center text-[10px] font-mono pt-1 text-zinc-500 border-t border-zinc-800/30">
+                  <span className="text-amber-500">Due: 2026-10-03</span>
+                  <Link
+                    href="/commercial/final-bill-retention"
+                    className="text-zinc-300 hover:text-zinc-100 underline underline-offset-2"
+                  >
+                    Form 65 Gateway &rarr;
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Desk Footer */}
+          <div className="p-4 border-t border-zinc-800/50 bg-zinc-950/50">
+            <div className="flex justify-between items-center text-xs font-mono text-zinc-400">
+              <span>BOARD STATUS:</span>
+              <span className="text-rose-400 font-bold uppercase">3 High Risks Active</span>
+            </div>
+          </div>
+        </section>
       </div>
-    </main>
+    </div>
   );
 }

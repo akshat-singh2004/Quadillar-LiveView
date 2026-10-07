@@ -85,7 +85,7 @@ function normalizeSubmittal(d: any): SubmittalRecord {
 
   return {
     id: d?.id ?? `sub-${Date.now()}`,
-    project_id: d?.project_id ?? "proj-default",
+    project_id: d?.project_id ?? "GOMTI-NAGAR-PH1-FITOUT",
     submittal_number: number,
     title: d?.title ?? "Technical Submittal Logged",
     submittal_type: (d?.submittal_type as SubmittalType) ?? "MATERIAL_SAMPLE",
@@ -124,7 +124,7 @@ export default function CanonicalSubmittalsPage() {
   // Review desk remarks input
   const [remarks, setRemarks] = useState("");
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";
@@ -145,28 +145,18 @@ export default function CanonicalSubmittalsPage() {
   const [subNumber, setSubNumber] = useState(
     `MAR-${tier === "RESIDENTIAL" ? "INT" : "STR"}-${Math.floor(100 + Math.random() * 900)}`
   );
-  const [title, setTitle] = useState(
-    tier === "RESIDENTIAL"
-      ? "Action TESA 18mm Boilo Grade High-Density Moisture Resistant (HDHMR) Boards"
-      : "UltraTech M40 Design Mix with Silica Fume & Polycarboxylate Superplasticizer"
-  );
+  const [title, setTitle] = useState("");
   const [subType, setSubType] = useState<SubmittalType>(
     tier === "RESIDENTIAL" ? "MATERIAL_SAMPLE" : "MIX_DESIGN"
   );
   const [discipline, setDiscipline] = useState(
     tier === "RESIDENTIAL" ? "Joinery & Millwork" : "Structural / Concrete"
   );
-  const [contractor, setContractor] = useState(
-    tier === "RESIDENTIAL" ? "Royal Woodworks & Interiors" : "Narmada Concrete Works"
-  );
-  const [tradePackage, setTradePackage] = useState(
-    tier === "RESIDENTIAL" ? "Custom Joinery & Millwork" : "Civil & Superstructure"
-  );
-  const [specClause, setSpecClause] = useState(
-    tier === "RESIDENTIAL" ? "IS 1658:2006 / Specs Section 06400" : "IS 10262:2019 / IS 456 Cl. 10.2"
-  );
-  const [brand, setBrand] = useState(tier === "RESIDENTIAL" ? "Action TESA (Boilo Series)" : "UltraTech Cement Ltd");
-  const [vendor, setVendor] = useState(tier === "RESIDENTIAL" ? "Royal Board Distributors" : "UltraTech Ready-Mix Plant");
+  const [contractor, setContractor] = useState("");
+  const [tradePackage, setTradePackage] = useState("");
+  const [specClause, setSpecClause] = useState("");
+  const [brand, setBrand] = useState("");
+  const [vendor, setVendor] = useState("");
   const [sampleSubmitted, setSampleSubmitted] = useState(true);
   const [testReportsAttached, setTestReportsAttached] = useState(true);
   const [complianceAttached, setComplianceAttached] = useState(true);
@@ -184,144 +174,7 @@ export default function CanonicalSubmittalsPage() {
         setSubmittals(normalized);
         if (!selectedSubmittal) setSelectedSubmittal(normalized[0]);
       } else {
-        const defaults: SubmittalRecord[] =
-          tier === "RESIDENTIAL"
-            ? [
-                normalizeSubmittal({
-                  id: "sub-res-01",
-                  project_id: projectId,
-                  submittal_number: "MAR-INT-008",
-                  title: "Action TESA 18mm Boilo HDHMR Water-Resistant Core Substrate",
-                  submittal_type: "MATERIAL_SAMPLE",
-                  discipline: "Joinery & Millwork",
-                  contractor_entity: "Royal Woodworks & Interiors",
-                  trade_package: "Custom Joinery & Millwork",
-                  specification_clause: "IS 1658:2006 / Spec 06400",
-                  manufacturer_brand: "Action TESA Boilo Grade",
-                  supplier_vendor: "Action TESA Distribution Ltd",
-                  submission_date: "2026-08-25",
-                  review_deadline: "2026-09-08",
-                  review_code: "CODE_A_APPROVED",
-                  consultant_remarks: "Approved for all modular kitchen and bedroom joinery carcass carcasses. Complies with 24-hr water boiling test.",
-                  reviewed_by: "Principal Architect",
-                  reviewed_at: "2026-09-01T14:00:00Z",
-                  sample_mockup_submitted: true,
-                  test_reports_attached: true,
-                  compliance_statement_attached: true,
-                }),
-                normalizeSubmittal({
-                  id: "sub-res-02",
-                  project_id: projectId,
-                  submittal_number: "MAR-PL-012",
-                  title: "Astral SDR-11 CPVC Hot & Cold Water Supply Piping System",
-                  submittal_type: "MATERIAL_SAMPLE",
-                  discipline: "Plumbing & Sanitary",
-                  contractor_entity: "Avadh MEP Solutions",
-                  trade_package: "First-Fix Plumbing & Sanitary",
-                  specification_clause: "IS 15778:2007 Class 1",
-                  manufacturer_brand: "Astral Poly Technik Ltd",
-                  supplier_vendor: "Astral Authorized Depot",
-                  submission_date: "2026-09-04",
-                  review_deadline: "2026-09-18",
-                  review_code: "CODE_B_APPROVED_AS_NOTED",
-                  consultant_remarks: "Approved. Solvent cement must be Astral approved heavy-duty fast-setting type only. Hydrostatic 10-bar test mandatory.",
-                  reviewed_by: "Principal Architect",
-                  reviewed_at: "2026-09-08T11:30:00Z",
-                  sample_mockup_submitted: true,
-                  test_reports_attached: true,
-                  compliance_statement_attached: true,
-                }),
-                normalizeSubmittal({
-                  id: "sub-res-03",
-                  project_id: projectId,
-                  submittal_number: "SD-CEIL-003",
-                  title: "Living & Dining False Ceiling Shadow Gap Profile Detail Shop Drawing",
-                  submittal_type: "SHOP_DRAWING",
-                  discipline: "Architectural Finishes",
-                  contractor_entity: "Royal Woodworks & Interiors",
-                  trade_package: "Surface Finishes & Ceiling",
-                  specification_clause: "Arch Ref GFC-INT-CEIL-01",
-                  manufacturer_brand: "Saint-Gobain Gyproc / Metal Profiles",
-                  supplier_vendor: "National Ceiling Supply",
-                  submission_date: "2026-09-10",
-                  review_deadline: "2026-09-24",
-                  review_code: "PENDING_REVIEW",
-                  sample_mockup_submitted: true,
-                  test_reports_attached: false,
-                  compliance_statement_attached: true,
-                }),
-              ]
-            : [
-                normalizeSubmittal({
-                  id: "sub-twr-01",
-                  project_id: projectId,
-                  submittal_number: "MIX-STR-M40",
-                  title: "M40 Grade Pumpable Concrete Mix Design with Fly Ash & Micro-Silica",
-                  submittal_type: "MIX_DESIGN",
-                  discipline: "Structural / Concrete",
-                  contractor_entity: "Narmada Concrete Works",
-                  trade_package: "Civil & Superstructure",
-                  specification_clause: "IS 10262:2019 & IS 456 Table 5",
-                  manufacturer_brand: "UltraTech RMC Concrete Plant",
-                  supplier_vendor: "UltraTech Batching Facility #02",
-                  submission_date: "2026-08-15",
-                  review_deadline: "2026-08-29",
-                  review_code: "CODE_A_APPROVED",
-                  consultant_remarks: "Target mean strength 48.2 MPa approved. Slump retention of 140mm at 2 hours verified in laboratory trials.",
-                  reviewed_by: "Resident SEOR",
-                  reviewed_at: "2026-08-22T16:00:00Z",
-                  sample_mockup_submitted: true,
-                  test_reports_attached: true,
-                  compliance_statement_attached: true,
-                }),
-                normalizeSubmittal({
-                  id: "sub-twr-02",
-                  project_id: projectId,
-                  submittal_number: "MAR-STR-TMT500",
-                  title: "Tata Tiscon 500D High-Yield Strength Deformed TMT Reinforcement Bars",
-                  submittal_type: "MATERIAL_SAMPLE",
-                  discipline: "Structural / Rebar",
-                  contractor_entity: "Narmada Concrete Works",
-                  trade_package: "Civil & Superstructure",
-                  specification_clause: "IS 1786:2008 Fe500D Specs",
-                  manufacturer_brand: "Tata Steel Ltd (Tata Tiscon)",
-                  supplier_vendor: "SteelSpan India Pvt Ltd",
-                  submission_date: "2026-08-18",
-                  review_deadline: "2026-09-01",
-                  review_code: "CODE_A_APPROVED",
-                  consultant_remarks: "Primary mill test certificate compliant. Proof stress 528 N/mm² and elongation 18.5% satisfies seismic zone criteria.",
-                  reviewed_by: "Resident SEOR",
-                  reviewed_at: "2026-08-24T10:00:00Z",
-                  sample_mockup_submitted: true,
-                  test_reports_attached: true,
-                  compliance_statement_attached: true,
-                }),
-                normalizeSubmittal({
-                  id: "sub-twr-03",
-                  project_id: projectId,
-                  submittal_number: "SD-FACADE-009",
-                  title: "Tower A Spider Glazing & 24mm DGU Glass Panel Structural Shop Drawings",
-                  submittal_type: "SHOP_DRAWING",
-                  discipline: "Building Enclosure",
-                  contractor_entity: "Narmada Concrete Works",
-                  trade_package: "Facade & Glazing",
-                  specification_clause: "ASTM E1300 / IS 875 Part 3",
-                  manufacturer_brand: "Saint-Gobain Solar Control DGU",
-                  supplier_vendor: "GlassTech Facade Systems",
-                  submission_date: "2026-09-08",
-                  review_deadline: "2026-09-22",
-                  review_code: "CODE_C_REVISE_RESUBMIT",
-                  consultant_remarks: "Wind load deflection calculation for 2.4kPa suction exceeds H/200 on corner cantilever transoms. Recalculate with 8mm+12A+8mm glass build-up.",
-                  reviewed_by: "Resident SEOR",
-                  reviewed_at: "2026-09-12T17:00:00Z",
-                  sample_mockup_submitted: false,
-                  test_reports_attached: true,
-                  compliance_statement_attached: false,
-                }),
-              ];
-
-        setSubmittals(defaults);
-        if (!selectedSubmittal) setSelectedSubmittal(defaults[0]);
+        setSubmittals([]); setSelectedSubmittal(null);
       }
     } catch {
       // Local fallback

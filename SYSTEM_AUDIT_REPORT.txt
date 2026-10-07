@@ -1,0 +1,88 @@
+=================================================================
+QUADILLAR LIVEVIEW SYSTEM READINESS REPORT
+Generated: Wed, Sep 30, 2026  9:34:45 AM
+=================================================================
+
+--- 1. TYPESCRIPT COMPILATION HEALTH ---
+Running 'npx tsc --noEmit'...
+STATUS: [FAIL] 5 TypeScript error(s) detected.
+First 25 compilation errors:
+components/quality/LogCubeTestModal.tsx(241,59): error TS2304: Cannot find name 'ck'.
+components/quality/LogCubeTestModal.tsx(265,82): error TS2304: Cannot find name 'ck'.
+components/site/DPRComposer.tsx(280,65): error TS2339: Property 'SpeechRecognition' does not exist on type 'Window & typeof globalThis'.
+components/site/DPRComposer.tsx(281,71): error TS2339: Property 'SpeechRecognition' does not exist on type 'Window & typeof globalThis'.
+components/site/DPRComposer.tsx(305,38): error TS2552: Cannot find name 'SpeechRecognitionEvent'. Did you mean 'SpeechRecognitionResult'?
+
+--- 2. AGENT INTEGRATION WIRING ---
+Checking files consuming the 4 Autonomous Agents:
+• Agent chronos imports:
+   app/actions/weather-actions.ts:5
+   components/schedule/GanttChartViewer.tsx:220
+• Agent midas imports:
+• Agent aegis imports:
+   app/actions/cube-actions.ts:5
+   app/actions/ncr-actions.ts:9
+   app/actions/pour-card-actions.ts:5
+• Agent hermes imports:
+   app/actions/cube-actions.ts:6
+   app/actions/pour-card-actions.ts:6
+   app/actions/weather-actions.ts:6
+
+--- 3. DETECTED MOCKS & FALLBACK OBJECTS ---
+Files containing 'fallback' or 'mock' data definitions:
+
+--- 4. UN-MIGRATED BRITTLE INLINE STYLES ---
+Files using raw 'style={{' instead of Tailwind:
+   components/dashboard/DetailDrawer.tsx (61 inline style tags)
+   app/portal/architect/page.tsx (61 inline style tags)
+   components/portal/ClientExecutiveDashboard.tsx (56 inline style tags)
+   components/contracts/DocumentClauseViewer.tsx (46 inline style tags)
+   components/site/DPRFormModal.tsx (34 inline style tags)
+   components/cde/DrawingValidator.tsx (34 inline style tags)
+   components/cde/FacetedCDETable.tsx (33 inline style tags)
+   app/transmittals/page.tsx (33 inline style tags)
+   app/finance/cashflow/page.tsx (23 inline style tags)
+   components/viewer/SheetViewer.tsx (20 inline style tags)
+   components/site/PunchListTable.tsx (20 inline style tags)
+   components/dashboard/QualityGateMatrix.tsx (20 inline style tags)
+   components/viewer/ClashResolutionDrawer.tsx (19 inline style tags)
+   components/cde/UploadModal.tsx (19 inline style tags)
+   components/audit/ProjectAuditLedger.tsx (19 inline style tags)
+
+--- 5. STATUS OF PENDING CORE MODULES ---
+• components/safety/StrippingPermitCard.tsx [240 lines]
+    - Server Action Wired: NO
+    - Fallback/Mock Count: 2
+    - Inline Styles: 0
+• components/site/DPRComposer.tsx [1117 lines]
+    - Server Action Wired: YES
+    - Fallback/Mock Count: 0
+    - Inline Styles: 0
+• components/site/LaborRosterTable.tsx [472 lines]
+    - Server Action Wired: NO
+    - Fallback/Mock Count: 1
+    - Inline Styles: 0
+• components/quality/ConcreteMaturityChart.tsx [350 lines]
+    - Server Action Wired: NO
+    - Fallback/Mock Count: 1
+    - Inline Styles: 0
+• app/finance/ra-bills/page.tsx [196 lines]
+    - Server Action Wired: NO
+    - Fallback/Mock Count: 1
+    - Inline Styles: 0
+• app/quality/cube-tests/page.tsx [330 lines]
+    - Server Action Wired: NO
+    - Fallback/Mock Count: 1
+    - Inline Styles: 0
+• components/finance/IPCDeductionDrawer.tsx [443 lines]
+    - Server Action Wired: YES
+    - Fallback/Mock Count: 1
+    - Inline Styles: 0
+• components/cde/DrawingMarkupViewer.tsx [808 lines]
+    - Server Action Wired: YES
+    - Fallback/Mock Count: 1
+    - Inline Styles: 2
+
+=================================================================
+END OF REPORT
+=================================================================

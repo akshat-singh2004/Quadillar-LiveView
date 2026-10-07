@@ -4,9 +4,9 @@
   --background: #09090b;
   --foreground: #f5f5f5;
   --muted: #a1a1aa;
-  --panel: rgba(24, 24, 27, 0.72);
-  --panel-strong: rgba(17, 17, 19, 0.88);
-  --border: rgba(255, 255, 255, 0.06);
+  --panel: #18181b;
+  --panel-strong: #111113;
+  --border: rgba(255, 255, 255, 0.07);
 }
 
 @theme inline {
@@ -20,13 +20,14 @@ html {
   background: var(--background);
 }
 
+/* Flat matte body — no radial gradient, no glow */
 body {
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent 28%),
-    var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), "SF Pro Display", "Segoe UI", sans-serif;
   letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @keyframes radar-pulse {
@@ -55,43 +56,55 @@ a:hover {
 }
 
 @layer utilities {
+  /* Matte shell surface — no backdrop-blur on chrome */
   .surface-shell {
-    @apply rounded-2xl border border-white/[0.06] bg-neutral-900/40 backdrop-blur-xl;
+    @apply rounded-2xl border border-white/[0.07] bg-zinc-900/60;
   }
 
   .surface-subtle {
-    @apply rounded-2xl border border-white/[0.04] bg-white/[0.015] backdrop-blur-xl;
+    @apply rounded-2xl border border-white/[0.04] bg-zinc-900/30;
+  }
+
+  /* Sidebar-aware content area transition */
+  .main-content {
+    transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .main-content-shifted {
+    margin-left: 20rem; /* 320px = sidebar w-80 */
   }
 }
-/* --- Apple OS Surface & Interaction Tokens --- */
+
+/* --- Matte Enterprise Surface Tokens --- */
 :root {
-  --apple-canvas: #FBFBFD;
-  --apple-border: rgba(0, 0, 0, 0.06);
-  --apple-card: #FFFFFF;
+  /* Sidebar layout */
+  --sidebar-width: 20rem;
+
+  /* Matte surface palette */
+  --ql-canvas: #09090b;
+  --ql-surface: #111113;
+  --ql-surface-elevated: #18181b;
+  --ql-border: rgba(255, 255, 255, 0.07);
+
+  /* Status signals — explicit, high-contrast, solid (no gradient) */
+  --ql-signal-green: #4ade80;
+  --ql-signal-red: #f87171;
+  --ql-signal-amber: #fbbf24;
+  --ql-signal-cyan: #22d3ee;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --apple-canvas: #09090B;
-    --apple-border: rgba(255, 255, 255, 0.08);
-    --apple-card: #121215;
-  }
-}
-
-/* Global Background & Typography Baseline */
-body {
-  background-color: var(--apple-canvas);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Reusable Apple UI Utility Classes */
-.apple-card {
-  background-color: var(--apple-card);
-  border: 1px solid var(--apple-border);
+/* Reusable Matte Cards */
+.ql-card {
+  background-color: var(--ql-surface);
+  border: 1px solid var(--ql-border);
   border-radius: 1rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+/* Legacy apple-card — remapped to matte */
+.apple-card {
+  background-color: var(--ql-surface);
+  border: 1px solid var(--ql-border);
+  border-radius: 1rem;
 }
 
 .apple-glass {
@@ -123,8 +136,8 @@ body {
 }
 
 .apple-btn-secondary {
-  background-color: rgba(0, 0, 0, 0.04);
-  color: #27272A;
+  background-color: rgba(255, 255, 255, 0.04);
+  color: #d4d4d8;
   border-radius: 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
@@ -137,7 +150,7 @@ body {
   transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .apple-btn-secondary:hover {
-  background-color: rgba(0, 0, 0, 0.07);
+  background-color: rgba(255, 255, 255, 0.07);
 }
 .apple-btn-secondary:active {
   transform: scale(0.98);
@@ -145,4 +158,124 @@ body {
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   CPWD / STATUTORY A4 PRINT OVERRIDES
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10pt;
+    line-height: 1.35;
+  }
+
+  /* Hide the UI shell: sidebars, navbars, action buttons, overlays, and dark-mode containers */
+  aside,
+  nav,
+  header:not([data-statutory-header]),
+  button,
+  input[type="button"],
+  input[type="submit"],
+  [role="button"],
+  .no-print,
+  .print\:hidden,
+  [data-sidebar],
+  [class*="sidebar"],
+  [class*="navbar"],
+  [class*="LiveViewShell"],
+  [class*="action-desk"],
+  [class*="action-button"],
+  [class*="dark-mode"] {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Typography: Force font-serif for formal statutory headers */
+  h1,
+  h2,
+  h3,
+  .font-serif,
+  [data-statutory-header],
+  .statutory-header {
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
+    color: #000000 !important;
+    letter-spacing: 0.025em;
+  }
+
+  /* Typography: Retain font-mono tabular-nums for all financial and ledger tables */
+  table,
+  td,
+  th,
+  .font-mono,
+  .tabular-nums,
+  [class*="font-mono"] {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    font-variant-numeric: tabular-nums !important;
+    color: #000000 !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #000000 !important;
+    padding: 4px 8px !important;
+  }
+
+  th {
+    font-weight: 700 !important;
+    background-color: #f4f4f5 !important;
+  }
+
+  /* Pagination: Enforce page-break-inside: avoid on all statutory tables, cards, and audit footer */
+  table,
+  tr,
+  figure,
+  .statutory-table,
+  .statutory-card,
+  [data-statutory-card],
+  [data-audit-footer],
+  .digital-audit-footer {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
 }

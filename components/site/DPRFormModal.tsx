@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useTransition } from "react";
+import { X, Upload, CheckCircle2, Loader2, Camera, CloudSun, HardHat, Cog } from "lucide-react";
 import { uploadFileToBucket } from "@/lib/storage";
 import type { SiteDailyProgressReport, SiteDprMilestoneLog } from "@/types/construction";
 
@@ -20,9 +21,10 @@ export function DPRFormModal({ open, onClose, onSubmit }: DPRFormModalProps) {
   const [weather, setWeather] = useState({ condition: "Clear", temperatureC: 32, humidityPct: 58, windKph: 12 });
   const [manpower, setManpower] = useState({ total: 148, subcontractors: 82, supervisors: 12 });
   const [machinery, setMachinery] = useState({ active: 14, breakdown: "Crane 02 - minor hydraulic leak" });
-  const [narrative, setNarrative] = useState("Implemented staged concrete works and maintained schedule adherence with no critical safety incidents. Coordination on MEP trimming remains in progress.");
+  const [narrative, setNarrative] = useState(
+    "Implemented staged concrete works and maintained schedule adherence with no critical safety incidents. Coordination on MEP trimming remains in progress."
+  );
   const [milestones, setMilestones] = useState<SiteDprMilestoneLog[]>(initialMilestones);
-  const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -40,7 +42,7 @@ export function DPRFormModal({ open, onClose, onSubmit }: DPRFormModalProps) {
         Array.from(files).map(async (file) => {
           const result = await uploadFileToBucket("site-dpr", file, "daily-progress");
           return result.publicUrl ?? result.path;
-        }),
+        })
       );
       setPhotos((current) => [...current, ...uploaded]);
     } finally {
@@ -51,7 +53,7 @@ export function DPRFormModal({ open, onClose, onSubmit }: DPRFormModalProps) {
   const submit = () => {
     const report: SiteDailyProgressReport = {
       id: `dpr-${Date.now()}`,
-      projectId: "proj-1",
+      projectId: "GOMTI-NAGAR-PH1-FITOUT",
       reportDate: new Date().toISOString(),
       weather,
       manpower,
@@ -68,106 +70,245 @@ export function DPRFormModal({ open, onClose, onSubmit }: DPRFormModalProps) {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(2,6,23,0.72)", display: "grid", placeItems: "center", zIndex: 80 }}>
-      <div style={{ width: "min(1100px, calc(100vw - 32px))", maxHeight: "90vh", overflowY: "auto", background: "#0b1220", border: "1px solid rgba(148,163,184,0.2)", borderRadius: 24, padding: 24, color: "#e2e8f0" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 20 }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 font-mono text-xs select-none">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-5 text-zinc-100">
+        {/* MODAL HEADER */}
+        <div className="flex justify-between items-center border-b border-zinc-800 pb-4">
           <div>
-            <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Daily Progress Report</div>
-            <h3 style={{ margin: "8px 0 0", fontSize: 28, letterSpacing: "-0.04em" }}>Site Diary Entry</h3>
+            <div className="text-[10px] text-cyan-400 uppercase tracking-widest font-bold">
+              Daily Progress Report
+            </div>
+            <h3 className="text-lg font-bold text-white mt-0.5">
+              Site Diary Entry &amp; Shift Synthesis
+            </h3>
           </div>
-          <button type="button" onClick={onClose} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.18)", color: "#f8fafc", borderRadius: 999, width: 36, height: 36, cursor: "pointer" }}>×</button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <div style={{ display: "grid", gap: 20 }}>
-          <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
-            <div>
-              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Weather</label>
-              <input value={weather.condition} onChange={(e) => setWeather((current) => ({ ...current, condition: e.target.value }))} style={fieldStyle} />
-            </div>
-            <div>
-              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Temp °C</label>
-              <input type="number" value={weather.temperatureC} onChange={(e) => setWeather((current) => ({ ...current, temperatureC: Number(e.target.value) }))} style={fieldStyle} />
-            </div>
-            <div>
-              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Humidity %</label>
-              <input type="number" value={weather.humidityPct} onChange={(e) => setWeather((current) => ({ ...current, humidityPct: Number(e.target.value) }))} style={fieldStyle} />
-            </div>
-            <div>
-              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Wind kph</label>
-              <input type="number" value={weather.windKph} onChange={(e) => setWeather((current) => ({ ...current, windKph: Number(e.target.value) }))} style={fieldStyle} />
+        {/* FORM GRID */}
+        <div className="space-y-4">
+          {/* Weather Section */}
+          <section className="p-3.5 bg-zinc-900/50 border border-zinc-800 rounded-xl space-y-2">
+            <span className="text-[10px] uppercase text-zinc-400 font-bold flex items-center gap-1.5">
+              <CloudSun className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Microclimate Telemetry Readings</span>
+            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-zinc-500 text-[10px] uppercase mb-1">Atmosphere</label>
+                <input
+                  value={weather.condition}
+                  onChange={(e) => setWeather({ ...weather, condition: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-zinc-500 text-[10px] uppercase mb-1">Temp (°C)</label>
+                <input
+                  type="number"
+                  value={weather.temperatureC}
+                  onChange={(e) => setWeather({ ...weather, temperatureC: Number(e.target.value) })}
+                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none text-right tabular-nums"
+                />
+              </div>
+              <div>
+                <label className="block text-zinc-500 text-[10px] uppercase mb-1">Humidity (%)</label>
+                <input
+                  type="number"
+                  value={weather.humidityPct}
+                  onChange={(e) => setWeather({ ...weather, humidityPct: Number(e.target.value) })}
+                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none text-right tabular-nums"
+                />
+              </div>
+              <div>
+                <label className="block text-zinc-500 text-[10px] uppercase mb-1">Wind (km/h)</label>
+                <input
+                  type="number"
+                  value={weather.windKph}
+                  onChange={(e) => setWeather({ ...weather, windKph: Number(e.target.value) })}
+                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none text-right tabular-nums"
+                />
+              </div>
             </div>
           </section>
 
-          <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
-            <div>
-              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Total manpower</label>
-              <input type="number" value={manpower.total} onChange={(e) => setManpower((current) => ({ ...current, total: Number(e.target.value) }))} style={fieldStyle} />
-            </div>
-            <div>
-              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Subcontractors</label>
-              <input type="number" value={manpower.subcontractors} onChange={(e) => setManpower((current) => ({ ...current, subcontractors: Number(e.target.value) }))} style={fieldStyle} />
-            </div>
-            <div>
-              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Supervisors</label>
-              <input type="number" value={manpower.supervisors} onChange={(e) => setManpower((current) => ({ ...current, supervisors: Number(e.target.value) }))} style={fieldStyle} />
-            </div>
-            <div>
-              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Active machinery</label>
-              <input type="number" value={machinery.active} onChange={(e) => setMachinery((current) => ({ ...current, active: Number(e.target.value) }))} style={fieldStyle} />
+          {/* Manpower & Machinery */}
+          <section className="p-3.5 bg-zinc-900/50 border border-zinc-800 rounded-xl space-y-2">
+            <span className="text-[10px] uppercase text-zinc-400 font-bold flex items-center gap-1.5">
+              <HardHat className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Shift Deployment &amp; Plant Fleet</span>
+            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-zinc-500 text-[10px] uppercase mb-1">Total Manpower</label>
+                <input
+                  type="number"
+                  value={manpower.total}
+                  onChange={(e) => setManpower({ ...manpower, total: Number(e.target.value) })}
+                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none text-right tabular-nums"
+                />
+              </div>
+              <div>
+                <label className="block text-zinc-500 text-[10px] uppercase mb-1">Subcontractors</label>
+                <input
+                  type="number"
+                  value={manpower.subcontractors}
+                  onChange={(e) => setManpower({ ...manpower, subcontractors: Number(e.target.value) })}
+                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none text-right tabular-nums"
+                />
+              </div>
+              <div>
+                <label className="block text-zinc-500 text-[10px] uppercase mb-1">Supervisors</label>
+                <input
+                  type="number"
+                  value={manpower.supervisors}
+                  onChange={(e) => setManpower({ ...manpower, supervisors: Number(e.target.value) })}
+                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none text-right tabular-nums"
+                />
+              </div>
+              <div>
+                <label className="block text-zinc-500 text-[10px] uppercase mb-1">Active Machinery</label>
+                <input
+                  type="number"
+                  value={machinery.active}
+                  onChange={(e) => setMachinery({ ...machinery, active: Number(e.target.value) })}
+                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none text-right tabular-nums"
+                />
+              </div>
             </div>
           </section>
 
+          {/* Machinery Breakdown */}
           <div>
-            <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Machinery breakdown</label>
-            <textarea value={machinery.breakdown} onChange={(e) => setMachinery((current) => ({ ...current, breakdown: e.target.value }))} style={{ ...fieldStyle, minHeight: 100, resize: "vertical" }} />
+            <label className="block text-zinc-400 text-[10px] uppercase mb-1">Machinery Breakdown / Stoppages</label>
+            <textarea
+              rows={2}
+              value={machinery.breakdown}
+              onChange={(e) => setMachinery({ ...machinery, breakdown: e.target.value })}
+              className="w-full bg-zinc-950 border border-zinc-800 p-2.5 text-zinc-100 rounded outline-none"
+            />
           </div>
 
+          {/* Daily Progress Narrative */}
           <div>
-            <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Daily progress narrative</label>
-            <textarea value={narrative} onChange={(e) => setNarrative(e.target.value)} style={{ ...fieldStyle, minHeight: 120, resize: "vertical" }} />
+            <label className="block text-zinc-400 text-[10px] uppercase mb-1">Daily Progress Narrative *</label>
+            <textarea
+              rows={3}
+              value={narrative}
+              onChange={(e) => setNarrative(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 p-2.5 text-zinc-100 rounded outline-none"
+            />
           </div>
 
-          <div>
-            <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Milestone logs</label>
-            <div style={{ display: "grid", gap: 10 }}>
+          {/* Milestone Logs */}
+          <div className="space-y-2">
+            <label className="block text-zinc-400 text-[10px] uppercase">Milestone Progress Tracking</label>
+            <div className="space-y-2">
               {milestones.map((milestone, index) => (
-                <div key={`${milestone.title}-${index}`} style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr 1.4fr", gap: 8 }}>
-                  <input value={milestone.title} onChange={(e) => setMilestones((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, title: e.target.value } : entry))} style={fieldStyle} />
-                  <select value={milestone.status} onChange={(e) => setMilestones((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, status: e.target.value as SiteDprMilestoneLog["status"] } : entry))} style={fieldStyle}>
-                    {(["Completed", "In Progress", "Delayed"] as const).map((status) => <option key={status} value={status}>{status}</option>)}
+                <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                  <input
+                    value={milestone.title}
+                    onChange={(e) =>
+                      setMilestones(
+                        milestones.map((entry, idx) => (idx === index ? { ...entry, title: e.target.value } : entry))
+                      )
+                    }
+                    className="sm:col-span-4 bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none"
+                  />
+                  <select
+                    value={milestone.status}
+                    onChange={(e) =>
+                      setMilestones(
+                        milestones.map((entry, idx) =>
+                          idx === index ? { ...entry, status: e.target.value as SiteDprMilestoneLog["status"] } : entry
+                        )
+                      )
+                    }
+                    className="sm:col-span-3 bg-zinc-950 border border-zinc-800 px-2 py-1.5 text-zinc-100 rounded outline-none"
+                  >
+                    <option value="Completed">Completed</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Delayed">Delayed</option>
                   </select>
-                  <input value={milestone.note} onChange={(e) => setMilestones((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, note: e.target.value } : entry))} style={fieldStyle} />
+                  <input
+                    value={milestone.note}
+                    onChange={(e) =>
+                      setMilestones(
+                        milestones.map((entry, idx) => (idx === index ? { ...entry, note: e.target.value } : entry))
+                      )
+                    }
+                    className="sm:col-span-5 bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-100 rounded outline-none"
+                  />
                 </div>
               ))}
             </div>
           </div>
 
-          <div
-            onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(event) => { event.preventDefault(); setDragging(false); void handleFiles(event.dataTransfer.files); }}
-            style={{ border: `1.5px dashed ${dragging ? "#7dd3fc" : "rgba(148,163,184,0.35)"}`, background: "rgba(15,23,42,0.7)", borderRadius: 18, padding: 18 }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          {/* Photo Capture */}
+          <div className="border border-dashed border-zinc-800 bg-zinc-900/40 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
               <div>
-                <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase" }}>Photo capture</div>
-                <div style={{ marginTop: 6, color: "#e2e8f0" }}>{photoCount} photos attached</div>
+                <span className="text-[10px] uppercase tracking-wider text-cyan-400 font-bold block">
+                  Geofenced Photographic Evidence
+                </span>
+                <span className="text-[11px] text-zinc-400">{photoCount} photos attached to diary</span>
               </div>
-              <button type="button" onClick={() => fileInputRef.current?.click()} style={{ background: "#2563eb", border: "none", color: "#eff6ff", borderRadius: 12, padding: "10px 14px", cursor: "pointer", fontWeight: 700 }}>
-                {uploading ? "Uploading…" : "Add photos"}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+              >
+                {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                <span>{uploading ? "Uploading..." : "Add Photos"}</span>
               </button>
             </div>
-            <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={(event) => void handleFiles(event.target.files)} />
-            <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {photos.map((url, index) => (
-                <img key={`${url}-${index}`} src={url} alt={`Field site photo ${index + 1}`} style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 12, border: "1px solid rgba(148,163,184,0.16)" }} />
-              ))}
-            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => void handleFiles(e.target.files)}
+            />
+
+            {photos.length > 0 && (
+              <div className="flex gap-2.5 flex-wrap pt-2">
+                {photos.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`DPR Photo ${idx + 1}`}
+                    className="w-20 h-20 object-cover rounded-lg border border-zinc-800"
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 8 }}>
-            <button type="button" onClick={onClose} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(148,163,184,0.18)", color: "#e2e8f0", borderRadius: 12, padding: "10px 14px", cursor: "pointer" }}>Cancel</button>
-            <button type="button" onClick={submit} style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", border: "none", color: "#eff6ff", borderRadius: 12, padding: "10px 18px", cursor: "pointer", fontWeight: 700 }}>Save DPR</button>
+          {/* Modal Actions */}
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-zinc-800">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded font-semibold text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={submit}
+              className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-bold uppercase text-xs transition cursor-pointer"
+            >
+              Commit Site Diary Entry
+            </button>
           </div>
         </div>
       </div>
@@ -175,12 +316,4 @@ export function DPRFormModal({ open, onClose, onSubmit }: DPRFormModalProps) {
   );
 }
 
-const fieldStyle: React.CSSProperties = {
-  width: "100%",
-  background: "rgba(15,23,42,0.8)",
-  border: "1px solid rgba(148,163,184,0.18)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  color: "#f8fafc",
-  fontSize: 14,
-};
+export default DPRFormModal;

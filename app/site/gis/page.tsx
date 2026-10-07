@@ -1,5 +1,45 @@
+import React from "react";
 import { SiteGeospatialMap } from "@/components/gis/SiteGeospatialMap";
+import { CraneSlewRadar } from "@/components/site/CraneSlewRadar";
+import { createClient } from "@/lib/supabase/server";
+import { Compass } from "lucide-react";
 
-export default function GisPage() {
-  return <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}><div style={{ maxWidth: 1400, margin: "0 auto" }}><header style={{ marginBottom: 24 }}><div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase" }}>Site intelligence / geospatial control</div><h1 style={{ margin: "8px 0 0", fontSize: 38 }}>GIS boundary & drone command view</h1><p style={{ color: "#94a3b8", margin: "9px 0 0" }}>Plot control, crane exclusion zones, and live field telemetry on one survey surface.</p></header><SiteGeospatialMap /></div></main>;
+export default async function SiteGisPage() {
+  const supabase = await createClient();
+
+  const { data: projectRow } = await supabase
+    .from("projects")
+    .select("project_id, project_name")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
+  const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 font-mono text-xs select-none space-y-6">
+      <header className="border-b border-zinc-800 pb-4">
+        <div className="flex items-center gap-2 text-[10px] text-cyan-400 uppercase tracking-widest font-bold">
+          <Compass className="w-3.5 h-3.5" />
+          <span>GEOSPATIAL REALITY CAPTURE &amp; RIGGING SAFETY • {projectId}</span>
+        </div>
+        <h1 className="text-xl font-bold text-white uppercase mt-0.5">
+          Site GIS Geofencing &amp; Crane Rigging Radar
+        </h1>
+        <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
+          {projectName} • Orthomosaic drone boundary overlays, zone hazard radiuses &amp; tower crane wind lockouts.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-8">
+          <SiteGeospatialMap />
+        </div>
+        <div className="lg:col-span-4">
+          <CraneSlewRadar />
+        </div>
+      </div>
+    </div>
+  );
 }

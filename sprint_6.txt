@@ -1,0 +1,43 @@
+=== SPRINT 6 CODE BUNDLE ===
+
+================================================================================
+FILE_START: app/handover/export/page.tsx
+================================================================================
+export { default } from '@/app/closeout/audit-vault/page';
+
+================================================================================
+FILE_END: app/handover/export/page.tsx
+================================================================================
+
+================================================================================
+FILE_START: app/handover/assets/page.tsx
+================================================================================
+import { fetchFacilityAssets } from "@/app/lib/services";
+import { AssetRegisterTable } from "@/components/handover/AssetRegisterTable";
+
+export default async function AssetHandoverPage() {
+  const assets = await fetchFacilityAssets("GOMTI-NAGAR-PH1-FITOUT");
+  return <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}><div style={{ maxWidth: 1450, margin: "0 auto", display: "grid", gap: 22 }}><header><div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase" }}>Quadillar LiveView / Handover</div><h1 style={{ margin: "8px 0 0", fontSize: 40 }}>Facility Asset Register & As-Built Handover</h1><p style={{ margin: "10px 0 0", color: "#94a3b8" }}>Commissioning evidence, O&M manuals, warranty windows, and vendor accountability.</p></header><section style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 22, padding: 20 }}><AssetRegisterTable initialAssets={assets} /></section></div></main>;
+}
+
+================================================================================
+FILE_END: app/handover/assets/page.tsx
+================================================================================
+
+================================================================================
+FILE_START: app/handover/possession/page.tsx
+================================================================================
+"use client";
+
+import { useState } from "react";
+import { CustomerHandoverModal } from "@/components/handover/CustomerHandoverModal";
+import type { CustomerPossessionRecord } from "@/types/construction";
+
+const initial: CustomerPossessionRecord[] = [];
+
+export default function PossessionPage() { const [records, setRecords] = useState(initial); const [selected, setSelected] = useState<CustomerPossessionRecord | null>(null); const inspected = records.filter((record) => record.inspectedPercent === 100).length / records.length * 100; const handedOver = records.filter((record) => record.handedOver).length / records.length * 100; return <main style={page}><div style={shell}><header><div style={eyebrow}>Handover / customer experience</div><h1 style={heading}>Pre-possession & key delivery console</h1><p style={muted}>Run the walkthrough, clear every snag, and issue a formal possession record with dual sign-off.</p></header><section style={stats}><div><span>Units inspected</span><strong>{inspected.toFixed(0)}%</strong></div><div><span>De-snagged</span><strong style={{ color: "#34d399" }}>{(records.reduce((sum, record) => sum + record.deSnaggedPercent, 0) / records.length).toFixed(0)}%</strong></div><div><span>Handed over</span><strong style={{ color: "#7dd3fc" }}>{handedOver.toFixed(0)}%</strong></div></section><section style={panel}><div style={eyebrow}>Walkthrough register</div><div style={list}>{records.map((record) => <button type="button" key={record.id} onClick={() => setSelected(record)} style={row}><div><strong>{record.unitRef} · {record.buyerName}</strong><div style={small}>{record.unresolvedSnagsCount ? `${record.unresolvedSnagsCount} pending snags · ${record.pendingTickets.join(", ")}` : "Zero-defect gate clear"}</div></div><span style={{ color: record.handedOver ? "#86efac" : record.unresolvedSnagsCount ? "#f87171" : "#fbbf24", fontWeight: 800 }}>{record.handedOver ? "Keys delivered" : record.unresolvedSnagsCount ? "Rectification pending" : "Ready to certify"}</span></button>)}</div></section></div><CustomerHandoverModal record={selected} onClose={() => setSelected(null)} onUpdated={(updated) => setRecords((current) => current.map((record) => record.id === updated.id ? updated : record))} /></main>; }
+
+const page = { minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }; const shell = { maxWidth: 1180, margin: "0 auto", display: "grid", gap: 20 }; const eyebrow = { color: "#7dd5fc", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase" as const }; const heading = { margin: "7px 0 0", fontSize: 40, letterSpacing: "-.04em" }; const muted = { color: "#94a3b8", fontSize: 13, lineHeight: 1.5 }; const stats = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))", gap: 1, background: "#1e293b", borderRadius: 16, overflow: "hidden" as const }; const panel = { background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }; const list = { display: "grid", gap: 10, marginTop: 16 }; const row = { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 15, textAlign: "left" as const, background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 15, color: "#e2e8f0", cursor: "pointer" }; const small = { marginTop: 5, color: "#94a3b8", fontSize: 12 };
+================================================================================
+FILE_END: app/handover/possession/page.tsx
+================================================================================

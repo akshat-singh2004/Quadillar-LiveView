@@ -152,7 +152,7 @@ function normalizeClientBill(d: any): ClientBillingRecord {
 
   return {
     id: d?.id ?? `cb-${Date.now()}`,
-    project_id: d?.project_id ?? "proj-default",
+    project_id: d?.project_id ?? "GOMTI-NAGAR-PH1-FITOUT",
     invoice_number: d?.invoice_number ?? `INV-${Date.now().toString().slice(-4)}`,
     client_name: d?.client_name ?? "Principal Employer / Master Developer",
     client_gstin: d?.client_gstin ?? "09AAACG1234F1Z5",
@@ -199,7 +199,7 @@ export default function CanonicalClientBillingPage() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";

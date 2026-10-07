@@ -1,0 +1,62 @@
+=== SPRINT 14 CODE BUNDLE ===
+
+================================================================================
+FILE_START: app/governance/signatures/page.tsx
+================================================================================
+"use client";
+
+import { useState } from "react";
+import { DocumentSignatureModal } from "@/components/cde/DocumentSignatureModal";
+import type { DocumentSignatureRecord, SignatureDocumentType } from "@/types/construction";
+
+const initialRecords: DocumentSignatureRecord[] = [];
+
+export default function SignatureGovernancePage() {
+  const [records, setRecords] = useState(initialRecords);
+  const [open, setOpen] = useState(false);
+  const [documentType, setDocumentType] = useState<SignatureDocumentType>("GFC Drawing");
+
+  return <main style={pageStyle}><div style={{ maxWidth: 1240, margin: "0 auto" }}><header style={{ display: "flex", justifyContent: "space-between", gap: 18, flexWrap: "wrap", alignItems: "end" }}><div><div style={eyebrowStyle}>Governance / trust registry</div><h1 style={{ margin: "8px 0 0", fontSize: 38 }}>Digital signature vault</h1><p style={{ color: "#94a3b8", margin: "8px 0 0" }}>Immutable certificate stamps for GFC drawings and RA payment certificates.</p></div><div style={{ display: "flex", gap: 8 }}><select value={documentType} onChange={(event) => setDocumentType(event.target.value as SignatureDocumentType)} style={inputStyle}><option>GFC Drawing</option><option>RA Billing Certificate</option></select><button type="button" onClick={() => setOpen(true)} style={buttonStyle}>Open stamping canvas</button></div></header><section style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, margin: "28px 0" }}>{[{ label: "Verified certificates", value: records.length }, { label: "Authorized roles", value: 3 }, { label: "Integrity state", value: "100% valid" }].map((item) => <div key={item.label} style={panelStyle}><div style={labelStyle}>{item.label}</div><div style={{ marginTop: 12, fontSize: 25, fontWeight: 800, color: "#a7f3d0" }}>{item.value}</div></div>)}</section><section style={panelStyle}><div style={eyebrowStyle}>Signed document verification ledger</div><div style={{ display: "grid", gap: 10, marginTop: 16 }}>{records.map((record) => <div key={record.id} style={rowStyle}><div><strong>{record.documentName}</strong><div style={mutedStyle}>{record.documentType} · {record.signer} · {record.organization}</div></div><div style={{ textAlign: "right" }}><span style={verifiedStyle}>✓ {record.verificationStatus}</span><div style={mutedStyle}>{new Date(record.signedAt).toLocaleString()}</div></div></div>)}</div></section></div><DocumentSignatureModal open={open} documentName={documentType === "GFC Drawing" ? "GFC-STR-05 / Level 05 Frame" : "RA-09 / Interim Payment Certificate"} documentType={documentType} onClose={() => setOpen(false)} onSigned={(record) => setRecords((current) => [record, ...current])} /></main>;
+}
+
+const pageStyle: React.CSSProperties = { minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: "48px 24px" };
+const panelStyle: React.CSSProperties = { background: "#0b1220", border: "1px solid #1e293b", borderRadius: 14, padding: 20 };
+const rowStyle: React.CSSProperties = { display: "flex", justifyContent: "space-between", gap: 14, alignItems: "center", padding: 14, background: "#111827", border: "1px solid #1f2937", borderRadius: 10 };
+const eyebrowStyle: React.CSSProperties = { color: "#67e8f9", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", fontWeight: 700 };
+const labelStyle: React.CSSProperties = { color: "#94a3b8", fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase" };
+const mutedStyle: React.CSSProperties = { color: "#94a3b8", fontSize: 12, marginTop: 6 };
+const verifiedStyle: React.CSSProperties = { color: "#86efac", fontSize: 11, fontWeight: 800 };
+const inputStyle: React.CSSProperties = { background: "#0f172a", color: "#f8fafc", border: "1px solid #334155", borderRadius: 8, padding: "10px" };
+const buttonStyle: React.CSSProperties = { background: "#34d399", color: "#052e16", border: 0, borderRadius: 8, padding: "10px 14px", fontWeight: 800, cursor: "pointer" };
+
+================================================================================
+FILE_END: app/governance/signatures/page.tsx
+================================================================================
+
+================================================================================
+FILE_START: app/sustainability/waste/page.tsx
+================================================================================
+"use client";
+
+import { WasteDiversionTracker } from "@/components/sustainability/WasteDiversionTracker";
+
+export default function WastePage() { return <main style={page}><div style={shell}><header><div style={eyebrow}>Sustainability / circular construction</div><h1 style={heading}>C&D waste diversion manager</h1><p style={muted}>Capture weighbridge-backed manifests and protect IGBC / LEED landfill diversion credits.</p></header><WasteDiversionTracker /></div></main>; }
+const page = { minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }; const shell = { maxWidth: 1180, margin: "0 auto", display: "grid", gap: 20 }; const eyebrow = { color: "#7dd3fc", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase" as const }; const heading = { margin: "7px 0 0", fontSize: 40, letterSpacing: "-.04em" }; const muted = { color: "#94a3b8", fontSize: 13 };
+================================================================================
+FILE_END: app/sustainability/waste/page.tsx
+================================================================================
+
+================================================================================
+FILE_START: app/settings/branding/page.tsx
+================================================================================
+"use client";
+
+import { useState } from "react";
+import { tenantProfiles, useTenantBranding } from "@/context/TenantBrandingContext";
+
+export default function BrandingPage() { const { tenant, setTenant } = useTenantBranding(); const [name, setName] = useState(tenant.name); const [primary, setPrimary] = useState(tenant.primary); const [accent, setAccent] = useState(tenant.accent); const save = () => { document.documentElement.style.setProperty("--primary-brand", primary); document.documentElement.style.setProperty("--accent-brand", accent); }; return <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: "32px 24px 64px" }}><div style={{ maxWidth: 760, margin: "0 auto", display: "grid", gap: 20 }}><header><div style={eyebrow}>Settings / White Label</div><h1 style={heading}>Tenant Branding</h1><p style={muted}>Switch demo organizations or tune the active organization identity.</p></header><section style={panel}><label>Demo tenant<select value={tenant.id} onChange={(event) => { setTenant(event.target.value); const profile = tenantProfiles.find((item) => item.id === event.target.value) ?? tenantProfiles[0]; setName(profile.name); setPrimary(profile.primary); setAccent(profile.accent); }} style={input}>{tenantProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select></label><label>Organization name<input value={name} onChange={(event) => setName(event.target.value)} style={input} /></label><label>Logo mark<input value={tenant.logo} readOnly style={input} /></label><label>Primary accent<input type="color" value={primary} onChange={(event) => setPrimary(event.target.value)} style={{ ...input, height: 44, padding: 4 }} /></label><label>Secondary accent<input type="color" value={accent} onChange={(event) => setAccent(event.target.value)} style={{ ...input, height: 44, padding: 4 }} /></label><button type="button" onClick={save} style={button}>Apply branding variables</button><div style={{ color: "var(--accent-brand)", fontWeight: 800 }}>Live preview: {name}</div></section></div></main>; }
+const eyebrow = { color: "var(--primary-brand)", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase" as const }; const heading = { margin: "8px 0 0", fontSize: 42 }; const muted = { color: "#94a3b8" }; const panel = { display: "grid", gap: 16, background: "rgba(15,23,42,.82)", border: "1px solid rgba(148,163,184,.2)", borderRadius: 18, padding: 22 }; const input = { display: "block", width: "100%", boxSizing: "border-box" as const, marginTop: 6, background: "#020817", color: "#f8fafc", border: "1px solid rgba(148,163,184,.25)", borderRadius: 9, padding: "10px 12px" }; const button = { border: "1px solid var(--primary-brand)", background: "color-mix(in srgb, var(--primary-brand) 20%, transparent)", color: "#f8fafc", borderRadius: 9, padding: 11, fontWeight: 800, cursor: "pointer" };
+
+================================================================================
+FILE_END: app/settings/branding/page.tsx
+================================================================================

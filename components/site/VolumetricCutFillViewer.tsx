@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { EarthworkSurvey, StockpileEstimate, StockpileMaterial } from "@/types/construction";
 
 const survey: EarthworkSurvey = {
-  id: "survey-aug-24", projectId: "proj-1", surveyDate: "2026-08-24", surveyName: "North Tower foundation earthwork / Flight 08", orthomosaicUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=90", cutVolumeM3: 18420, fillVolumeM3: 6920, targetCutM3: 22000, targetFillM3: 8400, polygon: [{ x: 13, y: 22 }, { x: 82, y: 16 }, { x: 91, y: 75 }, { x: 24, y: 88 }],
+  id: "survey-aug-24", projectId: "GOMTI-NAGAR-PH1-FITOUT", surveyDate: "2026-08-24", surveyName: "North Tower foundation earthwork / Flight 08", orthomosaicUrl: "", cutVolumeM3: 18420, fillVolumeM3: 6920, targetCutM3: 22000, targetFillM3: 8400, polygon: [{ x: 13, y: 22 }, { x: 82, y: 16 }, { x: 91, y: 75 }, { x: 24, y: 88 }],
 };
 const densities: Record<StockpileMaterial, number> = { "River Sand": 1.6, "20mm Aggregates": 1.55, "Excavated Soil": 1.45 };
 

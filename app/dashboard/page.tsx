@@ -1,394 +1,461 @@
-"use client";
-
-import React, { useState, useMemo } from "react";
+import React from "react";
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import {
-  AlertOctagon,
-  AlertTriangle,
-  ArrowRight,
-  Award,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Compass,
-  DollarSign,
-  FileCheck,
   FileSpreadsheet,
-  FileText,
-  HardHat,
-  Layers,
-  Lock,
-  Receipt,
-  Share2,
-  ShieldAlert,
   ShieldCheck,
+  Receipt,
+  ArrowUpRight,
   TrendingUp,
-  Truck,
-  Users,
-  Wrench
+  AlertTriangle,
+  Building2,
+  Lock,
 } from "lucide-react";
-import { useActiveRole } from "@/context/RoleContext";
 
-export default function DashboardPage() {
-  const { project, role, tier } = useActiveRole();
-  const [activeBottomTab, setActiveBottomTab] = useState<"CDE" | "EV" | "WORKFORCE" | "BIM">("EV");
+interface ExecutiveMetrics {
+  grossWorkExecutedInr: number;
+  unbilledMbInventoryInr: number;
+  totalCertifiedNetInr: number;
+  retentionEscrowInr: number;
+  ncrWithholdsInr: number;
+  cpi: number;
+  spi: number;
+  safeManHours: number;
+  clause5DelayDays: number;
+  ldExposureInr: number;
+  criticalPoursFrozen: number;
+  gccProtocol: string;
+}
 
-  // Dynamic Metrics governed by Active Project Tier
-  const telemetry = useMemo(() => {
-    if (tier === "RESIDENTIAL") {
-      return {
-        submittalsCount: "14 Items",
-        submittalsSubtext: "2 Pending Review",
-        pourCardsCount: "3 Open",
-        pourCardsSubtext: "Hold-Points Active",
-        approvedVariations: "₹45,000",
-        approvedVariationsSubtext: "1 Claim Active",
-        handoverDays: "18 Days",
-        handoverSubtext: "On Schedule",
-        stageGateName: "STAGE 04 ACTIVE",
-        strippingStatus: "Locked (7d Cube Pending)",
-        strippingAlert: true,
-        reraStatus: "Valid through Q3",
-        scurveBac: "₹4.00 Lakh",
-        scurveEv: "₹2.18 Lakh",
-        scurveProgressPct: 54.5,
-        workforceHeadcount: "7 Artisans",
-        workforceEfficiency: "81.3%",
-        stockRebarDays: "3 days",
-        stockCementDays: "6 days",
-      };
-    }
-    return {
-      submittalsCount: "73 Items",
-      submittalsSubtext: "12 Critical Rev B",
-      pourCardsCount: "4 Active",
-      pourCardsSubtext: "Level 04 Deck Ready",
-      approvedVariations: "₹1.49 Cr",
-      approvedVariationsSubtext: "Underwriter Certified",
-      handoverDays: "86%",
-      handoverSubtext: "Quality Index Cleared",
-      stageGateName: "STAGE 08 ACTIVE",
-      strippingStatus: "IS 456 Release Verified",
-      strippingAlert: false,
-      reraStatus: "RERA Certificate Valid",
-      scurveBac: "₹39.50 Cr",
-      scurveEv: "₹31.20 Cr",
-      scurveProgressPct: 78.9,
-      workforceHeadcount: "148 Men",
-      workforceEfficiency: "94.2%",
-      stockRebarDays: "14 days",
-      stockCementDays: "9 days",
-    };
-  }, [tier]);
+function formatInr(val: number): string {
+  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+  if (val >= 100000) return `₹${(val / 100000).toFixed(2)} L`;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(val || 0);
+}
+
+function ExecutiveCommandHub({ metrics }: { metrics: ExecutiveMetrics }) {
+  const isCpiHealthy = metrics.cpi >= 1.0;
+  const isSpiHealthy = metrics.spi >= 1.0;
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1600px] space-y-6">
-        
-        {/* TOP OVERVIEW BAR */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-5 gap-4">
+    <div className="space-y-4 font-sans">
+      <div className="bg-zinc-900 border border-zinc-800 px-5 py-3 flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-zinc-200 font-bold uppercase tracking-wider">
+              ENTERPRISE AUDIT ACTIVE
+            </span>
+          </div>
+          <span className="text-zinc-600">|</span>
+          <span className="text-zinc-400">{metrics.gccProtocol}</span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="text-zinc-500">
+            HSE SAFE HOURS:{" "}
+            <strong className="text-emerald-400 font-bold">
+              {metrics.safeManHours.toLocaleString("en-IN")} HRS
+            </strong>
+          </span>
+          <span className="text-zinc-600">|</span>
+          <span className="text-zinc-500">
+            FROZEN STAGE-GATES:{" "}
+            <strong
+              className={
+                metrics.criticalPoursFrozen > 0
+                  ? "text-rose-400 font-bold"
+                  : "text-zinc-300"
+              }
+            >
+              {metrics.criticalPoursFrozen}
+            </strong>
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* PILLAR 1: COMMERCIAL REVENUE & BILLING LAG */}
+        <div className="bg-zinc-900 border border-zinc-800 p-5 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 text-[11px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
-              <span>Executive Command Center</span>
-              <span>·</span>
-              <span className="text-zinc-400">{project.name}</span>
+            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+              <span>Gross Production Executed</span>
+              <Building2 className="h-4 w-4 text-zinc-500" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
-              Operational Overview
+            <div className="mt-3 flex flex-col items-end">
+              <span className="text-2xl font-bold font-mono text-zinc-100 tabular-nums">
+                {formatInr(metrics.grossWorkExecutedInr)}
+              </span>
+              <span className="text-[10px] font-mono text-amber-400 mt-0.5">
+                Unbilled e-MB: {formatInr(metrics.unbilledMbInventoryInr)}
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-zinc-500">
+            <span>Disbursed Net IPC:</span>
+            <span className="text-emerald-400 font-bold">
+              {formatInr(metrics.totalCertifiedNetInr)}
+            </span>
+          </div>
+        </div>
+
+        {/* PILLAR 2: EARNED VALUE PERFORMANCE (CPI & SPI) */}
+        <div className="bg-zinc-900 border border-zinc-800 p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+              <span>Cost &amp; Schedule Index</span>
+              <TrendingUp className="h-4 w-4 text-zinc-500" />
+            </div>
+            <div className="mt-3 flex items-baseline justify-between font-mono">
+              <div>
+                <span className="text-[10px] text-zinc-500 block">COST (CPI)</span>
+                <span
+                  className={`text-2xl font-bold tabular-nums ${
+                    isCpiHealthy ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {metrics.cpi.toFixed(2)}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-zinc-500 block">SCHEDULE (SPI)</span>
+                <span
+                  className={`text-2xl font-bold tabular-nums ${
+                    isSpiHealthy ? "text-emerald-400" : "text-amber-400"
+                  }`}
+                >
+                  {metrics.spi.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-zinc-500">
+            <span>Efficiency Verdict:</span>
+            <span
+              className={
+                isCpiHealthy && isSpiHealthy
+                  ? "text-emerald-400 font-bold"
+                  : "text-amber-400 font-bold"
+              }
+            >
+              {isCpiHealthy && isSpiHealthy
+                ? "Target Baseline Surpassed"
+                : "Under Schedule Friction"}
+            </span>
+          </div>
+        </div>
+
+        {/* PILLAR 3: CLAUSE 5 HINDRANCE & LIQUIDATED DAMAGES RISK */}
+        <div className="bg-zinc-900 border border-zinc-800 p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+              <span>Statutory Hindrance Defense</span>
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+            </div>
+            <div className="mt-3 flex flex-col items-end">
+              <span
+                className={`text-2xl font-bold font-mono tabular-nums ${
+                  metrics.clause5DelayDays > 0 ? "text-amber-400" : "text-zinc-100"
+                }`}
+              >
+                {metrics.clause5DelayDays} Delay Days
+              </span>
+              <span className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                Contemporaneous Logged (Cl. 5)
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-zinc-500">
+            <span>Potential LD Exposure:</span>
+            <span
+              className={
+                metrics.ldExposureInr > 0 ? "text-rose-400 font-bold" : "text-zinc-400"
+              }
+            >
+              {metrics.ldExposureInr > 0
+                ? formatInr(metrics.ldExposureInr)
+                : "Zero Liability"}
+            </span>
+          </div>
+        </div>
+
+        {/* PILLAR 4: RETENTION ESCROW & QUALITY INTERLOCK */}
+        <div className="bg-zinc-900 border border-zinc-800 p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+              <span>Retention Escrow &amp; QMS</span>
+              <Lock className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="mt-3 flex flex-col items-end">
+              <span className="text-2xl font-bold font-mono text-zinc-100 tabular-nums">
+                {formatInr(metrics.retentionEscrowInr)}
+              </span>
+              <span className="text-[10px] font-mono text-rose-400 mt-0.5">
+                NCR Withholds: -{formatInr(metrics.ncrWithholdsInr)}
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-zinc-500">
+            <span>Cl. 17 DLP Escrow:</span>
+            <span className="text-emerald-400 font-bold">Tranche 1 Verified</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+
+  // 1. Resolve Project Context
+  const { data: projectRow } = await supabase
+    .from("projects")
+    .select("project_id, project_name, contract_value, gcc_protocol")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
+  const projectName =
+    projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
+  const contractBudget = Number(projectRow?.contract_value) || 0;
+  const gccProtocol =
+    projectRow?.gcc_protocol || "CPWD GCC Cl. 14 / FIDIC Red Book";
+
+  // 2. Fetch Live Commercial & Measurement Book Volumes
+  const { data: mbRows } = await supabase
+    .from("digital_measurement_book_entries")
+    .select("measured_quantity, consultant_qs_verified")
+    .eq("project_id", projectId);
+
+  const mbEntries = mbRows || [];
+  const grossMbProduction = mbEntries.reduce(
+    (sum, row) => sum + (Number(row.measured_quantity) || 0) * 4500,
+    0
+  );
+
+  // 3. Fetch Latest Certified RA Bills
+  const { data: bills } = await supabase
+    .from("running_account_bills")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("bill_sequence_no", { ascending: false });
+
+  const billList = bills || [];
+  const latestBill = billList[0];
+  const totalCertifiedNet = billList
+    .filter((b) => b.status === "SEOR_CERTIFIED_IPC")
+    .reduce((sum, b) => sum + (Number(b.net_payable_certified) || 0), 0);
+
+  const unbilledMbInventoryInr = Math.max(
+    0,
+    grossMbProduction - (Number(latestBill?.gross_valuation) || 0)
+  );
+
+  // 4. Fetch Quality NCR Withholdings
+  const { data: ncrs } = await supabase
+    .from("quality_ncr_register")
+    .select("withholding_amount_inr, status")
+    .eq("project_id", projectId)
+    .neq("status", "CLOSED");
+
+  const totalNcrWithholding = (ncrs || []).reduce(
+    (sum, row) => sum + (Number(row.withholding_amount_inr) || 0),
+    0
+  );
+
+  // 5. Fetch Statutory Hindrances (CPWD Clause 5)
+  const { data: hindrances } = await supabase
+    .from("site_hindrance_register")
+    .select("days_hindered, critical_path_impact")
+    .eq("project_id", projectId);
+
+  const totalDelayDays = (hindrances || []).reduce(
+    (sum, row) => sum + (Number(row.days_hindered) || 0),
+    0
+  );
+
+  const ldWeeks = Math.floor(totalDelayDays / 7);
+  const calculatedLd = Math.min(
+    contractBudget * 0.1,
+    contractBudget * 0.005 * ldWeeks
+  );
+
+  // 6. Assemble Verified Executive Metrics (with 0 fallbacks for unseeded state)
+  const executiveMetrics: ExecutiveMetrics = {
+    grossWorkExecutedInr:
+      grossMbProduction > 0
+        ? grossMbProduction
+        : Number(latestBill?.gross_valuation) || 0,
+    unbilledMbInventoryInr,
+    totalCertifiedNetInr: totalCertifiedNet,
+    retentionEscrowInr: contractBudget * 0.05,
+    ncrWithholdsInr: totalNcrWithholding,
+    cpi: 0,
+    spi: 0,
+    safeManHours: 0,
+    clause5DelayDays: totalDelayDays,
+    ldExposureInr: calculatedLd,
+    criticalPoursFrozen: ncrs?.length || 0,
+    gccProtocol,
+  };
+
+  return (
+    <main className="min-h-screen bg-zinc-950 p-6 text-zinc-100 font-sans">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-zinc-900 border border-zinc-800 text-zinc-400">
+                Project Code: {projectId}
+              </span>
+              <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-950/40 border border-emerald-800 text-emerald-400">
+                Contract Value: ₹ {(contractBudget / 10000000).toFixed(2)} Cr
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-100 font-mono uppercase">
+              Master Command Center: {projectName}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3 font-mono text-xs">
             <Link
-              href="/operations/dpr"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold transition"
+              href="/finance/ra-bills"
+              className="bg-zinc-100 hover:bg-zinc-300 text-zinc-950 font-bold px-4 py-2 uppercase tracking-wider flex items-center gap-1.5 transition-colors"
             >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>Share Flash DPR</span>
-            </Link>
-            <Link
-              href="/drawings/redlines"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold transition shadow-sm"
-            >
-              <Compass className="w-3.5 h-3.5" />
-              <span>Open CDE Sheets</span>
+              <FileSpreadsheet className="h-4 w-4" />
+              <span>Open RA Bills</span>
             </Link>
           </div>
-        </div>
+        </header>
 
-        {/* 4 PRIMARY TELEMETRY TILES */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <Link
-            href="/submittals"
-            className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 hover:border-zinc-700 transition block group"
-          >
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span className="group-hover:text-cyan-400 transition">Joinery & Finish Submittals</span>
-              <FileSpreadsheet className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-white mt-2">
-              {telemetry.submittalsCount}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">{telemetry.submittalsSubtext}</div>
-          </Link>
+        <ExecutiveCommandHub metrics={executiveMetrics} />
 
-          <Link
-            href="/quality/pour-cards"
-            className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 hover:border-zinc-700 transition block group"
-          >
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span className="group-hover:text-amber-400 transition">Active Pour Cards</span>
-              <Wrench className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-amber-400 mt-2">
-              {telemetry.pourCardsCount}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">{telemetry.pourCardsSubtext}</div>
-          </Link>
-
-          <Link
-            href="/contracts/variations"
-            className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 hover:border-zinc-700 transition block group"
-          >
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span className="group-hover:text-emerald-400 transition">Approved Variations</span>
-              <DollarSign className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-emerald-400 mt-2">
-              {telemetry.approvedVariations}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">{telemetry.approvedVariationsSubtext}</div>
-          </Link>
-
-          <Link
-            href="/handover/punch-list"
-            className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 hover:border-zinc-700 transition block group"
-          >
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span className="group-hover:text-cyan-400 transition">Handover Target</span>
-              <Award className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-white mt-2">
-              {telemetry.handoverDays}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">{telemetry.handoverSubtext}</div>
-          </Link>
-        </div>
-
-        {/* 2-COLUMN ACTION DESK & GOVERNANCE STAGE-GATE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* ACTION DESK: PENDING SIGNATURE (7 cols) */}
-          <div className="lg:col-span-7 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col justify-between space-y-4">
+          <div className="lg:col-span-8 bg-zinc-900 border border-zinc-800 p-5 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                    Action Desk · Pending Your Signature ({role.label})
-                  </span>
+                  <Receipt className="h-4 w-4 text-emerald-400" />
+                  <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-100">
+                    Contractor Payment Certificates (RA Register)
+                  </h2>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
-                  0 Active Holds
-                </span>
+                <Link
+                  href="/finance/ra-bills"
+                  className="text-[10px] font-mono text-zinc-400 hover:text-zinc-200 flex items-center gap-1"
+                >
+                  <span>Full Ledger</span>
+                  <ArrowUpRight className="h-3 w-3" />
+                </Link>
               </div>
 
-              <div className="py-12 text-center space-y-2">
-                <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-950/40 border border-emerald-800/60 text-emerald-400">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div className="text-xs font-semibold text-zinc-200">
-                  All assigned design queries and cost clearances are up to date.
-                </div>
-                <div className="text-[11px] font-mono text-zinc-500">
-                  No statutory hold-points require your signature at this milestone.
-                </div>
+              <div className="overflow-x-auto mt-4">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-[10px] text-zinc-500 uppercase">
+                      <th className="py-2.5 px-3">Bill No.</th>
+                      <th className="py-2.5 px-3">Work Package</th>
+                      <th className="py-2.5 px-3 text-right">Gross Valuation</th>
+                      <th className="py-2.5 px-3 text-right">Net Certified</th>
+                      <th className="py-2.5 px-3 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {billList.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-6 text-center text-zinc-500">
+                          No active payment certificates compiled yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      billList.map((b) => (
+                        <tr key={b.id} className="hover:bg-zinc-800/20">
+                          <td className="py-3 px-3 font-bold text-zinc-200">
+                            {b.ra_bill_number}
+                          </td>
+                          <td className="py-3 px-3 text-zinc-400 truncate max-w-[200px]">
+                            {b.trade_package || "General Civil"}
+                          </td>
+                          <td className="py-3 px-3 text-right tabular-nums text-zinc-100">
+                            ₹ {(Number(b.gross_valuation) || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td className="py-3 px-3 text-right tabular-nums text-emerald-400 font-bold">
+                            ₹ {(Number(b.net_payable_certified) || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <span className="px-2 py-0.5 border text-[10px] uppercase font-bold bg-emerald-950/40 border-emerald-800 text-emerald-400">
+                              {b.status.replace(/_/g, " ")}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80 text-[11px] font-mono text-zinc-500">
-              <span>Authority: {role.category}</span>
-              <span className="text-cyan-400">Audit Ledger Active</span>
             </div>
           </div>
 
-          {/* GOVERNANCE STAGE-GATE (5 cols) */}
-          <div className="lg:col-span-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
-              <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                Governance Stage-Gate
-              </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50 font-bold uppercase">
-                {telemetry.stageGateName}
-              </span>
-            </div>
-
-            <div className="space-y-3 font-mono text-xs">
-              <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/40 flex items-center justify-between">
-                <span className="text-zinc-400">Pour-Release Hold Points</span>
-                <span className="text-emerald-400 font-bold">01 Active Inspection</span>
+          <div className="lg:col-span-4 bg-zinc-900 border border-zinc-800 p-5 flex flex-col justify-between font-mono text-xs">
+            <div>
+              <div className="flex items-center gap-2 pb-3 border-b border-zinc-800">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <h2 className="font-bold uppercase tracking-wider text-zinc-100">
+                  Principal Action Desk
+                </h2>
               </div>
 
-              <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/40 flex items-center justify-between">
-                <span className="text-zinc-400">Formwork Stripping (IS 456)</span>
-                <span className={`font-bold ${telemetry.strippingAlert ? "text-rose-400" : "text-emerald-400"}`}>
-                  {telemetry.strippingStatus}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/40 flex items-center justify-between">
-                <span className="text-zinc-400">Statutory RERA Filing</span>
-                <span className="text-emerald-400 font-bold">{telemetry.reraStatus}</span>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] font-mono">
-              <span className="text-zinc-500">Next risk gate: Virtual Handover</span>
-              <Link href="/milestones" className="text-cyan-400 hover:underline flex items-center gap-1">
-                <span>View Milestone Ledger</span>
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-          </div>
-
-        </div>
-
-        {/* BOTTOM MULTI-TAB WORKSPACE */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
-            {[
-              { key: "EV", label: "Cashflow & Earned Value (S-Curve)" },
-              { key: "CDE", label: "CDE Document Register" },
-              { key: "WORKFORCE", label: "Site Workforce & Logistics" },
-              { key: "BIM", label: "BIM Coordination & ESG" },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveBottomTab(tab.key as any)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition ${
-                  activeBottomTab === tab.key
-                    ? "bg-cyan-500 text-zinc-950 shadow-md shadow-cyan-950/50"
-                    : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* TAB 1: CASHFLOW & EARNED VALUE */}
-          {activeBottomTab === "EV" && (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/60 pb-3">
-                <div>
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                    Earned Value Management (EVM) Telemetry
-                  </h3>
-                  <div className="text-[11px] font-mono text-zinc-400 mt-0.5">
-                    Budget at Completion (BAC): <strong className="text-white">{telemetry.scurveBac}</strong> · Certified Earned Value: <strong className="text-cyan-400">{telemetry.scurveEv}</strong>
+              <div className="mt-4 space-y-3">
+                <div className="p-3 bg-zinc-950 border border-zinc-800">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] text-zinc-500 uppercase">
+                      QMS NCR Withholdings
+                    </span>
+                    <span className="px-1.5 py-0.2 bg-rose-950/60 border border-rose-800 text-rose-400 text-[10px]">
+                      Active
+                    </span>
                   </div>
+                  <div className="text-sm font-bold text-rose-400 mt-1">
+                    -₹ {totalNcrWithholding.toLocaleString("en-IN")}
+                  </div>
+                  <p className="text-[10px] text-zinc-400 mt-1">
+                    Locked across active Interim Payment Certificates until CAPA
+                    training closure.
+                  </p>
                 </div>
-                <Link href="/finance/ra-bills" className="text-xs text-cyan-400 font-mono hover:underline flex items-center gap-1">
-                  <span>View Full Billing Ledger</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-zinc-400">Cumulative Earned Value Progress</span>
-                  <span className="text-emerald-400 font-bold">{telemetry.scurveProgressPct}%</span>
-                </div>
-                <div className="w-full h-3 rounded-full bg-zinc-800 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full transition-all duration-500"
-                    style={{ width: `${telemetry.scurveProgressPct}%` }}
-                  />
+                <div className="p-3 bg-zinc-950 border border-zinc-800">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] text-zinc-500 uppercase">
+                      Clause 5 Hindrance Register
+                    </span>
+                    <span className="px-1.5 py-0.2 bg-amber-950/60 border border-amber-800 text-amber-400 text-[10px]">
+                      {totalDelayDays} Days
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-zinc-200 mt-1">
+                    Weather &amp; Drawing Approvals
+                  </div>
+                  <p className="text-[10px] text-zinc-400 mt-1">
+                    Contemporaneous delay records logged for formal Extension of
+                    Time (EOT) defense.
+                  </p>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* TAB 2: CDE DOCUMENT REGISTER */}
-          {activeBottomTab === "CDE" && (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-3">
-              <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  ISO 19650 Common Data Environment (CDE)
-                </span>
-                <Link href="/drawings/redlines" className="text-xs text-cyan-400 font-mono hover:underline">
-                  Launch Spatial Viewer →
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
-                <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/30">
-                  <span className="text-zinc-400 block mb-1">Architecture IFC</span>
-                  <strong className="text-white">LOD 400 · Rev 03</strong>
-                </div>
-                <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/30">
-                  <span className="text-zinc-400 block mb-1">Structural Rebar</span>
-                  <strong className="text-white">BBS Approved · GFC</strong>
-                </div>
-                <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/30">
-                  <span className="text-zinc-400 block mb-1">MEP Clash Review</span>
-                  <strong className="text-emerald-400">Zero Hard Clashes</strong>
-                </div>
-              </div>
+            <div className="pt-4 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between">
+              <span>QUADILLAR LIVEVIEW v3.2</span>
+              <span>CPWD / FIDIC CONFORMANCE</span>
             </div>
-          )}
-
-          {/* TAB 3: WORKFORCE & LOGISTICS */}
-          {activeBottomTab === "WORKFORCE" && (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  Site Workforce Roster & Inventory Runway
-                </span>
-                <Link href="/site/labor" className="text-xs text-cyan-400 font-mono hover:underline">
-                  View Labor Gang Ledger →
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/30">
-                  <span className="text-zinc-400 block">Active Artisans</span>
-                  <strong className="text-white text-base mt-1 block">{telemetry.workforceHeadcount}</strong>
-                </div>
-                <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/30">
-                  <span className="text-zinc-400 block">Productivity Index</span>
-                  <strong className="text-emerald-400 text-base mt-1 block">{telemetry.workforceEfficiency}</strong>
-                </div>
-                <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/30">
-                  <span className="text-zinc-400 block">Rebar Runway</span>
-                  <strong className="text-amber-400 text-base mt-1 block">{telemetry.stockRebarDays}</strong>
-                </div>
-                <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/30">
-                  <span className="text-zinc-400 block">Cement Runway</span>
-                  <strong className="text-emerald-400 text-base mt-1 block">{telemetry.stockCementDays}</strong>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: BIM COORDINATION & ESG */}
-          {activeBottomTab === "BIM" && (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-3">
-              <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  BIM Coordination Matrix & Embodied Carbon
-                </span>
-                <Link href="/sustainability/carbon" className="text-xs text-cyan-400 font-mono hover:underline">
-                  Carbon Dashboard →
-                </Link>
-              </div>
-              <div className="text-xs font-mono text-zinc-400 leading-relaxed">
-                Heavy BIM coordination and carbon index monitoring are actively bypassed for Tier 1 Residential Fit-Out, preserving high-throughput execution cycles while maintaining full audit logging on superstructure packages.
-              </div>
-            </div>
-          )}
+          </div>
         </div>
-
       </div>
     </main>
   );

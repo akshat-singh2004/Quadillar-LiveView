@@ -2,7 +2,7 @@ import { fetchDashboardSnapshot } from "@/app/lib/services";
 import { generateProjectDocumentBundle } from "@/lib/export/documentGenerator";
 
 export default async function DocumentsPage() {
-  const snapshot = await fetchDashboardSnapshot("proj-1");
+  const snapshot = await fetchDashboardSnapshot("GOMTI-NAGAR-PH1-FITOUT");
   const documents = await generateProjectDocumentBundle(snapshot);
 
   const documentCards = [

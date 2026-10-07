@@ -89,7 +89,7 @@ function normalizeBoqItem(d: any): BoqItemRecord {
 
   return {
     id: d?.id ?? `boq-${Date.now()}`,
-    project_id: d?.project_id ?? "proj-default",
+    project_id: d?.project_id ?? "GOMTI-NAGAR-PH1-FITOUT",
     item_code: d?.item_code ?? `BOQ-${Date.now().toString().slice(-4)}`,
     wbs_code: d?.wbs_code ?? "WBS-1.0",
     item_description: d?.item_description ?? "Contract Schedule Line Item",
@@ -119,7 +119,7 @@ export default function CanonicalBoqPage() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";

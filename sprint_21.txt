@@ -1,0 +1,1598 @@
+==================================================
+SPRINT 21: ROOT SHELL, MASTER VIEWPORT & MODULE ROUTER
+==================================================
+==================================================
+FILE: app/page.tsx
+==================================================
+import React from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { SiteStreamPlayer } from "@/components/site/SiteStreamPlayer";
+import {
+  ShieldCheck,
+  Video,
+  FileCheck2,
+  Clock,
+  Activity,
+  Layers,
+  AlertCircle,
+} from "lucide-react";
+
+function formatInr(val: number): string {
+  if (!val || val === 0) return "₹0.00";
+  if (Math.abs(val) >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+  if (Math.abs(val) >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(val);
+}
+
+export default async function RealityCommandRootPage() {
+  const supabase = await createClient();
+
+  // 1. Resolve Active Project Context from Database
+  const { data: projectRow } = await supabase
+    .from("projects")
+    .select("project_id, project_name, contract_value")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const projectId = projectRow?.project_id || "proj-1";
+  const projectName = projectRow?.project_name || "Project 01 / Core Shell";
+  const contractBudget = Number(projectRow?.contract_value) || 0;
+
+  // 2. Verified Measurement Book Turnover
+  const { data: mbRows } = await supabase
+    .from("digital_measurement_book_entries")
+    .select("measured_quantity, rate_inr")
+    .eq("project_id", projectId)
+    .eq("consultant_qs_verified", true);
+
+  const certifiedMbGross = (mbRows || []).reduce(
+    (sum, r) => sum + (Number(r.measured_quantity) || 0) * (Number(r.rate_inr) || 4500),
+    0
+  );
+
+  // 3. Certified RA Bills (Interim Payment Certificates)
+  const { data: bills } = await supabase
+    .from("running_account_bills")
+    .select("net_payable_certified, retention_amount, status")
+    .eq("project_id", projectId);
+
+  const certifiedNetDisbursed = (bills || [])
+    .filter((b) => b.status === "SEOR_CERTIFIED_IPC" || b.status === "FINANCE_DISBURSED")
+    .reduce((sum, b) => sum + (Number(b.net_payable_certified) || 0), 0);
+
+  const totalRetentionEscrow = (bills || []).reduce(
+    (sum, b) => sum + (Number(b.retention_amount) || 0),
+    0
+  );
+
+  // 4. Quality Withholding Liens (NCRs)
+  const { data: ncrs } = await supabase
+    .from("quality_ncr_register")
+    .select("withholding_amount_inr, financial_lien_inr, status")
+    .eq("project_id", projectId)
+    .neq("status", "CLOSED");
+
+  const totalNcrDebits = (ncrs || []).reduce(
+    (sum, r) => sum + (Number(r.withholding_amount_inr || r.financial_lien_inr) || 0),
+    0
+  );
+
+  // 5. Contemporaneous Hindrances & Delay Float
+  const { data: hindrances } = await supabase
+    .from("site_hindrance_register")
+    .select("days_hindered, status")
+    .eq("project_id", projectId)
+    .eq("status", "ACTIVE_DELAY");
+
+  const delayDays = (hindrances || []).reduce(
+    (sum, r) => sum + (Number(r.days_hindered) || 0),
+    0
+  );
+
+  // 6. Section 65B Immutable Audit Trail
+  const { data: auditLogs } = await supabase
+    .from("immutable_audit_logs")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  const logs = auditLogs || [];
+
+  return (
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 p-6 sm:p-8 font-sans">
+      <div className="max-w-[1650px] mx-auto space-y-6">
+
+        {/* HEADER BAR */}
+        <header className="border-b border-zinc-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4 font-mono">
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">
+              STATUTORY PROJECT GOVERNANCE • {projectId}
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+              Master Command Center
+            </h1>
+            <p className="text-xs text-zinc-400 mt-0.5 font-sans">
+              Contractual earned value verification, reality capture telemetry, and statutory interlocks.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs">
+            <span className="px-2.5 py-1 bg-zinc-900 border border-zinc-800 text-zinc-300">
+              {projectName}
+            </span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900 border border-neutral-700 text-neutral-300 font-mono">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span>POSTGRES RLS LIVE</span>
+            </div>
+          </div>
+        </header>
+
+        {/* 5 EXECUTIVE TILES */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 font-mono text-xs">
+          {/* Tile 1: Sanctioned Contract Baseline */}
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <span className="text-[10px] uppercase text-zinc-500 block">Total Contract Baseline</span>
+            <div className="text-xl font-bold text-zinc-100 mt-2">{formatInr(contractBudget)}</div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">Sanctioned BOQ ceiling</span>
+          </div>
+
+          {/* Tile 2: Certified e-MB Measure */}
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <span className="text-[10px] uppercase text-zinc-500 block">Certified e-MB Measure</span>
+            <div className="text-xl font-bold text-zinc-100 mt-2">
+              {formatInr(certifiedNetDisbursed || certifiedMbGross)}
+            </div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">
+              {(mbRows || []).length > 0 ? `${mbRows?.length} verified lines` : "0 verified lines (Standby)"}
+            </span>
+          </div>
+
+          {/* Tile 3: Retained Escrow Balance */}
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <span className="text-[10px] uppercase text-zinc-500 block">Retained Escrow (5%)</span>
+            <div className="text-xl font-bold text-zinc-100 mt-2">
+              {formatInr(totalRetentionEscrow)}
+            </div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">
+              {totalRetentionEscrow > 0 ? "FIDIC Cl 14.3 Retention Held" : "₹0 held (No certified bills)"}
+            </span>
+          </div>
+
+          {/* Tile 4: Active Commercial Debits */}
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <span className="text-[10px] uppercase text-zinc-500 block">Active NCR Liens</span>
+            <div className={`text-xl font-bold mt-2 ${totalNcrDebits > 0 ? "text-rose-400" : "text-zinc-100"}`}>
+              {formatInr(totalNcrDebits)}
+            </div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">
+              {totalNcrDebits > 0 ? `${ncrs?.length} open structural liens` : "Zero open defect liens"}
+            </span>
+          </div>
+
+          {/* Tile 5: Critical Path Float Delta */}
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <span className="text-[10px] uppercase text-zinc-500 block">Critical Path Delay Float</span>
+            <div className={`text-xl font-bold mt-2 ${delayDays > 0 ? "text-amber-400" : "text-zinc-100"}`}>
+              {delayDays > 0 ? `+${delayDays} Days` : "0 Days"}
+            </div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">
+              {delayDays > 0 ? "Contemporaneous delay notice" : "Schedule on baseline"}
+            </span>
+          </div>
+        </div>
+
+        {/* SURVEILLANCE & EVENT STREAM VIEWPORTS */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* SURVEILLANCE & REALITY CAPTURE (8 COLS) */}
+          <div className="lg:col-span-8 bg-zinc-900/40 border border-zinc-800 p-5 flex flex-col justify-between space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3 font-mono text-xs">
+              <div className="flex items-center gap-2">
+                <Video className="w-4 h-4 text-cyan-400" />
+                <span className="font-bold text-zinc-200 uppercase">Reality Capture Hub • RTSP/WHEP Streaming Gate /* FALLBACK_STREAMING_CHANNEL */</span>
+              </div>
+              <span className="text-[10px] text-neutral-400 font-mono">
+                EDGE SENSORS: 0 ACTIVE
+              </span>
+            </div>
+
+            {/* Industrial Diagnostic Stream Player */}
+            <div className="w-full">
+              <SiteStreamPlayer />
+            </div>
+
+            {/* Hold-Gate Quick Links */}
+            <div className="grid grid-cols-3 gap-3 font-mono text-xs pt-1">
+              <Link href="/quality/pour-cards" className="p-3 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition block">
+                <span className="text-[10px] text-zinc-500 block uppercase">Pour Cards</span>
+                <span className="font-bold text-zinc-300 mt-1 block">Pre-Pour Hold-Gate</span>
+              </Link>
+              <Link href="/finance/ra-bills" className="p-3 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition block">
+                <span className="text-[10px] text-zinc-500 block uppercase">RA Bills</span>
+                <span className="font-bold text-zinc-300 mt-1 block">IPC Settlement</span>
+              </Link>
+              <Link href="/handover/punch-list" className="p-3 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition block">
+                <span className="text-[10px] text-zinc-500 block uppercase">Taking-Over</span>
+                <span className="font-bold text-zinc-300 mt-1 block">TOC &amp; Snags</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* AUDIT LOG & OPERATIONS STREAM (4 COLS) */}
+          <div className="lg:col-span-4 bg-zinc-900/40 border border-zinc-800 p-5 space-y-4 font-mono text-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <span className="font-bold text-zinc-200 uppercase">Live Operations Stream</span>
+                <span className="text-[10px] text-neutral-400 uppercase">Audit Trail</span>
+              </div>
+
+              <div className="space-y-3 pt-3">
+                {logs.length === 0 ? (
+                  <div className="py-24 text-center text-zinc-500 space-y-2">
+                    <Clock className="w-6 h-6 mx-auto text-zinc-700" />
+                    <div className="font-semibold text-zinc-400">No Operations Logged Yet</div>
+                    <p className="text-[11px] text-zinc-600 font-sans max-w-xs mx-auto">
+                      Transactions, concrete pour approvals, and biometric DPR entries will populate this Section 65B audit trail as work is logged on site.
+                    </p>
+                  </div>
+                ) : (
+                  logs.map((log: any) => (
+                    <div key={log.id} className="p-3 bg-zinc-950 border border-zinc-800">
+                      <div className="flex justify-between items-start">
+                        <span className="text-zinc-200 font-bold text-xs">{log.action_title || log.action_category}</span>
+                        <span className="text-[10px] text-zinc-500">{new Date(log.created_at).toLocaleTimeString()}</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 mt-1">{log.details || log.action_description}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between">
+              <span>QUADILLAR LIVEVIEW v3.2</span>
+              <span>CPWD / FIDIC CONFORMANCE</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  );
+}
+
+==================================================
+FILE: components/LiveViewShell.tsx
+==================================================
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  FileText,
+  TrendingUp,
+  Briefcase,
+  ShieldAlert,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+
+interface LiveViewShellProps {
+  children: React.ReactNode;
+}
+
+const NAV_ITEMS = [
+  {
+    name: "Master Command Center",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Variations (Cl. 12)",
+    href: "/modules/variations",
+    icon: FileText,
+  },
+  {
+    name: "Escalation (Cl. 10CA/CC)",
+    href: "/modules/escalation",
+    icon: TrendingUp,
+  },
+  {
+    name: "Advances (Cl. 10B)",
+    href: "/modules/advances",
+    icon: Briefcase,
+  },
+  {
+    name: "Hindrance & EOT (Cl. 5)",
+    href: "/modules/eot",
+    icon: ShieldAlert,
+  },
+];
+
+export default function LiveViewShell({ children }: LiveViewShellProps) {
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const pathname = usePathname();
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      {/* ===================================================================
+          SIDEBAR: Fixed position, rigid non-overlaying width
+          =================================================================== */}
+      <aside
+        className={`fixed top-0 bottom-0 left-0 z-30 flex flex-col bg-zinc-900 border-r border-zinc-800 transition-all duration-300 ${
+          isExpanded ? "w-64" : "w-16"
+        }`}
+      >
+        {/* Brand / Toggle Header */}
+        <div
+          className={`flex h-14 items-center border-b border-zinc-800 px-3 ${
+            isExpanded ? "justify-between" : "justify-center"
+          }`}
+        >
+          {isExpanded && (
+            <div className="flex items-center gap-2 overflow-hidden pl-1">
+              <span className="font-mono text-xs font-bold tracking-wider text-zinc-100 uppercase truncate">
+                QUADILLAR
+              </span>
+              <span className="border border-zinc-800 bg-zinc-950 px-1.5 py-0.5 font-mono text-[10px] text-emerald-500 font-medium">
+                LIVE
+              </span>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+            aria-label={isExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
+          >
+            {isExpanded ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+
+        {/* Navigation List */}
+        <nav className="flex-1 py-3 flex flex-col gap-1 overflow-y-auto">
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/" && pathname.startsWith(item.href));
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={item.name}
+                className={`flex items-center gap-3 py-3 text-sm font-medium transition-colors ${
+                  isExpanded ? "px-4" : "justify-center px-0"
+                } ${
+                  isActive
+                    ? "bg-zinc-800 border-l-2 border-zinc-100 text-zinc-100"
+                    : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 border-l-2 border-transparent"
+                }`}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                {isExpanded && (
+                  <span className="truncate whitespace-nowrap">{item.name}</span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Statutory Compliance Footer */}
+        <div className="border-t border-zinc-800 p-3">
+          {isExpanded ? (
+            <div className="flex flex-col gap-0.5 text-[10px] font-mono text-zinc-500">
+              <div className="flex items-center gap-1.5 text-zinc-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="uppercase tracking-wider">CPWD / FIDIC</span>
+              </div>
+              <span className="truncate">ISO 19650 COMPLIANT</span>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <span
+                className="h-2 w-2 rounded-full bg-emerald-500"
+                title="CPWD / FIDIC System Active"
+              />
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* ===================================================================
+          MAIN WRAPPER: Dynamic left margin shifting to prevent any overlap
+          =================================================================== */}
+      <main
+        className={`min-h-screen transition-all duration-300 ${
+          isExpanded ? "ml-64" : "ml-16"
+        }`}
+      >
+        {children}
+      </main>
+    </div>
+  );
+}
+
+
+==================================================
+FILE: app/dashboard/DashboardShell.tsx
+==================================================
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import {
+  AlertOctagon,
+  ArrowRight,
+  Award,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Compass,
+  Database,
+  DollarSign,
+  FileSpreadsheet,
+  FileText,
+  HardHat,
+  Receipt,
+  RefreshCw,
+  Share2,
+  ShieldAlert,
+  ShieldCheck,
+  TrendingDown,
+  TrendingUp,
+  TriangleAlert,
+  Wrench,
+  Zap,
+} from "lucide-react";
+import { useActiveRole } from "@/context/RoleContext";
+
+// ---------------------------------------------------------------------------
+// Public contract — mirrors what page.tsx constructs from DB rows
+// ---------------------------------------------------------------------------
+export interface DashboardKPIs {
+  projectId:               string;
+  projectCode:             string;
+  projectName:             string;
+  contractorName:          string;
+  contractReference:       string;
+  agreementDate:           string;
+  tier:                    string;
+  contractBaseline:        string;
+  contractBaselineRaw:     number;
+  certifiedRaBills:        string;
+  certifiedRaBillsRaw:     number;
+  totalBillCount:          number;
+  activeDelayDays:         number;
+  eotGrantedDays:          number;
+  earnedValue:             string;
+  actualCost:              string;
+  plannedValue:            string;
+  evProgressPct:           number;
+  cpi:                     number | null;
+  spi:                     number | null;
+  pendingVariationsValue:  string;
+  activeEotBillCount:      number;
+  latestEotStatus:         string;
+  latestEotColour:         string;
+  latestBillRef:           string | null;
+  latestBillStatus:        string | null;
+  latestBillNetDue:        string | null;
+  latestBillCertDate:      string | null;
+  latestBillCertifiedBy:   string | null;
+  stipulatedCompletion:    string;
+  revisedCompletion:       string | null;
+  isAuthenticated:         boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components: purely presentational, zero data-fetching
+// ---------------------------------------------------------------------------
+
+type Tab = "EV" | "LEDGER" | "EOT" | "CONTRACT";
+
+interface BadgeProps { label: string; variant: "ok" | "warn" | "danger" | "muted" | "info" }
+function Badge({ label, variant }: BadgeProps) {
+  const cls = {
+    ok:     "bg-emerald-950 border-emerald-800 text-emerald-400",
+    warn:   "bg-amber-950  border-amber-800  text-amber-400",
+    danger: "bg-rose-950   border-rose-800   text-rose-400",
+    muted:  "bg-zinc-900   border-zinc-700   text-zinc-400",
+    info:   "bg-cyan-950   border-cyan-800   text-cyan-400",
+  }[variant];
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[10px] font-mono font-bold uppercase tracking-wider ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+interface KpiTileProps {
+  label:    string;
+  value:    string;
+  sub?:     React.ReactNode;
+  icon:     React.ReactNode;
+  accent:   string;
+  href:     string;
+}
+function KpiTile({ label, value, sub, icon, accent, href }: KpiTileProps) {
+  return (
+    <Link
+      href={href}
+      className="rounded-none border border-zinc-800 bg-zinc-900 p-4 hover:border-zinc-600 transition-colors block group"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">
+          {label}
+        </span>
+        <span className={`${accent}`}>{icon}</span>
+      </div>
+      <div className={`text-2xl font-extrabold font-mono tabular-nums tracking-tight ${accent}`}>
+        {value}
+      </div>
+      {sub && <div className="mt-1.5 text-[11px] font-mono text-zinc-500 leading-tight">{sub}</div>}
+    </Link>
+  );
+}
+
+/** Solid colour progress bar — no gradient, as per matte constraint. */
+function ProgressBar({ pct, colour }: { pct: number; colour: string }) {
+  return (
+    <div className="w-full h-2 bg-zinc-800 rounded-none overflow-hidden">
+      <div
+        className={`h-full ${colour} rounded-none transition-all duration-700`}
+        style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
+      />
+    </div>
+  );
+}
+
+/** Deterministic payment_status → colour map. Solid colours only. */
+function paymentColour(status: string): string {
+  const MAP: Record<string, string> = {
+    Paid:      "text-emerald-400",
+    Certified: "text-cyan-400",
+    Pending:   "text-amber-400",
+    Disputed:  "text-rose-400",
+    Withheld:  "text-rose-400",
+  };
+  return MAP[status] ?? "text-zinc-400";
+}
+
+function paymentBadgeVariant(status: string): BadgeProps["variant"] {
+  const MAP: Record<string, BadgeProps["variant"]> = {
+    Paid:      "ok",
+    Certified: "info",
+    Pending:   "warn",
+    Disputed:  "danger",
+    Withheld:  "danger",
+  };
+  return MAP[status] ?? "muted";
+}
+
+// ---------------------------------------------------------------------------
+// Empty state — "Initiate Phase 3 Algorithmic Ingestion"
+// ---------------------------------------------------------------------------
+function EmptyState({ isAuthenticated }: { isAuthenticated: boolean }) {
+  return (
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 px-6 py-10">
+      <div className="mx-auto max-w-[860px] space-y-8">
+        <div className="border-b border-zinc-800 pb-6">
+          <div className="text-[11px] font-mono tracking-widest text-cyan-400 uppercase font-bold mb-1">
+            QUADILLAR LIVEVIEW · MASTER COMMAND CENTER
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">
+            No Project Data Indexed
+          </h1>
+          <p className="mt-2 text-sm text-zinc-500 font-mono">
+            {isAuthenticated
+              ? "Your session is authenticated. No project records are associated with your portal role for the requested project code."
+              : "Unauthenticated session. Sign in to access your project ledger."}
+          </p>
+        </div>
+
+        {/* Ingestion prompt */}
+        <div className="border border-zinc-700 bg-zinc-900 p-8 space-y-6">
+          <div className="flex items-start gap-4">
+            <div className="mt-0.5 flex-shrink-0 h-10 w-10 border border-cyan-800 bg-zinc-950 flex items-center justify-center">
+              <Database className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <div className="text-[11px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
+                PHASE 3 ALGORITHMIC INGESTION REQUIRED
+              </div>
+              <h2 className="text-xl font-bold text-white mt-1">
+                Initiate Phase 3 Algorithmic Ingestion
+              </h2>
+              <p className="mt-2 text-sm text-zinc-400 font-mono leading-relaxed">
+                The Command Center requires a fully indexed project ledger before rendering
+                live KPIs. Execute the three-step ingestion protocol to populate the
+                <code className="mx-1 px-1.5 py-0.5 bg-zinc-800 text-cyan-300 text-[11px] rounded-none">
+                  projects
+                </code>
+                and
+                <code className="mx-1 px-1.5 py-0.5 bg-zinc-800 text-cyan-300 text-[11px] rounded-none">
+                  statutory_ledgers
+                </code>
+                tables and assign your membership in
+                <code className="mx-1 px-1.5 py-0.5 bg-zinc-800 text-cyan-300 text-[11px] rounded-none">
+                  project_members
+                </code>.
+              </p>
+            </div>
+          </div>
+
+          {/* Step list */}
+          <ol className="space-y-4 font-mono text-xs pl-2">
+            {[
+              {
+                n: "01",
+                title: "Apply Supabase Schema",
+                body: "Run supabase/schema.sql in your Supabase SQL Editor. This creates project_members, projects, and statutory_ledgers with full RLS and seeds benchmark data.",
+                status: "REQUIRED",
+                variant: "danger" as const,
+              },
+              {
+                n: "02",
+                title: "Assign Project Membership",
+                body: "Insert a row in project_members mapping your auth.uid() to this project_id with the appropriate portal_role (e.g., PMC_LEAD or QS_BILLING for full read access).",
+                status: "REQUIRED",
+                variant: "danger" as const,
+              },
+              {
+                n: "03",
+                title: "Run Advances Migration",
+                body: "Apply supabase/migrations/20260918_advances_recoveries.sql to seed Clause 10B advance and recovery data into contract_advances_master.",
+                status: "OPTIONAL",
+                variant: "muted" as const,
+              },
+            ].map((step) => (
+              <li key={step.n} className="flex items-start gap-4 border border-zinc-800 bg-zinc-950 p-4">
+                <span className="text-zinc-600 font-bold text-base shrink-0 w-6 text-right">{step.n}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bold text-white text-[13px]">{step.title}</span>
+                    <Badge label={step.status} variant={step.variant} />
+                  </div>
+                  <p className="text-zinc-500 leading-relaxed">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          {/* CTA */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-zinc-800">
+            {!isAuthenticated && (
+              <Link
+                href="/auth/sign-in"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-500 text-zinc-950 text-xs font-bold font-mono uppercase tracking-wider hover:bg-cyan-400 transition-colors"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                Sign In to Portal
+              </Link>
+            )}
+            <Link
+              href="https://supabase.com/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-zinc-700 bg-zinc-900 text-zinc-300 text-xs font-mono font-bold uppercase tracking-wider hover:border-zinc-500 transition-colors"
+            >
+              <Database className="w-3.5 h-3.5" />
+              Open Supabase SQL Editor
+            </Link>
+            <Link
+              href="/settings"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-zinc-700 bg-zinc-900 text-zinc-300 text-xs font-mono font-bold uppercase tracking-wider hover:border-zinc-500 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Project Settings
+            </Link>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main shell — receives DB-derived KPIs as props
+// ---------------------------------------------------------------------------
+interface Props { kpis: DashboardKPIs | null }
+
+export function DashboardShell({ kpis }: Props) {
+  const { project, role, tier } = useActiveRole();
+  const [activeTab, setActiveTab] = useState<Tab>("EV");
+
+  // If no data was returned from Supabase, surface the ingestion prompt
+  if (!kpis) {
+    return <EmptyState isAuthenticated={false} />;
+  }
+
+  // ── Derived status tokens ────────────────────────────────────────────────
+  const delayStatus: "ok" | "warn" | "danger" =
+    kpis.activeDelayDays === 0   ? "ok"
+    : kpis.activeDelayDays < 30  ? "warn"
+    :                              "danger";
+
+  const cpiStatus: "ok" | "warn" | "danger" | "muted" =
+    kpis.cpi === null        ? "muted"
+    : kpis.cpi >= 1.0        ? "ok"
+    : kpis.cpi >= 0.9        ? "warn"
+    :                          "danger";
+
+  const spiStatus: "ok" | "warn" | "danger" | "muted" =
+    kpis.spi === null        ? "muted"
+    : kpis.spi >= 1.0        ? "ok"
+    : kpis.spi >= 0.9        ? "warn"
+    :                          "danger";
+
+  const delayColour =
+    delayStatus === "ok"     ? "#22c55e"   // emerald-500
+    : delayStatus === "warn" ? "#f59e0b"   // amber-500
+    :                          "#ef4444";  // red-500 — solid per constraint
+
+  const evBarColour =
+    kpis.evProgressPct >= 80 ? "bg-emerald-500"
+    : kpis.evProgressPct >= 50 ? "bg-cyan-500"
+    : "bg-amber-500";
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: "EV",       label: "Earned Value (EVM)" },
+    { key: "LEDGER",   label: "Statutory Ledger" },
+    { key: "EOT",      label: "EOT / Delay Tracker" },
+    { key: "CONTRACT", label: "Contract Meta" },
+  ];
+
+  return (
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] space-y-6">
+
+        {/* ── TOP BAR ──────────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-5 gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
+              <span>Master Command Center</span>
+              <span className="text-zinc-700">·</span>
+              <span className="text-zinc-400">{kpis.projectCode}</span>
+              <span className="text-zinc-700">·</span>
+              <Badge label={kpis.tier} variant="muted" />
+              {kpis.isAuthenticated && <Badge label="LIVE" variant="ok" />}
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
+              {kpis.projectName}
+            </h1>
+            <div className="mt-1 text-[11px] font-mono text-zinc-500">
+              {kpis.contractorName} · {kpis.contractReference}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Link
+              href="/operations/dpr"
+              className="inline-flex items-center gap-1.5 px-3 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-mono font-semibold transition-colors"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Share DPR
+            </Link>
+            <Link
+              href="/drawings/redlines"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-mono font-bold transition-colors"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              Open CDE Sheets
+            </Link>
+          </div>
+        </div>
+
+        {/* ── 3-COLUMN PRIMARY KPI STRIP ─────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px border border-zinc-800 bg-zinc-800">
+          {/* Contract Baseline */}
+          <KpiTile
+            label="Contract Baseline Value"
+            value={kpis.contractBaseline}
+            sub={<>Agreement Date: <span className="text-zinc-300">{kpis.agreementDate}</span></>}
+            icon={<FileText className="w-4 h-4" />}
+            accent="text-white"
+            href="/contracts"
+          />
+
+          {/* Certified RA Bills */}
+          <KpiTile
+            label="Certified RA Bills (Gross)"
+            value={kpis.certifiedRaBills}
+            sub={<>{kpis.totalBillCount} bill{kpis.totalBillCount !== 1 ? "s" : ""} certified · EV Progress: <span className="text-cyan-400">{kpis.evProgressPct}%</span></>}
+            icon={<Receipt className="w-4 h-4" />}
+            accent="text-cyan-400"
+            href="/finance/ra-bills"
+          />
+
+          {/* Active Delay Days */}
+          <KpiTile
+            label="Active Delay Days"
+            value={kpis.activeDelayDays === 0 ? "ON SCHEDULE" : `+${kpis.activeDelayDays} Days`}
+            sub={
+              kpis.activeDelayDays > 0
+                ? <>EOT Granted: <span className="text-emerald-400">{kpis.eotGrantedDays}d</span> · Net Exposure: <span style={{ color: delayColour }}>{Math.max(0, kpis.activeDelayDays - kpis.eotGrantedDays)}d</span></>
+                : <>Stipulated: {kpis.revisedCompletion ?? kpis.stipulatedCompletion}</>
+            }
+            icon={
+              kpis.activeDelayDays === 0
+                ? <CheckCircle2 className="w-4 h-4" />
+                : <AlertOctagon className="w-4 h-4" />
+            }
+            accent={
+              delayStatus === "ok"     ? "text-emerald-400"
+              : delayStatus === "warn" ? "text-amber-400"
+              : "text-red-500"           /* solid red — per constraint */
+            }
+            href="/commercial/hindrance-eot"
+          />
+        </div>
+
+        {/* ── SECONDARY KPI ROW: CPI / SPI / Variations / EOT ─────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px border border-zinc-800 bg-zinc-800">
+          {/* CPI */}
+          <div className="bg-zinc-900 p-4">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5" />
+              Cost Perf. Index (CPI)
+            </div>
+            <div className={`text-2xl font-extrabold font-mono tabular-nums ${
+              cpiStatus === "ok"   ? "text-emerald-400"
+              : cpiStatus === "warn" ? "text-amber-400"
+              : cpiStatus === "danger" ? "text-red-500"
+              : "text-zinc-500"
+            }`}>
+              {kpis.cpi !== null ? kpis.cpi.toFixed(2) : "—"}
+            </div>
+            <div className="text-[10px] font-mono text-zinc-600 mt-1">
+              {kpis.cpi === null ? "Awaiting cost data"
+                : kpis.cpi >= 1 ? "Under budget · FIDIC Cl.14"
+                : "Cost overrun · escalate"}
+            </div>
+          </div>
+
+          {/* SPI */}
+          <div className="bg-zinc-900 p-4">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              Schedule Perf. Index (SPI)
+            </div>
+            <div className={`text-2xl font-extrabold font-mono tabular-nums ${
+              spiStatus === "ok"      ? "text-emerald-400"
+              : spiStatus === "warn"  ? "text-amber-400"
+              : spiStatus === "danger"? "text-red-500"
+              : "text-zinc-500"
+            }`}>
+              {kpis.spi !== null ? kpis.spi.toFixed(2) : "—"}
+            </div>
+            <div className="text-[10px] font-mono text-zinc-600 mt-1">
+              {kpis.spi === null ? "Awaiting schedule data"
+                : kpis.spi >= 1 ? "Ahead of schedule"
+                : "Behind schedule · review Float"}
+            </div>
+          </div>
+
+          {/* Pending Variations */}
+          <div className="bg-zinc-900 p-4">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+              <DollarSign className="w-3.5 h-3.5" />
+              Pending Variations Value
+            </div>
+            <div className="text-2xl font-extrabold font-mono tabular-nums text-amber-400">
+              {kpis.pendingVariationsValue}
+            </div>
+            <div className="text-[10px] font-mono text-zinc-600 mt-1">
+              Awaiting QS certification · FIDIC Cl.13
+            </div>
+          </div>
+
+          {/* EOT Bills */}
+          <div className="bg-zinc-900 p-4">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              Bills with Active EOT
+            </div>
+            <div className={`text-2xl font-extrabold font-mono tabular-nums ${
+              kpis.activeEotBillCount === 0 ? "text-emerald-400" : "text-amber-400"
+            }`}>
+              {kpis.activeEotBillCount}
+            </div>
+            <div className="text-[10px] font-mono text-zinc-600 mt-1">
+              Latest: <span className={kpis.latestEotColour}>{kpis.latestEotStatus}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── LATEST BILL BANNER ────────────────────────────────────────── */}
+        {kpis.latestBillRef && (
+          <div className="border border-zinc-800 bg-zinc-900 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="shrink-0 h-8 w-8 border border-zinc-700 bg-zinc-950 flex items-center justify-center">
+                <FileSpreadsheet className="w-4 h-4 text-zinc-400" />
+              </div>
+              <div>
+                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                  Latest Billing Cycle
+                </div>
+                <div className="text-sm font-bold font-mono text-white">
+                  {kpis.latestBillRef}
+                </div>
+                <div className="text-[11px] font-mono text-zinc-500 mt-0.5">
+                  Certified by {kpis.latestBillCertifiedBy} · {kpis.latestBillCertDate}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 sm:text-right">
+              <div>
+                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Net Payable</div>
+                <div className={`text-lg font-extrabold font-mono tabular-nums ${paymentColour(kpis.latestBillStatus ?? "")}`}>
+                  {kpis.latestBillNetDue}
+                </div>
+              </div>
+              <Badge
+                label={kpis.latestBillStatus ?? "—"}
+                variant={paymentBadgeVariant(kpis.latestBillStatus ?? "")}
+              />
+              <Link
+                href="/finance/ra-bills"
+                className="flex items-center gap-1 text-cyan-400 text-xs font-mono hover:underline shrink-0"
+              >
+                Full Ledger <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ── TABBED WORKSPACE ──────────────────────────────────────────── */}
+        <div className="space-y-0">
+          {/* Tab bar */}
+          <div className="flex items-center border border-zinc-800 border-b-0 bg-zinc-950">
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                id={`dashboard-tab-${tab.key.toLowerCase()}`}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-3 text-[11px] font-mono font-bold uppercase tracking-wider transition-colors border-r border-zinc-800 last:border-r-0 ${
+                  activeTab === tab.key
+                    ? "bg-zinc-900 text-white border-b-2 border-b-cyan-500"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab panels */}
+          <div className="border border-zinc-800 bg-zinc-950">
+
+            {/* ── EVM TAB ─────────────────────────────────────────────── */}
+            {activeTab === "EV" && (
+              <div className="p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-4">
+                  <div>
+                    <div className="text-[10px] font-mono tracking-widest text-zinc-500 uppercase font-bold">
+                      Earned Value Management (EVM) · FIDIC Cl.14
+                    </div>
+                    <div className="text-xs font-mono text-zinc-400 mt-1">
+                      BAC: <strong className="text-white">{kpis.contractBaseline}</strong>
+                      &nbsp;·&nbsp;
+                      EV: <strong className="text-cyan-400">{kpis.earnedValue}</strong>
+                      &nbsp;·&nbsp;
+                      AC: <strong className="text-zinc-300">{kpis.actualCost}</strong>
+                      &nbsp;·&nbsp;
+                      PV: <strong className="text-zinc-300">{kpis.plannedValue}</strong>
+                    </div>
+                  </div>
+                  <Link
+                    href="/finance/ra-bills"
+                    className="text-xs text-cyan-400 font-mono hover:underline flex items-center gap-1 shrink-0"
+                  >
+                    Full Billing Ledger <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                {/* Progress bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-zinc-400">Cumulative EV Progress (EV / BAC)</span>
+                    <span className={`font-bold ${
+                      kpis.evProgressPct >= 80 ? "text-emerald-400"
+                      : kpis.evProgressPct >= 50 ? "text-cyan-400"
+                      : "text-amber-400"
+                    }`}>
+                      {kpis.evProgressPct}%
+                    </span>
+                  </div>
+                  <ProgressBar pct={kpis.evProgressPct} colour={evBarColour} />
+                </div>
+
+                {/* Index summary grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="border border-zinc-800 bg-zinc-900 p-4 space-y-1">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                      Cost Variance (CV = EV − AC)
+                    </div>
+                    {kpis.cpi !== null ? (
+                      <>
+                        <div className={`text-lg font-extrabold font-mono tabular-nums ${
+                          kpis.cpi >= 1 ? "text-emerald-400" : "text-red-500"
+                        }`}>
+                          {kpis.cpi >= 1 ? "Favourable" : "Unfavourable"}
+                        </div>
+                        <div className="text-[11px] font-mono text-zinc-500">
+                          CPI = {kpis.cpi.toFixed(3)} · {kpis.cpi >= 1 ? "Under" : "Over"} budget by {Math.abs((1 - kpis.cpi) * 100).toFixed(1)}%
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-zinc-600 text-sm font-mono">Actual cost not indexed</div>
+                    )}
+                  </div>
+
+                  <div className="border border-zinc-800 bg-zinc-900 p-4 space-y-1">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                      Schedule Variance (SV = EV − PV)
+                    </div>
+                    {kpis.spi !== null ? (
+                      <>
+                        <div className={`text-lg font-extrabold font-mono tabular-nums ${
+                          kpis.spi >= 1 ? "text-emerald-400" : "text-red-500"
+                        }`}>
+                          {kpis.spi >= 1 ? "Ahead of Plan" : "Behind Plan"}
+                        </div>
+                        <div className="text-[11px] font-mono text-zinc-500">
+                          SPI = {kpis.spi.toFixed(3)} · {kpis.spi >= 1 ? "+" : ""}{((kpis.spi - 1) * 100).toFixed(1)}% vs baseline schedule
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-zinc-600 text-sm font-mono">Planned value not indexed</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                  <span>Role: {role.label} · Authority: {role.category}</span>
+                  <span className="text-cyan-400">Supabase Live · RLS Active</span>
+                </div>
+              </div>
+            )}
+
+            {/* ── LEDGER TAB ──────────────────────────────────────────── */}
+            {activeTab === "LEDGER" && (
+              <div className="p-6 space-y-4">
+                <div className="border-b border-zinc-800 pb-3 flex items-center justify-between">
+                  <div className="text-[10px] font-mono tracking-widest text-zinc-500 uppercase font-bold">
+                    Statutory Ledger — RA Bills / IPC Certificates
+                  </div>
+                  <Link href="/finance/ra-bills" className="text-xs text-cyan-400 font-mono hover:underline flex items-center gap-1">
+                    Full Register <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="border border-zinc-800 bg-zinc-900 p-4">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
+                      Gross Certified (Σ RA Bills)
+                    </div>
+                    <div className="text-xl font-extrabold font-mono text-white">{kpis.certifiedRaBills}</div>
+                    <div className="text-[11px] font-mono text-zinc-600 mt-1">{kpis.totalBillCount} billing cycles indexed</div>
+                  </div>
+                  <div className="border border-zinc-800 bg-zinc-900 p-4">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
+                      Pending Variations
+                    </div>
+                    <div className="text-xl font-extrabold font-mono text-amber-400">{kpis.pendingVariationsValue}</div>
+                    <div className="text-[11px] font-mono text-zinc-600 mt-1">Awaiting QS certification</div>
+                  </div>
+                  <div className="border border-zinc-800 bg-zinc-900 p-4">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
+                      Latest Net Payable
+                    </div>
+                    <div className={`text-xl font-extrabold font-mono ${paymentColour(kpis.latestBillStatus ?? "")}`}>
+                      {kpis.latestBillNetDue ?? "—"}
+                    </div>
+                    <div className="text-[11px] font-mono text-zinc-600 mt-1">
+                      {kpis.latestBillRef ?? "No bills indexed"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-zinc-800 bg-zinc-900 p-4 space-y-2 font-mono text-xs">
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-3">
+                    Latest Bill Summary — {kpis.latestBillRef ?? "N/A"}
+                  </div>
+                  {[
+                    { label: "Certification Date",  value: kpis.latestBillCertDate ?? "—",     colour: "text-zinc-300" },
+                    { label: "Certified By",         value: kpis.latestBillCertifiedBy ?? "—",  colour: "text-zinc-300" },
+                    { label: "Payment Status",       value: kpis.latestBillStatus ?? "—",       colour: paymentColour(kpis.latestBillStatus ?? "") },
+                    { label: "EOT Status",           value: kpis.latestEotStatus,               colour: kpis.latestEotColour },
+                  ].map((row) => (
+                    <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-zinc-800 last:border-b-0">
+                      <span className="text-zinc-500">{row.label}</span>
+                      <span className={`font-bold ${row.colour}`}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── EOT TAB ─────────────────────────────────────────────── */}
+            {activeTab === "EOT" && (
+              <div className="p-6 space-y-4">
+                <div className="border-b border-zinc-800 pb-3 flex items-center justify-between">
+                  <div className="text-[10px] font-mono tracking-widest text-zinc-500 uppercase font-bold">
+                    Extension of Time / Delay Tracker · FIDIC Cl.20 / CPWD GCC Cl.5
+                  </div>
+                  <Link href="/commercial/hindrance-eot" className="text-xs text-cyan-400 font-mono hover:underline flex items-center gap-1">
+                    EOT Register <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className={`border ${kpis.activeDelayDays > 0 ? "border-rose-900 bg-rose-950" : "border-zinc-800 bg-zinc-900"} p-4`}>
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
+                      Active Delay Exposure
+                    </div>
+                    <div className={`text-2xl font-extrabold font-mono tabular-nums ${
+                      kpis.activeDelayDays === 0 ? "text-emerald-400" : "text-red-500"
+                    }`}>
+                      {kpis.activeDelayDays === 0 ? "NIL" : `${kpis.activeDelayDays}d`}
+                    </div>
+                    <div className="text-[11px] font-mono text-zinc-500 mt-1">
+                      Calendar days beyond completion date
+                    </div>
+                  </div>
+
+                  <div className="border border-zinc-800 bg-zinc-900 p-4">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
+                      EOT Days Granted
+                    </div>
+                    <div className="text-2xl font-extrabold font-mono text-emerald-400 tabular-nums">
+                      {kpis.eotGrantedDays === 0 ? "NIL" : `${kpis.eotGrantedDays}d`}
+                    </div>
+                    <div className="text-[11px] font-mono text-zinc-500 mt-1">
+                      Formally issued EOT orders
+                    </div>
+                  </div>
+
+                  <div className="border border-zinc-800 bg-zinc-900 p-4">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
+                      Net LD Exposure
+                    </div>
+                    <div className={`text-2xl font-extrabold font-mono tabular-nums ${
+                      Math.max(0, kpis.activeDelayDays - kpis.eotGrantedDays) === 0
+                        ? "text-emerald-400"
+                        : "text-red-500"
+                    }`}>
+                      {Math.max(0, kpis.activeDelayDays - kpis.eotGrantedDays) === 0
+                        ? "NIL"
+                        : `${Math.max(0, kpis.activeDelayDays - kpis.eotGrantedDays)}d`}
+                    </div>
+                    <div className="text-[11px] font-mono text-zinc-500 mt-1">
+                      Unmitigated delay · LD clause exposed
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-zinc-800 bg-zinc-900 p-4 font-mono text-xs space-y-2.5">
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-3">
+                    Completion Date Tracker
+                  </div>
+                  {[
+                    { label: "Stipulated Completion Date",  value: kpis.stipulatedCompletion, colour: "text-zinc-300" },
+                    { label: "Revised Completion (Post-EOT)", value: kpis.revisedCompletion ?? "Not revised", colour: kpis.revisedCompletion ? "text-amber-400" : "text-zinc-500" },
+                    { label: "Bills with Active EOT Claim",   value: `${kpis.activeEotBillCount} bill${kpis.activeEotBillCount !== 1 ? "s" : ""}`, colour: kpis.activeEotBillCount > 0 ? "text-amber-400" : "text-emerald-400" },
+                    { label: "Latest EOT Status",            value: kpis.latestEotStatus,       colour: kpis.latestEotColour },
+                  ].map((row) => (
+                    <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-zinc-800 last:border-b-0">
+                      <span className="text-zinc-500">{row.label}</span>
+                      <span className={`font-bold ${row.colour}`}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── CONTRACT META TAB ───────────────────────────────────── */}
+            {activeTab === "CONTRACT" && (
+              <div className="p-6 space-y-4">
+                <div className="border-b border-zinc-800 pb-3">
+                  <div className="text-[10px] font-mono tracking-widest text-zinc-500 uppercase font-bold">
+                    Contract Metadata — ISO 19650-2 CDE Record
+                  </div>
+                </div>
+
+                <div className="border border-zinc-800 bg-zinc-900 font-mono text-xs divide-y divide-zinc-800">
+                  {[
+                    { label: "Project Code",        value: kpis.projectCode },
+                    { label: "Project Name",         value: kpis.projectName },
+                    { label: "Project Tier",         value: kpis.tier },
+                    { label: "Main Contractor",      value: kpis.contractorName },
+                    { label: "Contract Reference",   value: kpis.contractReference },
+                    { label: "Agreement Date",       value: kpis.agreementDate },
+                    { label: "Contract Baseline",    value: kpis.contractBaseline },
+                    { label: "Stipulated Completion", value: kpis.stipulatedCompletion },
+                    { label: "Revised Completion",   value: kpis.revisedCompletion ?? "No revision order issued" },
+                    { label: "Active Role (Session)", value: `${role.label} · ${role.category}` },
+                    { label: "Supabase Project UUID", value: kpis.projectId },
+                  ].map((row) => (
+                    <div key={row.label} className="flex flex-col sm:flex-row sm:items-center px-4 py-2.5 gap-1">
+                      <span className="text-zinc-500 sm:w-52 shrink-0">{row.label}</span>
+                      <span className="text-zinc-200 font-medium break-all">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] font-mono text-zinc-600 pt-1">
+                  <span>Data source: Supabase · public.projects · RLS enforced</span>
+                  <Link href="/contracts" className="text-cyan-400 hover:underline">
+                    Contract Module →
+                  </Link>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        {/* ── FOOTER AUDIT STRIP ───────────────────────────────────────── */}
+        <div className="border border-zinc-800 bg-zinc-900 px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10px] font-mono text-zinc-600">
+          <span>
+            {kpis.projectCode} · {tier} tier · Role: {role.label} ·{" "}
+            {kpis.isAuthenticated
+              ? <span className="text-emerald-500">Session authenticated · RLS active</span>
+              : <span className="text-amber-500">Anonymous session · RLS enforced via anon key</span>}
+          </span>
+          <div className="flex items-center gap-3">
+            <Link href="/commercial/variations-deviations" className="text-zinc-500 hover:text-cyan-400 transition-colors">
+              Variations Register →
+            </Link>
+            <Link href="/commercial/hindrance-eot" className="text-zinc-500 hover:text-cyan-400 transition-colors">
+              Hindrance / EOT →
+            </Link>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  );
+}
+
+
+==================================================
+FILE: components/layout/Sidebar.tsx
+==================================================
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Compass,
+  Layers,
+  FileText,
+  Users,
+  Truck,
+  Wrench,
+  HardHat,
+  FlaskConical,
+  Thermometer,
+  ShieldAlert,
+  ShieldCheck,
+  Clock,
+  Calendar,
+  Award,
+  Calculator,
+  Scale,
+  Briefcase,
+  MinusCircle,
+  FileDiff,
+  PackageCheck,
+  Landmark,
+  TrendingUp,
+  Boxes,
+  Receipt,
+  ClipboardCheck,
+  FileCheck2,
+  FileSpreadsheet,
+  Fingerprint,
+  ChevronDown,
+  Camera,
+  Activity,
+} from 'lucide-react';
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: any;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const NAVIGATION_SECTIONS: NavSection[] = [
+  {
+    title: '1. Executive & Spatial CDE',
+    items: [
+      { label: 'Master Command Center', href: '/', icon: Activity },
+      { label: 'GFC Spatial Blueprint', href: '/drawings/gfc-canvas', icon: Compass },
+      { label: '360° Site Reality Tour', href: '/site/360-tour', icon: Camera },
+    ],
+  },
+  {
+    title: '2. Field Telemetry & Labor',
+    items: [
+      { label: 'Daily Progress Report (DPR)', href: '/site/dpr', icon: FileText },
+      { label: "Gate Inward & Weighbridge", href: "/site/gate-inward", icon: Truck },
+      { label: "Plant & Machinery (P&M)", href: "/operations/plant-machinery", icon: Wrench },
+      { label: 'Biometric Turnstiles (BOCW)', href: '/site/labor', icon: Users },
+      { label: 'Permit to Work (PTW)', href: '/safety/ptw', icon: HardHat },
+      { label: "Hindrance Register & EOT", href: "/commercial/hindrance-eot", icon: Clock },
+      { label: "Master Schedule (CPM)", href: "/schedule/gantt", icon: Calendar },
+      { label: "EVM S-Curve Cashflow", href: "/executive/evm-scurve", icon: TrendingUp },
+      { label: "Governed Milestones", href: "/milestones", icon: Award },
+      { label: "BOCW HSE Compliance", href: "/safety/hse-compliance", icon: ShieldCheck },
+    ],
+  },
+  {
+    title: '3. Structural Quality & Materials',
+    items: [
+      { label: 'Pour Cards & IS 516 Cubes', href: '/quality/pour-cards', icon: FlaskConical },
+      { label: "ITP Stage-Gate Matrix", href: "/quality/itp", icon: Layers },
+      { label: "Visual Defect AI", href: "/quality/vision-ai", icon: Camera },
+      { label: 'Concrete Maturity & Stripping', href: '/engineering/concrete-maturity', icon: Thermometer },
+      { label: 'NCR Quality Debit Liens', href: '/quality/ncr', icon: ShieldAlert },
+      { label: 'Fitout Finishes Matrix', href: '/interiors/fitout-matrix', icon: Layers },
+      { label: 'Material Recon (Cl. 42)', href: '/materials/reconciliation', icon: PackageCheck },
+      { label: "Advances & Form 31", href: "/commercial/advances-recoveries", icon: Landmark },
+      { label: "Price Escalation (Cl. 10CC)", href: "/commercial/price-escalation", icon: TrendingUp },
+      { label: "Secured Advance (Form 10A)", href: "/finance/secured-advance", icon: Boxes },
+    ],
+  },
+  {
+    title: '4. Commercial & Legal Handover',
+    items: [
+      { label: 'Digital Measurement Book (e-MB)', href: '/finance/measurement-book', icon: Calculator },
+      { label: "Subcontractor Work Orders", href: "/contracts/work-orders", icon: Briefcase },
+      { label: "Tender Packages (RFP)", href: "/procurement/tenders", icon: FileSpreadsheet },
+      { label: "Comparative Statement (CST)", href: "/procurement/tender-evaluation", icon: Scale },
+      { label: "Vendor Directory", href: "/procurement/vendors", icon: Users },
+      { label: "Material Recon (Cl. 42)", href: "/operations/material-recon", icon: Scale },
+      { label: "Contra-Charges & Backcharges", href: "/finance/backcharges", icon: MinusCircle },
+      { label: "Subcontractor IPCs", href: "/finance/subcontractors", icon: Users },
+      { label: 'Potential Change Orders (PCO)', href: '/finance/change-orders', icon: FileDiff },
+      { label: "Contract Variations (VO)", href: "/contracts/variations", icon: FileDiff },
+      { label: "Claims & Dispute Board (DAB)", href: "/contracts/claims-disputes", icon: Scale },
+      { label: 'Running Account (RA) Billing', href: '/finance/ra-bills', icon: Receipt },
+      { label: 'TOC & Snag Clearance', href: '/handover/punch-list', icon: ClipboardCheck },
+      { label: 'Final Bill & PBG Release', href: '/finance/final-bill', icon: FileCheck2 },
+      { label: 'Section 65B Audit Vault', href: '/closeout/audit-vault', icon: Fingerprint },
+    ],
+  },
+];
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (title: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  return (
+    <aside className="w-72 bg-zinc-950 border-r border-zinc-800 flex flex-col h-screen select-none font-mono text-xs">
+      {/* Brand Header */}
+      <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
+        <div>
+          <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">QUADILLAR OS</div>
+          <div className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5 mt-0.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>LiveView.OS Core</span>
+          </div>
+        </div>
+        <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-400 font-bold uppercase">
+          v2.4-PROD
+        </span>
+      </div>
+
+      {/* Nav Accordions */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        {NAVIGATION_SECTIONS.map((sec) => {
+          const isCollapsed = collapsedSections[sec.title];
+          return (
+            <div key={sec.title} className="space-y-1">
+              <button
+                type="button"
+                onClick={() => toggleSection(sec.title)}
+                className="w-full flex items-center justify-between text-[10px] uppercase font-bold text-zinc-500 hover:text-zinc-300 py-1 px-2 tracking-wider"
+              >
+                <span>{sec.title}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+              </button>
+
+              {!isCollapsed && (
+                <div className="space-y-0.5">
+                  {sec.items.map((item) => {
+                    const isActive = pathname === item.href;
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded transition ${
+                          isActive
+                            ? 'bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/30'
+                            : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer System Telemetry */}
+      <div className="p-3 border-t border-zinc-800 bg-zinc-950 text-[10px] text-zinc-500 flex justify-between items-center">
+        <span>SECURITY: RLS ACTIVE</span>
+        <span className="text-emerald-400 font-bold">GROUND TRUTH STRICT</span>
+      </div>
+    </aside>
+  );
+}
+
+export default Sidebar;
+
+
+==================================================
+FILE: components/layout/AppShell.tsx
+==================================================
+"use client";
+
+import React, { ReactNode, Suspense, Component, ErrorInfo } from "react";
+import { UnifiedHeader } from "@/components/layout/UnifiedHeader";
+import ConnectionStatusBanner from "@/components/liveview/ConnectionStatusBanner";
+import { OfflineSyncBanner } from "@/components/layout/OfflineSyncBanner";
+import { AlertOctagon, RefreshCw, Terminal } from "lucide-react";
+
+interface AppShellProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
+// Resilient Internal Boundary: Prevents child module crashes from black-screening the entire app
+class PageLevelErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("[LiveView Shell Critical Error Boundary]:", error, errorInfo);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null });
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex h-[calc(100vh-140px)] w-full items-center justify-center p-6 font-mono">
+          <div className="max-w-xl w-full bg-zinc-900/90 border border-rose-900/60 rounded p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 border-b border-rose-900/40 pb-3">
+              <div className="p-2 rounded bg-rose-950 text-rose-400 border border-rose-800">
+                <AlertOctagon className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  Module Telemetry Fault
+                </h3>
+                <span className="text-[10px] text-zinc-500 uppercase">
+                  Telemetry Execution Halted • Viewport Preserved
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-300">
+              The requested submodule encountered an unhandled exception while mounting or synchronizing with Supabase:
+            </p>
+
+            <div className="p-3 bg-zinc-950 border border-zinc-800 rounded font-mono text-[11px] text-rose-300 overflow-x-auto max-h-40">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1 text-[10px]">
+                <Terminal className="w-3.5 h-3.5" />
+                <span>FAULT STACK SUMMARY</span>
+              </div>
+              <code>{this.state.error?.message || "Unknown runtime fault"}</code>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <span className="text-[10px] text-zinc-500">
+                LiveView Shell Active • Global Header &amp; Route Controls Intact
+              </span>
+              <button
+                onClick={this.handleReset}
+                className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 text-rose-300 hover:text-white text-xs font-bold uppercase rounded flex items-center gap-2 transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Re-Initialize Module</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function PageSuspenseFallback() {
+  return (
+    <div className="flex h-[calc(100vh-140px)] w-full items-center justify-center p-6 font-mono">
+      <div className="flex flex-col items-center space-y-3">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+        <span className="text-xs text-zinc-400 tracking-wider uppercase">
+          Streaming Module Telemetry...
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function AppShell({ children }: AppShellProps) {
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+      <OfflineSyncBanner />
+      <UnifiedHeader />
+      <ConnectionStatusBanner />
+      <main className="flex-1 w-full">
+        <PageLevelErrorBoundary>
+          <Suspense fallback={<PageSuspenseFallback />}>
+            {children}
+          </Suspense>
+        </PageLevelErrorBoundary>
+      </main>
+    </div>
+  );
+}
+

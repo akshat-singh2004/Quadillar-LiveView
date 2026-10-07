@@ -155,7 +155,7 @@ export function generateMasterQualityDossier(input: QualityDossierInput): string
 }
 
 export async function generateProjectDocumentBundle(snapshot: DashboardSnapshot) {
-  const projectId = "proj-1";
+  const projectId = "GOMTI-NAGAR-PH1-FITOUT";
   const verifiedSpaces = (snapshot.cdeItems ?? []).filter((item) => item.state === "Published").slice(0, 5).map((item) => item.title);
   const materialTests = (snapshot.materialTests ?? []).slice(0, 12);
 

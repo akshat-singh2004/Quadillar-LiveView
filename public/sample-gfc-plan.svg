@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="100%" height="100%">
+  <defs>
+    <pattern id="hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#38bdf8" stroke-width="1.2" opacity="0.35" />
+    </pattern>
+    <style>
+      .grid-line { stroke: #475569; stroke-width: 1.2; stroke-dasharray: 8 6; }
+      .grid-bubble { fill: #0f172a; stroke: #38bdf8; stroke-width: 1.8; }
+      .grid-text { font-family: monospace; font-size: 14px; font-weight: bold; fill: #38bdf8; text-anchor: middle; dominant-baseline: central; }
+      .wall-ext { fill: #1e293b; stroke: #94a3b8; stroke-width: 3; }
+      .wall-core { fill: url(#hatch); stroke: #38bdf8; stroke-width: 2.5; }
+      .column { fill: #0284c7; stroke: #bae6fd; stroke-width: 1.5; }
+      .dim-line { stroke: #64748b; stroke-width: 1; marker-start: url(#tick); marker-end: url(#tick); }
+      .dim-text { font-family: monospace; font-size: 11px; fill: #94a3b8; text-anchor: middle; }
+      .room-label { font-family: sans-serif; font-size: 14px; font-weight: 700; fill: #f8fafc; letter-spacing: 1.5px; }
+      .room-sub { font-family: monospace; font-size: 10px; fill: #64748b; }
+      .door-swing { fill: none; stroke: #64748b; stroke-width: 1.2; stroke-dasharray: 3 3; }
+      .title-border { fill: #090d16; stroke: #334155; stroke-width: 2; }
+      .title-text { font-family: monospace; font-size: 11px; fill: #cbd5e1; }
+      .title-bold { font-family: monospace; font-size: 13px; font-weight: 800; fill: #f8fafc; }
+    </style>
+  </defs>
+
+  <!-- BACKGROUND SHEET (A0 ASPECT) -->
+  <rect width="1600" height="1000" fill="#06090e" stroke="#1e293b" stroke-width="4" />
+
+  <!-- STRUCTURAL GRID LINES -->
+  <!-- Vertical Grids (A, B, C, D) -->
+  <line x1="220" y1="90" x2="220" y2="820" class="grid-line" />
+  <line x1="560" y1="90" x2="560" y2="820" class="grid-line" />
+  <line x1="900" y1="90" x2="900" y2="820" class="grid-line" />
+  <line x1="1240" y1="90" x2="1240" y2="820" class="grid-line" />
+
+  <!-- Horizontal Grids (01, 02, 03, 04) -->
+  <line x1="160" y1="160" x2="1300" y2="160" class="grid-line" />
+  <line x1="160" y1="360" x2="1300" y2="360" class="grid-line" />
+  <line x1="160" y1="560" x2="1300" y2="560" class="grid-line" />
+  <line x1="160" y1="760" x2="1300" y2="760" class="grid-line" />
+
+  <!-- GRID BUBBLES - TOP -->
+  <circle cx="220" cy="90" r="16" class="grid-bubble" /><text x="220" y="90" class="grid-text">A</text>
+  <circle cx="560" cy="90" r="16" class="grid-bubble" /><text x="560" y="90" class="grid-text">B</text>
+  <circle cx="900" cy="90" r="16" class="grid-bubble" /><text x="900" y="90" class="grid-text">C</text>
+  <circle cx="1240" cy="90" r="16" class="grid-bubble" /><text x="1240" y="90" class="grid-text">D</text>
+
+  <!-- GRID BUBBLES - LEFT -->
+  <circle cx="160" cy="160" r="16" class="grid-bubble" /><text x="160" y="160" class="grid-text">01</text>
+  <circle cx="160" cy="360" r="16" class="grid-bubble" /><text x="160" y="360" class="grid-text">02</text>
+  <circle cx="160" cy="560" r="16" class="grid-bubble" /><text x="160" y="560" class="grid-text">03</text>
+  <circle cx="160" cy="760" r="16" class="grid-bubble" /><text x="160" y="760" class="grid-text">04</text>
+
+  <!-- EXTERIOR PERIMETER WALLS (200mm MASONRY / DRY-LINING) -->
+  <polygon points="220,160 1240,160 1240,760 220,760" fill="none" stroke="#0ea5e9" stroke-width="4" opacity="0.8" />
+  <polygon points="235,175 1225,175 1225,745 235,745" fill="#0b111a" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- INTERNAL DEMISING WALLS -->
+  <rect x="550" y="175" width="16" height="570" fill="#1e293b" stroke="#334155" stroke-width="1" />
+  <rect x="235" y="450" width="315" height="16" fill="#1e293b" stroke="#334155" stroke-width="1" />
+  <rect x="890" y="450" width="335" height="16" fill="#1e293b" stroke="#334155" stroke-width="1" />
+
+  <!-- CENTRAL LIFT & SERVICES REINFORCED SHEAR CORE (IS 456 M35 GRADE CONCRETE) -->
+  <rect x="680" y="320" width="220" height="260" class="wall-core" />
+  <rect x="710" y="350" width="160" height="200" fill="#06090e" stroke="#38bdf8" stroke-width="1.5" />
+  <!-- LIFT SHAFTS -->
+  <line x1="710" y1="350" x2="870" y2="550" stroke="#0284c7" stroke-width="1" stroke-dasharray="4 4" />
+  <line x1="710" y1="550" x2="870" y2="350" stroke="#0284c7" stroke-width="1" stroke-dasharray="4 4" />
+  <text x="790" y="450" class="room-label" style="font-size: 11px; fill: #38bdf8; text-anchor: middle;">SERVICE CORE / LIFT</text>
+
+  <!-- STRUCTURAL RCC COLUMNS (C1-C16) AT GRID INTERSECTIONS (600x600mm) -->
+  <!-- Row 01 -->
+  <rect x="205" y="145" width="30" height="30" class="column" />
+  <rect x="545" y="145" width="30" height="30" class="column" />
+  <rect x="885" y="145" width="30" height="30" class="column" />
+  <rect x="1225" y="145" width="30" height="30" class="column" />
+
+  <!-- Row 02 -->
+  <rect x="205" y="345" width="30" height="30" class="column" />
+  <rect x="545" y="345" width="30" height="30" class="column" />
+  <rect x="885" y="345" width="30" height="30" class="column" />
+  <rect x="1225" y="345" width="30" height="30" class="column" />
+
+  <!-- Row 03 -->
+  <rect x="205" y="545" width="30" height="30" class="column" />
+  <rect x="545" y="545" width="30" height="30" class="column" />
+  <rect x="885" y="545" width="30" height="30" class="column" />
+  <rect x="1225" y="545" width="30" height="30" class="column" />
+
+  <!-- Row 04 -->
+  <rect x="205" y="745" width="30" height="30" class="column" />
+  <rect x="545" y="745" width="30" height="30" class="column" />
+  <rect x="885" y="745" width="30" height="30" class="column" />
+  <rect x="1225" y="745" width="30" height="30" class="column" />
+
+  <!-- ROOM DESIGNATIONS -->
+  <text x="380" y="300" class="room-label">PRIMARY OFFICE / SUITE 01</text>
+  <text x="380" y="320" class="room-sub">FFL +0.150 • POLISHED SCREED</text>
+
+  <text x="380" y="600" class="room-label">CONFERENCE &amp; BOARDROOM</text>
+  <text x="380" y="620" class="room-sub">FFL +0.150 • ACOUSTIC TIMBER CEILING</text>
+
+  <text x="1050" y="300" class="room-label">OPEN WORKSTATIONS BAY</text>
+  <text x="1050" y="320" class="room-sub">FFL +0.150 • RAISED ACCESS FLOOR</text>
+
+  <text x="1050" y="600" class="room-label">MEP &amp; HVAC RISER SUITE</text>
+  <text x="1050" y="620" class="room-sub">FFL +0.050 • WATERPROOFED COATING</text>
+
+  <!-- DOOR OPENINGS & SWINGS -->
+  <!-- Door Suite 01 -->
+  <path d="M 550,260 A 60 60 0 0 0 490,200" class="door-swing" />
+  <line x1="550" y1="260" x2="490" y2="260" stroke="#94a3b8" stroke-width="2" />
+  <!-- Door Boardroom -->
+  <path d="M 550,520 A 60 60 0 0 0 490,460" class="door-swing" />
+  <line x1="550" y1="520" x2="490" y2="520" stroke="#94a3b8" stroke-width="2" />
+
+  <!-- NORTH ARROW -->
+  <g transform="translate(1480, 140)">
+    <circle cx="0" cy="0" r="32" fill="#090d16" stroke="#38bdf8" stroke-width="1.5" />
+    <polygon points="0,-24 8,16 0,8 -8,16" fill="#38bdf8" />
+    <text x="0" y="-30" font-family="monospace" font-size="14" font-weight="900" fill="#38bdf8" text-anchor="middle">N</text>
+  </g>
+
+  <!-- ISO 19650 STATUTORY TITLE BLOCK (BOTTOM-RIGHT) -->
+  <rect x="1020" y="800" width="540" height="160" class="title-border" />
+  
+  <line x1="1020" y1="840" x2="1560" y2="840" stroke="#1e293b" stroke-width="1.5" />
+  <line x1="1020" y1="880" x2="1560" y2="880" stroke="#1e293b" stroke-width="1.5" />
+  <line x1="1020" y1="920" x2="1560" y2="920" stroke="#1e293b" stroke-width="1.5" />
+  <line x1="1300" y1="840" x2="1300" y2="960" stroke="#1e293b" stroke-width="1.5" />
+
+  <text x="1035" y="825" class="title-bold">QUADILLAR LIVEVIEW CDE • STATUTORY GFC RELEASE</text>
+  <text x="1035" y="862" class="title-text">SHEET: <tspan fill="#38bdf8" font-weight="bold">GFC-ARC-01-101</tspan></text>
+  <text x="1315" y="862" class="title-text">REVISION: <tspan fill="#4ade80" font-weight="bold">REV 01 (GFC APPROVED)</tspan></text>
+  <text x="1035" y="902" class="title-text">SCALE: <tspan fill="#f8fafc">1:50 @ A0</tspan></text>
+  <text x="1315" y="902" class="title-text">SANCTION REF: <tspan fill="#38bdf8">LDA/BP/2026/0894</tspan></text>
+  <text x="1035" y="942" class="title-text">DISCIPLINE: <tspan fill="#f8fafc">ARCHITECTURAL COORDINATION</tspan></text>
+  <text x="1315" y="942" class="title-text">STAMP: <tspan fill="#4ade80">MUNICIPAL AUDIT VERIFIED</tspan></text>
+</svg>

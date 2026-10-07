@@ -1,11 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import type {
   ContractClauseCard,
   ContractComplianceIssue,
   ContractDocumentAnalysis,
 } from "@/types/construction";
+import {
+  ShieldAlert,
+  ShieldCheck,
+  AlertTriangle,
+  FileText,
+  Scale,
+  CheckCircle2,
+  Layers,
+  ArrowRight,
+} from "lucide-react";
 
 const defaultAnalyses: ContractDocumentAnalysis[] = [
   {
@@ -22,7 +32,8 @@ const defaultAnalyses: ContractDocumentAnalysis[] = [
         summary:
           "LD clause imposes 0.15% of contract value per week beyond the agreed completion date without a clear cap for owner-caused delay events.",
         riskDriver: "Uncapped delay damages and weak force-majeure carve-out",
-        mitigation: "Add a mutual carve-out for client-caused approvals, utility delays, and weather disruption; cap damage at 5% of the contract sum.",
+        mitigation:
+          "Add a mutual carve-out for client-caused approvals, utility delays, and weather disruption; cap damage at 5% of the contract sum.",
       },
       {
         id: "clause-defect",
@@ -31,7 +42,8 @@ const defaultAnalyses: ContractDocumentAnalysis[] = [
         summary:
           "Defect liability period is set at 12 months, but the rectification notice period and carrier-of-risk allocation are not explicit.",
         riskDriver: "Ambiguous defect notification and warranty enforcement",
-        mitigation: "Define notice timelines, access rights, and warranty defect categorization in a schedule attached to the contract.",
+        mitigation:
+          "Define notice timelines, access rights, and warranty defect categorization in a schedule attached to the contract.",
       },
       {
         id: "clause-price",
@@ -40,7 +52,8 @@ const defaultAnalyses: ContractDocumentAnalysis[] = [
         summary:
           "Escalation is linked to WPI and fuel indices with a base-index confirmation, but the submission trigger is not tied to a material availability event.",
         riskDriver: "Index methodology is acceptable but not fully aligned with market volatility",
-        mitigation: "Tie escalation to a monthly review and define documentation requirements for claims substantiation.",
+        mitigation:
+          "Tie escalation to a monthly review and define documentation requirements for claims substantiation.",
       },
       {
         id: "clause-force",
@@ -49,7 +62,8 @@ const defaultAnalyses: ContractDocumentAnalysis[] = [
         summary:
           "Force majeure includes pandemics and government action but excludes labor shortage and material supply disruption unless specifically notified.",
         riskDriver: "Narrow event definition for supply chain disruptions",
-        mitigation: "Expand the list of covered events to include supply-chain disruption, import restrictions, and labor unrest.",
+        mitigation:
+          "Expand the list of covered events to include supply-chain disruption, import restrictions, and labor unrest.",
       },
     ],
     complianceChecks: [
@@ -60,7 +74,8 @@ const defaultAnalyses: ContractDocumentAnalysis[] = [
         status: "Mismatch",
         issue:
           "Tender specification states nominal cover of 25 mm for slabs, while IS 456 requires 30 mm for severe exposure / RC element durability in coastal environment.",
-        recommendation: "Update drawing specification and concrete mix durability note to match IS 456 Table 16 / Table 18 for severe exposure.",
+        recommendation:
+          "Update drawing specification and concrete mix durability note to match IS 456 Table 16 / Table 18 for severe exposure.",
       },
       {
         id: "compliance-02",
@@ -95,7 +110,8 @@ const defaultAnalyses: ContractDocumentAnalysis[] = [
         summary:
           "Steel escalation is capped at 12% and absent for imported reinforcement, which may leave the contractor exposed to global market volatility.",
         riskDriver: "Insufficient protection against imported commodities and FX fluctuation",
-        mitigation: "Revisit the steel and aluminum escalation formula with explicit foreign-exchange and freight adjustment clauses.",
+        mitigation:
+          "Revisit the steel and aluminum escalation formula with explicit foreign-exchange and freight adjustment clauses.",
       },
     ],
     complianceChecks: [
@@ -112,235 +128,209 @@ const defaultAnalyses: ContractDocumentAnalysis[] = [
   },
 ];
 
-const severityStyle: Record<ContractClauseCard["severity"], { border: string; badge: string; glow: string }> = {
-  "High Risk": { border: "1px solid rgba(248, 113, 113, 0.8)", badge: "#fda4af", glow: "rgba(239, 68, 68, 0.18)" },
-  "Medium Risk": { border: "1px solid rgba(251, 191, 36, 0.8)", badge: "#fbbf24", glow: "rgba(245, 158, 11, 0.18)" },
-  Standard: { border: "1px solid rgba(52, 211, 153, 0.8)", badge: "#6ee7b7", glow: "rgba(16, 185, 129, 0.18)" },
-};
-
-function getRiskSummary(selected: ContractDocumentAnalysis) {
-  const counts: Record<ContractClauseCard["severity"], number> = {
-    "High Risk": 0,
-    "Medium Risk": 0,
-    Standard: 0,
-  };
-
-  selected.clauses.forEach((clause: ContractClauseCard) => {
-    counts[clause.severity] += 1;
-  });
-
-  return {
-    highest: selected.clauses.reduce<ContractClauseCard | undefined>((top, clause) => {
-      if (!top || clause.severity === "High Risk") return clause;
-      if (top.severity === "Standard" && clause.severity === "Medium Risk") return clause;
-      return top;
-    }, undefined),
-    counts,
-  };
-}
-
-export function DocumentClauseViewer({ analyses = defaultAnalyses }: { analyses?: ContractDocumentAnalysis[] }) {
+export function DocumentClauseViewer({
+  analyses = defaultAnalyses,
+}: {
+  analyses?: ContractDocumentAnalysis[];
+}) {
   const [selectedId, setSelectedId] = useState(analyses[0]?.id ?? defaultAnalyses[0].id);
   const [reportVisible, setReportVisible] = useState(false);
 
   const selected = useMemo(
-    () => analyses.find((document) => document.id === selectedId) ?? analyses[0] ?? defaultAnalyses[0],
-    [analyses, selectedId],
+    () => analyses.find((doc) => doc.id === selectedId) ?? analyses[0] ?? defaultAnalyses[0],
+    [analyses, selectedId]
   );
 
-  const summary = useMemo(() => getRiskSummary(selected), [selected]);
+  const riskCounts = useMemo(() => {
+    const counts = { "High Risk": 0, "Medium Risk": 0, Standard: 0 };
+    selected.clauses.forEach((c) => {
+      counts[c.severity] = (counts[c.severity] || 0) + 1;
+    });
+    return counts;
+  }, [selected]);
 
-  const complianceFlagCount = selected.complianceChecks.filter((check: ContractComplianceIssue) => check.status === "Mismatch").length;
+  const complianceFlagCount = selected.complianceChecks.filter((c) => c.status === "Mismatch").length;
 
   return (
-    <div style={{ display: "grid", gap: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {analyses.map((document) => (
+    <div className="space-y-5 font-mono text-xs select-none">
+      {/* TOOLBAR */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-800 pb-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          {analyses.map((doc) => (
             <button
-              key={document.id}
+              key={doc.id}
               type="button"
-              onClick={() => setSelectedId(document.id)}
-              style={{
-                background: selectedId === document.id ? "rgba(56, 189, 248, 0.18)" : "rgba(15, 23, 42, 0.8)",
-                border: selectedId === document.id ? "1px solid rgba(56, 189, 248, 0.8)" : "1px solid rgba(148,163,184,0.24)",
-                color: "#e2e8f0",
-                borderRadius: 999,
-                padding: "8px 12px",
-                cursor: "pointer",
-                fontWeight: 700,
-              }}
+              onClick={() => setSelectedId(doc.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase transition cursor-pointer ${
+                selectedId === doc.id
+                  ? "bg-cyan-950 border border-cyan-500 text-cyan-300"
+                  : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+              }`}
             >
-              {document.pdfLabel}
+              {doc.pdfLabel}
             </button>
           ))}
         </div>
 
         <button
           type="button"
-          onClick={() => setReportVisible(true)}
-          style={{
-            background: "linear-gradient(135deg, #f97316, #ef4444)",
-            border: "none",
-            color: "white",
-            borderRadius: 12,
-            padding: "10px 16px",
-            fontWeight: 800,
-            cursor: "pointer",
-          }}
+          onClick={() => setReportVisible((curr) => !curr)}
+          className="px-4 py-2 bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white font-bold uppercase rounded-lg text-xs transition cursor-pointer shadow-lg shadow-rose-950/40"
         >
-          Generate Contract Risk Matrix
+          {reportVisible ? "Hide Risk Matrix" : "Generate Contract Risk Matrix"}
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(300px, 0.95fr) minmax(320px, 1.25fr)", gap: 18 }}>
-        <div style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(148,163,184,0.24)", borderRadius: 20, padding: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      {/* WORKBENCH: PREVIEW (5 COLS) vs CLAUSE AUDIT (7 COLS) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* DOCUMENT METADATA */}
+        <div className="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
+          <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
             <div>
-              <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Document preview</div>
-              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>{selected.documentName}</div>
+              <span className="text-[10px] text-cyan-400 uppercase tracking-widest font-bold">
+                Contract Document Preview
+              </span>
+              <h3 className="text-sm font-bold text-white mt-0.5">{selected.documentName}</h3>
             </div>
-            <div style={{ color: "#cbd5e1", fontSize: 12 }}>Pages: {selected.pageCount}</div>
+            <span className="text-[10px] text-zinc-500">{selected.pageCount} Pages</span>
           </div>
 
-          <div style={{ background: "linear-gradient(180deg, rgba(15,23,42,0.95), rgba(15,23,42,0.75))", border: "1px solid rgba(148,163,184,0.22)", borderRadius: 18, minHeight: 440, padding: 18 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#94a3b8", marginBottom: 12 }}>
+          <div className="p-4 bg-zinc-950 border border-zinc-850 rounded-xl space-y-3 font-sans text-xs">
+            <div className="flex justify-between text-[11px] font-mono text-zinc-500 border-b border-zinc-850 pb-2">
               <span>{selected.pdfLabel}</span>
               <span>{selected.uploadedAt}</span>
             </div>
-
-            <div style={{ background: "rgba(2,6,23,0.7)", border: "1px solid rgba(148,163,184,0.2)", borderRadius: 14, padding: 18, minHeight: 340 }}>
-              <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 12, color: "#f8fafc" }}>Main Contract</div>
-              <div style={{ display: "grid", gap: 8, color: "#cbd5e1", lineHeight: 1.7 }}>
-                <div>Clause 4.1 — Time for Completion</div>
-                <div>Clause 7.2 — Defects and Rectification</div>
-                <div>Clause 10.1 — Liquidated Damages</div>
-                <div>Clause 12.4 — Escalation & Change Control</div>
-                <div>Annexure D — Technical Specification Schedule</div>
-              </div>
-              <div style={{ marginTop: 22, background: "rgba(56, 189, 248, 0.12)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 10, padding: 12, color: "#bae6fd" }}>
-                Highlight: Non-standard LD cap and weak force majeure risk allocation are visible on page 48 and 92.
-              </div>
+            <div className="space-y-1.5 text-zinc-300 font-mono text-[11px]">
+              <div>• Clause 4.1 — Time for Completion &amp; Extension Rules</div>
+              <div>• Clause 7.2 — Defects and Warranty Rectification</div>
+              <div>• Clause 10.1 — Liquidated Damages Assessment</div>
+              <div>• Clause 12.4 — Price Escalation &amp; Indices Formula</div>
+              <div>• Annexure D — Technical Specification Schedule</div>
+            </div>
+            <div className="p-3 bg-cyan-950/40 border border-cyan-800 text-cyan-300 rounded text-[11px] font-mono">
+              Auditor Highlight: Liquidated damages cap and force-majeure carve-outs deviate from FIDIC Red Book standard conditions.
             </div>
           </div>
         </div>
 
-        <div style={{ display: "grid", gap: 14 }}>
+        {/* CLAUSES BREAKDOWN */}
+        <div className="lg:col-span-7 space-y-3">
           {selected.clauses.map((clause) => {
-            const style = severityStyle[clause.severity];
+            const isHigh = clause.severity === "High Risk";
+            const isMed = clause.severity === "Medium Risk";
             return (
-              <div key={clause.id} style={{ background: "rgba(15,23,42,0.8)", border: style.border, boxShadow: `inset 0 0 0 1px ${style.glow}`, borderRadius: 16, padding: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                  <div style={{ fontWeight: 800, color: "#f8fafc" }}>{clause.type}</div>
+              <div
+                key={clause.id}
+                className={`p-4 rounded-xl border space-y-2.5 transition ${
+                  isHigh
+                    ? "bg-rose-950/20 border-rose-800/80 shadow-md shadow-rose-950/30"
+                    : isMed
+                    ? "bg-amber-950/20 border-amber-800/80"
+                    : "bg-zinc-900/60 border-zinc-800"
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm text-white">{clause.type}</span>
                   <span
-                    style={{
-                      background: style.badge,
-                      color: "#0f172a",
-                      borderRadius: 999,
-                      padding: "5px 10px",
-                      fontSize: 11,
-                      fontWeight: 900,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                      isHigh
+                        ? "bg-rose-950 text-rose-300 border border-rose-800"
+                        : isMed
+                        ? "bg-amber-950 text-amber-300 border border-amber-800"
+                        : "bg-emerald-950 text-emerald-300 border border-emerald-800"
+                    }`}
                   >
                     {clause.severity}
                   </span>
                 </div>
 
-                <p style={{ margin: "12px 0 8px", color: "#e2e8f0", lineHeight: 1.7 }}>{clause.summary}</p>
-
-                <div style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.7 }}>
-                  <div><strong>Risk driver:</strong> {clause.riskDriver}</div>
+                <p className="text-xs text-zinc-300 font-sans leading-relaxed">{clause.summary}</p>
+                <div className="text-[11px] text-zinc-400">
+                  <strong className="text-zinc-200 uppercase text-[10px]">Risk Driver:</strong> {clause.riskDriver}
                 </div>
 
-                {clause.severity === "High Risk" && (
-                  <div style={{ marginTop: 12, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.35)", borderRadius: 10, padding: 10, color: "#fecaca" }}>
-                    <strong>Mitigation:</strong> {clause.mitigation}
-                  </div>
-                )}
-
-                {clause.severity === "Medium Risk" && (
-                  <div style={{ marginTop: 12, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.35)", borderRadius: 10, padding: 10, color: "#fde68a" }}>
-                    <strong>Mitigation:</strong> {clause.mitigation}
-                  </div>
-                )}
+                <div className="p-2.5 bg-zinc-950/60 border border-zinc-800 rounded text-[11px] text-zinc-300">
+                  <strong className="text-amber-400 uppercase text-[10px] block mb-0.5">Recommended Mitigation:</strong>
+                  <span>{clause.mitigation}</span>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 18 }}>
-        <div style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(148,163,184,0.24)", borderRadius: 18, padding: 18 }}>
-          <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>IS Code / NBC Compliance validator</div>
-          <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+      {/* COMPLIANCE & RISK SUMMARY PILLS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* IS 456 / NBC Checks */}
+        <div className="lg:col-span-7 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
+          <span className="text-[10px] text-cyan-400 uppercase tracking-widest font-bold block">
+            IS Code / NBC Statutory Compliance Validator
+          </span>
+          <div className="space-y-2.5">
             {selected.complianceChecks.map((check) => (
-              <ComplianceRow key={check.id} check={check} />
+              <div
+                key={check.id}
+                className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl space-y-1.5"
+              >
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white">{check.standard} • {check.subject}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                      check.status === "Mismatch"
+                        ? "bg-rose-950 text-rose-400 border border-rose-800"
+                        : "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                    }`}
+                  >
+                    {check.status}
+                  </span>
+                </div>
+                <div className="text-[11px] text-zinc-400 font-sans">{check.issue}</div>
+                <div className="text-[10px] text-cyan-300">{check.recommendation}</div>
+              </div>
             ))}
           </div>
         </div>
 
-        <div style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(148,163,184,0.24)", borderRadius: 18, padding: 18 }}>
-          <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Risk summary</div>
-          <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
-            <RiskPill label="High Risk clauses" value={summary.counts["High Risk"]} tone="#f87171" />
-            <RiskPill label="Medium Risk clauses" value={summary.counts["Medium Risk"]} tone="#fbbf24" />
-            <RiskPill label="Standard clauses" value={summary.counts.Standard} tone="#34d399" />
-            <RiskPill label="Code mismatches" value={complianceFlagCount} tone="#60a5fa" />
+        {/* Risk Tallies */}
+        <div className="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
+          <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold block">
+            Legal Exposure Tally
+          </span>
+          <div className="space-y-2">
+            <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex justify-between items-center">
+              <span className="text-zinc-400">High Risk Exposure</span>
+              <strong className="text-rose-400 text-lg tabular-nums">{riskCounts["High Risk"]}</strong>
+            </div>
+            <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex justify-between items-center">
+              <span className="text-zinc-400">Medium Risk Clauses</span>
+              <strong className="text-amber-400 text-lg tabular-nums">{riskCounts["Medium Risk"]}</strong>
+            </div>
+            <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex justify-between items-center">
+              <span className="text-zinc-400">Standard Baseline</span>
+              <strong className="text-emerald-400 text-lg tabular-nums">{riskCounts.Standard}</strong>
+            </div>
+            <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex justify-between items-center">
+              <span className="text-zinc-400">Code Mismatches</span>
+              <strong className="text-cyan-400 text-lg tabular-nums">{complianceFlagCount}</strong>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* REPORT MATRIX */}
       {reportVisible && (
-        <div style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(148,163,184,0.24)", borderRadius: 18, padding: 18 }}>
-          <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Contract risk matrix</div>
-          <div style={{ marginTop: 12, color: "#e2e8f0", lineHeight: 1.8 }}>
-            <div><strong>Document:</strong> {selected.documentName}</div>
-            <div><strong>Primary exposure:</strong> {summary.highest ? `${summary.highest.type} — ${summary.highest.severity}` : "No active issue"}</div>
-            <div><strong>Top action:</strong> Cap LD exposure and revise concrete cover specification to match IS 456 / NBC durability tables.</div>
-            <div><strong>Commercial watch:</strong> Maintain escalation log for steel and imported material claims, and add a formal EOT notice protocol.</div>
-          </div>
+        <div className="p-5 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-2 font-sans text-xs">
+          <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest font-bold block">
+            Executive Summary Matrix • {selected.documentName}
+          </span>
+          <p className="text-zinc-300 leading-relaxed font-mono">
+            <strong>Primary Exposure:</strong> Liquidated damages cap and ambiguous force majeure trigger.<br />
+            <strong>Action Mandate:</strong> Incorporate mutual carve-out for municipal authority delays and align slab concrete cover with IS 456 Table 16.
+          </p>
         </div>
       )}
     </div>
   );
 }
 
-function ComplianceRow({ check }: { check: ContractComplianceIssue }) {
-  const statusColor = check.status === "Mismatch" ? "#f87171" : "#34d399";
-
-  return (
-    <div style={{ background: "rgba(2,6,23,0.6)", border: "1px solid rgba(148,163,184,0.18)", borderRadius: 12, padding: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <div style={{ fontWeight: 700, color: "#f8fafc" }}>{check.standard}</div>
-        <span
-          style={{
-            background: statusColor,
-            color: "#020617",
-            borderRadius: 999,
-            padding: "4px 10px",
-            fontSize: 10,
-            fontWeight: 900,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          {check.status}
-        </span>
-      </div>
-      <div style={{ marginTop: 8, color: "#cbd5e1" }}><strong>{check.subject}</strong></div>
-      <div style={{ marginTop: 6, color: "#e2e8f0", lineHeight: 1.6 }}>{check.issue}</div>
-      <div style={{ marginTop: 8, color: "#bae6fd" }}>{check.recommendation}</div>
-    </div>
-  );
-}
-
-function RiskPill({ label, value, tone }: { label: string; value: number; tone: string }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(2,6,23,0.6)", borderRadius: 12, padding: "12px 14px", border: "1px solid rgba(148,163,184,0.18)" }}>
-      <span style={{ color: "#cbd5e1" }}>{label}</span>
-      <span style={{ color: tone, fontWeight: 800, fontSize: 20 }}>{value}</span>
-    </div>
-  );
-}
+export default DocumentClauseViewer;

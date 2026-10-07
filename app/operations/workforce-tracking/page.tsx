@@ -119,7 +119,7 @@ function normalizeDwellRecord(d: any): WorkforceDwellRecord {
 
   return {
     id: d?.id ?? `dwell-${Date.now()}`,
-    project_id: d?.project_id ?? "proj-default",
+    project_id: d?.project_id ?? "GOMTI-NAGAR-PH1-FITOUT",
     track_session_code: d?.track_session_code ?? `TRK-${Date.now().toString().slice(-4)}`,
     worker_name: d?.worker_name ?? "Operative Person",
     trade_role: d?.trade_role ?? "Steel Fixer / BBS Operative",
@@ -159,7 +159,7 @@ export default function CanonicalWorkforceTrackingPage() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const projectId = (project as any)?.project_id || (project as any)?.id || "proj-default";
+  const projectId = (project as any)?.project_id || (project as any)?.id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = (project as any)?.project_name || (project as any)?.name || "Default Project";
 
   const roleId = (role as { id?: string })?.id || "";

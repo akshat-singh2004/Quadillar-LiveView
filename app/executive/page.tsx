@@ -1,343 +1,217 @@
-"use client";
-
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React from "react";
+import { createClient } from "@/lib/supabase/server";
 import {
-  Banknote,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Download,
-  FileCheck,
-  FileSpreadsheet,
-  Globe,
-  Layers,
-  Lock,
-  RefreshCw,
-  ShieldAlert,
+  Wallet,
   ShieldCheck,
-  TrendingDown,
   TrendingUp,
-  Zap
+  Clock,
+  ArrowUpRight,
+  Layers,
+  FileCheck2,
 } from "lucide-react";
-import { supabase } from "@/app/lib/supabase";
-import { useActiveRole } from "@/context/RoleContext";
-import { generatePitchDossierPdf, type PitchDossierData } from "@/lib/reports/generatePitchDossier";
 
-interface ExecutiveSummaryData {
-  project_id: string;
-  tier: string;
-  total_budget: number;
-  certified_value: number;
-  retainage_held: number;
-  cost_variance: number;
-  schedule_variance_days: number;
-  quality_health: number;
-  carbon_intensity: number;
-  critical_snags: number;
-  liquidity_gap: number;
-  escrow_balance: number;
+function formatInr(val: number): string {
+  if (!val || val === 0) return "₹0";
+  if (Math.abs(val) >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+  if (Math.abs(val) >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(val);
 }
 
-function formatInr(val: number) {
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
-  return `₹${Math.round(val).toLocaleString("en-IN")}`;
-}
+export default async function ExecutiveConsolePage() {
+  const supabase = await createClient();
 
-export default function ExecutivePage() {
-  const { project, role, tier } = useActiveRole();
-  const [data, setData] = useState<ExecutiveSummaryData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // 1. Resolve Project Context
+  const { data: project } = await supabase
+    .from("projects")
+    .select("project_id, project_name, contract_value, gcc_protocol")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  const loadExecutiveData = useCallback(async () => {
-    try {
-      const { data: rpcData, error } = await supabase.rpc("get_executive_portfolio_summary", {
-        p_project_id: project.id
-      });
-      if (!error && rpcData) {
-        setData(rpcData as ExecutiveSummaryData);
-      } else {
-        // Fallback calculation
-        setData({
-          project_id: project.id,
-          tier,
-          total_budget: tier === "RESIDENTIAL" ? 400000 : 448000000,
-          certified_value: tier === "RESIDENTIAL" ? 177600 : 74760000,
-          retainage_held: tier === "RESIDENTIAL" ? 10250 : 427300,
-          cost_variance: tier === "RESIDENTIAL" ? 12500 : 2980000,
-          schedule_variance_days: tier === "RESIDENTIAL" ? -2 : 11,
-          quality_health: 86,
-          carbon_intensity: tier === "RESIDENTIAL" ? 185.2 : 358.4,
-          critical_snags: 1,
-          liquidity_gap: tier === "RESIDENTIAL" ? 35000 : -4200000,
-          escrow_balance: tier === "RESIDENTIAL" ? 180000 : 9200000,
-        });
-      }
-    } catch {
-      // Fallback gracefully
-    } finally {
-      setLoading(false);
-    }
-  }, [project.id, tier]);
+  const projectId = project?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
+  const projectName = project?.project_name || "Gomti Nagar Extension Commercial Hub";
+  const committedCap = Number(project?.contract_value) || 0;
 
-  useEffect(() => {
-    void loadExecutiveData();
-  }, [loadExecutiveData]);
+  // 2. Certified Work Output (RA Bills)
+  const { data: bills } = await supabase
+    .from("running_account_bills")
+    .select("net_payable_certified, gross_valuation, status")
+    .eq("project_id", projectId);
 
-  // Packages dynamically calibrated to scale
-  const packages = useMemo(() => {
-    if (tier === "RESIDENTIAL") {
-      return [
-        { name: "First-Fix Civil & Conduit", progress: 100, budget: 120000, variance: 0 },
-        { name: "Custom Joinery & Millwork", progress: 65, budget: 280000, variance: 12500 },
-        { name: "Surface Finishes & Polish", progress: 40, budget: 85000, variance: -4000 },
-      ];
-    }
-    return [
-      { name: "Civil & Superstructure", progress: 72, budget: 184000000, variance: 1220000 },
-      { name: "MEP & Services Infrastructure", progress: 61, budget: 148000000, variance: 980000 },
-      { name: "Finishes, Facade & Envelope", progress: 58, budget: 116000000, variance: 760000 },
-    ];
-  }, [tier]);
+  const certifiedOutput = (bills || [])
+    .filter((b) => b.status === "SEOR_CERTIFIED_IPC" || b.status === "FINANCE_DISBURSED")
+    .reduce((sum, b) => sum + (Number(b.net_payable_certified) || 0), 0);
 
-  const milestones = useMemo(() => {
-    if (tier === "RESIDENTIAL") {
-      return [
-        { name: "Wall Chasing & Plumbing Tests", planned: 100, actual: 100, status: "Passed" },
-        { name: "Modular Carcass Installation", planned: 80, actual: 65, status: "In Progress" },
-        { name: "Veneer PU Finish Signoff", planned: 40, actual: 25, status: "Pending Sample" },
-        { name: "Final Handover & Snag Closeout", planned: 20, actual: 10, status: "On Track" },
-      ];
-    }
-    return [
-      { name: "Structural Frame Up to L4", planned: 100, actual: 87, status: "Slightly delayed" },
-      { name: "MEP Rough-In & Risers", planned: 100, actual: 76, status: "Pending QA closeout" },
-      { name: "Facade Envelope Cladding", planned: 90, actual: 63, status: "Weather impacted" },
-      { name: "Substantial Completion", planned: 68, actual: 56, status: "On watchlist" },
-    ];
-  }, [tier]);
+  // 3. Quality & Punchlist Defect Exposure
+  const { data: snags } = await supabase
+    .from("punch_list_items")
+    .select("id, severity_tier, status")
+    .eq("project_id", projectId)
+    .neq("status", "CLOSED");
 
-  const handleExportDossier = () => {
-    if (!data) return;
-    const dossier: PitchDossierData = {
-      projectName: project.name,
-      projectCode: project.id,
-      tier,
-      generatedAt: new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }),
-      executiveSummary: `Audited portfolio summary for ${project.name}. Scale tier is ${tier}. All calculations are synchronized with ISO 19650 CDE and live RA billing certifications.`,
-      portfolio: {
-        totalBudget: data.total_budget,
-        certifiedValue: data.certified_value,
-        retainageHeld: data.retainage_held,
-        costVariance: data.cost_variance,
-        scheduleVarianceDays: data.schedule_variance_days,
-        qualityHealth: data.quality_health,
-        carbonIntensity: data.carbon_intensity,
-      },
-      packages,
-      milestones,
-      safety: {
-        manpowerActive: tier === "RESIDENTIAL" ? 7 : 88,
-        incidentCount: 0,
-        complianceScore: 96,
-      },
-      verification: {
-        signer: `${role.label} (${role.category})`,
-        credentialId: `QL-AUDIT-${Date.now().toString().slice(-8)}`,
-      },
-    };
-    generatePitchDossierPdf(dossier);
-  };
+  const urgentDefects = (snags || []).filter(
+    (s) => s.severity_tier === "CATEGORY_A" || s.severity_tier === "CAT-A CRITICAL"
+  ).length;
 
-  if (loading || !data) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center text-xs font-mono text-zinc-500">
-        <Clock className="w-4 h-4 mr-2 animate-spin text-cyan-400" />
-        INITIALIZING EXECUTIVE TREASURY ENGINE...
-      </div>
-    );
-  }
+  // 4. Milestone Packages (Real dynamic or zero-state)
+  const { data: mbRows } = await supabase
+    .from("digital_measurement_book_entries")
+    .select("measured_quantity")
+    .eq("project_id", projectId);
+
+  const totalQty = (mbRows || []).reduce((sum, r) => sum + (Number(r.measured_quantity) || 0), 0);
+  const executionPct = committedCap > 0 ? Math.min(100, Math.round((certifiedOutput / committedCap) * 100)) : 0;
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1500px] space-y-6">
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 p-6 font-sans">
+      <div className="max-w-[1600px] mx-auto space-y-6">
         
-        {/* EXECUTIVE HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-5 gap-4">
+        {/* SUBHEADER TITLE */}
+        <div className="border-b border-zinc-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-[11px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
-              <span>Board & Investor Governance Console</span>
-              <span>·</span>
-              <span className="text-zinc-400">{project.name}</span>
+            <div className="text-[11px] font-mono uppercase tracking-widest text-zinc-500 font-semibold mb-1">
+              BOARD &amp; INVESTOR GOVERNANCE CONSOLE • {projectId}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
-              Portfolio & Treasury Overview
+            <h1 className="text-2xl font-bold font-mono tracking-tight text-zinc-100">
+              Portfolio &amp; Treasury Overview
             </h1>
-            <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
-              Audited balance sheet, liquidity drawdown runway, and contractual risk exposure across active packages.
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Audited balance sheet, liquidity drawdown runway, and physical execution status.
             </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleExportDossier}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-xs transition shadow-sm"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export Executive Pitch Dossier (PDF)</span>
-            </button>
-          </div>
         </div>
 
-        {/* 4 PRIMARY EXECUTIVE VITAL GAUGES */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Committed Capital Cap</span>
-              <Banknote className="w-4 h-4 text-zinc-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-white mt-2">
-              {formatInr(data.total_budget)}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Target contract ceiling</div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>60-Day Treasury Liquidity</span>
-              <Zap className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className={`text-2xl font-extrabold font-mono mt-2 ${data.liquidity_gap >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-              {data.liquidity_gap >= 0 ? `+${formatInr(data.liquidity_gap)}` : `-${formatInr(Math.abs(data.liquidity_gap))}`}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">
-              {data.liquidity_gap >= 0 ? "Projected cash surplus" : "Projected cash gap runway"}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Certified Work Output</span>
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-emerald-400 mt-2">
-              {formatInr(data.certified_value)}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Audited against physical hold-gates</div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Schedule Variance (SPI)</span>
-              <Clock className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className={`text-2xl font-extrabold font-mono mt-2 ${data.schedule_variance_days >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-              {data.schedule_variance_days >= 0 ? `+${data.schedule_variance_days}d` : `${data.schedule_variance_days}d`}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">
-              {data.schedule_variance_days >= 0 ? "Ahead of milestone baseline" : "Behind milestone baseline"}
-            </div>
-          </div>
-        </div>
-
-        {/* 2-COLUMN SPLIT: TRADE PACKAGES vs MILESTONE STAGE PROGRESS */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* 4 TOP REVENUE / TREASURY TILES (Monotone, no rainbow accents) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-xs">
           
-          {/* LEFT: TRADE PACKAGE MIX (6 cols) */}
-          <div className="lg:col-span-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
-                  Capital Allocation
-                </span>
-                <h2 className="text-sm font-bold text-white mt-0.5">Package Mix & Variance</h2>
-              </div>
-              <span className="text-xs font-mono text-zinc-500">{packages.length} Trade Packages</span>
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <div className="flex items-center justify-between text-zinc-500 text-[11px]">
+              <span>COMMITTED CAPITAL CAP</span>
+              <Wallet className="w-4 h-4 text-zinc-400" />
             </div>
-
-            <div className="space-y-4">
-              {packages.map((pkg) => (
-                <div key={pkg.name} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-zinc-200">{pkg.name}</span>
-                    <span className="font-mono text-zinc-400">{pkg.progress}% Complete</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-zinc-900 overflow-hidden border border-zinc-800">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-400"
-                      style={{ width: `${pkg.progress}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono pt-0.5">
-                    <span>Budget: {formatInr(pkg.budget)}</span>
-                    <span className={pkg.variance >= 0 ? "text-rose-400" : "text-emerald-400"}>
-                      Variance: {pkg.variance >= 0 ? `+${formatInr(pkg.variance)}` : `-${formatInr(Math.abs(pkg.variance))}`}
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <div className="text-2xl font-bold text-zinc-100 mt-2 tabular-nums">
+              {formatInr(committedCap)}
             </div>
+            <div className="text-[10px] text-zinc-500 mt-1">Target contract ceiling</div>
           </div>
 
-          {/* RIGHT: CRITICAL MILESTONE PROGRESS (6 cols) */}
-          <div className="lg:col-span-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold">
-                  Physical Execution
-                </span>
-                <h2 className="text-sm font-bold text-white mt-0.5">Key Milestone Trajectory</h2>
-              </div>
-              <span className="text-xs font-mono text-zinc-500">ISO 19650 Gates</span>
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <div className="flex items-center justify-between text-zinc-500 text-[11px]">
+              <span>CERTIFIED WORK OUTPUT</span>
+              <TrendingUp className="w-4 h-4 text-zinc-400" />
             </div>
+            <div className="text-2xl font-bold text-zinc-200 mt-2 tabular-nums">
+              {formatInr(certifiedOutput)}
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-1">Audited against physical hold-gates</div>
+          </div>
 
-            <div className="space-y-4">
-              {milestones.map((ms) => (
-                <div key={ms.name} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-zinc-200">{ms.name}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
-                      {ms.status}
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full bg-zinc-900 overflow-hidden border border-zinc-800">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-400"
-                      style={{ width: `${ms.actual}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono pt-0.5">
-                    <span>Planned: {ms.planned}%</span>
-                    <span>Actual: {ms.actual}%</span>
-                  </div>
-                </div>
-              ))}
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <div className="flex items-center justify-between text-zinc-500 text-[11px]">
+              <span>SCHEDULE VARIANCE (SPI)</span>
+              <Clock className="w-4 h-4 text-zinc-400" />
             </div>
+            <div className="text-2xl font-bold text-zinc-200 mt-2 tabular-nums">
+              0d
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-1">Contemporaneous baseline delta</div>
+          </div>
+
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4">
+            <div className="flex items-center justify-between text-zinc-500 text-[11px]">
+              <span>DEFECT EXPOSURE</span>
+              <ShieldCheck className="w-4 h-4 text-zinc-400" />
+            </div>
+            <div className="text-2xl font-bold text-zinc-200 mt-2 tabular-nums">
+              {urgentDefects} Urgent
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-1">Unresolved Category-A tickets</div>
           </div>
 
         </div>
 
-        {/* STATUTORY ESG & CLOSEOUT ROW */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">CDE Data Health</div>
-            <div className="text-xl font-bold font-mono text-white mt-1">{data.quality_health}%</div>
-            <div className="text-[11px] text-zinc-400 mt-0.5">ISO 19650 compliant document register</div>
+        {/* PROGRESS SECTION: SOOTHING UNIFIED BARS (Subtle slate/cyan-500 fill, NO gradients) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-mono text-xs">
+          
+          {/* PACKAGE MIX & EXECUTION */}
+          <div className="bg-zinc-900/50 border border-zinc-800 p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div>
+                <span className="text-[10px] uppercase text-zinc-500 font-bold block">
+                  CAPITAL ALLOCATION
+                </span>
+                <span className="text-sm font-bold text-zinc-200">Package Mix &amp; Progress</span>
+              </div>
+              <span className="text-zinc-500 text-[11px]">{executionPct}% Overall</span>
+            </div>
+
+            <div className="space-y-4 pt-1">
+              <div>
+                <div className="flex justify-between text-zinc-300 text-xs mb-1.5">
+                  <span>Physical Construction Work</span>
+                  <span className="text-zinc-400">{executionPct}%</span>
+                </div>
+                {/* Soothing single-tint bar */}
+                <div className="h-2 w-full bg-zinc-800 overflow-hidden rounded-none">
+                  <div
+                    className="h-full bg-cyan-600 transition-all duration-300"
+                    style={{ width: `${executionPct}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
+                  <span>Certified: {formatInr(certifiedOutput)}</span>
+                  <span>Ceiling: {formatInr(committedCap)}</span>
+                </div>
+              </div>
+
+              {totalQty === 0 && (
+                <div className="p-3 bg-zinc-950 border border-zinc-800/80 text-zinc-500 text-center text-[11px]">
+                  No trade packages logged yet. Data will populate dynamically as e-MB entries are recorded.
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
-            <div className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider">Carbon Intensity</div>
-            <div className="text-xl font-bold font-mono text-emerald-400 mt-1">{data.carbon_intensity} kg/m²</div>
-            <div className="text-[11px] text-zinc-400 mt-0.5">Well below 420 kg/m² green benchmark</div>
+          {/* KEY MILESTONE TRAJECTORY */}
+          <div className="bg-zinc-900/50 border border-zinc-800 p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div>
+                <span className="text-[10px] uppercase text-zinc-500 font-bold block">
+                  PHYSICAL EXECUTION
+                </span>
+                <span className="text-sm font-bold text-zinc-200">Key Milestone Trajectory</span>
+              </div>
+              <span className="text-zinc-500 text-[11px]">ISO 19650 Gates</span>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              <div className="p-3 bg-zinc-950 border border-zinc-800 flex items-center justify-between text-xs">
+                <span className="text-zinc-300">Substructure &amp; Raft Foundation</span>
+                <span className="px-2 py-0.5 border border-zinc-800 bg-zinc-900 text-zinc-400 text-[10px]">
+                  {executionPct > 0 ? "In Progress" : "Pending Inward"}
+                </span>
+              </div>
+
+              <div className="p-3 bg-zinc-950 border border-zinc-800 flex items-center justify-between text-xs">
+                <span className="text-zinc-300">Superstructure Shear Walls &amp; Slabs</span>
+                <span className="px-2 py-0.5 border border-zinc-800 bg-zinc-900 text-zinc-400 text-[10px]">
+                  {executionPct > 40 ? "Active" : "Pending"}
+                </span>
+              </div>
+
+              <div className="p-3 bg-zinc-950 border border-zinc-800 flex items-center justify-between text-xs">
+                <span className="text-zinc-300">MEP Services &amp; Pre-Handover Snagging</span>
+                <span className="px-2 py-0.5 border border-zinc-800 bg-zinc-900 text-zinc-400 text-[10px]">
+                  {urgentDefects === 0 ? "Clear" : `${urgentDefects} On Hold`}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
-            <div className="text-[10px] font-mono text-amber-400 uppercase tracking-wider">Defect Exposure</div>
-            <div className="text-xl font-bold font-mono text-amber-400 mt-1">{data.critical_snags} Urgent</div>
-            <div className="text-[11px] text-zinc-400 mt-0.5">Blocking final closeout release</div>
-          </div>
         </div>
 
       </div>

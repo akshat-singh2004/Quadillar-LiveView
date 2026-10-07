@@ -1,8 +1,8 @@
 import type { DocumentSignatureRecord } from "@/types/construction";
 
 const signedDocuments: DocumentSignatureRecord[] = [
-  { id: "ledger-1", projectId: "proj-1", documentName: "GFC-STR-04 / Level 04 Slab", documentType: "GFC Drawing", signer: "Ananya Mehta", stakeholder: "Architect", organization: "Mehta Design Associates", credential: "COA / AOR-1184", signedAt: "2026-08-24T07:40:00.000Z", certificateHash: "a8e0e0a8b4c177e09580bf4d4a2df21d9c3f7b9fbd6a6b590ef6ec457e7798d1", verificationStatus: "Verified", x: 72, y: 72 },
-  { id: "ledger-2", projectId: "proj-1", documentName: "RA-08 / Interim Payment Certificate", documentType: "RA Billing Certificate", signer: "Nikhil Shah", stakeholder: "Client", organization: "Quadillar Asset Holdings", credential: "Authorized Client Signatory", signedAt: "2026-08-23T15:20:00.000Z", certificateHash: "47f851b64cdb4f7f4b77e3fdcbeb3f1dd9fb55fbc89f6793ecf4be5e62ae9fb0", verificationStatus: "Verified", x: 72, y: 72 },
+  { id: "ledger-1", projectId: "GOMTI-NAGAR-PH1-FITOUT", documentName: "GFC-STR-04 / Level 04 Slab", documentType: "GFC Drawing", signer: "Ananya Mehta", stakeholder: "Architect", organization: "Mehta Design Associates", credential: "COA / AOR-1184", signedAt: "2026-08-24T07:40:00.000Z", certificateHash: "a8e0e0a8b4c177e09580bf4d4a2df21d9c3f7b9fbd6a6b590ef6ec457e7798d1", verificationStatus: "Verified", x: 72, y: 72 },
+  { id: "ledger-2", projectId: "GOMTI-NAGAR-PH1-FITOUT", documentName: "RA-08 / Interim Payment Certificate", documentType: "RA Billing Certificate", signer: "Nikhil Shah", stakeholder: "Client", organization: "Quadillar Asset Holdings", credential: "Authorized Client Signatory", signedAt: "2026-08-23T15:20:00.000Z", certificateHash: "47f851b64cdb4f7f4b77e3fdcbeb3f1dd9fb55fbc89f6793ecf4be5e62ae9fb0", verificationStatus: "Verified", x: 72, y: 72 },
 ];
 
 export function VerificationTelemetry() {

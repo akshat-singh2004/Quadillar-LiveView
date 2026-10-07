@@ -4,11 +4,7 @@ import { useMemo, useState } from "react";
 import { CommissioningPackModal, isCommissioningPass } from "@/components/quality/CommissioningPackModal";
 import type { CommissioningTestPack } from "@/types/construction";
 
-const seedPacks: CommissioningTestPack[] = [
-  { id: "tc-01", projectId: "proj-1", packNumber: "T&C-HP-014", system: "Domestic water riser", testType: "Hydrostatic Pressure", location: "North Tower / Level 07", witnessRequired: true, status: "Pending", values: { measured: 0.18, allowable: 0.2, unit: "bar drop" } },
-  { id: "tc-02", projectId: "proj-1", packNumber: "T&C-MG-009", system: "LV distribution board DB-03", testType: "Megger Electrical", location: "Electrical room / Level 03", witnessRequired: true, status: "Pending", values: { measured: 2.4, allowable: 1, unit: "MOhm" } },
-  { id: "tc-03", projectId: "proj-1", packNumber: "T&C-HV-006", system: "AHU-04 supply network", testType: "HVAC Air Balancing", location: "West wing / Level 04", witnessRequired: true, status: "Passed", consultantStamp: "CONSULTANT-WITNESS-T&C-HV-006", values: { measured: 101, allowable: 95, unit: "% design airflow" } },
-];
+const seedPacks: CommissioningTestPack[] = [];
 
 export default function CommissioningPage() {
   const [packs, setPacks] = useState(seedPacks);

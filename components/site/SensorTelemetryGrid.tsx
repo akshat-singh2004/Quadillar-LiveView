@@ -5,11 +5,11 @@ import { createClient } from "@supabase/supabase-js";
 import type { SiteSensorTelemetry } from "@/types/construction";
 
 const seedSensors: SiteSensorTelemetry[] = [
-  { id: "sensor-1", projectId: "proj-1", metric: "Wind Anemometer", location: "Tower Crane 02 / Roofline", value: 31, unit: "km/h", threshold: 38, status: "Healthy", timestamp: new Date().toISOString(), trend: [24, 27, 26, 31, 29, 31] },
-  { id: "sensor-2", projectId: "proj-1", metric: "Concrete Cure Temperature", location: "Level 03 / S-204 pour", value: 27.4, unit: "°C", threshold: 30, status: "Healthy", timestamp: new Date().toISOString(), trend: [22, 24, 26, 25, 27, 27.4] },
-  { id: "sensor-3", projectId: "proj-1", metric: "Noise", location: "North Facade / Steel erection", value: 68, unit: "dB", threshold: 85, status: "Healthy", timestamp: new Date().toISOString(), trend: [55, 59, 62, 66, 68, 68] },
-  { id: "sensor-4", projectId: "proj-1", metric: "Air Quality PM2.5", location: "Site entry / PM2.5", value: 22, unit: "µg/m³", threshold: 90, status: "Healthy", timestamp: new Date().toISOString(), trend: [18, 20, 19, 22, 24, 22] },
-  { id: "sensor-5", projectId: "proj-1", metric: "Air Quality PM10", location: "Site entry / PM10", value: 48, unit: "µg/m³", threshold: 150, status: "Healthy", timestamp: new Date().toISOString(), trend: [42, 45, 43, 48, 51, 48] },
+  { id: "sensor-1", projectId: "GOMTI-NAGAR-PH1-FITOUT", metric: "Wind Anemometer", location: "Tower Crane 02 / Roofline", value: 31, unit: "km/h", threshold: 38, status: "Healthy", timestamp: new Date().toISOString(), trend: [24, 27, 26, 31, 29, 31] },
+  { id: "sensor-2", projectId: "GOMTI-NAGAR-PH1-FITOUT", metric: "Concrete Cure Temperature", location: "Level 03 / S-204 pour", value: 27.4, unit: "°C", threshold: 30, status: "Healthy", timestamp: new Date().toISOString(), trend: [22, 24, 26, 25, 27, 27.4] },
+  { id: "sensor-3", projectId: "GOMTI-NAGAR-PH1-FITOUT", metric: "Noise", location: "North Facade / Steel erection", value: 68, unit: "dB", threshold: 85, status: "Healthy", timestamp: new Date().toISOString(), trend: [55, 59, 62, 66, 68, 68] },
+  { id: "sensor-4", projectId: "GOMTI-NAGAR-PH1-FITOUT", metric: "Air Quality PM2.5", location: "Site entry / PM2.5", value: 22, unit: "µg/m³", threshold: 90, status: "Healthy", timestamp: new Date().toISOString(), trend: [18, 20, 19, 22, 24, 22] },
+  { id: "sensor-5", projectId: "GOMTI-NAGAR-PH1-FITOUT", metric: "Air Quality PM10", location: "Site entry / PM10", value: 48, unit: "µg/m³", threshold: 150, status: "Healthy", timestamp: new Date().toISOString(), trend: [42, 45, 43, 48, 51, 48] },
 ];
 
 function formatTrendPath(values: number[]) {
@@ -42,7 +42,7 @@ export function SensorTelemetryGrid() {
         const row = payload.new as Partial<SiteSensorTelemetry> & Record<string, unknown>;
         const next: SiteSensorTelemetry = {
           id: String(row.id ?? `sensor-${Date.now()}`),
-          projectId: String(row.project_id ?? "proj-1"),
+          projectId: String(row.project_id ?? "GOMTI-NAGAR-PH1-FITOUT"),
           metric: (row.metric as SiteSensorTelemetry["metric"]) ?? "Wind Anemometer",
           location: String(row.location ?? "Site zone"),
           value: Number(row.value ?? 0),

@@ -1,97 +1,358 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useState, useMemo, useTransition } from "react";
+import {
+  CloudRain,
+  Wind,
+  Thermometer,
+  Droplets,
+  AlertTriangle,
+  CheckCircle2,
+  ShieldAlert,
+  Loader2,
+  FileText,
+  Clock,
+  ExternalLink,
+  Lock,
+} from "lucide-react";
 import type { MicroclimateTelemetryReading } from "@/types/construction";
+import { logWeatherDelayHindrance } from "@/app/actions/weather-actions";
 
-const defaultTelemetry: MicroclimateTelemetryReading[] = [
-  {
-    id: "micro-1",
-    projectId: "proj-1",
-    location: "North Tower / Level 03",
-    temperatureC: 29.4,
-    windKmH: 36,
-    rainfallMmHr: 4.2,
-    humidityPercent: 71,
-    capturedAt: new Date().toISOString(),
-    status: "Restricted Weather Ops",
-    trigger: ["Wind alert: crane suspension watch"],
-  },
-  {
-    id: "micro-2",
-    projectId: "proj-1",
-    location: "West Facade / L04",
-    temperatureC: 31.1,
-    windKmH: 42,
-    rainfallMmHr: 6.8,
-    humidityPercent: 88,
-    capturedAt: new Date(Date.now() - 1800000).toISOString(),
-    status: "Full Stoppage",
-    trigger: ["Wind >= 38 km/h", "Rain >= 5 mm/hr"],
-  },
-];
+export interface MicroclimateGaugesProps {
+  projectId?: string;
+  initialReading?: MicroclimateTelemetryReading;
+  linkedTaskId?: string;
+  onHindranceLogged?: () => void;
+}
 
-export function MicroclimateGauges() {
-  const [reading, setReading] = useState<MicroclimateTelemetryReading>(defaultTelemetry[0]);
+const DEFAULT_READING: MicroclimateTelemetryReading = {
+  id: "telemetry-active-node",
+  projectId: "GOMTI-NAGAR-PH1-FITOUT",
+  location: "Tower A / Level 14 External Deck",
+  temperatureC: 32.4,
+  windKmH: 41.5,
+  rainfallMmHr: 6.2,
+  humidityPercent: 84,
+  capturedAt: new Date().toISOString(),
+  status: "Full Stoppage",
+  trigger: ["Wind >= 38 km/h (Crane Hold)", "Rain >= 5 mm/hr (Concrete/Paint Hold)"],
+};
 
-  const statusColor = useMemo(() => {
-    if (reading.windKmH >= 38 || reading.rainfallMmHr >= 5) return { label: "Full Stoppage", tone: "#ef4444", bg: "rgba(239,68,68,0.12)" };
-    if (reading.windKmH >= 30 || reading.rainfallMmHr >= 3) return { label: "Restricted Weather Ops", tone: "#f59e0b", bg: "rgba(245,158,11,0.12)" };
-    return { label: "Normal Site Ops", tone: "#22c55e", bg: "rgba(34,197,94,0.12)" };
+export function MicroclimateGauges({
+  projectId = "GOMTI-NAGAR-PH1-FITOUT",
+  initialReading = DEFAULT_READING,
+  linkedTaskId,
+  onHindranceLogged,
+}: MicroclimateGaugesProps) {
+  const [reading, setReading] = useState<MicroclimateTelemetryReading>(initialReading);
+  const [isPending, startTransition] = useTransition();
+  const [eotReceipt, setEotReceipt] = useState<{
+    hindranceNumber: string;
+    criticalPath: boolean;
+    floatConsumed: number;
+    slippageDays: number;
+    clause: string;
+  } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Concrete & Safety Threshold Evaluation
+  const weatherStatus = useMemo(() => {
+    const isWindStoppage = reading.windKmH >= 38;
+    const isRainStoppage = reading.rainfallMmHr >= 5.0;
+    const isThermalWarning = reading.temperatureC >= 40 || reading.temperatureC <= 5;
+    const isRestricted = reading.windKmH >= 28 || reading.rainfallMmHr >= 2.5;
+
+    const triggers: string[] = [];
+    if (isWindStoppage) triggers.push("Wind speed ≥ 38 km/h (IS 7293 Crane & Scaffolding Suspension)");
+    if (isRainStoppage) triggers.push("Precipitation ≥ 5.0 mm/h (IS 456 Cl. 13.3 Pouring & External Coating Stop)");
+    if (isThermalWarning) triggers.push("Thermal threshold breach (IS 7861 Hot/Cold Weather Protocol)");
+
+    if (isWindStoppage || isRainStoppage) {
+      return {
+        level: "FULL_STOPPAGE",
+        label: "Mandatory Stoppage In Force",
+        badgeClass: "bg-rose-950/80 border-rose-800 text-rose-300",
+        indicatorClass: "bg-rose-500 animate-ping",
+        triggers,
+      };
+    }
+
+    if (isRestricted || triggers.length > 0) {
+      return {
+        level: "RESTRICTED",
+        label: "Restricted Operations Warning",
+        badgeClass: "bg-amber-950/80 border-amber-800 text-amber-300",
+        indicatorClass: "bg-amber-500 animate-pulse",
+        triggers: triggers.length > 0 ? triggers : ["Marginal atmospheric conditions: proceed under watch"],
+      };
+    }
+
+    return {
+      level: "NOMINAL",
+      label: "Nominal Operations Cleared",
+      badgeClass: "bg-emerald-950/80 border-emerald-800 text-emerald-300",
+      indicatorClass: "bg-emerald-500",
+      triggers: ["All environmental telemetry within IS & OSHA working tolerances"],
+    };
   }, [reading]);
 
-  const convertStoppage = () => {
-    const timestamp = new Date().toISOString();
-    const claimText = `Weather Delay Claim – ${timestamp}\nCause: Adverse weather telemetry breached safety controls.\nWind: ${reading.windKmH} km/h | Rainfall: ${reading.rainfallMmHr} mm/hr | Humidity: ${reading.humidityPercent}% | Temperature: ${reading.temperatureC}°C.\nImpact: crane and work-at-height operations paused; external painting and concreting ceased pending safe recommencement.`;
-    window.alert(claimText);
-  };
+  // Convert Telemetry Breach to Legal EOT Claim
+  const handleConvertStoppageToClaim = () => {
+    setErrorMessage(null);
 
-  const updateTelemetry = () => {
-    setReading((current) => {
-      const next = current.id === defaultTelemetry[0].id ? defaultTelemetry[1] : defaultTelemetry[0];
-      return { ...next, capturedAt: new Date().toISOString() };
+    startTransition(async () => {
+      const res = await logWeatherDelayHindrance({
+        projectId: reading.projectId || projectId,
+        affectedTaskId: linkedTaskId,
+        location: reading.location,
+        temperatureC: reading.temperatureC,
+        windKmH: reading.windKmH,
+        rainfallMmHr: reading.rainfallMmHr,
+        humidityPercent: reading.humidityPercent,
+        triggerDescriptions: weatherStatus.triggers,
+        estimatedDelayDays: 1,
+      });
+
+      if (res.success && res.assessment) {
+        setEotReceipt({
+          hindranceNumber: res.assessment.hindranceNumber,
+          criticalPath: res.assessment.criticalPathImpacted,
+          floatConsumed: res.assessment.consumedFloatDays,
+          slippageDays: res.assessment.projectCompletionSlippageDays,
+          clause: res.assessment.suggestedClauseRef,
+        });
+        if (onHindranceLogged) onHindranceLogged();
+      } else {
+        setErrorMessage(res.error || "Failed to commit weather delay hindrance.");
+      }
     });
   };
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+    <div className="bg-zinc-900 border border-zinc-800 font-mono text-xs select-none relative space-y-4 p-5">
+      {/* HEADER BAR */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
         <div>
-          <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Microclimate telemetry</div>
-          <div style={{ marginTop: 6, fontSize: 28, fontWeight: 700 }}>{reading.location}</div>
+          <div className="flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${weatherStatus.indicatorClass}`} />
+            <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-bold">
+              MICROCLIMATE TELEMETRY ARRAY • SENSOR NODE #04
+            </span>
+          </div>
+          <h2 className="text-base font-bold text-zinc-100 font-mono mt-0.5">
+            {reading.location}
+          </h2>
+          <p className="text-[11px] text-zinc-500 mt-0.5">
+            Synchronized at: {new Date(reading.capturedAt).toLocaleTimeString()} • Station ID: {reading.id}
+          </p>
         </div>
-        <div style={{ borderRadius: 999, padding: "8px 12px", background: statusColor.bg, color: statusColor.tone, border: `1px solid ${statusColor.tone}44`, fontWeight: 700 }}>{statusColor.label}</div>
+
+        <div className="flex items-center gap-3">
+          <span
+            className={`px-3 py-1.5 border text-[11px] font-bold uppercase tracking-wider flex items-center gap-2 ${weatherStatus.badgeClass}`}
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span>{weatherStatus.label}</span>
+          </span>
+        </div>
       </div>
 
-      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
-        {[
-          { label: "Site Temperature", value: `${reading.temperatureC.toFixed(1)}°C`, accent: "#38bdf8" },
-          { label: "Wind Speed", value: `${reading.windKmH.toFixed(0)} km/h`, accent: "#fbbf24" },
-          { label: "Precipitation Rate", value: `${reading.rainfallMmHr.toFixed(1)} mm/hr`, accent: "#60a5fa" },
-          { label: "Humidity", value: `${reading.humidityPercent.toFixed(0)}%`, accent: "#34d399" },
-        ].map((metric) => (
-          <div key={metric.label} style={{ padding: 18, borderRadius: 16, border: "1px solid rgba(148,163,184,0.18)", background: "rgba(15,23,42,0.77)" }}>
-            <div style={{ color: "#94a3b8", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em" }}>{metric.label}</div>
-            <div style={{ marginTop: 18, fontSize: 32, fontWeight: 700, color: metric.accent }}>{metric.value}</div>
-            <div style={{ marginTop: 8, height: 8, borderRadius: 999, background: "rgba(148,163,184,0.12)", overflow: "hidden" }}>
-              <div style={{ width: `${Math.min(100, Math.max(10, reading.windKmH / 50 * 100))}%`, height: "100%", background: metric.accent, borderRadius: 999 }} />
+      {/* ERROR FEEDBACK */}
+      {errorMessage && (
+        <div className="p-3 bg-rose-950/70 border border-rose-800 text-rose-300 flex items-start gap-2">
+          <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-rose-400" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {/* NOTARIZED EOT RECEIPT */}
+      {eotReceipt && (
+        <div className="p-4 bg-amber-950/40 border border-amber-800/90 text-amber-200 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-bold flex items-center gap-1.5 text-xs text-amber-300">
+              <CheckCircle2 className="h-4 w-4 text-amber-400" />
+              <span>DELAY NOTICE SERVED: {eotReceipt.hindranceNumber}</span>
+            </span>
+            <span className="text-[10px] bg-amber-950 border border-amber-700 px-2 py-0.5 font-bold">
+              SECTION 65B NOTARIZED
+            </span>
+          </div>
+          <div className="text-[11px] text-amber-300/90 space-y-0.5">
+            <div>
+              <strong>Contractual Authority:</strong> {eotReceipt.clause}
+            </div>
+            <div>
+              <strong>CPM Impact:</strong> Consumed {eotReceipt.floatConsumed}d float • Critical Path Breached:{" "}
+              {eotReceipt.criticalPath ? (
+                <span className="text-rose-400 font-bold">YES ({eotReceipt.slippageDays}d Slippage)</span>
+              ) : (
+                <span className="text-emerald-400 font-bold">NO (Buffered within float)</span>
+              )}
             </div>
           </div>
-        ))}
+        </div>
+      )}
+
+      {/* SENSOR GAUGES GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Wind Velocity */}
+        <div
+          className={`p-3.5 border bg-zinc-950/60 ${reading.windKmH >= 38
+              ? "border-rose-800/80 bg-rose-950/20"
+              : "border-zinc-800"
+            }`}
+        >
+          <div className="flex items-center justify-between text-zinc-400 text-[10px] uppercase font-bold">
+            <span>Wind Velocity</span>
+            <Wind className={`h-3.5 w-3.5 ${reading.windKmH >= 38 ? "text-rose-400" : "text-zinc-500"}`} />
+          </div>
+          <div className="mt-2 flex items-baseline gap-1">
+            <span
+              className={`text-2xl font-bold tabular-nums ${reading.windKmH >= 38 ? "text-rose-400" : "text-zinc-100"
+                }`}
+            >
+              {reading.windKmH.toFixed(1)}
+            </span>
+            <span className="text-[10px] text-zinc-500">km/h</span>
+          </div>
+          {/* Progress Bar */}
+          <div className="mt-2.5 h-1.5 w-full bg-zinc-800 overflow-hidden">
+            <div
+              style={{ width: `${Math.min(100, (reading.windKmH / 60) * 100)}%` }}
+              className={`h-full ${reading.windKmH >= 38 ? "bg-rose-500" : "bg-sky-500"}`}
+            />
+          </div>
+          <span className="block text-[9px] text-zinc-500 mt-1">Limit: 38 km/h (Crane Stop)</span>
+        </div>
+
+        {/* Rainfall Intensity */}
+        <div
+          className={`p-3.5 border bg-zinc-950/60 ${reading.rainfallMmHr >= 5.0
+              ? "border-rose-800/80 bg-rose-950/20"
+              : "border-zinc-800"
+            }`}
+        >
+          <div className="flex items-center justify-between text-zinc-400 text-[10px] uppercase font-bold">
+            <span>Precipitation Rate</span>
+            <CloudRain className={`h-3.5 w-3.5 ${reading.rainfallMmHr >= 5.0 ? "text-rose-400" : "text-zinc-500"}`} />
+          </div>
+          <div className="mt-2 flex items-baseline gap-1">
+            <span
+              className={`text-2xl font-bold tabular-nums ${reading.rainfallMmHr >= 5.0 ? "text-rose-400" : "text-zinc-100"
+                }`}
+            >
+              {reading.rainfallMmHr.toFixed(1)}
+            </span>
+            <span className="text-[10px] text-zinc-500">mm/hr</span>
+          </div>
+          <div className="mt-2.5 h-1.5 w-full bg-zinc-800 overflow-hidden">
+            <div
+              style={{ width: `${Math.min(100, (reading.rainfallMmHr / 15) * 100)}%` }}
+              className={`h-full ${reading.rainfallMmHr >= 5.0 ? "bg-rose-500" : "bg-sky-500"}`}
+            />
+          </div>
+          <span className="block text-[9px] text-zinc-500 mt-1">Limit: 5 mm/hr (Concrete Stop)</span>
+        </div>
+
+        {/* Ambient Temperature */}
+        <div
+          className={`p-3.5 border bg-zinc-950/60 ${reading.temperatureC >= 40
+              ? "border-amber-800/80 bg-amber-950/20"
+              : "border-zinc-800"
+            }`}
+        >
+          <div className="flex items-center justify-between text-zinc-400 text-[10px] uppercase font-bold">
+            <span>Ambient Temp</span>
+            <Thermometer className="h-3.5 w-3.5 text-zinc-500" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-1">
+            <span className="text-2xl font-bold text-zinc-100 tabular-nums">
+              {reading.temperatureC.toFixed(1)}
+            </span>
+            <span className="text-[10px] text-zinc-500">°C</span>
+          </div>
+          <div className="mt-2.5 h-1.5 w-full bg-zinc-800 overflow-hidden">
+            <div
+              style={{ width: `${Math.min(100, (reading.temperatureC / 50) * 100)}%` }}
+              className={`h-full ${reading.temperatureC >= 40 ? "bg-amber-500" : "bg-emerald-500"}`}
+            />
+          </div>
+          <span className="block text-[9px] text-zinc-500 mt-1">IS 7861 Range: 5°C – 40°C</span>
+        </div>
+
+        {/* Relative Humidity */}
+        <div className="p-3.5 border border-zinc-800 bg-zinc-950/60">
+          <div className="flex items-center justify-between text-zinc-400 text-[10px] uppercase font-bold">
+            <span>Relative Humidity</span>
+            <Droplets className="h-3.5 w-3.5 text-zinc-500" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-1">
+            <span className="text-2xl font-bold text-zinc-100 tabular-nums">
+              {reading.humidityPercent.toFixed(0)}
+            </span>
+            <span className="text-[10px] text-zinc-500">%</span>
+          </div>
+          <div className="mt-2.5 h-1.5 w-full bg-zinc-800 overflow-hidden">
+            <div
+              style={{ width: `${Math.min(100, reading.humidityPercent)}%` }}
+              className="h-full bg-cyan-500"
+            />
+          </div>
+          <span className="block text-[9px] text-zinc-500 mt-1">Slump Loss &amp; Curing Factor</span>
+        </div>
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-        <button type="button" onClick={updateTelemetry} style={{ background: "#0ea5e9", color: "white", border: "none", borderRadius: 12, padding: "10px 16px", cursor: "pointer", fontWeight: 700 }}>Simulate telemetry refresh</button>
-        <button type="button" onClick={convertStoppage} style={{ background: "#f59e0b", color: "#111827", border: "none", borderRadius: 12, padding: "10px 16px", cursor: "pointer", fontWeight: 700 }}>Convert Stoppage into EOT Claim Evidence</button>
-      </div>
+      {/* STATUTORY CODIFIED CRITERIA & ACTIONS */}
+      <div className="border border-zinc-800 bg-zinc-950/80 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold flex items-center gap-1.5">
+            <Lock className="h-3.5 w-3.5 text-zinc-500" />
+            <span>Active Environmental Interlocks &amp; Statutory Thresholds</span>
+          </span>
+          <span className="text-[10px] text-zinc-500 font-normal">
+            FIDIC Cl. 8.4(c) • CPWD GCC Cl. 5.1
+          </span>
+        </div>
 
-      <div style={{ border: "1px solid rgba(148,163,184,0.18)", borderRadius: 16, padding: 16, background: "rgba(2,6,23,0.9)" }}>
-        <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Adverse weather trigger</div>
-        <ul style={{ margin: "12px 0 0", paddingLeft: 18, color: "#e2e8f0", lineHeight: 1.8 }}>
-          <li>Wind ≥ 38 km/h → crane and work-at-height stoppage.</li>
-          <li>Rainfall ≥ 5 mm/hr → external painting and concreting stoppage.</li>
-          <li>Current event: {reading.trigger.join(" • ") || "No active trigger"}</li>
+        <ul className="space-y-1.5 text-[11px] text-zinc-300">
+          {weatherStatus.triggers.map((t, idx) => (
+            <li key={idx} className="flex items-start gap-2">
+              <span className="text-amber-500 mt-0.5">•</span>
+              <span>{t}</span>
+            </li>
+          ))}
         </ul>
+
+        <div className="pt-2 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-[10px] text-zinc-500">
+            Clicking will notify Chronos, lock the delay in the Hindrance Register, and compute CPM slippage.
+          </div>
+
+          <button
+            type="button"
+            disabled={isPending || weatherStatus.level === "NOMINAL"}
+            onClick={handleConvertStoppageToClaim}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${weatherStatus.level === "FULL_STOPPAGE"
+                ? "bg-rose-600 hover:bg-rose-500 text-white"
+                : "bg-amber-600 hover:bg-amber-500 text-zinc-950"
+              }`}
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Submitting EOT Evidence...</span>
+              </>
+            ) : (
+              <>
+                <FileText className="h-3.5 w-3.5" />
+                <span>Log Contemporaneous EOT Stoppage</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
+export default MicroclimateGauges;

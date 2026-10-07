@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { CheckCircle2, AlertTriangle, X, Printer, ShieldCheck, Clock, FileCheck } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
+import { ImageUploader } from "@/app/components/ImageUploader";
+import { ValidatedEvidencePayload } from "@/lib/security/exifGeofenceValidator";
 
 export interface ConcretePourCardRecord {
   id: string;
@@ -22,6 +24,7 @@ export interface ConcretePourCardRecord {
   cover_blocks_cleared: boolean;
   status: "Hold" | "Cleared" | "Poured" | "Rejected";
   contractor_name: string;
+  sha256_hash?: string;
 }
 
 interface Props {
@@ -33,6 +36,7 @@ interface Props {
 export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
   const [draft, setDraft] = useState<ConcretePourCardRecord | null>(pour);
   const [saving, setSaving] = useState(false);
+  const [evidence, setEvidence] = useState<ValidatedEvidencePayload | null>(null);
 
   if (!pour || !draft) return null;
 
@@ -44,28 +48,44 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
     setDraft({ ...draft, [key]: !draft[key] });
   };
 
+  const handleEvidenceValidated = (payload: ValidatedEvidencePayload) => {
+    setEvidence(payload);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const nextStatus = allClearancesPassed && isSlumpCompliant ? "Cleared" : "Hold";
-    const updated = { ...draft, status: nextStatus };
+    const updated = {
+      ...draft,
+      status: nextStatus,
+      sha256_hash: evidence?.sha256Hash || draft.sha256_hash
+    };
 
-    await supabase
-      .from("pour_cards")
-      .update({
-        design_slump_mm: updated.design_slump_mm,
-        actual_slump_mm: updated.actual_slump_mm,
-        rebar_cleared: updated.rebar_cleared,
-        formwork_cleared: updated.formwork_cleared,
-        mep_cleared: updated.mep_cleared,
-        cover_blocks_cleared: updated.cover_blocks_cleared,
-        status: nextStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", updated.id);
+    try {
+      await supabase
+        .from("pour_cards")
+        .update({
+          design_slump_mm: updated.design_slump_mm,
+          actual_slump_mm: updated.actual_slump_mm,
+          rebar_cleared: updated.rebar_cleared,
+          formwork_cleared: updated.formwork_cleared,
+          mep_cleared: updated.mep_cleared,
+          cover_blocks_cleared: updated.cover_blocks_cleared,
+          status: nextStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", updated.id);
 
-    onUpdated(updated as ConcretePourCardRecord);
-    setSaving(false);
-    onClose();
+      onUpdated(updated as ConcretePourCardRecord);
+    } catch {
+      // Fallback offline queue if sub-basement disconnected
+      const { enqueueOfflineMutation } = await import("@/lib/offline/indexedDbQueue");
+      await enqueueOfflineMutation("POUR_CARD_CREATE", "/api/quality/pour-cards", updated);
+      onUpdated(updated as ConcretePourCardRecord);
+    } finally {
+      setSaving(false);
+      onClose();
+    }
   };
 
   const handlePrintProtocol = () => {
@@ -99,6 +119,7 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
     <tr><th>Formwork Stability & Level</th><td>${draft.formwork_cleared ? 'PASSED' : 'PENDING'}</td></tr>
     <tr><th>MEP Sleeve & Box Embedments</th><td>${draft.mep_cleared ? 'PASSED' : 'PENDING'}</td></tr>
     <tr><th>Cover Blocks (Min 40mm)</th><td>${draft.cover_blocks_cleared ? 'PASSED' : 'PENDING'}</td></tr>
+    <tr><th>Evidence SHA-256 Hash</th><td>${evidence?.sha256Hash || 'Hardware Verification Bound'}</td></tr>
   </table>
   <div style="margin-top: 24px; display: flex; align-items: center; gap: 14px;">
     <img src="${qrUrl}" width="100" height="100" alt="Batch QR"/>
@@ -112,28 +133,27 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5">
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md font-mono">
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5">
+
         {/* MODAL HEADER */}
         <div className="flex items-start justify-between border-b border-zinc-800 pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-cyan-400">
+              <span className="text-xs font-bold text-cyan-400">
                 {draft.pour_number}
               </span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                allClearancesPassed && isSlumpCompliant
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${allClearancesPassed && isSlumpCompliant
                   ? "bg-emerald-950 text-emerald-400 border border-emerald-800/60"
                   : "bg-rose-950 text-rose-400 border border-rose-800/60"
-              }`}>
+                }`}>
                 {allClearancesPassed && isSlumpCompliant ? "Ready for Pour" : "Hold Active"}
               </span>
             </div>
             <h3 className="text-base font-bold text-white mt-1">
               {draft.location}
             </h3>
-            <div className="text-xs text-zinc-500 mt-0.5 font-mono">
+            <div className="text-xs text-zinc-500 mt-0.5">
               Grade: {draft.grade} · Batch: {draft.batch_tag}
             </div>
           </div>
@@ -148,7 +168,7 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
 
         {/* 4 MANDATORY PRE-CONCRETING CLEARANCES */}
         <div className="space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">
             Mandatory Hold-Point Check Items
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -162,14 +182,13 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
                 key={check.key}
                 type="button"
                 onClick={() => handleToggleClearance(check.key)}
-                className={`p-3 rounded-xl border text-left flex items-center justify-between transition ${
-                  draft[check.key]
+                className={`p-3 rounded-xl border text-left flex items-center justify-between transition ${draft[check.key]
                     ? "border-emerald-900/60 bg-emerald-950/20 text-emerald-300"
                     : "border-zinc-800 bg-zinc-900/40 text-zinc-400"
-                }`}
+                  }`}
               >
                 <span>{check.label}</span>
-                <span className="font-mono text-[10px] font-bold">
+                <span className="text-[10px] font-bold">
                   {draft[check.key] ? "PASS" : "HOLD"}
                 </span>
               </button>
@@ -177,7 +196,7 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
           </div>
         </div>
 
-        {/* IS 456 SLUMP VALIDATOR (Only applies if design slump > 0) */}
+        {/* IS 456 SLUMP VALIDATOR */}
         {draft.design_slump_mm > 0 && (
           <div className="grid grid-cols-2 gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/40 text-xs">
             <div>
@@ -186,7 +205,7 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
                 type="number"
                 value={draft.design_slump_mm}
                 onChange={(e) => setDraft({ ...draft, design_slump_mm: Number(e.target.value) })}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-white font-mono"
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-white"
               />
             </div>
             <div>
@@ -195,10 +214,10 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
                 type="number"
                 value={draft.actual_slump_mm}
                 onChange={(e) => setDraft({ ...draft, actual_slump_mm: Number(e.target.value) })}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-white font-mono"
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-white"
               />
             </div>
-            <div className="col-span-2 flex items-center justify-between text-[11px] font-mono pt-1">
+            <div className="col-span-2 flex items-center justify-between text-[11px] pt-1">
               <span className="text-zinc-500">IS 456 allowable tolerance: ±25mm</span>
               <span className={`font-bold ${isSlumpCompliant ? "text-emerald-400" : "text-rose-400"}`}>
                 {isSlumpCompliant ? "Slump Compliant" : `Out of Spec (${slumpDiff >= 0 ? '+' : ''}${slumpDiff}mm)`}
@@ -206,6 +225,18 @@ export function PourCardDetailModal({ pour, onClose, onUpdated }: Props) {
             </div>
           </div>
         )}
+
+        {/* SECTION 65B PHOTOGRAPHIC EVIDENCE UPLOADER */}
+        <div className="space-y-1.5">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold block">
+            Pre-Pour Photo Evidence (EXIF Geofence Stamp)
+          </span>
+          <ImageUploader
+            entityType="POUR_CARD"
+            entityId={draft.id}
+            onEvidenceValidated={handleEvidenceValidated}
+          />
+        </div>
 
         {/* ACTIONS FOOTER */}
         <div className="flex items-center justify-between border-t border-zinc-800 pt-3">

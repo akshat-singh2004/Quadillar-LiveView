@@ -1,0 +1,144 @@
+=== SPRINT 7 CODE BUNDLE ===
+
+================================================================================
+FILE_START: app/portal/client/page.tsx
+================================================================================
+import { ClientExecutiveDashboard } from "@/components/portal/ClientExecutiveDashboard";
+
+export default function ClientPortalPage() {
+  return <ClientExecutiveDashboard />;
+}
+
+================================================================================
+FILE_END: app/portal/client/page.tsx
+================================================================================
+
+================================================================================
+FILE_START: app/portal/snag/page.tsx
+================================================================================
+import { redirect } from "next/navigation";
+
+export default function PortalSnagPage() {
+  redirect("/handover/punch-list");
+}
+================================================================================
+FILE_END: app/portal/snag/page.tsx
+================================================================================
+
+================================================================================
+FILE_START: app/auth/page.tsx
+================================================================================
+// app/auth/page.tsx
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/app/lib/supabase";
+
+export default function AuthPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSignup = async () => {
+    setIsLoading(true);
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (authError) {
+      alert(authError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    const user = authData.user;
+    if (user) {
+      const { error: profileError } = await supabase.from("user_profiles").upsert([
+        {
+          id: user.id,
+          full_name: user.email?.split("@")[0] || "Authorized User",
+          default_role: "architect",
+        },
+      ]);
+
+      if (profileError) {
+        console.warn("[AUTH] Failed to initialize user_profile record:", profileError.message);
+      }
+    }
+
+    setIsLoading(false);
+    router.push("/dashboard");
+  };
+
+  const handleLogin = async () => {
+    setIsLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      setIsLoading(false);
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-black text-white flex items-center justify-center font-sans">
+      <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl w-[360px] flex flex-col gap-4 shadow-2xl">
+        <div>
+          <h1 className="text-2xl font-bold font-mono tracking-tight text-zinc-100">
+            Quadillar LiveView
+          </h1>
+          <p className="text-xs text-zinc-500 font-mono mt-1">
+            Statutory Construction &amp; Engineering Gateway
+          </p>
+        </div>
+
+        <input
+          type="email"
+          placeholder="Email"
+          disabled={isLoading}
+          className="p-3 rounded bg-zinc-950 border border-zinc-800 text-xs font-mono focus:outline-none focus:border-zinc-600 disabled:opacity-50"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          disabled={isLoading}
+          className="p-3 rounded bg-zinc-950 border border-zinc-800 text-xs font-mono focus:outline-none focus:border-zinc-600 disabled:opacity-50"
+          value={password}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={handleSignup}
+          className="bg-zinc-100 hover:bg-zinc-300 text-black p-3 rounded font-mono text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+        >
+          {isLoading ? "Processing..." : "Sign Up"}
+        </button>
+
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={handleLogin}
+          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 p-3 rounded font-mono text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+        >
+          {isLoading ? "Authenticating..." : "Login"}
+        </button>
+      </div>
+    </main>
+  );
+}
+================================================================================
+FILE_END: app/auth/page.tsx
+================================================================================

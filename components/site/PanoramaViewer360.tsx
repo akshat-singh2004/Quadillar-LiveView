@@ -1,14 +1,263 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import type { PanoramaSnapshot } from "@/types/construction";
+import React, { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+import { Compass, Layers, CheckCircle2 } from 'lucide-react';
 
-const snapshots: PanoramaSnapshot[] = [
-  { id: "pano-12", projectId: "proj-1", capturedAt: "2026-06-12", weekLabel: "Week 12 · Bare concrete", location: "North Tower / Level 03", imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=80" },
-  { id: "pano-15", projectId: "proj-1", capturedAt: "2026-07-03", weekLabel: "Week 15 · MEP rough-in", location: "North Tower / Level 03", imageUrl: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1800&q=80" },
-  { id: "pano-18", projectId: "proj-1", capturedAt: "2026-07-24", weekLabel: "Week 18 · MEP piping", location: "North Tower / Level 03", imageUrl: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1800&q=80" },
-];
+export interface PanoramaPin {
+  id: string;
+  pin_type: 'NCR_DEFECT' | 'RFI_CLARIFICATION' | 'SAFETY_HAZARD' | 'VERIFIED_OK';
+  title: string;
+  description?: string;
+  sphere_yaw: number;
+  sphere_pitch: number;
+  status: 'OPEN' | 'RESOLVED' | 'CLOSED';
+}
 
-export function PanoramaViewer360() { const [index, setIndex] = useState(2); const [yaw, setYaw] = useState(0); const [fov, setFov] = useState(75); const [dragging, setDragging] = useState(false); const startX = useRef(0); const snapshot = snapshots[index]; useEffect(() => { const stop = () => setDragging(false); window.addEventListener("mouseup", stop); return () => window.removeEventListener("mouseup", stop); }, []); const startDrag = (event: React.MouseEvent<HTMLCanvasElement>) => { setDragging(true); startX.current = event.clientX; }; const move = (event: React.MouseEvent<HTMLCanvasElement>) => { if (!dragging) return; setYaw((current) => current + (event.clientX - startX.current) * .3); startX.current = event.clientX; }; return <section style={shell}><div style={floorplan}><div style={eyebrow}>2D floorplan sheet</div><h2 style={title}>360 site walk hotspots</h2><div style={plan}><div style={building}>Level 03 / North Tower</div>{[{ left: "25%", top: "32%", label: "Grid B2" }, { left: "67%", top: "28%", label: "MEP riser" }, { left: "50%", top: "70%", label: "Core" }].map((pin) => <button key={pin.label} type="button" onClick={() => setIndex(pin.label === "Grid B2" ? 0 : pin.label === "MEP riser" ? 2 : 1)} style={{ ...pinStyle, left: pin.left, top: pin.top }} aria-label={`Load ${pin.label} panorama`}>●</button>)}</div><div style={hint}>Click a hotspot to load the matching spatial capture.</div></div><div style={viewer}><div style={viewerHeader}><div><div style={eyebrow}>WebGL equirectangular panorama surface</div><h2 style={title}>{snapshot.weekLabel}</h2><div style={muted}>{snapshot.location} · {snapshot.capturedAt}</div></div><label style={control}>FOV <input type="range" min="45" max="110" value={fov} onChange={(event) => setFov(Number(event.target.value))} /></label></div><canvas width="900" height="500" onMouseDown={startDrag} onMouseMove={move} style={{ ...canvas, cursor: dragging ? "grabbing" : "grab", backgroundImage: `url(${snapshot.imageUrl})`, backgroundPosition: `${50 + yaw / 8}% center`, backgroundSize: `${Math.max(100, 110 - (fov - 45) * .65)}% auto` }} aria-label="Interactive 360 degree panorama viewer" /><div style={sliderRow}><span style={muted}>Time-travel progress</span><input type="range" min="0" max={snapshots.length - 1} value={index} onChange={(event) => setIndex(Number(event.target.value))} style={{ flex: 1 }} /><strong>{snapshot.capturedAt}</strong></div></div></section>; }
+export interface PanoramaViewer360Props {
+  photoUrl: string;
+  bimRenderUrl?: string | null;
+  pins?: PanoramaPin[];
+  onPinClick?: (pin: PanoramaPin) => void;
+  onSphereClickAddPin?: (yaw: number, pitch: number) => void;
+  initialYaw?: number;
+  initialPitch?: number;
+}
 
-const shell: React.CSSProperties = { display: "grid", gridTemplateColumns: "minmax(260px, .75fr) minmax(0, 1.6fr)", gap: 18 }; const floorplan: React.CSSProperties = { background: "#0b1220", border: "1px solid #1e293b", borderRadius: 16, padding: 18 }; const viewer: React.CSSProperties = { background: "#0b1220", border: "1px solid #1e293b", borderRadius: 16, padding: 18 }; const eyebrow: React.CSSProperties = { color: "#67e8f9", fontSize: 10, letterSpacing: ".15em", textTransform: "uppercase", fontWeight: 800 }; const title: React.CSSProperties = { margin: "7px 0 0", fontSize: 20 }; const muted: React.CSSProperties = { color: "#94a3b8", fontSize: 12, marginTop: 5 }; const plan: React.CSSProperties = { position: "relative", height: 360, marginTop: 18, border: "1px solid #334155", background: "repeating-linear-gradient(0deg, transparent 0 35px, #334155 36px), repeating-linear-gradient(90deg, transparent 0 35px, #334155 36px)" }; const building: React.CSSProperties = { position: "absolute", left: "15%", top: "14%", width: "70%", height: "72%", display: "grid", placeItems: "center", border: "2px solid #e2e8f0", background: "#e2e8f00d", color: "#cbd5e1", fontSize: 12 }; const pinStyle: React.CSSProperties = { position: "absolute", transform: "translate(-50%, -50%)", border: 0, background: "#f59e0b", color: "#111827", borderRadius: 999, width: 26, height: 26, cursor: "pointer", boxShadow: "0 0 0 6px #f59e0b33" }; const hint: React.CSSProperties = { color: "#64748b", fontSize: 11, marginTop: 12 }; const viewerHeader: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 16 }; const control: React.CSSProperties = { display: "flex", alignItems: "center", gap: 8, color: "#cbd5e1", fontSize: 11 }; const canvas: React.CSSProperties = { width: "100%", height: "auto", minHeight: 320, objectFit: "cover", border: "1px solid #334155", display: "block", backgroundColor: "#162a36", backgroundRepeat: "no-repeat" }; const sliderRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 12, marginTop: 14, fontSize: 11 };
+export const PanoramaViewer360: React.FC<PanoramaViewer360Props> = ({
+  photoUrl,
+  bimRenderUrl,
+  pins = [],
+  onPinClick,
+  onSphereClickAddPin,
+  initialYaw = 0,
+  initialPitch = 0,
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [crossfadeRatio, setCrossfadeRatio] = useState<number>(0);
+  const [activePinDetail, setActivePinDetail] = useState<PanoramaPin | null>(null);
+
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const sphereMeshRef = useRef<THREE.Mesh | null>(null);
+
+  const lonRef = useRef<number>(initialYaw);
+  const latRef = useRef<number>(initialPitch);
+  const isUserInteractingRef = useRef<boolean>(false);
+  const onPointerDownPointerXRef = useRef<number>(0);
+  const onPointerDownPointerYRef = useRef<number>(0);
+  const onPointerDownLonRef = useRef<number>(0);
+  const onPointerDownLatRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
+
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+
+    const camera = new THREE.PerspectiveCamera(75, width / height, 1, 1100);
+    cameraRef.current = camera;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    rendererRef.current = renderer;
+
+    containerRef.current.innerHTML = '';
+    containerRef.current.appendChild(renderer.domElement);
+
+    const geometry = new THREE.SphereGeometry(500, 60, 40);
+    geometry.scale(-1, 1, 1);
+
+    const textureLoader = new THREE.TextureLoader();
+    const photoTexture = textureLoader.load(photoUrl);
+    photoTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const material = new THREE.MeshBasicMaterial({
+      map: photoTexture,
+      transparent: true,
+      opacity: 1.0,
+    });
+
+    const sphereMesh = new THREE.Mesh(geometry, material);
+    sphereMeshRef.current = sphereMesh;
+    scene.add(sphereMesh);
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.isPrimary === false) return;
+      isUserInteractingRef.current = true;
+      onPointerDownPointerXRef.current = event.clientX;
+      onPointerDownPointerYRef.current = event.clientY;
+      onPointerDownLonRef.current = lonRef.current;
+      onPointerDownLatRef.current = latRef.current;
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.isPrimary === false || !isUserInteractingRef.current) return;
+      lonRef.current = (onPointerDownPointerXRef.current - event.clientX) * 0.15 + onPointerDownLonRef.current;
+      latRef.current = (event.clientY - onPointerDownPointerYRef.current) * 0.15 + onPointerDownLatRef.current;
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.isPrimary === false) return;
+      const movedDistance = Math.hypot(
+        event.clientX - onPointerDownPointerXRef.current,
+        event.clientY - onPointerDownPointerYRef.current
+      );
+
+      isUserInteractingRef.current = false;
+
+      if (movedDistance < 4 && onSphereClickAddPin) {
+        onSphereClickAddPin(Math.round(lonRef.current % 360), Math.round(latRef.current));
+      }
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (!cameraRef.current) return;
+      cameraRef.current.fov = Math.max(30, Math.min(100, cameraRef.current.fov + event.deltaY * 0.05));
+      cameraRef.current.updateProjectionMatrix();
+    };
+
+    const domElement = renderer.domElement;
+    domElement.addEventListener('pointerdown', onPointerDown);
+    domElement.addEventListener('pointermove', onPointerMove);
+    domElement.addEventListener('pointerup', onPointerUp);
+    domElement.addEventListener('wheel', onWheel);
+
+    let reqId: number;
+    const animate = () => {
+      reqId = requestAnimationFrame(animate);
+
+      latRef.current = Math.max(-85, Math.min(85, latRef.current));
+      const phi = THREE.MathUtils.degToRad(90 - latRef.current);
+      const theta = THREE.MathUtils.degToRad(lonRef.current);
+
+      const targetX = 500 * Math.sin(phi) * Math.cos(theta);
+      const targetY = 500 * Math.cos(phi);
+      const targetZ = 500 * Math.sin(phi) * Math.sin(theta);
+
+      camera.lookAt(targetX, targetY, targetZ);
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    const handleResize = () => {
+      if (!containerRef.current || !rendererRef.current || !cameraRef.current) return;
+      const w = containerRef.current.clientWidth;
+      const h = containerRef.current.clientHeight;
+      cameraRef.current.aspect = w / h;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(w, h);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(reqId);
+      window.removeEventListener('resize', handleResize);
+      domElement.removeEventListener('pointerdown', onPointerDown);
+      domElement.removeEventListener('pointermove', onPointerMove);
+      domElement.removeEventListener('pointerup', onPointerUp);
+      domElement.removeEventListener('wheel', onWheel);
+      renderer.dispose();
+      photoTexture.dispose();
+      geometry.dispose();
+    };
+  }, [photoUrl]);
+
+  return (
+    <div className="relative w-full h-[620px] bg-black border border-neutral-800 rounded-lg overflow-hidden flex flex-col font-mono select-none">
+      <div ref={containerRef} className="relative flex-1 cursor-grab active:cursor-grabbing" />
+
+      <div className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md px-3 py-1.5 rounded border border-neutral-700/60 z-10 flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-bold text-neutral-200">360° REALITY SPHERE</span>
+        </div>
+        <span className="text-neutral-600">|</span>
+        <span className="text-[10px] text-neutral-400">DRAG TO ORBIT • SCROLL TO ZOOM</span>
+      </div>
+
+      {bimRenderUrl && (
+        <div className="absolute top-3 right-3 bg-neutral-950/80 backdrop-blur-md px-3 py-2 rounded border border-neutral-700/60 z-10 flex items-center gap-3 text-xs">
+          <Layers className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="text-[10px] text-neutral-300 uppercase font-semibold">BIM Split:</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={crossfadeRatio}
+            onChange={(e) => setCrossfadeRatio(Number(e.target.value))}
+            className="w-24 accent-cyan-400 cursor-pointer"
+          />
+          <span className="text-[10px] text-cyan-400 w-8">{crossfadeRatio}%</span>
+        </div>
+      )}
+
+      <div className="absolute bottom-14 left-4 z-10 space-y-2 max-w-sm">
+        {pins.map((pin) => (
+          <div
+            key={pin.id}
+            onClick={() => {
+              setActivePinDetail(pin);
+              if (onPinClick) onPinClick(pin);
+            }}
+            className="p-2.5 bg-neutral-900/90 backdrop-blur-md border border-neutral-700 hover:border-emerald-500 rounded text-xs cursor-pointer transition flex items-center justify-between gap-3 shadow-lg"
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className={
+                  pin.pin_type === 'NCR_DEFECT'
+                    ? 'h-2 w-2 rounded-full bg-rose-500'
+                    : 'h-2 w-2 rounded-full bg-cyan-400'
+                }
+              />
+              <span className="font-bold text-neutral-200 truncate">{pin.title}</span>
+            </div>
+            <span className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold bg-neutral-950 border border-neutral-800 text-neutral-400">
+              {pin.status}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {activePinDetail && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-neutral-950/95 backdrop-blur-md border border-neutral-700 p-4 rounded-lg shadow-2xl z-20 space-y-3 text-xs">
+          <div className="flex justify-between items-start border-b border-neutral-800 pb-2">
+            <span className="font-bold text-neutral-100">{activePinDetail.title}</span>
+            <button
+              onClick={() => setActivePinDetail(null)}
+              className="text-neutral-500 hover:text-neutral-300"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-neutral-400 text-[11px] leading-relaxed">
+            {activePinDetail.description || 'No detailed engineering notes attached.'}
+          </p>
+          <div className="flex justify-between text-[10px] text-neutral-500 pt-1 border-t border-neutral-850">
+            <span>YAW: {activePinDetail.sphere_yaw}°</span>
+            <span>PITCH: {activePinDetail.sphere_pitch}°</span>
+          </div>
+        </div>
+      )}
+
+      <div className="h-10 bg-neutral-900/95 border-t border-neutral-800 px-4 flex items-center justify-between text-xs z-10">
+        <div className="text-[10px] text-neutral-400 flex items-center gap-2">
+          <Compass className="w-3.5 h-3.5 text-emerald-400" />
+          <span>POLAR PROJECTION (YAW / PITCH COORD LOCKED)</span>
+        </div>
+        <div className="text-[10px] text-neutral-500">
+          THREE.JS SPHERICAL SHADER • LATENCY: 0MS
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PanoramaViewer360;

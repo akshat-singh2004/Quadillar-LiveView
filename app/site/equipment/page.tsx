@@ -4,12 +4,7 @@ import { useMemo, useState } from "react";
 import { EquipmentFleetDrawer } from "@/components/site/EquipmentFleetDrawer";
 import type { EquipmentFleetRecord, FleetMaintenanceStatus } from "@/types/construction";
 
-const initialFleet: EquipmentFleetRecord[] = [
-  { id: "fleet-01", projectId: "proj-1", assetNumber: "EXC-07", machineType: "35T Excavator", operator: "R. Kumar", location: "North Tower excavation", operatingHours: 148, idleHours: 22, fuelIssuedLitres: 1260, standardNormLph: 7.8, serviceDueInHours: 34, lastTelemetryAt: "2026-08-25T08:42:00Z", status: "Active" },
-  { id: "fleet-02", projectId: "proj-1", assetNumber: "CRN-02", machineType: "Tower Crane", operator: "S. Patil", location: "Core shell / Grid C", operatingHours: 92, idleHours: 31, fuelIssuedLitres: 390, standardNormLph: 4.1, serviceDueInHours: 112, lastTelemetryAt: "2026-08-25T08:39:00Z", status: "Active" },
-  { id: "fleet-03", projectId: "proj-1", assetNumber: "DZR-03", machineType: "Crawler Dozer", operator: "M. Singh", location: "East service road", operatingHours: 206, idleHours: 58, fuelIssuedLitres: 2010, standardNormLph: 8.6, serviceDueInHours: -12, lastTelemetryAt: "2026-08-25T08:31:00Z", status: "Idle" },
-  { id: "fleet-04", projectId: "proj-1", assetNumber: "GEN-11", machineType: "250 kVA Generator", operator: "A. Das", location: "Temporary power yard", operatingHours: 166, idleHours: 14, fuelIssuedLitres: 740, standardNormLph: 4.7, serviceDueInHours: 68, lastTelemetryAt: "2026-08-25T08:20:00Z", status: "Active" },
-];
+const initialFleet: EquipmentFleetRecord[] = [];
 
 function maintenanceStatus(hours: number): FleetMaintenanceStatus { return hours < 0 ? "Service Overdue" : hours < 50 ? "Service Due Soon" : "Healthy"; }
 function variance(item: EquipmentFleetRecord) { const actual = item.operatingHours ? item.fuelIssuedLitres / item.operatingHours : 0; return item.standardNormLph ? ((actual - item.standardNormLph) / item.standardNormLph) * 100 : 0; }

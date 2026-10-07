@@ -1,0 +1,1121 @@
+==================================================
+SPRINT 19: EXECUTIVE COMMAND & CONTRACTS
+==================================================
+==================================================
+FILE: components/dashboard/DetailDrawer.tsx
+==================================================
+import { useEffect, useState } from "react";
+import { UploadModal } from "@/components/cde/UploadModal";
+import { DocumentPreviewModal } from "@/components/cde/DocumentPreviewModal";
+import type { AuditEvent, CdeItem, ChangeOrderRecord, RfiRecord } from "@/types/construction";
+
+interface DetailDrawerProps {
+  open: boolean;
+  item: CdeItem | RfiRecord | ChangeOrderRecord | null;
+  onClose: () => void;
+  onCdeTransition?: (item: CdeItem) => Promise<void>;
+  onRfiAction?: (item: RfiRecord, action: "answer" | "close" | "escalate", responseText?: string, estimatedCost?: number, delayDays?: number) => Promise<void>;
+  onRfiAssignment?: (item: RfiRecord, ballInCourt: RfiRecord["ballInCourt"], currentOwner: string) => Promise<void>;
+  onChangeOrderStatus?: (item: ChangeOrderRecord, status: ChangeOrderRecord["status"]) => Promise<void>;
+  auditEvents?: AuditEvent[];
+}
+
+function formatInrCurrency(value: number) {
+  if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
+  if (value >= 100000) return `₹${(value / 100000).toFixed(2)} Lakh`;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function getCdeNarrative(item: CdeItem) {
+  const label =
+    item.state === "Published"
+      ? "GFC (Good For Construction / Site Ready)"
+      : item.state === "Shared"
+        ? "Under Coordination"
+        : item.state === "WIP"
+          ? "Draft (Not for Site)"
+          : "Archived";
+
+  if (item.state === "Published") {
+    return `This drawing is ${label}. Site team can proceed with work without waiting for further review.`;
+  }
+
+  if (item.state === "Shared") {
+    return `This drawing is ${label}. Coordination is still ongoing and site team should confirm before execution.`;
+  }
+
+  if (item.state === "WIP") {
+    return `This drawing is still in ${label}. It is not approved for site use and should not be used on the ground.`;
+  }
+
+  return `This drawing has been archived and is no longer active for construction execution.`;
+}
+
+function getRfiNarrative(item: RfiRecord) {
+  return `This site query is pending with ${item.ballInCourt}. The response is required to avoid delay to execution or procurement.`;
+}
+
+function getCoNarrative(item: ChangeOrderRecord) {
+  const originalScope = Math.max(0, item.amount * 0.68);
+  const addedWork = item.amount - originalScope;
+  return `This extra work has been raised because the original scope is being revised. Client approval is required before execution.`;
+}
+
+export function DetailDrawer({ open, item, onClose, onCdeTransition, onRfiAction, onRfiAssignment, onChangeOrderStatus, auditEvents = [] }: DetailDrawerProps) {
+  const [responseText, setResponseText] = useState("");
+  const [estimatedCost, setEstimatedCost] = useState(0);
+  const [delayDays, setDelayDays] = useState(0);
+  const [ballInCourt, setBallInCourt] = useState<RfiRecord["ballInCourt"]>("Consultant");
+  const [currentOwner, setCurrentOwner] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [attachments, setAttachments] = useState<Array<{ name: string; path: string; mimeType: string; fullPath?: string; publicUrl?: string; size: number; uploadedAt: string }>>([]);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const isCdeItem = Boolean(item && "container" in item);
+  const isRfi = Boolean(item && "ballInCourt" in item);
+
+  useEffect(() => {
+    if (item && "ballInCourt" in item) {
+      setBallInCourt(item.ballInCourt);
+      setCurrentOwner(item.currentOwner);
+    }
+  }, [item]);
+
+  if (!open || !item) return null;
+
+  const isChangeOrder = "rfcId" in item;
+  const cdeItem = item as CdeItem;
+  const rfiItem = item as RfiRecord;
+  const changeOrderItem = item as ChangeOrderRecord;
+
+  const narrative = isCdeItem
+    ? getCdeNarrative(cdeItem)
+    : isRfi
+      ? getRfiNarrative(rfiItem)
+      : getCoNarrative(changeOrderItem);
+
+  const statusTone = isCdeItem
+    ? cdeItem.state === "Published"
+      ? "green"
+      : cdeItem.state === "Shared"
+        ? "amber"
+        : cdeItem.state === "WIP"
+          ? "red"
+          : "neutral"
+    : isRfi
+      ? rfiItem.status === "Closed"
+        ? "green"
+        : rfiItem.status === "PendingResponse"
+          ? "amber"
+          : "red"
+      : changeOrderItem.status === "Approved"
+        ? "green"
+        : changeOrderItem.status === "AwaitingApproval"
+          ? "amber"
+          : "red";
+
+  const toneColors: Record<string, string> = {
+    green: "#e5e5e5",
+    amber: "#d4d4d4",
+    red: "#f5f5f5",
+    neutral: "#a3a3a3",
+  };
+
+  const surfaceColors: Record<string, string> = {
+    green: "rgba(255,255,255,0.06)",
+    amber: "rgba(255,255,255,0.04)",
+    red: "rgba(255,255,255,0.05)",
+    neutral: "rgba(255,255,255,0.03)",
+  };
+
+  const changeOrderDetails = isChangeOrder
+    ? {
+        originalScope: Math.max(0, changeOrderItem.amount * 0.68),
+        addedWork: changeOrderItem.amount - Math.max(0, changeOrderItem.amount * 0.68),
+        delayDays: changeOrderItem.timeImpactDays,
+      }
+    : null;
+
+  const runAction = async (action: () => Promise<void> | void) => {
+    setBusy(true);
+    try { await action(); } finally { setBusy(false); }
+  };
+
+  const itemAuditEvents = auditEvents.filter((event) => event.documentReference === item.id);
+
+  const openPreview = (url: string) => {
+    setPreviewUrl(url);
+    setPreviewOpen(true);
+  };
+
+  return (
+    <>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(9, 9, 11, 0.72)",
+        backdropFilter: "blur(12px)",
+        display: "flex",
+        justifyContent: "flex-end",
+        zIndex: 60,
+      }}
+      onClick={onClose}
+    >
+      <aside
+        style={{
+          width: "420px",
+          maxWidth: "92vw",
+          height: "100vh",
+          background: "rgba(10, 10, 12, 0.96)",
+          borderLeft: "1px solid rgba(255,255,255,0.06)",
+          boxShadow: "-24px 0 60px rgba(0,0,0,0.4)",
+          padding: "18px 18px 22px",
+          color: "#f5f5f5",
+          overflowY: "auto",
+        }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+          <div style={{ fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase", color: "#a1a1aa" }}>
+            {isCdeItem ? "Drawing detail" : isRfi ? "Site inquiry" : "Extra work"}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "#f5f5f5", borderRadius: 999, padding: "7px 12px", cursor: "pointer", fontSize: 11, fontWeight: 500 }}
+          >
+            Close
+          </button>
+        </div>
+
+        <div
+          style={{
+            background: surfaceColors[statusTone] ?? "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            color: toneColors[statusTone] ?? "#f5f5f5",
+            borderRadius: 18,
+            padding: "14px 16px",
+            marginBottom: 18,
+            lineHeight: 1.5,
+            fontSize: 14,
+          }}
+        >
+          {narrative}
+        </div>
+
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+            <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Item</div>
+            <div style={{ fontSize: 20, fontWeight: 500, letterSpacing: "-0.04em" }}>{item.title}</div>
+          </div>
+
+          {isCdeItem && (
+            <>
+              <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+                <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Status</div>
+                <div style={{ color: "#f5f5f5" }}>{cdeItem.state === "Published" ? "GFC / Site ready" : cdeItem.state === "Shared" ? "Under coordination" : cdeItem.state === "WIP" ? "Draft / not for site" : cdeItem.state}</div>
+              </div>
+              <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+                <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Impact</div>
+                <div style={{ color: "#f5f5f5" }}>{cdeItem.state === "Published" ? "Proceed with execution." : cdeItem.state === "Shared" ? "Coordinate before execution." : "Do not use on site until approved."}</div>
+              </div>
+            </>
+          )}
+
+          {isRfi && (
+            <>
+              <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+                <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Pending with</div>
+                <div style={{ color: "#f5f5f5" }}>{rfiItem.ballInCourt}</div>
+              </div>
+              <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+                <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Risk</div>
+                <div style={{ color: "#f5f5f5" }}>{rfiItem.contractImpact} impact • Risk score {rfiItem.riskScore}</div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <select value={ballInCourt} onChange={(event) => setBallInCourt(event.target.value as RfiRecord["ballInCourt"])} style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.1)", color: "#f5f5f5", borderRadius: 10, padding: 10 }}>
+                  {(["Contractor", "Consultant", "Client", "Supplier", "Designer"] as const).map((role) => <option key={role} value={role}>{role}</option>)}
+                </select>
+                <input value={currentOwner} onChange={(event) => setCurrentOwner(event.target.value)} placeholder="Current owner" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.1)", color: "#f5f5f5", borderRadius: 10, padding: 10 }} />
+              </div>
+              <button disabled={busy || !currentOwner.trim()} type="button" onClick={() => void runAction(() => onRfiAssignment?.(rfiItem, ballInCourt, currentOwner.trim()))} style={{ background: "transparent", color: "#f5f5f5", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 10, padding: "9px 12px", cursor: "pointer", fontWeight: 700 }}>Save Ball-in-Court</button>
+              <textarea value={responseText} onChange={(event) => setResponseText(event.target.value)} placeholder="Record the consultant or site response" rows={4} style={{ width: "100%", boxSizing: "border-box", background: "#111111", border: "1px solid rgba(255,255,255,0.1)", color: "#f5f5f5", borderRadius: 10, padding: 12, resize: "vertical" }} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <input type="number" min="0" value={estimatedCost || ""} onChange={(event) => setEstimatedCost(Number(event.target.value))} placeholder="Cost impact (INR)" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.1)", color: "#f5f5f5", borderRadius: 10, padding: 10 }} />
+                <input type="number" min="0" value={delayDays || ""} onChange={(event) => setDelayDays(Number(event.target.value))} placeholder="Delay (days)" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.1)", color: "#f5f5f5", borderRadius: 10, padding: 10 }} />
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button disabled={busy} type="button" onClick={() => void runAction(() => onRfiAction?.(rfiItem, "answer", responseText, estimatedCost, delayDays))} style={{ background: "#f5f5f5", color: "#111111", border: "none", borderRadius: 10, padding: "9px 12px", cursor: "pointer", fontWeight: 700 }}>Submit response</button>
+                <button disabled={busy} type="button" onClick={() => void runAction(() => onRfiAction?.(rfiItem, "close"))} style={{ background: "transparent", color: "#f5f5f5", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 10, padding: "9px 12px", cursor: "pointer", fontWeight: 700 }}>Close site query</button>
+                <button disabled={busy} type="button" onClick={() => void runAction(() => onRfiAction?.(rfiItem, "escalate", responseText, estimatedCost, delayDays))} style={{ background: "transparent", color: "#f5f5f5", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 10, padding: "9px 12px", cursor: "pointer", fontWeight: 700 }}>Escalate variation</button>
+              </div>
+            </>
+          )}
+
+          {isChangeOrder && changeOrderDetails && (
+            <>
+              <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+                <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Original scope</div>
+                <div style={{ color: "#f5f5f5" }}>{formatInrCurrency(changeOrderDetails.originalScope)}</div>
+              </div>
+              <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+                <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Added work</div>
+                <div style={{ color: "#f5f5f5" }}>{formatInrCurrency(changeOrderDetails.addedWork)}</div>
+              </div>
+              <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+                <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Exact cost impact</div>
+                <div style={{ color: "#f5f5f5" }}>{formatInrCurrency(item.amount)}</div>
+              </div>
+              <div style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 14 }}>
+                <div style={{ color: "#a1a1aa", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Schedule delay</div>
+                <div style={{ color: "#f5f5f5" }}>{changeOrderDetails.delayDays} days</div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <details style={{ marginTop: 18, border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: 12 }}>
+          <summary style={{ cursor: "pointer", color: "#d4d4d8", fontWeight: 700 }}>ISO 19650 activity log ({itemAuditEvents.length})</summary>
+          <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+            {itemAuditEvents.length ? itemAuditEvents.map((event) => (
+              <div key={event.id} style={{ borderLeft: "2px solid #52525b", paddingLeft: 10 }}>
+                <div style={{ fontSize: 12, color: "#f5f5f5" }}>{event.action}</div>
+                <div style={{ marginTop: 3, fontSize: 11, color: "#a1a1aa" }}>{event.actorName ?? event.role} • {new Date(event.timestamp).toLocaleString("en-IN")}</div>
+                <div style={{ marginTop: 3, fontSize: 11, color: "#a1a1aa" }}>{event.previousStatus ?? "-"} → {event.nextStatus ?? "-"} {event.previousRevision || event.nextRevision ? `• ${event.previousRevision ?? "-"} → ${event.nextRevision ?? "-"}` : ""}</div>
+              </div>
+            )) : <div style={{ color: "#a1a1aa", fontSize: 12 }}>No recorded transitions for this item.</div>}
+          </div>
+        </details>
+
+        <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
+          <button type="button" onClick={() => setUploadOpen(true)} style={{ background: "#0ea5e9", color: "white", border: "none", borderRadius: 12, padding: "10px 14px", fontWeight: 700, cursor: "pointer" }}>Attach files</button>
+          {attachments.length > 0 && (
+            <div style={{ display: "grid", gap: 8 }}>
+              {attachments.map((attachment) => (
+                <button key={attachment.path} type="button" onClick={() => openPreview(attachment.publicUrl ?? attachment.fullPath ?? "")} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 12px", color: "#f5f5f5", textAlign: "left", cursor: "pointer" }}>
+                  <div style={{ fontWeight: 700 }}>{attachment.name}</div>
+                  <div style={{ marginTop: 4, color: "#a1a1aa", fontSize: 11 }}>{attachment.mimeType}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {isChangeOrder && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void runAction(() => onChangeOrderStatus?.(changeOrderItem, "Approved"))}
+            style={{
+              width: "100%",
+              marginTop: 18,
+              background: "rgba(255,255,255,0.08)",
+              color: "#f5f5f5",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 14,
+              padding: "12px 14px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Approve variation
+          </button>
+        )}
+      </aside>
+    </div>
+    <UploadModal open={uploadOpen} bucket={isRfi ? "rfi-attachments" : "cde-documents"} onClose={() => setUploadOpen(false)} onUploadComplete={(entry) => { setAttachments((current) => [...current, entry]); setUploadOpen(false); }} />
+    <DocumentPreviewModal open={previewOpen} url={previewUrl} onClose={() => setPreviewOpen(false)} fileName={attachments.find((item) => item.publicUrl === previewUrl || item.fullPath === previewUrl)?.name ?? "document-preview"} />
+    </>
+  );
+}
+
+==================================================
+FILE: components/contracts/DocumentClauseViewer.tsx
+==================================================
+"use client";
+
+import { useMemo, useState } from "react";
+import type {
+  ContractClauseCard,
+  ContractComplianceIssue,
+  ContractDocumentAnalysis,
+} from "@/types/construction";
+
+const defaultAnalyses: ContractDocumentAnalysis[] = [
+  {
+    id: "contract-01",
+    documentName: "Main Works Contract - Tender Bundle",
+    uploadedAt: "2026-08-23",
+    pdfLabel: "C-01 / Main Contract",
+    pageCount: 118,
+    clauses: [
+      {
+        id: "clause-ld",
+        type: "Liquidated Damages",
+        severity: "High Risk",
+        summary:
+          "LD clause imposes 0.15% of contract value per week beyond the agreed completion date without a clear cap for owner-caused delay events.",
+        riskDriver: "Uncapped delay damages and weak force-majeure carve-out",
+        mitigation: "Add a mutual carve-out for client-caused approvals, utility delays, and weather disruption; cap damage at 5% of the contract sum.",
+      },
+      {
+        id: "clause-defect",
+        type: "Defect Liability",
+        severity: "Medium Risk",
+        summary:
+          "Defect liability period is set at 12 months, but the rectification notice period and carrier-of-risk allocation are not explicit.",
+        riskDriver: "Ambiguous defect notification and warranty enforcement",
+        mitigation: "Define notice timelines, access rights, and warranty defect categorization in a schedule attached to the contract.",
+      },
+      {
+        id: "clause-price",
+        type: "Price Escalation",
+        severity: "Standard",
+        summary:
+          "Escalation is linked to WPI and fuel indices with a base-index confirmation, but the submission trigger is not tied to a material availability event.",
+        riskDriver: "Index methodology is acceptable but not fully aligned with market volatility",
+        mitigation: "Tie escalation to a monthly review and define documentation requirements for claims substantiation.",
+      },
+      {
+        id: "clause-force",
+        type: "Force Majeure",
+        severity: "Standard",
+        summary:
+          "Force majeure includes pandemics and government action but excludes labor shortage and material supply disruption unless specifically notified.",
+        riskDriver: "Narrow event definition for supply chain disruptions",
+        mitigation: "Expand the list of covered events to include supply-chain disruption, import restrictions, and labor unrest.",
+      },
+    ],
+    complianceChecks: [
+      {
+        id: "compliance-01",
+        standard: "IS 456",
+        subject: "Concrete cover / durability",
+        status: "Mismatch",
+        issue:
+          "Tender specification states nominal cover of 25 mm for slabs, while IS 456 requires 30 mm for severe exposure / RC element durability in coastal environment.",
+        recommendation: "Update drawing specification and concrete mix durability note to match IS 456 Table 16 / Table 18 for severe exposure.",
+      },
+      {
+        id: "compliance-02",
+        standard: "NBC",
+        subject: "Fire resistance ratings",
+        status: "Pass",
+        issue: "Fire rating schedule aligns with NBC Part 4 requirements for exit corridors and shafts.",
+        recommendation: "Retain current rating schedule and verify final door fire seals during site inspection.",
+      },
+    ],
+  },
+  {
+    id: "contract-02",
+    documentName: "Tender Specification - Civil & Structure",
+    uploadedAt: "2026-08-20",
+    pdfLabel: "C-02 / Technical Specs",
+    pageCount: 64,
+    clauses: [
+      {
+        id: "clause-ld-2",
+        type: "Liquidated Damages",
+        severity: "Medium Risk",
+        summary:
+          "Delay damages are stated but not linked to a milestone-based liquidated damages schedule, creating a dispute risk during partial handed-over areas.",
+        riskDriver: "Schedule logic is incomplete for staged completion",
+        mitigation: "Add milestone-specific delay damage schedule and extension-of-time process map.",
+      },
+      {
+        id: "clause-price-2",
+        type: "Price Escalation",
+        severity: "High Risk",
+        summary:
+          "Steel escalation is capped at 12% and absent for imported reinforcement, which may leave the contractor exposed to global market volatility.",
+        riskDriver: "Insufficient protection against imported commodities and FX fluctuation",
+        mitigation: "Revisit the steel and aluminum escalation formula with explicit foreign-exchange and freight adjustment clauses.",
+      },
+    ],
+    complianceChecks: [
+      {
+        id: "compliance-03",
+        standard: "IS 456",
+        subject: "Concrete grade and cover",
+        status: "Mismatch",
+        issue:
+          "Tender specifies M25 concrete at a 20 mm cover for the water tank retaining wall, contrary to IS 456 durability recommendations for moisture-exposed concrete.",
+        recommendation: "Raise cover to 30 mm and confirm concrete grade adequacy against exposure class.",
+      },
+    ],
+  },
+];
+
+const severityStyle: Record<ContractClauseCard["severity"], { border: string; badge: string; glow: string }> = {
+  "High Risk": { border: "1px solid rgba(248, 113, 113, 0.8)", badge: "#fda4af", glow: "rgba(239, 68, 68, 0.18)" },
+  "Medium Risk": { border: "1px solid rgba(251, 191, 36, 0.8)", badge: "#fbbf24", glow: "rgba(245, 158, 11, 0.18)" },
+  Standard: { border: "1px solid rgba(52, 211, 153, 0.8)", badge: "#6ee7b7", glow: "rgba(16, 185, 129, 0.18)" },
+};
+
+function getRiskSummary(selected: ContractDocumentAnalysis) {
+  const counts: Record<ContractClauseCard["severity"], number> = {
+    "High Risk": 0,
+    "Medium Risk": 0,
+    Standard: 0,
+  };
+
+  selected.clauses.forEach((clause: ContractClauseCard) => {
+    counts[clause.severity] += 1;
+  });
+
+  return {
+    highest: selected.clauses.reduce<ContractClauseCard | undefined>((top, clause) => {
+      if (!top || clause.severity === "High Risk") return clause;
+      if (top.severity === "Standard" && clause.severity === "Medium Risk") return clause;
+      return top;
+    }, undefined),
+    counts,
+  };
+}
+
+export function DocumentClauseViewer({ analyses = defaultAnalyses }: { analyses?: ContractDocumentAnalysis[] }) {
+  const [selectedId, setSelectedId] = useState(analyses[0]?.id ?? defaultAnalyses[0].id);
+  const [reportVisible, setReportVisible] = useState(false);
+
+  const selected = useMemo(
+    () => analyses.find((document) => document.id === selectedId) ?? analyses[0] ?? defaultAnalyses[0],
+    [analyses, selectedId],
+  );
+
+  const summary = useMemo(() => getRiskSummary(selected), [selected]);
+
+  const complianceFlagCount = selected.complianceChecks.filter((check: ContractComplianceIssue) => check.status === "Mismatch").length;
+
+  return (
+    <div style={{ display: "grid", gap: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {analyses.map((document) => (
+            <button
+              key={document.id}
+              type="button"
+              onClick={() => setSelectedId(document.id)}
+              style={{
+                background: selectedId === document.id ? "rgba(56, 189, 248, 0.18)" : "rgba(15, 23, 42, 0.8)",
+                border: selectedId === document.id ? "1px solid rgba(56, 189, 248, 0.8)" : "1px solid rgba(148,163,184,0.24)",
+                color: "#e2e8f0",
+                borderRadius: 999,
+                padding: "8px 12px",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              {document.pdfLabel}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setReportVisible(true)}
+          style={{
+            background: "linear-gradient(135deg, #f97316, #ef4444)",
+            border: "none",
+            color: "white",
+            borderRadius: 12,
+            padding: "10px 16px",
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          Generate Contract Risk Matrix
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(300px, 0.95fr) minmax(320px, 1.25fr)", gap: 18 }}>
+        <div style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(148,163,184,0.24)", borderRadius: 20, padding: 18 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div>
+              <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Document preview</div>
+              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>{selected.documentName}</div>
+            </div>
+            <div style={{ color: "#cbd5e1", fontSize: 12 }}>Pages: {selected.pageCount}</div>
+          </div>
+
+          <div style={{ background: "linear-gradient(180deg, rgba(15,23,42,0.95), rgba(15,23,42,0.75))", border: "1px solid rgba(148,163,184,0.22)", borderRadius: 18, minHeight: 440, padding: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#94a3b8", marginBottom: 12 }}>
+              <span>{selected.pdfLabel}</span>
+              <span>{selected.uploadedAt}</span>
+            </div>
+
+            <div style={{ background: "rgba(2,6,23,0.7)", border: "1px solid rgba(148,163,184,0.2)", borderRadius: 14, padding: 18, minHeight: 340 }}>
+              <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 12, color: "#f8fafc" }}>Main Contract</div>
+              <div style={{ display: "grid", gap: 8, color: "#cbd5e1", lineHeight: 1.7 }}>
+                <div>Clause 4.1 — Time for Completion</div>
+                <div>Clause 7.2 — Defects and Rectification</div>
+                <div>Clause 10.1 — Liquidated Damages</div>
+                <div>Clause 12.4 — Escalation & Change Control</div>
+                <div>Annexure D — Technical Specification Schedule</div>
+              </div>
+              <div style={{ marginTop: 22, background: "rgba(56, 189, 248, 0.12)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 10, padding: 12, color: "#bae6fd" }}>
+                Highlight: Non-standard LD cap and weak force majeure risk allocation are visible on page 48 and 92.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gap: 14 }}>
+          {selected.clauses.map((clause) => {
+            const style = severityStyle[clause.severity];
+            return (
+              <div key={clause.id} style={{ background: "rgba(15,23,42,0.8)", border: style.border, boxShadow: `inset 0 0 0 1px ${style.glow}`, borderRadius: 16, padding: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                  <div style={{ fontWeight: 800, color: "#f8fafc" }}>{clause.type}</div>
+                  <span
+                    style={{
+                      background: style.badge,
+                      color: "#0f172a",
+                      borderRadius: 999,
+                      padding: "5px 10px",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {clause.severity}
+                  </span>
+                </div>
+
+                <p style={{ margin: "12px 0 8px", color: "#e2e8f0", lineHeight: 1.7 }}>{clause.summary}</p>
+
+                <div style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.7 }}>
+                  <div><strong>Risk driver:</strong> {clause.riskDriver}</div>
+                </div>
+
+                {clause.severity === "High Risk" && (
+                  <div style={{ marginTop: 12, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.35)", borderRadius: 10, padding: 10, color: "#fecaca" }}>
+                    <strong>Mitigation:</strong> {clause.mitigation}
+                  </div>
+                )}
+
+                {clause.severity === "Medium Risk" && (
+                  <div style={{ marginTop: 12, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.35)", borderRadius: 10, padding: 10, color: "#fde68a" }}>
+                    <strong>Mitigation:</strong> {clause.mitigation}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 18 }}>
+        <div style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(148,163,184,0.24)", borderRadius: 18, padding: 18 }}>
+          <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>IS Code / NBC Compliance validator</div>
+          <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+            {selected.complianceChecks.map((check) => (
+              <ComplianceRow key={check.id} check={check} />
+            ))}
+          </div>
+        </div>
+
+        <div style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(148,163,184,0.24)", borderRadius: 18, padding: 18 }}>
+          <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Risk summary</div>
+          <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+            <RiskPill label="High Risk clauses" value={summary.counts["High Risk"]} tone="#f87171" />
+            <RiskPill label="Medium Risk clauses" value={summary.counts["Medium Risk"]} tone="#fbbf24" />
+            <RiskPill label="Standard clauses" value={summary.counts.Standard} tone="#34d399" />
+            <RiskPill label="Code mismatches" value={complianceFlagCount} tone="#60a5fa" />
+          </div>
+        </div>
+      </div>
+
+      {reportVisible && (
+        <div style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(148,163,184,0.24)", borderRadius: 18, padding: 18 }}>
+          <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Contract risk matrix</div>
+          <div style={{ marginTop: 12, color: "#e2e8f0", lineHeight: 1.8 }}>
+            <div><strong>Document:</strong> {selected.documentName}</div>
+            <div><strong>Primary exposure:</strong> {summary.highest ? `${summary.highest.type} — ${summary.highest.severity}` : "No active issue"}</div>
+            <div><strong>Top action:</strong> Cap LD exposure and revise concrete cover specification to match IS 456 / NBC durability tables.</div>
+            <div><strong>Commercial watch:</strong> Maintain escalation log for steel and imported material claims, and add a formal EOT notice protocol.</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ComplianceRow({ check }: { check: ContractComplianceIssue }) {
+  const statusColor = check.status === "Mismatch" ? "#f87171" : "#34d399";
+
+  return (
+    <div style={{ background: "rgba(2,6,23,0.6)", border: "1px solid rgba(148,163,184,0.18)", borderRadius: 12, padding: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+        <div style={{ fontWeight: 700, color: "#f8fafc" }}>{check.standard}</div>
+        <span
+          style={{
+            background: statusColor,
+            color: "#020617",
+            borderRadius: 999,
+            padding: "4px 10px",
+            fontSize: 10,
+            fontWeight: 900,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          {check.status}
+        </span>
+      </div>
+      <div style={{ marginTop: 8, color: "#cbd5e1" }}><strong>{check.subject}</strong></div>
+      <div style={{ marginTop: 6, color: "#e2e8f0", lineHeight: 1.6 }}>{check.issue}</div>
+      <div style={{ marginTop: 8, color: "#bae6fd" }}>{check.recommendation}</div>
+    </div>
+  );
+}
+
+function RiskPill({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(2,6,23,0.6)", borderRadius: 12, padding: "12px 14px", border: "1px solid rgba(148,163,184,0.18)" }}>
+      <span style={{ color: "#cbd5e1" }}>{label}</span>
+      <span style={{ color: tone, fontWeight: 800, fontSize: 20 }}>{value}</span>
+    </div>
+  );
+}
+
+==================================================
+FILE: components/portal/ClientExecutiveDashboard.tsx
+==================================================
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { fetchDashboardSnapshot, subscribeToProjectRealtime, updateChangeOrderStatus } from "@/app/lib/services";
+import { getClientExecutiveView } from "@/lib/auth/portalGate";
+import { exportProjectSummaryCsv, exportProjectSummaryPdf } from "@/lib/export/summaryExporter";
+import { TelemetryErrorBoundary } from "@/components/analytics/TelemetryErrorBoundary";
+import type { DashboardSnapshot } from "@/types/construction";
+import { ScheduleMetrics } from "@/components/dashboard/ScheduleMetrics";
+import { VariationTourWidget } from "@/components/dashboard/VariationTourWidget";
+import { ESGScorecardWidget } from "@/components/dashboard/ESGScorecardWidget";
+import { HandoverSafetyKpiWidget } from "@/components/dashboard/HandoverSafetyKpiWidget";
+
+function formatInrShort(value: number) {
+  if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
+  if (value >= 100000) return `₹${(value / 100000).toFixed(2)} Lakh`;
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value);
+}
+
+function buildPdfDossier(summary: ReturnType<typeof getClientExecutiveView>) {
+  const lines = [
+    "Quadillar LiveView - Client Status Dossier",
+    "",
+    `Total Contract Sum: ${formatInrShort(summary.totalContractSum)}`,
+    `Certified Billed Amount: ${formatInrShort(summary.certifiedBilledAmount)}`,
+    `Withheld Retainage Escrow: ${formatInrShort(summary.withheldRetainage)}`,
+    `Net Variation Impact: ${formatInrShort(summary.netVariation)}`,
+    "",
+    "Key Milestones:",
+    ...summary.milestones.map((item) => `- ${item.title} (${item.status} / target ${item.target_completion_date})`),
+    "",
+    "Pending Owner Approvals:",
+    ...summary.pendingApprovals.map((item) => `- ${item.title}: ${formatInrShort(item.amount)} and ${item.timeImpactDays} days`),
+  ];
+
+  const content = lines.join("\n");
+  const stream = `BT\n/F1 16 Tf\n50 760 Td\n(${content.replace(/\(/g, "\\(").replace(/\)/g, "\\)")}) Tj\nET`;
+
+  const pdf = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length ${stream.length} >>
+stream
+${stream}
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000010 00000 n 
+0000000062 00000 n 
+0000000124 00000 n 
+0000000267 00000 n 
+0000000715 00000 n 
+trailer
+<< /Root 1 0 R /Size 6 >>
+startxref
+778
+%%EOF`;
+
+  const blob = new Blob([pdf], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "client-status-dossier.pdf";
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+export function ClientExecutiveDashboard() {
+  const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
+
+  const dashboard = useMemo(() => (snapshot ? getClientExecutiveView(snapshot) : null), [snapshot]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      const data = await fetchDashboardSnapshot("GOMTI-NAGAR-PH1-FITOUT");
+      if (mounted) {
+        setSnapshot(data);
+      }
+    }
+
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => subscribeToProjectRealtime("GOMTI-NAGAR-PH1-FITOUT", {
+    onCdeChange: (payload: any) => setSnapshot((current) => current ? { ...current, cdeItems: current.cdeItems.map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) } : current),
+    onRfiChange: () => undefined,
+    onChangeOrderChange: (payload: any) => setSnapshot((current) => current ? { ...current, changeOrders: current.changeOrders.map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) } : current),
+  }), []);
+
+  const summary = dashboard;
+
+  if (!summary) {
+    return <div style={{ minHeight: "60vh", display: "grid", placeItems: "center", color: "#cbd5e1" }}>Loading executive dashboard…</div>;
+  }
+
+  const view = (
+    <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}>
+      <div style={{ maxWidth: 1360, margin: "0 auto" }}>
+        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 26 }}>
+          <div>
+            <div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>Client / Asset Owner</div>
+            <h1 style={{ margin: 0, fontSize: 38, letterSpacing: "-0.04em" }}>Executive Clarity Portal</h1>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => exportProjectSummaryCsv({ projectName: "Quadillar Client Status Dossier", drawingRevisions: snapshot?.cdeItems ?? [], rfiLogs: snapshot?.rfis ?? [], changeOrders: snapshot?.changeOrders ?? [], fileName: "client-status-dossier" })}
+              style={{ background: "#0ea5e9", color: "white", border: "none", borderRadius: 12, padding: "10px 16px", fontWeight: 700, cursor: "pointer" }}
+            >
+              Export CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => exportProjectSummaryPdf({ projectName: "Quadillar Client Status Dossier", drawingRevisions: snapshot?.cdeItems ?? [], rfiLogs: snapshot?.rfis ?? [], changeOrders: snapshot?.changeOrders ?? [], fileName: "client-status-dossier" })}
+              style={{ background: "#22c55e", color: "#052e16", border: "none", borderRadius: 12, padding: "10px 16px", fontWeight: 700, cursor: "pointer" }}
+            >
+              Download PDF
+            </button>
+          </div>
+        </header>
+
+        <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18, marginBottom: 24 }}>
+          {[
+            { label: "Total Contract Sum", value: formatInrShort(summary.totalContractSum) },
+            { label: "Certified Billed Amount", value: formatInrShort(summary.certifiedBilledAmount) },
+            { label: "Withheld Retainage Escrow", value: formatInrShort(summary.withheldRetainage) },
+            { label: "Net Variation Impact", value: formatInrShort(summary.netVariation) },
+          ].map((item) => (
+            <div key={item.label} style={{ background: "linear-gradient(180deg, rgba(11,18,32,0.96), rgba(15,23,42,0.9))", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+              <div style={{ color: "#94a3b8", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.12em" }}>{item.label}</div>
+              <div style={{ marginTop: 14, fontSize: 28, fontWeight: 800 }}>{item.value}</div>
+            </div>
+          ))}
+        </section>
+
+        <section style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 24, background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 18 }}>
+          <div><div style={{ color: "#94a3b8", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase" }}>Today's DPR Status</div><strong style={{ display: "block", marginTop: 8, color: "#fbbf24", fontSize: 18 }}>Pending Consultant Sign-off</strong></div>
+          <a href="/site/dpr" style={{ color: "#7dd3fc", fontWeight: 700, textDecoration: "none" }}>Inspect latest progress report →</a>
+        </section>
+
+        <section style={{ display: "grid", gridTemplateColumns: "1.3fr 0.9fr", gap: 20, marginBottom: 24 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Project Health & Milestone Roadmap</h2>
+            <div style={{ display: "grid", gap: 14 }}>
+              {summary.milestones.map((milestone) => (
+                <div key={milestone.milestone_id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+                    <div style={{ fontWeight: 700 }}>{milestone.title}</div>
+                    <span style={{ background: milestone.status === "Certified_Completed" ? "#dcfce7" : milestone.status === "Under_Verification" ? "#fef3c7" : "#dbeafe", color: milestone.status === "Certified_Completed" ? "#166534" : milestone.status === "Under_Verification" ? "#b45309" : "#1d4ed8", borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 700 }}>
+                      {milestone.status === "Certified_Completed" ? "Verified" : milestone.status === "Under_Verification" ? "Under Verification" : "In Progress"}
+                    </span>
+                  </div>
+                  <div style={{ height: 10, background: "#0f172a", borderRadius: 999, overflow: "hidden" }}>
+                    <div style={{ width: milestone.status === "Certified_Completed" ? "100%" : milestone.status === "Under_Verification" ? "70%" : "55%", height: "100%", background: "linear-gradient(90deg, #22c55e, #60a5fa)", borderRadius: 999 }} />
+                  </div>
+                  <div style={{ marginTop: 8, color: "#94a3b8", fontSize: 12 }}>Target handover: {milestone.target_completion_date}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Pending Owner Approvals</h2>
+            <div style={{ display: "grid", gap: 12 }}>
+              {summary.pendingApprovals.length ? summary.pendingApprovals.map((order) => (
+                <div key={order.id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 8 }}>{order.title}</div>
+                  <div style={{ color: "#94a3b8", fontSize: 12, marginBottom: 10 }}>{formatInrShort(order.amount)} • {order.timeImpactDays} days</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button type="button" onClick={() => void updateChangeOrderStatus(order.id, "Approved", { role: "client" })} style={{ background: "#16a34a", color: "#052e16", border: "none", borderRadius: 10, padding: "8px 12px", fontWeight: 700, cursor: "pointer" }}>Authorize Variation</button>
+                    <button type="button" style={{ background: "transparent", color: "#e2e8f0", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                  </div>
+                </div>
+              )) : <div style={{ color: "#94a3b8" }}>No variation approvals pending.</div>}
+            </div>
+          </div>
+        </section>
+
+        <section style={{ marginBottom: 24 }}>
+          <ScheduleMetrics tasks={snapshot?.projectTasks ?? []} />
+        </section>
+
+        <VariationTourWidget />
+        <ESGScorecardWidget />
+        <HandoverSafetyKpiWidget />
+
+        <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Verified Site Photo Walkthrough</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+              {summary.photoWalkthrough.map((photo) => (
+                <div key={photo.title} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, overflow: "hidden" }}>
+                  <img src={photo.image} alt={photo.title} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+                  <div style={{ padding: 12 }}>
+                    <div style={{ fontWeight: 700 }}>{photo.title}</div>
+                    <div style={{ marginTop: 6, color: "#94a3b8", fontSize: 12 }}>{photo.caption}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Certified Financial Snapshot</h2>
+            <div style={{ display: "grid", gap: 12 }}>
+              {summary.certifiedBills.map((bill) => (
+                <div key={bill.paymentApplicationId} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontWeight: 700 }}>{bill.tradePackage}</div>
+                    <span style={{ background: "#dcfce7", color: "#166534", borderRadius: 999, padding: "6px 8px", fontSize: 11, fontWeight: 700 }}>{bill.status}</span>
+                  </div>
+                  <div style={{ marginTop: 8, color: "#94a3b8", fontSize: 12 }}>Certified amount: {formatInrShort(bill.currentWorkCompleted + bill.storedMaterials)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+
+  return (
+    <TelemetryErrorBoundary fallback={<main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}><div style={{ maxWidth: 720, margin: "0 auto", border: "1px solid rgba(148,163,184,0.2)", borderRadius: 18, background: "rgba(15,23,42,0.9)", padding: 24 }}>The executive dashboard is unavailable right now. Please refresh or check connectivity.</div></main>}>
+      {view}
+    </TelemetryErrorBoundary>
+  );
+}
+
+==================================================
+FILE: app/portal/architect/page.tsx
+==================================================
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { fetchDashboardSnapshot, subscribeToProjectRealtime, updateCdeItemState } from "@/app/lib/services";
+import { getArchitectView } from "@/lib/auth/portalGate";
+import { exportProjectSummaryCsv, exportProjectSummaryPdf } from "@/lib/export/summaryExporter";
+import { TelemetryErrorBoundary } from "@/components/analytics/TelemetryErrorBoundary";
+import type { CdeItem, DashboardSnapshot, WorkInspectionRequest } from "@/types/construction";
+import { VerificationTelemetry } from "@/components/governance/VerificationTelemetry";
+import { QualityGovernanceTelemetry } from "@/components/quality/QualityGovernanceTelemetry";
+import { MeasurementItpWidget } from "@/components/dashboard/MeasurementItpWidget";
+import { BackchargeVrWidget } from "@/components/dashboard/BackchargeVrWidget";
+import { QualityTelemetryWidget } from "@/components/dashboard/QualityTelemetryWidget";
+
+export default function ArchitectPortalPage() {
+  const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      const data = await fetchDashboardSnapshot("GOMTI-NAGAR-PH1-FITOUT");
+      if (mounted) setSnapshot(data);
+    }
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => subscribeToProjectRealtime("GOMTI-NAGAR-PH1-FITOUT", {
+    onCdeChange: (payload: any) => setSnapshot((current) => current ? { ...current, cdeItems: current.cdeItems.map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) } : current),
+    onRfiChange: (payload: any) => setSnapshot((current) => current ? { ...current, rfis: current.rfis.map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) } : current),
+    onChangeOrderChange: (payload: any) => setSnapshot((current) => current ? { ...current, changeOrders: current.changeOrders.map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) } : current),
+    onWirChange: (payload: any) => setSnapshot((current) => current ? { ...current, workInspectionRequests: payload.eventType === "DELETE" ? (current.workInspectionRequests ?? []).filter((item) => item.id !== payload.old.id) : (current.workInspectionRequests ?? []).some((item) => item.id === payload.new.id) ? (current.workInspectionRequests ?? []).map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) : [...(current.workInspectionRequests ?? []), payload.new as WorkInspectionRequest] } : current),
+  }), []);
+
+  const view = useMemo(() => (snapshot ? getArchitectView(snapshot) : null), [snapshot]);
+
+  const publishGfc = async (item: CdeItem) => {
+    if (!snapshot) return;
+    const updated = await updateCdeItemState(item.id, "Published", { status: "Approved", approved: true }, { role: "architect", name: "Architect Portal" });
+    if (updated) setSnapshot((current) => current ? { ...current, cdeItems: current.cdeItems.map((entry) => entry.id === updated.id ? updated : entry) } : current);
+  };
+
+  const pendingInspections = (snapshot?.workInspectionRequests ?? []).filter((item) => item.status === "Pending Inspection");
+  const clashHealth = useMemo(() => {
+    const total = Math.max(1, (snapshot?.bimClashes ?? []).length || 1);
+    const resolved = (snapshot?.bimClashes ?? []).filter((item) => item.status === "Resolved").length;
+    return { health: Math.round((resolved / total) * 100), open: total - resolved };
+  }, [snapshot?.bimClashes]);
+  const weatherStatus = useMemo(() => {
+    const wind = 42;
+    const rain = 6.8;
+    if (wind >= 38 || rain >= 5) return { label: "Full Stoppage", color: "#ef4444" };
+    if (wind >= 30 || rain >= 3) return { label: "Restricted Weather Ops", color: "#f59e0b" };
+    return { label: "Normal Site Ops", color: "#22c55e" };
+  }, []);
+
+  if (!view) return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#050816", color: "#e2e8f0" }}>Loading design governance portal…</main>;
+
+  const portalContent = (
+    <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}>
+      <div style={{ maxWidth: 1360, margin: "0 auto" }}>
+        <header style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>Architect / Consultant</div>
+            <h1 style={{ margin: 0, fontSize: 38, letterSpacing: "-0.04em" }}>Design Governance Portal</h1>
+          </div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button type="button" onClick={() => exportProjectSummaryCsv({ projectName: "Quadillar Architect Summary", drawingRevisions: snapshot?.cdeItems ?? [], rfiLogs: snapshot?.rfis ?? [], changeOrders: snapshot?.changeOrders ?? [], fileName: "architect-summary" })} style={{ background: "#0ea5e9", color: "white", border: "none", borderRadius: 12, padding: "10px 16px", fontWeight: 700, cursor: "pointer" }}>Export CSV</button>
+            <button type="button" onClick={() => exportProjectSummaryPdf({ projectName: "Quadillar Architect Summary", drawingRevisions: snapshot?.cdeItems ?? [], rfiLogs: snapshot?.rfis ?? [], changeOrders: snapshot?.changeOrders ?? [], fileName: "architect-summary" })} style={{ background: "#22c55e", color: "#052e16", border: "none", borderRadius: 12, padding: "10px 16px", fontWeight: 700, cursor: "pointer" }}>Download PDF</button>
+          </div>
+        </header>
+
+        <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 22 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase" }}>Design Coordination Clash Health</div>
+            <div style={{ marginTop: 12, fontSize: 38, fontWeight: 700, color: "#67e8f9" }}>{clashHealth.health}%</div>
+            <div style={{ marginTop: 12, height: 10, borderRadius: 999, background: "rgba(148,163,184,0.12)", overflow: "hidden" }}><div style={{ width: `${clashHealth.health}%`, height: "100%", background: "linear-gradient(90deg, #22d3ee, #34d399)" }} /></div>
+            <div style={{ marginTop: 12, color: "#cbd5e1" }}>{clashHealth.open} clashes remain in active review.</div>
+          </div>
+
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase" }}>Site Operating Weather Condition</div>
+            <div style={{ marginTop: 12, fontSize: 28, fontWeight: 700, color: weatherStatus.color }}>{weatherStatus.label}</div>
+            <div style={{ marginTop: 12, color: "#cbd5e1" }}>Wind 42 km/h • Rain 6.8 mm/hr</div>
+          </div>
+        </section>
+
+        <VerificationTelemetry />
+        <QualityGovernanceTelemetry />
+        <MeasurementItpWidget />
+        <BackchargeVrWidget />
+        <QualityTelemetryWidget />
+
+        <section style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 20, marginBottom: 22 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>CDE State Promotion Center</h2>
+            <div style={{ display: "grid", gap: 12 }}>
+              {view.cdeItems.map((item) => (
+                <div key={item.id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{item.title}</div>
+                      <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>{item.container}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ background: item.state === "Published" ? "#dcfce7" : "#fef3c7", color: item.state === "Published" ? "#166534" : "#b45309", borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 700 }}>{item.state}</span>
+                      <button type="button" disabled={item.state === "Published"} onClick={() => void publishGfc(item)} style={{ background: "#2563eb", color: "white", border: "none", borderRadius: 10, padding: "8px 12px", fontWeight: 700, cursor: item.state === "Published" ? "not-allowed" : "pointer", opacity: item.state === "Published" ? 0.5 : 1 }}>Approve to GFC</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Active Inquiries (RFIs)</h2>
+            <div style={{ display: "grid", gap: 12 }}>
+              {view.activeRfis.map((rfi) => (
+                <div key={rfi.id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
+                  <div style={{ fontWeight: 700 }}>{rfi.title}</div>
+                  <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>{rfi.ballInCourt} / {rfi.currentOwner}</div>
+                  <div style={{ marginTop: 10, color: "#dbeafe", fontSize: 12 }}>SLA: {rfi.slaHoursRemaining ?? 0}h remaining</div>
+                  <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                    <button type="button" style={{ background: "#1d4ed8", color: "white", border: "none", borderRadius: 10, padding: "8px 12px", fontWeight: 700, cursor: "pointer" }}>Escalate to RFC</button>
+                    <button type="button" style={{ background: "transparent", color: "#e2e8f0", border: "1px solid #334155", borderRadius: 10, padding: "8px 12px", fontWeight: 700, cursor: "pointer" }}>Respond</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20, marginBottom: 22 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}><h2 style={{ margin: 0, fontSize: 22 }}>Pending Inspections Queue</h2><span style={{ color: "#fde68a", fontSize: 12 }}>{pendingInspections.length} awaiting review</span></div>
+          <div style={{ display: "grid", gap: 10, marginTop: 14 }}>{pendingInspections.filter((item) => item.discipline === "Concrete" || item.discipline === "Reinforcement").map((item) => <div key={item.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", background: "#111827", borderRadius: 12, padding: 12 }}><div><div style={{ fontWeight: 700 }}>{item.wirNumber} · {item.title}</div><div style={{ color: "#94a3b8", fontSize: 12, marginTop: 5 }}>{item.targetGridLocation} / {item.discipline}</div></div><span style={{ color: "#fca5a5", fontSize: 11, fontWeight: 700 }}>URGENT PRE-POUR</span></div>)}</div>
+        </section>
+
+        <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Submittal & Sample Queue</h2>
+            <div style={{ display: "grid", gap: 12 }}>
+              {view.submittals.map((submittal) => (
+                <div key={submittal.id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                    <div style={{ fontWeight: 700 }}>{submittal.title}</div>
+                    <span style={{ background: "#fef3c7", color: "#b45309", borderRadius: 999, padding: "6px 8px", fontSize: 11, fontWeight: 700 }}>{submittal.actionCode ?? "Pending"}</span>
+                  </div>
+                  <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>Trade: {submittal.trade}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
+            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Milestone Quality Certifications</h2>
+            <div style={{ display: "grid", gap: 12 }}>
+              {view.milestoneRules.map((rule) => (
+                <div key={rule.rule_id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                    <div style={{ fontWeight: 700 }}>{rule.verification_type.replace("_", " ")}</div>
+                    <span style={{ color: rule.is_verified ? "#4ade80" : "#fbbf24", fontSize: 11, fontWeight: 700 }}>{rule.is_verified ? "Certified" : "Open"}</span>
+                  </div>
+                  <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>{rule.description}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+
+  return (
+    <TelemetryErrorBoundary fallback={<main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}><div style={{ maxWidth: 720, margin: "0 auto", border: "1px solid rgba(148,163,184,0.2)", borderRadius: 18, background: "rgba(15,23,42,0.9)", padding: 24 }}>The design governance portal is unavailable right now. Please refresh or retry when connectivity is restored.</div></main>}>
+      {portalContent}
+    </TelemetryErrorBoundary>
+  );
+}
+

@@ -3,7 +3,7 @@ import type { PhaseInspectionGate } from "@/types/construction";
 export const defaultPhaseGates: PhaseInspectionGate[] = [
   {
     id: "phase-1",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     phaseNumber: 1,
     phaseName: "Site Preparation",
     mandatoryInspection: "Survey and earthworks readiness",
@@ -13,7 +13,7 @@ export const defaultPhaseGates: PhaseInspectionGate[] = [
   },
   {
     id: "phase-2",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     phaseNumber: 2,
     phaseName: "Foundation",
     mandatoryInspection: "Pile / footing inspection",
@@ -23,7 +23,7 @@ export const defaultPhaseGates: PhaseInspectionGate[] = [
   },
   {
     id: "phase-3",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     phaseNumber: 3,
     phaseName: "Structural Frame",
     mandatoryInspection: "Concrete cover and reinforcement checks",
@@ -33,7 +33,7 @@ export const defaultPhaseGates: PhaseInspectionGate[] = [
   },
   {
     id: "phase-4",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     phaseNumber: 4,
     phaseName: "Envelope",
     mandatoryInspection: "Facade and waterproofing inspection",
@@ -43,7 +43,7 @@ export const defaultPhaseGates: PhaseInspectionGate[] = [
   },
   {
     id: "phase-5",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     phaseNumber: 5,
     phaseName: "MEP Rough-in",
     mandatoryInspection: "MEP coordination and pressure test",
@@ -53,7 +53,7 @@ export const defaultPhaseGates: PhaseInspectionGate[] = [
   },
   {
     id: "phase-6",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     phaseName: "Finishes",
     phaseNumber: 6,
     mandatoryInspection: "Surface and finish approval",
@@ -63,7 +63,7 @@ export const defaultPhaseGates: PhaseInspectionGate[] = [
   },
   {
     id: "phase-7",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     phaseNumber: 7,
     phaseName: "Testing & Commissioning",
     mandatoryInspection: "Integrated system commissioning",
@@ -73,7 +73,7 @@ export const defaultPhaseGates: PhaseInspectionGate[] = [
   },
   {
     id: "phase-8",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     phaseNumber: 8,
     phaseName: "Handover",
     mandatoryInspection: "Defects and snag closure",

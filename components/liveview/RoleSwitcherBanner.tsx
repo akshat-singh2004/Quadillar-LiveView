@@ -25,7 +25,7 @@ export interface RoleContextValue {
 }
 
 // Map between unified RoleId and legacy ConTechRole
-const roleToConTechMap: Record<RoleId, ConTechRole> = {
+const roleToConTechMap: Record<string, ConTechRole> = {
   PRINCIPAL_ARCHITECT: "ARCHITECT",
   PMC_LEAD: "PMC_LEAD",
   SITE_ENGINEER: "SITE_ENGINEER",
@@ -57,7 +57,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
 export function useRoleController(): RoleContextValue {
   const { role, setRoleId } = useActiveRole();
-  const conTechRole = roleToConTechMap[role.id] ?? "ARCHITECT";
+  const conTechRole = (roleToConTechMap as any)[role?.id || "PMC_LEAD"] ?? "ARCHITECT";
 
   return {
     role: conTechRole,

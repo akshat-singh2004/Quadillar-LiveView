@@ -1,14 +1,23 @@
 "use client";
 
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
+import { Upload, X, FileText, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 import { ALLOWED_UPLOAD_TYPES, isAllowedUploadType, uploadFileToBucket, type StorageBucketName } from "@/lib/storage";
 
 interface UploadModalProps {
   open: boolean;
   bucket: StorageBucketName;
   onClose: () => void;
-  onUploadComplete?: (entry: { name: string; path: string; mimeType: string; fullPath?: string; publicUrl?: string; size: number; uploadedAt: string }) => void;
+  onUploadComplete?: (entry: {
+    name: string;
+    path: string;
+    mimeType: string;
+    fullPath?: string;
+    publicUrl?: string;
+    size: number;
+    uploadedAt: string;
+  }) => void;
 }
 
 const acceptedExtensions: Record<StorageBucketName, string> = {
@@ -21,7 +30,14 @@ const acceptedExtensions: Record<StorageBucketName, string> = {
 export function UploadModal({ open, bucket, onClose, onUploadComplete }: UploadModalProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [queue, setQueue] = useState<Array<{ file: File; progress: number; status: "ready" | "uploading" | "done" | "error"; error?: string }>>([]);
+  const [queue, setQueue] = useState<
+    Array<{
+      file: File;
+      progress: number;
+      status: "ready" | "uploading" | "done" | "error";
+      error?: string;
+    }>
+  >([]);
 
   const addFiles = (incoming: FileList | File[] | null) => {
     if (!incoming) return;
@@ -46,10 +62,14 @@ export function UploadModal({ open, bucket, onClose, onUploadComplete }: UploadM
 
     nextItems.forEach(async (item) => {
       if (item.status === "error") return;
-      setQueue((current) => current.map((entry) => entry.file === item.file ? { ...entry, status: "uploading", progress: 15 } : entry));
+      setQueue((current) =>
+        current.map((entry) => (entry.file === item.file ? { ...entry, status: "uploading", progress: 25 } : entry))
+      );
       try {
         const result = await uploadFileToBucket(bucket, item.file, bucket === "cde-documents" ? "drawings" : "rfi");
-        setQueue((current) => current.map((entry) => entry.file === item.file ? { ...entry, status: "done", progress: 100 } : entry));
+        setQueue((current) =>
+          current.map((entry) => (entry.file === item.file ? { ...entry, status: "done", progress: 100 } : entry))
+        );
         onUploadComplete?.({
           name: result.name,
           path: result.path,
@@ -61,7 +81,11 @@ export function UploadModal({ open, bucket, onClose, onUploadComplete }: UploadM
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Upload failed";
-        setQueue((current) => current.map((entry) => entry.file === item.file ? { ...entry, status: "error", progress: 100, error: message } : entry));
+        setQueue((current) =>
+          current.map((entry) =>
+            entry.file === item.file ? { ...entry, status: "error", progress: 100, error: message } : entry
+          )
+        );
       }
     });
   };
@@ -80,38 +104,94 @@ export function UploadModal({ open, bucket, onClose, onUploadComplete }: UploadM
   if (!open) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(9,9,11,0.72)", backdropFilter: "blur(8px)", zIndex: 80, display: "grid", placeItems: "center", padding: 20 }} onClick={onClose}>
-      <div style={{ width: 560, maxWidth: "100%", background: "rgba(15,23,42,0.96)", border: "1px solid rgba(148,163,184,0.2)", borderRadius: 24, padding: 20, color: "#e2e8f0" }} onClick={(event) => event.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 font-mono text-xs select-none"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4 text-zinc-100"
+      >
+        {/* HEADER */}
+        <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
           <div>
-            <div style={{ fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "#7dd3fc" }}>Document upload</div>
-            <h3 style={{ margin: "8px 0 0", fontSize: 22, letterSpacing: "-0.04em" }}>{bucket === "cde-documents" ? "CDE / Drawing Vault" : "RFI Attachment"}</h3>
+            <div className="text-[10px] text-cyan-400 uppercase tracking-widest font-bold">Document Ingestion</div>
+            <h3 className="text-base font-bold text-white mt-0.5">
+              {bucket === "cde-documents" ? "ISO 19650 Drawing Container Vault" : "RFI Attachment Ingress"}
+            </h3>
           </div>
-          <button type="button" onClick={onClose} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", borderRadius: 999, padding: "8px 12px", cursor: "pointer" }}>Close</button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 border border-zinc-800 bg-zinc-900 rounded text-zinc-400 hover:text-white cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <div onDragOver={(event) => event.preventDefault()} onDragEnter={() => setIsDragging(true)} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop} style={{ marginTop: 20, border: `1.5px dashed ${isDragging ? "#7dd3fc" : "rgba(148,163,184,0.35)"}`, background: "rgba(15,23,42,0.75)", borderRadius: 16, padding: 24, textAlign: "center" }}>
-          <div style={{ fontSize: 18, fontWeight: 600 }}>Drag & drop files here</div>
-          <div style={{ marginTop: 8, color: "#94a3b8", fontSize: 13 }}>Supported: {acceptedExtensions[bucket]}</div>
-          <button type="button" onClick={() => inputRef.current?.click()} style={{ marginTop: 18, background: "#0ea5e9", color: "white", border: "none", borderRadius: 12, padding: "10px 16px", fontWeight: 700, cursor: "pointer" }}>Choose files</button>
+        {/* DROPZONE */}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragEnter={() => setIsDragging(true)}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-xl p-8 text-center transition ${
+            isDragging ? "border-cyan-400 bg-cyan-950/20" : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
+          }`}
+        >
+          <Upload className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+          <div className="text-sm font-bold text-white">Drag &amp; drop design files here</div>
+          <div className="text-[10px] text-zinc-500 mt-1">Accepted Extensions: {acceptedExtensions[bucket]}</div>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold uppercase rounded text-xs transition cursor-pointer"
+          >
+            Choose Local Files
+          </button>
           <input ref={inputRef} type="file" accept={acceptedExtensions[bucket]} multiple onChange={handleInput} hidden />
         </div>
 
-        <div style={{ marginTop: 20, display: "grid", gap: 12 }}>
-          {queue.length === 0 ? <div style={{ color: "#94a3b8", fontSize: 14 }}>No files queued yet.</div> : queue.map((entry, index) => (
-            <div key={`${entry.file.name}-${index}`} style={{ background: "rgba(15,23,42,0.86)", border: "1px solid rgba(148,163,184,0.18)", borderRadius: 12, padding: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                <div style={{ fontWeight: 600 }}>{entry.file.name}</div>
-                <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: entry.status === "done" ? "#86efac" : entry.status === "error" ? "#fca5a5" : "#facc15" }}>{entry.status}</span>
+        {/* QUEUE */}
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {queue.length === 0 ? (
+            <div className="text-[10px] text-zinc-500 text-center py-2">Zero files currently queued for upload.</div>
+          ) : (
+            queue.map((entry, index) => (
+              <div key={`${entry.file.name}-${index}`} className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg space-y-1.5">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="font-semibold text-zinc-200 truncate max-w-xs">{entry.file.name}</span>
+                  <span
+                    className={`uppercase text-[9px] font-bold ${
+                      entry.status === "done"
+                        ? "text-emerald-400"
+                        : entry.status === "error"
+                        ? "text-rose-400"
+                        : "text-amber-400"
+                    }`}
+                  >
+                    {entry.status}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    style={{ width: `${entry.progress}%` }}
+                    className={`h-full transition-all duration-300 ${
+                      entry.status === "error" ? "bg-rose-500" : "bg-cyan-500"
+                    }`}
+                  />
+                </div>
+                {entry.error && <div className="text-[10px] text-rose-400">{entry.error}</div>}
               </div>
-              <div style={{ marginTop: 10, height: 8, borderRadius: 999, background: "rgba(148,163,184,0.12)", overflow: "hidden" }}>
-                <div style={{ width: `${entry.progress}%`, height: "100%", background: entry.status === "error" ? "#f87171" : "#38bdf8", borderRadius: 999 }} />
-              </div>
-              {entry.error ? <div style={{ marginTop: 8, color: "#fca5a5", fontSize: 12 }}>{entry.error}</div> : null}
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+export default UploadModal;

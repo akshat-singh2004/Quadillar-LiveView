@@ -1,46 +1,42 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import Link from "next/link";
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import {
-  AlertOctagon,
-  AlertTriangle,
-  ArrowRight,
-  Award,
-  Building2,
-  CheckCircle2,
-  Clock,
-  DollarSign,
-  Download,
-  FileCheck,
   FileSpreadsheet,
-  FileText,
-  Filter,
-  Layers,
+  Award,
+  Clock,
   Plus,
   Printer,
   RefreshCw,
-  Scale,
   Search,
-  ShieldCheck,
-  Tag,
+  CheckCircle2,
+  X,
   TrendingDown,
-  Wrench,
-  X
-} from "lucide-react";
-import { supabase } from "@/app/lib/supabase";
-import { useActiveRole } from "@/context/RoleContext";
+  Building2,
+  FileCheck2,
+  AlertTriangle,
+  Database,
+} from 'lucide-react';
+import { supabase } from '@/app/lib/supabase';
+import { useActiveRole } from '@/context/RoleContext';
+import { StatutoryInfo } from '@/components/ui/StatutoryInfo';
 
-export type TenderStatus = "RFP_ISSUED" | "TECHNICAL_EVALUATION" | "COMMERCIAL_BID_OPENED" | "AWARDED_LOI" | "REJECTED";
+export type TenderStatus =
+  | 'RFP_ISSUED'
+  | 'TECHNICAL_EVALUATION'
+  | 'COMMERCIAL_BID_OPENED'
+  | 'AWARDED_LOI'
+  | 'CANCELLED_RETENDER';
 
 export interface BidderQuotation {
-  bidder_id: string;
+  id: string;
+  tender_id: string;
   contractor_name: string;
   technical_score_pct: number;
   quoted_amount_inr: number;
-  variance_to_estimate_pct: number;
-  ranking: "L1" | "L2" | "L3" | "DISQUALIFIED";
   proposed_duration_days: number;
+  ranking: 'L1' | 'L2' | 'L3' | 'DISQUALIFIED';
   is_selected: boolean;
 }
 
@@ -51,243 +47,152 @@ export interface ProcurementTender {
   package_name: string;
   trade_category: string;
   estimated_budget_inr: number;
-  rfp_publish_date: string;
+  emd_amount_inr: number;
+  rfp_publish_date?: string;
   bid_submission_deadline: string;
-  bidders: BidderQuotation[];
   status: TenderStatus;
   awarded_vendor?: string | null;
   awarded_amount_inr?: number | null;
   loi_issued_at?: string | null;
   issued_by?: string | null;
+  bidders?: BidderQuotation[];
 }
+
+const FALLBACK_TENDERS: ProcurementTender[] = [
+  {
+    id: 'b-fallback-1',
+    project_id: 'PRJ-01-LIVE',
+    tender_code: 'RFP-2026-001',
+    package_name: 'Reinforced Concrete & Monolithic Formwork Package',
+    trade_category: 'Civil & Superstructure',
+    estimated_budget_inr: 14500000,
+    emd_amount_inr: 290000,
+    rfp_publish_date: new Date().toISOString(),
+    bid_submission_deadline: '2026-10-15',
+    status: 'COMMERCIAL_BID_OPENED',
+    issued_by: 'Contracts Lead',
+    bidders: [
+      {
+        id: 'bid-fb-1',
+        tender_id: 'b-fallback-1',
+        contractor_name: 'Apex Structural Formworks Ltd.',
+        technical_score_pct: 94.5,
+        quoted_amount_inr: 13800000,
+        proposed_duration_days: 75,
+        ranking: 'L1',
+        is_selected: false,
+      },
+      {
+        id: 'bid-fb-2',
+        tender_id: 'b-fallback-1',
+        contractor_name: 'Zenith Precast & Batching',
+        technical_score_pct: 86.0,
+        quoted_amount_inr: 14250000,
+        proposed_duration_days: 90,
+        ranking: 'L2',
+        is_selected: false,
+      },
+    ],
+  },
+  {
+    id: 'b-fallback-2',
+    project_id: 'PRJ-01-LIVE',
+    tender_code: 'RFP-2026-002',
+    package_name: 'HVAC Chillers & Basement Ventilation Infrastructure',
+    trade_category: 'HVAC & Chilled Water',
+    estimated_budget_inr: 8500000,
+    emd_amount_inr: 170000,
+    rfp_publish_date: new Date().toISOString(),
+    bid_submission_deadline: '2026-10-25',
+    status: 'RFP_ISSUED',
+    issued_by: 'Contracts Lead',
+    bidders: [],
+  },
+];
 
 function formatInr(val: number) {
   if (Math.abs(val) >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
   if (Math.abs(val) >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
-  return `₹${Math.round(val || 0).toLocaleString("en-IN")}`;
+  return `₹${Math.round(val || 0).toLocaleString('en-IN')}`;
 }
 
-export default function CanonicalProcurementTendersPage() {
-  const { project, role, tier } = useActiveRole();
+export default function ProcurementTendersPage() {
+  const { project, role } = useActiveRole();
+  const projectId = (project as any)?.project_id || (project as any)?.id || 'PRJ-01-LIVE';
+  const projectName = (project as any)?.project_name || (project as any)?.name || 'Project 01 / Main Shell';
+
   const [tenders, setTenders] = useState<ProcurementTender[]>([]);
   const [selectedTender, setSelectedTender] = useState<ProcurementTender | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<string>("ALL");
-  const [search, setSearch] = useState("");
+  const [isFallbackMode, setIsFallbackMode] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
-  const roleId = (role as { id?: string })?.id || "";
-  const roleLabel = role?.label || "";
-  const isProcurementLeadOrArchitect =
-    roleId === "PRINCIPAL_ARCHITECT" ||
-    roleId === "PMC_LEAD" ||
-    roleId === "QS_BILLING" ||
-    roleLabel.includes("Procurement") ||
-    roleLabel.includes("Architect") ||
-    roleLabel.includes("Lead") ||
-    roleLabel.includes("Surveyor");
+  // Form State
+  const [pkgName, setPkgName] = useState('');
+  const [tradeCat, setTradeCat] = useState('Civil & Superstructure');
+  const [budget, setBudget] = useState('');
+  const [deadline, setDeadline] = useState('');
 
-  const loadTenderData = useCallback(async () => {
+  const loadTenders = useCallback(async () => {
+    setLoading(true);
+    setErrorMessage(null);
     try {
-      const { data } = await (supabase as any)
-        .from("procurement_tender_packages")
-        .select("*")
-        .eq("project_id", project.id)
-        .order("bid_submission_deadline", { ascending: true });
+      let query = (supabase as any)
+        .from('procurement_tender_packages')
+        .select('*, bidders:procurement_tender_bids(*)');
 
-      if (data && data.length > 0) {
-        setTenders(data as ProcurementTender[]);
-        if (!selectedTender) setSelectedTender(data[0] as ProcurementTender);
-      } else {
-        const defaults: ProcurementTender[] =
-          tier === "RESIDENTIAL"
-            ? [
-                {
-                  id: "tnd-res-01",
-                  project_id: project.id,
-                  tender_code: "RFP-RES-041",
-                  package_name: "Modular Carcass Joinery & High-Gloss Polish",
-                  trade_category: "Custom Joinery & Millwork",
-                  estimated_budget_inr: 280000,
-                  rfp_publish_date: "2026-08-15",
-                  bid_submission_deadline: "2026-08-28",
-                  bidders: [
-                    {
-                      bidder_id: "b-01",
-                      contractor_name: "Royal Woodworks & Interiors",
-                      technical_score_pct: 92.5,
-                      quoted_amount_inr: 265000,
-                      variance_to_estimate_pct: -5.36,
-                      ranking: "L1",
-                      proposed_duration_days: 18,
-                      is_selected: true,
-                    },
-                    {
-                      bidder_id: "b-02",
-                      contractor_name: "Oudh Modular Craftsmen",
-                      technical_score_pct: 84.0,
-                      quoted_amount_inr: 282000,
-                      variance_to_estimate_pct: 0.71,
-                      ranking: "L2",
-                      proposed_duration_days: 22,
-                      is_selected: false,
-                    },
-                    {
-                      bidder_id: "b-03",
-                      contractor_name: "Kanpur Joiners LLP",
-                      technical_score_pct: 68.0,
-                      quoted_amount_inr: 240000,
-                      variance_to_estimate_pct: -14.29,
-                      ranking: "DISQUALIFIED",
-                      proposed_duration_days: 28,
-                      is_selected: false,
-                    },
-                  ],
-                  status: "AWARDED_LOI",
-                  awarded_vendor: "Royal Woodworks & Interiors",
-                  awarded_amount_inr: 265000,
-                  loi_issued_at: "2026-09-01T10:00:00Z",
-                  issued_by: "Principal Architect",
-                },
-                {
-                  id: "tnd-res-02",
-                  project_id: project.id,
-                  tender_code: "RFP-RES-042",
-                  package_name: "Plumbing Diverters & Sanitary Fixture Installation",
-                  trade_category: "First-Fix Plumbing & Sanitary",
-                  estimated_budget_inr: 95000,
-                  rfp_publish_date: "2026-09-02",
-                  bid_submission_deadline: "2026-09-18",
-                  bidders: [
-                    {
-                      bidder_id: "b-04",
-                      contractor_name: "Avadh MEP Solutions",
-                      technical_score_pct: 88.0,
-                      quoted_amount_inr: 89500,
-                      variance_to_estimate_pct: -5.79,
-                      ranking: "L1",
-                      proposed_duration_days: 12,
-                      is_selected: false,
-                    },
-                    {
-                      bidder_id: "b-05",
-                      contractor_name: "Gomti Hydraulic Engineers",
-                      technical_score_pct: 82.5,
-                      quoted_amount_inr: 94000,
-                      variance_to_estimate_pct: -1.05,
-                      ranking: "L2",
-                      proposed_duration_days: 14,
-                      is_selected: false,
-                    },
-                  ],
-                  status: "COMMERCIAL_BID_OPENED",
-                },
-              ]
-            : [
-                {
-                  id: "tnd-twr-01",
-                  project_id: project.id,
-                  tender_code: "RFP-TWR-101",
-                  package_name: "Superstructure Ready-Mix Concrete & Pumping Package",
-                  trade_category: "Civil & Superstructure",
-                  estimated_budget_inr: 185000000,
-                  rfp_publish_date: "2026-05-10",
-                  bid_submission_deadline: "2026-05-28",
-                  bidders: [
-                    {
-                      bidder_id: "b-10",
-                      contractor_name: "Narmada Concrete Works",
-                      technical_score_pct: 94.0,
-                      quoted_amount_inr: 178500000,
-                      variance_to_estimate_pct: -3.51,
-                      ranking: "L1",
-                      proposed_duration_days: 120,
-                      is_selected: true,
-                    },
-                    {
-                      bidder_id: "b-11",
-                      contractor_name: "BuildMix RMC India Pvt Ltd",
-                      technical_score_pct: 91.5,
-                      quoted_amount_inr: 182000000,
-                      variance_to_estimate_pct: -1.62,
-                      ranking: "L2",
-                      proposed_duration_days: 125,
-                      is_selected: false,
-                    },
-                  ],
-                  status: "AWARDED_LOI",
-                  awarded_vendor: "Narmada Concrete Works",
-                  awarded_amount_inr: 178500000,
-                  loi_issued_at: "2026-06-02T12:00:00Z",
-                  issued_by: "PMC Lead Director",
-                },
-                {
-                  id: "tnd-twr-02",
-                  project_id: project.id,
-                  tender_code: "RFP-TWR-102",
-                  package_name: "Unitized Curtain Wall & Architectural Glazing",
-                  trade_category: "Facade & Glazing",
-                  estimated_budget_inr: 58000000,
-                  rfp_publish_date: "2026-08-20",
-                  bid_submission_deadline: "2026-09-22",
-                  bidders: [
-                    {
-                      bidder_id: "b-12",
-                      contractor_name: "Apex Glass & Façades",
-                      technical_score_pct: 89.0,
-                      quoted_amount_inr: 56400000,
-                      variance_to_estimate_pct: -2.76,
-                      ranking: "L1",
-                      proposed_duration_days: 60,
-                      is_selected: false,
-                    },
-                    {
-                      bidder_id: "b-13",
-                      contractor_name: "Hind Curtain Wall Technologies",
-                      technical_score_pct: 86.0,
-                      quoted_amount_inr: 57900000,
-                      variance_to_estimate_pct: -0.17,
-                      ranking: "L2",
-                      proposed_duration_days: 65,
-                      is_selected: false,
-                    },
-                  ],
-                  status: "COMMERCIAL_BID_OPENED",
-                },
-              ];
-
-        setTenders(defaults);
-        if (!selectedTender) setSelectedTender(defaults[0]);
+      if (projectId && projectId !== 'all') {
+        query = query.eq('project_id', projectId);
       }
-    } catch {
-      // Local fallback
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase tenders query error, enabling resilient fallback mode:', error.message);
+        setIsFallbackMode(true);
+        setErrorMessage(error.message);
+        setTenders(FALLBACK_TENDERS);
+        setSelectedTender(FALLBACK_TENDERS[0]);
+      } else if (!data || data.length === 0) {
+        setTenders(FALLBACK_TENDERS);
+        setSelectedTender(FALLBACK_TENDERS[0]);
+        setIsFallbackMode(false);
+      } else {
+        const list = data as ProcurementTender[];
+        setTenders(list);
+        setSelectedTender((prev) => {
+          if (!prev) return list[0];
+          return list.find((t) => t.id === prev.id) || list[0];
+        });
+        setIsFallbackMode(false);
+      }
+    } catch (err: any) {
+      console.warn('Unhandled exception in tenders fetch:', err?.message);
+      setIsFallbackMode(true);
+      setErrorMessage(err?.message || 'Database connection fault');
+      setTenders(FALLBACK_TENDERS);
+      setSelectedTender(FALLBACK_TENDERS[0]);
     } finally {
       setLoading(false);
     }
-  }, [project.id, selectedTender, tier]);
+  }, [projectId]);
 
   useEffect(() => {
-    void loadTenderData();
-
-    const channel = supabase
-      .channel(`tenders_sync_${project.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "procurement_tender_packages" }, () => void loadTenderData())
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [project.id, loadTenderData]);
+    void loadTenders();
+  }, [loadTenders]);
 
   const summary = useMemo(() => {
     const totalCount = tenders.length;
-    const awardedTenders = tenders.filter((t) => t.status === "AWARDED_LOI");
-    const totalAwardedValue = awardedTenders.reduce(
-      (sum, t) => sum + Number(t.awarded_amount_inr || t.estimated_budget_inr || 0),
-      0
-    );
+    const awardedTenders = tenders.filter((t) => t.status === 'AWARDED_LOI');
+    const totalAwardedValue = awardedTenders.reduce((sum, t) => sum + Number(t.awarded_amount_inr || 0), 0);
     const activeEvaluations = tenders.filter(
-      (t) => t.status === "TECHNICAL_EVALUATION" || t.status === "COMMERCIAL_BID_OPENED"
+      (t) => t.status === 'RFP_ISSUED' || t.status === 'COMMERCIAL_BID_OPENED' || t.status === 'TECHNICAL_EVALUATION'
     ).length;
     const totalBudget = tenders.reduce((sum, t) => sum + Number(t.estimated_budget_inr || 0), 0);
     const procurementSavings = Math.max(0, totalBudget - totalAwardedValue);
@@ -297,412 +202,475 @@ export default function CanonicalProcurementTendersPage() {
 
   const filteredTenders = useMemo(() => {
     return tenders.filter((t) => {
-      const matchesFilter = filterStatus === "ALL" || t.status === filterStatus;
+      const matchStatus = filterStatus === 'ALL' || t.status === filterStatus;
       const haystack = `${t.tender_code} ${t.package_name} ${t.trade_category}`.toLowerCase();
-      const matchesSearch = !search.trim() || haystack.includes(search.toLowerCase().trim());
-      return matchesFilter && matchesSearch;
+      const matchSearch = !search.trim() || haystack.includes(search.toLowerCase().trim());
+      return matchStatus && matchSearch;
     });
   }, [tenders, filterStatus, search]);
 
-  const handleAwardLoi = async (tenderId: string, bidder: BidderQuotation) => {
-    if (!isProcurementLeadOrArchitect) return;
-    setActionInProgress(tenderId);
+  const handleCreatePackage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pkgName.trim() || !budget || !deadline) return;
 
-    const updatePayload: Partial<ProcurementTender> = {
-      status: "AWARDED_LOI",
-      awarded_vendor: bidder.contractor_name,
-      awarded_amount_inr: bidder.quoted_amount_inr,
-      loi_issued_at: new Date().toISOString(),
-      issued_by: role.label,
+    setActionInProgress('creating_pkg');
+    const code = `RFP-${new Date().getFullYear()}-${(tenders.length + 1).toString().padStart(3, '0')}`;
+    const budgetVal = parseFloat(budget) || 0;
+    const emdVal = Math.round(budgetVal * 0.02);
+
+    const payload = {
+      project_id: projectId,
+      tender_code: code,
+      package_name: pkgName.trim(),
+      trade_category: tradeCat,
+      estimated_budget_inr: budgetVal,
+      emd_amount_inr: emdVal,
+      bid_submission_deadline: deadline,
+      status: 'RFP_ISSUED' as TenderStatus,
+      issued_by: (role as any)?.label || 'Contracts Lead',
     };
 
     try {
-      await (supabase as any).from("procurement_tender_packages").update(updatePayload).eq("id", tenderId);
-    } catch {
-      // Optimistic local update
-    }
+      const { data, error } = await (supabase as any)
+        .from('procurement_tender_packages')
+        .insert([payload])
+        .select('*, bidders:procurement_tender_bids(*)')
+        .single();
 
-    setTenders((prev) =>
-      prev.map((t) => (t.id === tenderId ? { ...t, ...updatePayload } : t))
-    );
-    if (selectedTender && selectedTender.id === tenderId) {
-      setSelectedTender((prev) => (prev ? { ...prev, ...updatePayload } : null));
+      if (error) throw error;
+
+      setModalOpen(false);
+      setPkgName('');
+      setBudget('');
+      setDeadline('');
+      setFeedback(`Tender package ${code} published successfully.`);
+      setTimeout(() => setFeedback(null), 3500);
+      await loadTenders();
+      if (data) setSelectedTender(data);
+    } catch (err: any) {
+      // Optimistic local fallback update
+      const fallbackPkg: ProcurementTender = {
+        id: `opt-${Date.now()}`,
+        ...payload,
+        bidders: [],
+      };
+      setTenders((prev) => [fallbackPkg, ...prev]);
+      setSelectedTender(fallbackPkg);
+      setModalOpen(false);
+      setFeedback(`Optimistic package created: ${code}`);
+      setTimeout(() => setFeedback(null), 3500);
+    } finally {
+      setActionInProgress(null);
     }
-    setActionInProgress(null);
   };
 
-  const handlePrintLOI = (tender: ProcurementTender) => {
-    const printWin = window.open("", "_blank", "width=1000,height=850");
-    if (!printWin) return;
+  const handleAwardLoi = async (tenderId: string, bidder: BidderQuotation) => {
+    setActionInProgress(tenderId);
+    try {
+      await (supabase as any)
+        .from('procurement_tender_packages')
+        .update({
+          status: 'AWARDED_LOI',
+          awarded_vendor: bidder.contractor_name,
+          awarded_amount_inr: bidder.quoted_amount_inr,
+          loi_issued_at: new Date().toISOString(),
+          issued_by: (role as any)?.label || 'Project Director',
+        })
+        .eq('id', tenderId);
 
-    printWin.document.write(`<!doctype html>
-<html>
-<head>
-  <title>Letter of Intent (LOI) — ${tender.package_name}</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 32px; color: #09090b; font-size: 11px; line-height: 1.5; }
-    .header { border-bottom: 2px solid #09090b; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; }
-    .title { font-size: 20px; font-weight: 800; margin: 0; }
-    .meta { font-size: 11px; font-family: monospace; color: #52525b; margin-top: 4px; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 10px; }
-    .awarded { background: #dcfce7; color: #15803d; border: 1px solid #22c55e; }
-    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-    th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
-    th { background: #f8fafc; font-size: 10px; text-transform: uppercase; }
-    .tar { text-align: right; font-family: monospace; }
-    .box { border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-top: 16px; background: #fafafa; }
-    .footer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; border-top: 1px solid #cbd5e1; padding-top: 16px; }
-    .sig { border-top: 1px dashed #09090b; padding-top: 4px; margin-top: 36px; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #0284c7;">Quadillar LiveView · CPWD Works Manual / FIDIC Clause 4.4 Subcontract Award</div>
-      <h1 class="title">Formal Letter of Intent (LOI) &amp; Work Order Award</h1>
-      <div class="meta">Package Ref: ${tender.tender_code} · Project: ${project.name} (${project.id})</div>
-    </div>
-    <span class="badge awarded">${tender.status.replace(/_/g, ' ')}</span>
-  </div>
+      await (supabase as any)
+        .from('procurement_tender_bids')
+        .update({ is_selected: true })
+        .eq('id', bidder.id);
 
-  <table>
-    <tr><th>Awarded Vendor / Contractor</th><td><strong>${tender.awarded_vendor || 'L1 Bidder Under Award'}</strong></td><th>Package Classification</th><td>${tender.package_name}</td></tr>
-    <tr><th>Trade Designation</th><td>${tender.trade_category}</td><th>Contract Value Awarded</th><td class="tar" style="color: #0284c7; font-size: 12px; font-weight: bold;">₹${(tender.awarded_amount_inr || tender.estimated_budget_inr).toLocaleString("en-IN")}</td></tr>
-  </table>
-
-  <table>
-    <thead>
-      <tr><th>Bidder Entity</th><th class="tar">Technical Score</th><th class="tar">Quoted Total (INR)</th><th class="tar">Variance to Estimate</th><th>Bid Rank</th></tr>
-    </thead>
-    <tbody>
-      ${tender.bidders.map((b) => `
-        <tr style="${b.contractor_name === tender.awarded_vendor ? 'background: #f0fdf4; font-weight: bold;' : ''}">
-          <td>${b.contractor_name}</td>
-          <td class="tar">${b.technical_score_pct}%</td>
-          <td class="tar">₹${b.quoted_amount_inr.toLocaleString("en-IN")}</td>
-          <td class="tar" style="color: ${b.variance_to_estimate_pct < 0 ? '#15803d' : '#b91c1c'};">${b.variance_to_estimate_pct > 0 ? '+' : ''}${b.variance_to_estimate_pct.toFixed(2)}%</td>
-          <td><span style="font-family: monospace;">${b.ranking}</span></td>
-        </tr>
-      `).join("")}
-    </tbody>
-  </table>
-
-  <div class="box">
-    <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #475569; margin-bottom: 4px;">Standard Contractual Conditions of Award</div>
-    <div>1. Mobilization period is 7 calendar days from LOI receipt. 5% statutory retention will be held per RA billing cycle.<br/>
-    2. Submittals (MAR), method statements, and labor muster strength must be submitted prior to mobilization draw.<br/>
-    3. Defect Liability Period (DLP) shall govern for 12 months post Taking-Over Certificate (TOC) release.</div>
-  </div>
-
-  <div class="footer">
-    <div>
-      <div>Contracts &amp; Procurement Lead</div>
-      <div style="color: #64748b;">Competitive bid matrix verified.</div>
-      <div class="sig">Procurement Signature</div>
-    </div>
-    <div>
-      <div>Awarded Subcontractor</div>
-      <div style="color: #64748b;">${tender.awarded_vendor || 'Agreed & Accepted'}</div>
-      <div class="sig">Authorized Vendor Sign</div>
-    </div>
-    <div>
-      <div>Employer Project Director</div>
-      <div style="color: #64748b;">${tender.issued_by || 'Work Order Sanctioned'}</div>
-      <div class="sig">Employer Approval Stamp</div>
-    </div>
-  </div>
-</body>
-</html>`);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => printWin.print(), 250);
+      setFeedback(`Letter of Intent (LOI) issued to ${bidder.contractor_name}.`);
+      setTimeout(() => setFeedback(null), 3500);
+      await loadTenders();
+    } catch (err: any) {
+      // Local state update if network fails
+      setTenders((prev) =>
+        prev.map((t) =>
+          t.id === tenderId
+            ? {
+              ...t,
+              status: 'AWARDED_LOI',
+              awarded_vendor: bidder.contractor_name,
+              awarded_amount_inr: bidder.quoted_amount_inr,
+            }
+            : t
+        )
+      );
+      setFeedback(`LOI recorded locally for ${bidder.contractor_name}`);
+      setTimeout(() => setFeedback(null), 3500);
+    } finally {
+      setActionInProgress(null);
+    }
   };
-
-  if (loading || !selectedTender) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center text-xs font-mono text-zinc-500">
-        <Clock className="w-4 h-4 mr-2 animate-spin text-cyan-400" />
-        INITIALIZING PROCUREMENT PACKAGES &amp; COMPETITIVE BID EVALUATION MATRIX...
-      </div>
-    );
-  }
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1600px] space-y-6">
-        
-        {/* TOP TITLE BAR */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-5 gap-4">
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 p-6 sm:p-8 font-mono">
+      <div className="max-w-[1650px] mx-auto space-y-6">
+
+        {/* HEADER BAR */}
+        <header className="border-b border-zinc-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-[11px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
-              <span>Procurement and Tendering · CPWD Section 17 / FIDIC Clause 4.4</span>
-              <span>·</span>
-              <span className="text-zinc-400">{project.name}</span>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1 flex items-center gap-2">
+              <span>PROCUREMENT &amp; TENDERING • CPWD WORKS MANUAL SECTION 17 / FIDIC CL. 4.4</span>
+              <StatutoryInfo
+                standardRef="CPWD MANUAL SEC. 17 / FIDIC CL. 4.4"
+                title="Tender Packages & Subcontractor Prequalification"
+                idealRange="EMD: 2.0% of Estimate"
+                description="Governs competitive bidding, publication of NIT/RFP notices, statutory 2% Earnest Money Deposit (EMD) retention, and formal issuance of Letters of Intent (LOI) to responsive lowest (L1) bidders."
+              />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
-              Procurement Tenders and Bid Evaluation Matrix
+            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              <FileSpreadsheet className="w-6 h-6 text-cyan-400" />
+              <span>Procurement Tenders &amp; RFP Package Ledger</span>
             </h1>
-            <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
-              Strict dual-envelope competitive bidding. Ranks subcontractors by technical capability score (75% or greater) and commercial normalization (L1 / L2) before releasing the formal Letter of Intent (LOI).
+            <p className="text-xs text-zinc-400 mt-0.5 font-sans">
+              Scope: <strong className="text-zinc-200">{projectName}</strong> • Dual-envelope competitive bidding, EMD tracking, and LOI contract award governance.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
+            {isFallbackMode && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-950/80 border border-amber-800 text-[10px] text-amber-300">
+                <Database className="w-3.5 h-3.5" />
+                <span>Simulated Offline Cache</span>
+              </span>
+            )}
+            <button
+              onClick={() => void loadTenders()}
+              disabled={loading}
+              className="p-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition disabled:opacity-50"
+              title="Refresh Packages"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
+            </button>
             <button
               type="button"
-              onClick={() => handlePrintLOI(selectedTender)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold transition"
+              onClick={() => setModalOpen(true)}
+              className="px-3.5 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold uppercase rounded flex items-center gap-1.5 transition"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Award Letter (LOI)</span>
+              <Plus className="w-4 h-4" />
+              <span>Publish RFP Package</span>
             </button>
-            <span className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-xs font-semibold">
-              Procurement: <strong className="text-cyan-400">{role.label}</strong>
-            </span>
+          </div>
+        </header>
+
+        {feedback && (
+          <div className="p-3 bg-cyan-950/80 border border-cyan-800 text-cyan-300 text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>{feedback}</span>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="p-3 bg-rose-950/40 border border-rose-800/80 text-rose-300 text-xs flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>Telemetry Notice: {errorMessage} (Displaying cached/fallback tender telemetry)</span>
+          </div>
+        )}
+
+        {/* 4 SUMMARY METRIC TILES */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-sm">
+            <span className="text-[10px] text-zinc-500 uppercase block font-semibold">Total Packages Sanctioned</span>
+            <div className="text-2xl font-bold text-white mt-1">
+              {loading ? '--' : `${summary.totalCount} RFP Packages`}
+            </div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">Trade procurement queue</span>
+          </div>
+
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-sm">
+            <span className="text-[10px] text-zinc-500 uppercase block font-semibold">Awarded Contract Value</span>
+            <div className="text-2xl font-bold text-emerald-400 mt-1">
+              {loading ? '--' : formatInr(summary.totalAwardedValue)}
+            </div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">Bound under executed LOIs</span>
+          </div>
+
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-sm">
+            <span className="text-[10px] text-zinc-500 uppercase block font-semibold">Commercial Savings</span>
+            <div className="text-2xl font-bold text-cyan-400 mt-1">
+              {loading ? '--' : formatInr(summary.procurementSavings)}
+            </div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">Below estimated budget</span>
+          </div>
+
+          <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-sm">
+            <span className="text-[10px] text-zinc-500 uppercase block font-semibold">Active Tender Pipeline</span>
+            <div className="text-2xl font-bold text-amber-400 mt-1">
+              {loading ? '--' : `${summary.activeEvaluations} Packages`}
+            </div>
+            <span className="text-[10px] text-zinc-500 mt-1 block">In evaluation or bidding</span>
           </div>
         </div>
 
-        {/* 4 PRIMARY PROCUREMENT GAUGES */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Total Packages Sanctioned</span>
-              <FileSpreadsheet className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-white mt-2">
-              {summary.totalCount} RFP Packages
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Across all civil and finish trades</div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Awarded Contract Value</span>
-              <Award className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-emerald-400 mt-2">
-              {formatInr(summary.totalAwardedValue)}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Bound under signed Letters of Intent (LOI)</div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Commercial Savings Generated</span>
-              <TrendingDown className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-emerald-400 mt-2">
-              {formatInr(summary.procurementSavings)}
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Delta against initial estimated budget</div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center justify-between text-zinc-400 text-xs">
-              <span>Active Tender Pipeline</span>
-              <Clock className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="text-2xl font-extrabold font-mono text-amber-400 mt-2">
-              {summary.activeEvaluations} Packages
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-1">Under technical / commercial review</div>
-          </div>
-        </div>
-
-        {/* TOOLBAR FILTER TABS */}
-        <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3 overflow-x-auto">
-          {[
-            { key: "ALL", label: `All Tenders (${tenders.length})` },
-            { key: "COMMERCIAL_BID_OPENED", label: "Bid Matrix Opened" },
-            { key: "AWARDED_LOI", label: "Awarded (LOI Issued)" },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setFilterStatus(tab.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap transition ${
-                filterStatus === tab.key
-                  ? "bg-cyan-500 text-zinc-950 shadow-md shadow-cyan-950/50"
-                  : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* 2-COLUMN WORKBENCH: TENDER LIST (7 cols) vs BID COMPARISON & AWARD DESK (5 cols) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* LEFT: TENDER PACKAGES (7 cols) */}
-          <div className="lg:col-span-7 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
-                  Procurement Register
-                </span>
-                <h2 className="text-sm font-bold text-white mt-0.5">Trade Package Procurement Queue</h2>
-              </div>
-              <span className="text-xs font-mono text-zinc-500">{filteredTenders.length} Packages</span>
-            </div>
-
-            <div className="space-y-3">
-              {filteredTenders.map((tender) => {
-                const isSelected = selectedTender.id === tender.id;
-                const isAwarded = tender.status === "AWARDED_LOI";
-
-                return (
-                  <div
-                    key={tender.id}
-                    onClick={() => setSelectedTender(tender)}
-                    className={`rounded-xl border p-4 transition cursor-pointer space-y-3 ${
-                      isSelected
-                        ? "border-cyan-500/50 bg-cyan-950/20 shadow-lg shadow-cyan-950/30"
-                        : "border-zinc-800/80 bg-zinc-900/40 hover:border-zinc-700"
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-white">
-                          {tender.tender_code}
-                        </span>
-                        <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
-                          isAwarded
-                            ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
-                            : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
-                        }`}>
-                          {tender.status.replace(/_/g, " ")}
-                        </span>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="text-xs font-mono font-extrabold text-white">
-                          Est: {formatInr(tender.estimated_budget_inr)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-xs font-bold text-zinc-100">{tender.package_name}</div>
-                      <div className="text-[11px] text-zinc-400 font-mono mt-0.5">{tender.trade_category}</div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 pt-2 border-t border-zinc-800/60">
-                      <span>Bidders: <strong className="text-zinc-300">{tender.bidders.length} Qualified</strong></span>
-                      <span>Awarded: <strong className="text-emerald-400">{tender.awarded_vendor || "Evaluation Active"}</strong></span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* RIGHT: BID MATRIX & LOI AWARD DESK (5 cols) */}
-          <div className="lg:col-span-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-5 shadow-2xl">
-            <div className="border-b border-zinc-800 pb-3 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
-                  Commercial Evaluation Desk
-                </span>
-                <h3 className="text-sm font-bold text-white mt-0.5">{selectedTender.package_name}</h3>
-              </div>
-              <span className="text-xs font-mono text-zinc-400">
-                {selectedTender.tender_code}
-              </span>
-            </div>
-
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2 text-xs font-mono">
-              <span className="text-[10px] uppercase text-zinc-500 block">Package Scope:</span>
-              <strong className="text-white text-sm font-sans block leading-snug">{selectedTender.package_name}</strong>
-              <div className="text-cyan-400 text-[11px]">{selectedTender.trade_category}</div>
-              <div className="pt-2 border-t border-zinc-800/60 flex justify-between items-baseline text-[11px]">
-                <span className="text-zinc-400">Approved Budget:</span>
-                <strong className="text-white">{formatInr(selectedTender.estimated_budget_inr)}</strong>
+        {/* 2-COLUMN VIEWPORT */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start text-xs">
+          <div className="lg:col-span-7 bg-zinc-900/40 border border-zinc-800 p-5 space-y-4 rounded-sm">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-zinc-800 pb-2">
+              <span className="font-bold text-white uppercase">Tender Packages ({filteredTenders.length})</span>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500" />
+                  <input
+                    type="text"
+                    placeholder="Filter package..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1 pl-7 text-[11px] text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50"
+                  />
+                </div>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[11px] text-zinc-300 focus:outline-none focus:border-cyan-500/50"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="RFP_ISSUED">RFP Issued</option>
+                  <option value="COMMERCIAL_BID_OPENED">Bids Opened</option>
+                  <option value="AWARDED_LOI">Awarded</option>
+                </select>
               </div>
             </div>
 
-            {/* BIDDER MATRIX EVALUATION CARDS */}
-            <div className="space-y-2.5">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold block">
-                Subcontractor Bid Quotations ({selectedTender.bidders.length}):
-              </span>
+            {loading ? (
+              <div className="p-12 text-center border border-zinc-850 bg-zinc-950/60 text-xs text-zinc-500 space-y-3">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent mx-auto" />
+                <p className="text-zinc-400 font-mono">Synchronizing RFP ledger...</p>
+              </div>
+            ) : filteredTenders.length === 0 ? (
+              <div className="p-12 text-center border border-zinc-850 bg-zinc-950">
+                <FileSpreadsheet className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+                <div className="text-zinc-400 font-bold uppercase">Zero Tender Packages Published</div>
+                <p className="text-[11px] text-zinc-600 font-sans mt-1 max-w-sm mx-auto">
+                  No active trade packages found. Click &quot;Publish RFP Package&quot; to issue a notice inviting tenders.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1">
+                {filteredTenders.map((t) => {
+                  const isSelected = selectedTender?.id === t.id;
+                  const isAwarded = t.status === 'AWARDED_LOI';
 
-              {selectedTender.bidders.map((bidder) => {
-                const isDisqualified = bidder.ranking === "DISQUALIFIED";
-                const isL1 = bidder.ranking === "L1";
-                const isSelectedForAward = selectedTender.awarded_vendor === bidder.contractor_name;
-
-                return (
-                  <div
-                    key={bidder.bidder_id}
-                    className={`p-3.5 rounded-xl border transition space-y-2 text-xs font-mono ${
-                      isSelectedForAward
-                        ? "border-emerald-800/80 bg-emerald-950/20 shadow-md"
-                        : isDisqualified
-                        ? "border-zinc-800 bg-zinc-900/20 opacity-60"
-                        : "border-zinc-800 bg-zinc-900/40"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
-                          isL1
-                            ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
-                            : isDisqualified
-                            ? "bg-rose-950 text-rose-400 border border-rose-800/50"
-                            : "bg-zinc-800 text-zinc-300"
-                        }`}>
-                          {bidder.ranking}
-                        </span>
-                        <strong className="text-white font-sans text-xs">{bidder.contractor_name}</strong>
-                      </div>
-
-                      <strong className="text-white font-mono">
-                        {formatInr(bidder.quoted_amount_inr)}
-                      </strong>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-800/60">
-                      <span>Tech Score: <strong className={bidder.technical_score_pct >= 75 ? "text-emerald-400" : "text-rose-400"}>{bidder.technical_score_pct}%</strong></span>
-                      <span>Variance: <strong className={bidder.variance_to_estimate_pct < 0 ? "text-emerald-400" : "text-amber-400"}>{bidder.variance_to_estimate_pct > 0 ? "+" : ""}{bidder.variance_to_estimate_pct.toFixed(1)}%</strong></span>
-                      <span>Schedule: <strong className="text-zinc-200">{bidder.proposed_duration_days}d</strong></span>
-                    </div>
-
-                    {!selectedTender.awarded_vendor && !isDisqualified && (
-                      <div className="pt-2 border-t border-zinc-800/60">
-                        <button
-                          type="button"
-                          disabled={!isProcurementLeadOrArchitect || actionInProgress === selectedTender.id}
-                          onClick={() => handleAwardLoi(selectedTender.id, bidder)}
-                          className={`w-full py-1.5 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-sm ${
-                            isL1
-                              ? "bg-emerald-500 hover:bg-emerald-400 text-zinc-950"
-                              : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
-                          }`}
+                  return (
+                    <div
+                      key={t.id}
+                      onClick={() => setSelectedTender(t)}
+                      className={`p-4 rounded border cursor-pointer transition space-y-2.5 ${isSelected
+                          ? 'border-cyan-500/60 bg-cyan-950/20'
+                          : 'border-zinc-850 bg-zinc-950 hover:border-zinc-700'
+                        }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-white">{t.tender_code}</span>
+                        <span
+                          className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase border ${isAwarded
+                              ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
+                              : 'bg-cyan-950 text-cyan-400 border border-cyan-800'
+                            }`}
                         >
-                          <Award className="w-3.5 h-3.5" />
-                          <span>Award Letter of Intent (LOI)</span>
-                        </button>
+                          {t.status.replace(/_/g, ' ')}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {selectedTender.status === "AWARDED_LOI" && (
-              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 font-mono text-center text-xs font-bold flex items-center justify-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>LOI Issued to {selectedTender.awarded_vendor} ({formatInr(selectedTender.awarded_amount_inr || 0)})</span>
+                      <div className="text-xs font-bold text-zinc-200">{t.package_name}</div>
+                      <div className="flex justify-between items-center text-[10px] text-zinc-500 border-t border-zinc-850 pt-2">
+                        <span>
+                          Est: <strong className="text-white">{formatInr(Number(t.estimated_budget_inr))}</strong>
+                        </span>
+                        <span>
+                          EMD: <strong className="text-amber-400">{formatInr(Number(t.emd_amount_inr))}</strong>
+                        </span>
+                        <span>
+                          Deadline: <strong className="text-zinc-300">{t.bid_submission_deadline}</strong>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-
-            <div className="pt-2 border-t border-zinc-800/60 text-[10px] text-zinc-500 font-mono text-center">
-              CPWD Works Manual Section 17 and FIDIC Subcontract Award Protocol
-            </div>
           </div>
 
+          {/* RIGHT COLUMN: PACKAGE SPECIFICS & BIDDERS */}
+          <div className="lg:col-span-5 bg-zinc-900/40 border border-zinc-800 p-5 space-y-4 rounded-sm">
+            {selectedTender ? (
+              <div className="space-y-4">
+                <div className="border-b border-zinc-800 pb-2">
+                  <span className="text-xs font-bold text-cyan-400">{selectedTender.tender_code}</span>
+                  <h3 className="text-sm font-bold text-white mt-0.5">{selectedTender.package_name}</h3>
+                  <div className="text-[10px] text-zinc-500">{selectedTender.trade_category}</div>
+                </div>
+
+                <div className="p-3 bg-zinc-950 border border-zinc-850 space-y-1.5 text-xs rounded">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Estimated Budget:</span>
+                    <strong className="text-white">{formatInr(Number(selectedTender.estimated_budget_inr))}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Earnest Money (2% EMD):</span>
+                    <strong className="text-amber-400">{formatInr(Number(selectedTender.emd_amount_inr))}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Submission Due Date:</span>
+                    <span className="text-zinc-300">{selectedTender.bid_submission_deadline}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-white uppercase text-[10px]">
+                      Submitted Bid Quotations ({selectedTender.bidders?.length || 0})
+                    </span>
+                    <Link
+                      href="/procurement/tender-evaluation"
+                      className="text-[10px] text-cyan-400 hover:underline"
+                    >
+                      Open Comparative Statement (CST) &rarr;
+                    </Link>
+                  </div>
+
+                  {!selectedTender.bidders || selectedTender.bidders.length === 0 ? (
+                    <div className="p-4 text-center text-zinc-600 border border-zinc-850 bg-zinc-950 rounded">
+                      Zero bids submitted. Awaiting vendor proposal submissions.
+                    </div>
+                  ) : (
+                    selectedTender.bidders.map((b) => (
+                      <div key={b.id} className="p-3 bg-zinc-950 border border-zinc-850 rounded space-y-1.5">
+                        <div className="flex justify-between items-center">
+                          <strong className="text-white">{b.contractor_name}</strong>
+                          <span className="text-xs font-bold text-emerald-400">
+                            {formatInr(Number(b.quoted_amount_inr))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] text-zinc-500">
+                          <span>
+                            Tech Score: <strong className="text-cyan-400">{b.technical_score_pct}%</strong>
+                          </span>
+                          <span>
+                            Rank: <strong className="text-amber-400">{b.ranking}</strong>
+                          </span>
+                        </div>
+                        {selectedTender.status !== 'AWARDED_LOI' && b.ranking === 'L1' && (
+                          <button
+                            type="button"
+                            disabled={actionInProgress === selectedTender.id}
+                            onClick={() => handleAwardLoi(selectedTender.id, b)}
+                            className="w-full mt-1 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold uppercase text-[10px] rounded transition disabled:opacity-50"
+                          >
+                            {actionInProgress === selectedTender.id ? 'Issuing LOI...' : 'Award Letter of Intent (LOI)'}
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {selectedTender.status === 'AWARDED_LOI' && (
+                  <div className="p-3 bg-emerald-950/40 border border-emerald-800 rounded text-center text-xs text-emerald-400 font-bold">
+                    ✓ Awarded to {selectedTender.awarded_vendor} (
+                    {formatInr(Number(selectedTender.awarded_amount_inr || 0))})
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-16 text-center text-zinc-600">Select a tender package to review status and bids.</div>
+            )}
+          </div>
         </div>
+
+        {/* PUBLISH RFP MODAL */}
+        {modalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 font-mono">
+            <div className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-lg p-6 space-y-4 shadow-2xl">
+              <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+                <span className="font-bold text-white uppercase text-xs">Publish Procurement Tender Package</span>
+                <button onClick={() => setModalOpen(false)} className="text-zinc-500 hover:text-white">✕</button>
+              </div>
+
+              <form onSubmit={handleCreatePackage} className="space-y-3 text-xs">
+                <div>
+                  <label className="text-[10px] text-zinc-400 block mb-1">Package Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Unitized Curtain Wall & Architectural Glazing"
+                    value={pkgName}
+                    onChange={(e) => setPkgName(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 px-3 py-1.5 text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-zinc-400 block mb-1">Trade Category</label>
+                    <select
+                      value={tradeCat}
+                      onChange={(e) => setTradeCat(e.target.value)}
+                      className="w-full bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-white focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="Civil & Superstructure">Civil &amp; Superstructure</option>
+                      <option value="Facade & Glazing">Facade &amp; Glazing</option>
+                      <option value="Custom Joinery & Millwork">Custom Joinery &amp; Millwork</option>
+                      <option value="First-Fix Plumbing & Sanitary">Plumbing &amp; Sanitary</option>
+                      <option value="Electrical & Substation">Electrical &amp; Substation</option>
+                      <option value="HVAC & Chilled Water">HVAC &amp; Chilled Water</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-zinc-400 block mb-1">Estimated Budget (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="0.00"
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                      className="w-full bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-white font-bold focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-zinc-400 block mb-1">Bid Submission Deadline *</label>
+                  <input
+                    type="date"
+                    required
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 px-3 py-1.5 text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="p-3 bg-zinc-900 rounded border border-zinc-800 text-[11px] text-zinc-400">
+                  <span>Statutory EMD Rule: </span>
+                  <strong className="text-amber-400">
+                    2.0% Earnest Money Deposit ({formatInr((parseFloat(budget) || 0) * 0.02)})
+                  </strong>{' '}
+                  will be required from participating contractors.
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="px-3.5 py-1.5 bg-zinc-900 text-zinc-400 hover:text-white rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionInProgress === 'creating_pkg'}
+                    className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold uppercase rounded disabled:opacity-50"
+                  >
+                    {actionInProgress === 'creating_pkg' ? 'Publishing...' : 'Publish Tender Package'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
       </div>
     </main>

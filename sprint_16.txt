@@ -1,0 +1,1003 @@
+==================================================
+SPRINT 16: QA/QC CONSOLE & WORKFORCE MUSTER
+==================================================
+==================================================
+FILE: app/quality/cube-tests/page.tsx
+==================================================
+// app/quality/cubes/page.tsx
+import React from "react";
+import Link from "next/link";
+import { Beaker, CheckCircle2, AlertTriangle, ArrowUpRight } from "lucide-react";
+import { ConcreteMaturityChart } from "@/components/quality/ConcreteMaturityChart";
+import { LogCubeTestModal } from "@/components/quality/LogCubeTestModal";
+import { createClient } from "@/lib/supabase/server";
+
+export default async function CubeTestsPage() {
+  const supabase = await createClient();
+
+  // 1. Resolve Project Context
+  const { data: projectRow } = await supabase
+    .from("projects")
+    .select("project_id, project_name")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
+  const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
+
+  // 2. Fetch Live Concrete Test Logs
+  const { data: cubeData } = await supabase
+    .from("quality_concrete_cube_tests")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("cast_date", { ascending: false });
+
+  const cubeRegister = cubeData || [];
+
+  // 3. Compute Real-Time Telemetry & Acceptance Metrics
+  const totalSetsCast = cubeRegister.length;
+
+  const completed28DayTests = cubeRegister.filter((r) => r.strength_28day_mpa !== null);
+  const passed28DayTests = completed28DayTests.filter(
+    (r) => Number(r.strength_28day_mpa) >= Number(r.specified_grade_fck)
+  );
+
+  const totalCubeSets = cubeRegister?.length || 0;
+  const totalTests = totalCubeSets;
+  const passedCount = (cubeRegister || []).filter((r: any) => r.status === "COMPLIANT" || r.status === "Passed" || r.status === "Closed & Approved").length;
+  const passRatePct = totalCubeSets > 0 ? (passedCount / totalCubeSets) * 100 : 0;
+
+  const criticalFailures = cubeRegister.filter(
+    (r) =>
+      (r.strength_28day_mpa !== null &&
+        Number(r.strength_28day_mpa) < Number(r.specified_grade_fck)) ||
+      r.status === "FAILED_NCR_ISSUED"
+  ).length;
+
+  return (
+    <div className="min-h-screen bg-zinc-950 p-6 text-zinc-100 font-sans">
+      <div className="grid grid-cols-12 gap-6">
+        {/* HEADER */}
+        <header className="col-span-12 bg-zinc-900 border border-zinc-800">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between px-5 py-4 border-b border-zinc-800/50">
+            <div className="flex flex-col text-left">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono tracking-widest text-zinc-400 uppercase">
+                  QUALITY ASSURANCE (QA/QC) &amp; NABL LAB TESTING
+                </span>
+                <span className="text-zinc-600">/</span>
+                <span className="text-xs font-mono tracking-tight text-zinc-400">
+                  IS:516 &amp; IS:456 CLAUSE 15 ACCEPTANCE
+                </span>
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-zinc-100 mt-1 uppercase font-mono">
+                IS:516 Concrete Cube Compressive Strength &amp; Maturity Telemetry
+              </h1>
+              <p className="text-xs text-zinc-400 font-mono mt-0.5">
+                Active Project: <strong className="text-zinc-200">{projectName}</strong> ({projectId})
+              </p>
+            </div>
+
+            <div className="mt-4 md:mt-0 flex items-center gap-3">
+              <LogCubeTestModal projectId={projectId} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 px-5 py-2.5 text-xs text-zinc-400 bg-zinc-950/40 font-mono">
+            <div className="text-left border-r border-zinc-800/50 pr-4">
+              <span className="block text-zinc-500 uppercase tracking-wider text-[10px]">Testing Rig Calibration</span>
+              <span className="text-zinc-100 text-xs block truncate font-bold">CTM-2000kN (NABL Accr.)</span>
+            </div>
+            <div className="text-left md:border-r border-zinc-800/50 px-0 md:px-4">
+              <span className="block text-zinc-500 uppercase tracking-wider text-[10px]">Curing Environment</span>
+              <span className="text-emerald-400 text-xs block font-bold">27°C ± 2°C Saturated Tank</span>
+            </div>
+            <div className="text-left border-r border-zinc-800/50 pr-4 md:px-4 mt-2 md:mt-0">
+              <span className="block text-zinc-500 uppercase tracking-wider text-[10px]">Loading Rate Compliance</span>
+              <span className="text-zinc-100 text-xs block truncate">14 N/mm²/min (IS:516 Cl. 5.5)</span>
+            </div>
+            <div className="text-left px-0 md:px-4 mt-2 md:mt-0">
+              <span className="block text-zinc-500 uppercase tracking-wider text-[10px]">Formwork De-Shutter Gate</span>
+              <span className="text-emerald-400 text-xs block truncate">≥ 70% Design Strength Trigger</span>
+            </div>
+          </div>
+        </header>
+
+        {/* 3 KPI CARDS */}
+        <div className="col-span-12 md:col-span-4 bg-zinc-900 border border-zinc-800 p-5">
+          <div className="flex items-center justify-between text-xs text-zinc-400 uppercase tracking-wider font-mono">
+            <span>Total Cube Sets Cast</span>
+            <Beaker className="h-4 w-4 text-zinc-500" />
+          </div>
+          <div className="mt-4 flex items-baseline justify-between">
+            <div className="text-3xl font-bold font-mono text-zinc-100 tabular-nums">
+              {totalSetsCast} Sets
+            </div>
+            <span className="text-xs font-mono text-zinc-400">{totalSetsCast * 6} Specimen Cubes</span>
+          </div>
+          <div className="mt-3 pt-3 border-t border-zinc-800/50 text-xs text-zinc-400 font-mono flex items-center justify-between">
+            <span>Sampling Frequency</span>
+            <span className="text-zinc-200">IS:456 Table 11 Compliant</span>
+          </div>
+        </div>
+
+        <div className="col-span-12 md:col-span-4 bg-zinc-900 border border-zinc-800 p-5">
+          <div className="flex items-center justify-between text-xs text-zinc-400 uppercase tracking-wider font-mono">
+            <span>28-Day Strength Pass Rate</span>
+            <CheckCircle2 className="h-4 w-4 text-zinc-500" />
+          </div>
+          <div className="mt-4 flex items-baseline justify-between">
+            <div className="text-3xl font-bold font-mono text-emerald-500 tabular-nums">
+              {passRatePct.toFixed(1)}%
+            </div>
+            <span className="text-xs font-mono px-2 py-0.5 border bg-emerald-950/60 border-emerald-800 text-emerald-400 font-bold">
+              {"f_m ≥ f_ck + 1.65σ"}
+            </span>
+          </div>
+          <div className="mt-3 pt-3 border-t border-zinc-800/50 text-xs text-zinc-400 font-mono flex items-center justify-between">
+            <span>Acceptance Criteria</span>
+            <span className="text-emerald-400 font-semibold">Zero Structural Compromise</span>
+          </div>
+        </div>
+
+        <div className="col-span-12 md:col-span-4 bg-zinc-900 border border-zinc-800 p-5">
+          <div className="flex items-center justify-between text-xs text-zinc-400 uppercase tracking-wider font-mono">
+            <span>Critical Failure / Retest Gate</span>
+            <AlertTriangle className="h-4 w-4 text-zinc-500" />
+          </div>
+          <div className="mt-4 flex items-baseline justify-between">
+            <div
+              className={`text-3xl font-bold font-mono tabular-nums ${criticalFailures > 0 ? "text-rose-500" : "text-zinc-500"
+                }`}
+            >
+              {criticalFailures} {criticalFailures === 1 ? "Set" : "Sets"}
+            </div>
+            <span
+              className={`text-xs font-mono px-2 py-0.5 border ${criticalFailures > 0
+                  ? "bg-rose-950/60 border-rose-800 text-rose-400 font-bold"
+                  : "bg-zinc-800 border-zinc-700 text-zinc-500"
+                }`}
+            >
+              {criticalFailures > 0 ? "Action Required" : "Zero Non-Compliant"}
+            </span>
+          </div>
+          <div className="mt-3 pt-3 border-t border-zinc-800/50 text-xs text-zinc-400 font-mono flex items-center justify-between">
+            <span>Remedial Gate</span>
+            <span className={criticalFailures > 0 ? "text-rose-400 truncate" : "text-zinc-400"}>
+              {criticalFailures > 0 ? "NCR Issued • NDT Core Testing" : "No Retests Pending"}
+            </span>
+          </div>
+        </div>
+
+        {/* LOG TABLE */}
+        <div className="col-span-12 lg:col-span-8 bg-zinc-900 border border-zinc-800 flex flex-col justify-between">
+          <div>
+            <div className="px-5 py-4 border-b border-zinc-800/60 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-100 font-mono">
+                  Concrete Cube Register &amp; Compressive Strength Log
+                </h2>
+                <p className="text-xs text-zinc-400 font-mono mt-0.5">
+                  IS:516 Crushing Tests &amp; IS:456 Cl. 15 Statistical Acceptance Criteria
+                </p>
+              </div>
+              <span className="text-xs font-mono text-zinc-400">
+                Displaying {cubeRegister.length} Recent Batches
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse font-mono text-xs">
+                <thead>
+                  <tr className="border-b border-zinc-800/60 bg-zinc-950/60 text-[10px] text-zinc-500 uppercase tracking-wider">
+                    <th className="py-3 px-3.5 font-normal">Sample ID</th>
+                    <th className="py-3 px-3 font-normal">Pour Card Ref</th>
+                    <th className="py-3 px-3.5 font-normal">Member / Location</th>
+                    <th className="py-3 px-2.5 font-normal">Grade ($f_ck$)</th>
+                    <th className="py-3 px-3 font-normal">Cast Date</th>
+                    <th className="py-3 px-3 text-right">7-Day (N/mm²)</th>
+                    <th className="py-3 px-3 text-right">28-Day (N/mm²)</th>
+                    <th className="py-3 px-3.5 font-normal text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/50">
+                  {cubeRegister.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-zinc-500 font-sans text-xs">
+                        No active concrete cube crushing tests logged for this project.
+                      </td>
+                    </tr>
+                  ) : (
+                    cubeRegister.map((record) => {
+                      const fck = Number(record.specified_grade_fck);
+                      const s7 = Number(record.strength_7day_mpa);
+                      const s28 = record.strength_28day_mpa !== null ? Number(record.strength_28day_mpa) : null;
+
+                      let uiStatus = "PENDING 28D";
+                      let isFailed = record.status === "FAILED_NCR_ISSUED";
+                      let isCompliant = record.status === "COMPLIANT";
+
+                      if (!isFailed && !isCompliant && s28 !== null) {
+                        if (s28 >= fck) {
+                          uiStatus = "COMPLIANT";
+                          isCompliant = true;
+                        } else {
+                          uiStatus = "FAILED - ISSUE NCR";
+                          isFailed = true;
+                        }
+                      }
+
+                      return (
+                        <tr
+                          key={record.id}
+                          className={`transition-colors ${isFailed ? "bg-rose-950/15 hover:bg-rose-950/25" : "hover:bg-zinc-800/20"
+                            }`}
+                        >
+                          <td className="py-3 px-3.5 font-bold text-zinc-100 whitespace-nowrap">
+                            {record.sample_ref_id}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="text-zinc-300 font-mono">{record.pour_card_id || "PC-LINK"}</span>
+                          </td>
+                          <td className="py-3 px-3.5 text-zinc-200">
+                            <div className="line-clamp-1 max-w-[200px]">{record.structural_element}</div>
+                          </td>
+                          <td className="py-3 px-2.5 text-zinc-300 font-bold whitespace-nowrap">
+                            <span className="px-1.5 py-0.5 bg-zinc-950 border border-zinc-800 text-[11px]">
+                              M{fck}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-zinc-400 text-[11px] whitespace-nowrap">
+                            {new Date(record.cast_date).toISOString().split("T")[0]}
+                          </td>
+                          <td className="py-3 px-3 text-right whitespace-nowrap tabular-nums">
+                            {s7 > 0 ? (
+                              <>
+                                <span className={s7 >= 0.67 * fck ? "text-amber-500 font-bold" : "text-rose-500 font-bold"}>
+                                  {s7.toFixed(1)}
+                                </span>
+                                <span className="text-[10px] text-zinc-500 block">
+                                  {((s7 / fck) * 100).toFixed(0)}%
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-zinc-500 text-[10px]">Due 7d</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-right whitespace-nowrap tabular-nums">
+                            {s28 !== null ? (
+                              <>
+                                <span className={`font-bold ${s28 >= fck ? "text-emerald-500" : "text-rose-500"}`}>
+                                  {s28.toFixed(1)}
+                                </span>
+                                <span className="text-[10px] text-zinc-500 block">
+                                  {((s28 / fck) * 100).toFixed(0)}%
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-zinc-500 text-[10px]">Due 28d</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3.5 text-center whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono border uppercase tracking-wider font-bold ${isCompliant
+                                  ? "bg-emerald-950/50 border-emerald-800 text-emerald-500"
+                                  : isFailed
+                                    ? "bg-rose-950/50 border-rose-800 text-rose-500"
+                                    : "bg-amber-950/50 border-amber-800 text-amber-500"
+                                }`}
+                            >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${isCompliant ? "bg-emerald-500" : isFailed ? "bg-rose-500" : "bg-amber-500 animate-pulse"
+                                  }`}
+                              />
+                              {uiStatus}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="px-5 py-3 border-t border-zinc-800/50 bg-zinc-950/50 text-[11px] text-zinc-500 font-mono flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 bg-emerald-500 rounded-full" />
+                <span className="text-emerald-500 font-semibold">$\ge f_ck$ Compliant</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 bg-amber-500 rounded-full" />
+                <span className="text-amber-500 font-semibold">Target 7d $\ge 0.67 f_ck$</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 bg-rose-500 rounded-full" />
+                <span className="text-rose-500 font-semibold">&lt; $f_ck$ Failed (NCR)</span>
+              </span>
+            </div>
+            <span>IS:456-2000 Cl. 15 Acceptance Rules</span>
+          </div>
+        </div>
+
+        {/* MATURITY VISUALIZATION */}
+        <div className="col-span-12 lg:col-span-4">
+          <ConcreteMaturityChart
+            pourName={cubeRegister[0]?.structural_element || "Level 04 Deck Bay C"}
+            targetFck={Number(cubeRegister[0]?.specified_grade_fck) || 30.0}
+            designStrengthMpa={Number(cubeRegister[0]?.specified_grade_fck) || 30.0}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+==================================================
+FILE: components/site/LaborRosterTable.tsx
+==================================================
+"use client";
+
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  Banknote,
+  CheckCircle2,
+  Clock,
+  HardHat,
+  Plus,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Zap
+} from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts";
+import { supabase } from "@/app/lib/supabase";
+import { useActiveRole } from "@/context/RoleContext";
+
+export interface LaborRosterItem {
+  id: string;
+  project_id: string;
+  work_date: string;
+  trade: string;
+  contractor_name: string;
+  planned_headcount: number;
+  actual_headcount: number;
+  wage_rate_per_day: number;
+  overtime_hours: number;
+  target_output_unit: string;
+  target_output_qty: number;
+  achieved_output_qty: number;
+  synced_to_dpr: boolean;
+}
+
+function formatInr(val: number) {
+  if (val >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
+  return `₹${Number(val).toLocaleString("en-IN")}`;
+}
+
+export function LaborRosterTable() {
+  const { project, tier, role } = useActiveRole();
+  const [roster, setRoster] = useState<LaborRosterItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
+
+  // Form State for Adding New Roster Entries
+  const [form, setForm] = useState({
+    trade: tier === "RESIDENTIAL" ? "Master Joinery Carpenters" : "Rebar Steel Fixers",
+    contractor_name: tier === "RESIDENTIAL" ? "Royal Woodworks" : "Narmada Concrete Works",
+    planned_headcount: 10,
+    actual_headcount: 10,
+    wage_rate_per_day: 1050,
+    overtime_hours: 0,
+    target_output_unit: tier === "RESIDENTIAL" ? "units" : "sqm",
+    target_output_qty: 100,
+    achieved_output_qty: 95,
+  });
+
+  const loadRoster = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from("labor_roster_entries")
+        .select("*")
+        .eq("project_id", project.id)
+        .order("created_at", { ascending: true });
+
+      if (data) setRoster(data as LaborRosterItem[]);
+    } catch {
+      // Fallback gracefully
+    } finally {
+      setLoading(false);
+    }
+  }, [project.id]);
+
+  useEffect(() => {
+    void loadRoster();
+
+    const channel = supabase
+      .channel(`labor_realtime_${project.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "labor_roster_entries" }, () => void loadRoster())
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [project.id, loadRoster]);
+
+  // Correct Statutory Overtime & Daily Cash Burn Math
+  const metrics = useMemo(() => {
+    const totalActual = roster.reduce((sum, i) => sum + Number(i.actual_headcount), 0);
+    const totalPlanned = roster.reduce((sum, i) => sum + Number(i.planned_headcount), 0);
+
+    // Standard hourly overtime: (Daily Wage / 8 hrs) * OT Hours * 1.5
+    const totalDailyBurn = roster.reduce((sum, i) => {
+      const basePay = Number(i.actual_headcount) * Number(i.wage_rate_per_day);
+      const hourlyRate = Number(i.wage_rate_per_day) / 8;
+      const otPay = Number(i.overtime_hours) * hourlyRate * 1.5;
+      return sum + basePay + otPay;
+    }, 0);
+
+    // True Productivity (Achieved Output vs Target Output)
+    const avgYield = roster.length > 0
+      ? roster.reduce((sum, i) => {
+          const ratio = Number(i.target_output_qty) > 0 
+            ? (Number(i.achieved_output_qty) / Number(i.target_output_qty)) * 100 
+            : 100;
+          return sum + ratio;
+        }, 0) / roster.length
+      : 100;
+
+    const allSynced = roster.length > 0 && roster.every((i) => i.synced_to_dpr);
+
+    return { totalActual, totalPlanned, totalDailyBurn, avgYield, allSynced };
+  }, [roster]);
+
+  const chartData = useMemo(() => {
+    return roster.map((item) => ({
+      trade: item.trade.length > 14 ? item.trade.slice(0, 14) + "…" : item.trade,
+      Planned: item.planned_headcount,
+      Actual: item.actual_headcount,
+    }));
+  }, [roster]);
+
+  // Handle Form Submission
+  const handleAddRoster = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionInProgress("adding");
+
+    await supabase.from("labor_roster_entries").insert([{
+      project_id: project.id,
+      work_date: new Date().toISOString().slice(0, 10),
+      trade: form.trade,
+      contractor_name: form.contractor_name,
+      planned_headcount: form.planned_headcount,
+      actual_headcount: form.actual_headcount,
+      wage_rate_per_day: form.wage_rate_per_day,
+      overtime_hours: form.overtime_hours,
+      target_output_unit: form.target_output_unit,
+      target_output_qty: form.target_output_qty,
+      achieved_output_qty: form.achieved_output_qty,
+      synced_to_dpr: false,
+    }]);
+
+    await loadRoster();
+    setActionInProgress(null);
+  };
+
+  // Real Atomic DPR Sync
+  const handleSyncToDpr = async () => {
+    setActionInProgress("syncing");
+
+    await supabase
+      .from("labor_roster_entries")
+      .update({ synced_to_dpr: true })
+      .eq("project_id", project.id);
+
+    await loadRoster();
+    setActionInProgress(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-xs font-mono text-zinc-500">
+        <Clock className="w-4 h-4 mr-2 animate-spin text-cyan-400" />
+        LOADING MUSTER TELEMETRY...
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      
+      {/* TOP 3 VITAL METRIC CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex items-center justify-between text-zinc-400 text-xs">
+            <span>Site Muster Strength</span>
+            <Users className="w-4 h-4 text-cyan-400" />
+          </div>
+          <div className="mt-2 text-2xl font-extrabold font-mono text-white">
+            {metrics.totalActual} <span className="text-xs text-zinc-500 font-sans">/ {metrics.totalPlanned} planned</span>
+          </div>
+          <div className="text-[11px] text-zinc-400 mt-1 flex items-center gap-1.5">
+            <span className={`h-1.5 w-1.5 rounded-full ${metrics.totalActual >= metrics.totalPlanned ? "bg-emerald-400" : "bg-amber-400"}`} />
+            <span>{((metrics.totalActual / Math.max(metrics.totalPlanned, 1)) * 100).toFixed(0)}% attendance fulfillment</span>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex items-center justify-between text-zinc-400 text-xs">
+            <span>Daily Wage & Overtime Burn</span>
+            <Banknote className="w-4 h-4 text-rose-400" />
+          </div>
+          <div className="mt-2 text-2xl font-extrabold font-mono text-rose-400">
+            {formatInr(metrics.totalDailyBurn)}
+          </div>
+          <div className="text-[11px] text-zinc-400 mt-1">
+            Calculated on 8h statutory shift + 1.5x OT rate
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex items-center justify-between text-zinc-400 text-xs">
+            <span>Avg Gang Output Yield</span>
+            <Activity className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="mt-2 text-2xl font-extrabold font-mono text-emerald-400">
+            {metrics.avgYield.toFixed(1)}%
+          </div>
+          <div className="text-[11px] text-zinc-400 mt-1">
+            Measured output vs planned gang target
+          </div>
+        </div>
+      </div>
+
+      {/* 2-COLUMN SPLIT: RECHARTS CHART (LEFT) vs DAILY MUSTER INTAKE (RIGHT) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* LEFT: MUSTER BAR CHART (7 cols) */}
+        <div className="lg:col-span-7 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
+                Muster Comparison
+              </span>
+              <h2 className="text-sm font-bold text-white mt-0.5">
+                Planned vs Actual Deployment by Trade
+              </h2>
+            </div>
+            <span className="text-xs font-mono text-zinc-500">Shift Date: {new Date().toISOString().slice(0, 10)}</span>
+          </div>
+
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                <CartesianGrid stroke="#27272a" vertical={false} />
+                <XAxis dataKey="trade" tick={{ fill: "#a1a1aa", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#71717a", fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: 8, fontSize: 12 }}
+                  itemStyle={{ color: "#fafafa" }}
+                />
+                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+                <Bar dataKey="Planned" fill="#52525b" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Actual" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* RIGHT: DAILY MUSTER INTAKE FORM (5 cols) */}
+        <div className="lg:col-span-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3 border-b border-zinc-800/80 pb-3">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
+                  Field Logging
+                </span>
+                <h2 className="text-sm font-bold text-white mt-0.5">
+                  Daily Shift Muster Intake
+                </h2>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-zinc-900 text-zinc-400 font-mono text-[10px] border border-zinc-800">
+                Live Input
+              </span>
+            </div>
+
+            <form onSubmit={handleAddRoster} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-zinc-400 text-[11px] mb-1">Trade Specialization</label>
+                <input
+                  type="text"
+                  value={form.trade}
+                  onChange={(e) => setForm({ ...form, trade: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-zinc-400 text-[11px] mb-1">Planned Men</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.planned_headcount}
+                    onChange={(e) => setForm({ ...form, planned_headcount: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-zinc-400 text-[11px] mb-1">Actual Muster</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.actual_headcount}
+                    onChange={(e) => setForm({ ...form, actual_headcount: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-zinc-400 text-[11px] mb-1">Daily Wage (₹/day)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.wage_rate_per_day}
+                    onChange={(e) => setForm({ ...form, wage_rate_per_day: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-zinc-400 text-[11px] mb-1">OT Hours (Total)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={form.overtime_hours}
+                    onChange={(e) => setForm({ ...form, overtime_hours: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-zinc-400 text-[11px] mb-1">Target Output ({form.target_output_unit})</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.target_output_qty}
+                    onChange={(e) => setForm({ ...form, target_output_qty: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-zinc-400 text-[11px] mb-1">Achieved Output</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.achieved_output_qty}
+                    onChange={(e) => setForm({ ...form, achieved_output_qty: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-100 outline-none focus:border-cyan-400"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={actionInProgress === "adding"}
+                className="w-full mt-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 py-2 text-xs font-bold text-zinc-950 transition shadow-sm"
+              >
+                + Append Gang Roster
+              </button>
+            </form>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-zinc-800">
+            <button
+              type="button"
+              disabled={metrics.allSynced || actionInProgress === "syncing"}
+              onClick={handleSyncToDpr}
+              className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                metrics.allSynced
+                  ? "bg-zinc-900 border border-zinc-800 text-emerald-400 cursor-default"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950/50"
+              }`}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{metrics.allSynced ? "Muster Synced to Official DPR" : "Auto-Sync Roster into DPR"}</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* DETAILED GANG PRODUCTIVITY & YIELD LEDGER */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 overflow-hidden shadow-xl">
+        <div className="border-b border-zinc-800/80 px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <HardHat className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+              Governed Trade Gang Performance & Yield Ledger
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono text-zinc-500">
+            IS 7272 Construction Gang Productivity Index
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="border-b border-zinc-800 bg-zinc-900/60 font-mono text-[10px] text-zinc-400 uppercase tracking-wider">
+              <tr>
+                <th className="px-5 py-3">Trade</th>
+                <th className="px-5 py-3">Contractor</th>
+                <th className="px-5 py-3 text-center">Planned / Actual</th>
+                <th className="px-5 py-3 text-right">Daily Rate</th>
+                <th className="px-5 py-3 text-right">OT Hours</th>
+                <th className="px-5 py-3 text-right">Total Burn</th>
+                <th className="px-5 py-3 text-right">Output Yield</th>
+                <th className="px-5 py-3 text-center">DPR State</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/60 font-mono text-zinc-300">
+              {roster.map((item) => {
+                const hourlyRate = Number(item.wage_rate_per_day) / 8;
+                const totalItemBurn = (Number(item.actual_headcount) * Number(item.wage_rate_per_day)) + (Number(item.overtime_hours) * hourlyRate * 1.5);
+                const yieldPct = Number(item.target_output_qty) > 0 ? (Number(item.achieved_output_qty) / Number(item.target_output_qty)) * 100 : 100;
+
+                return (
+                  <tr key={item.id} className="hover:bg-zinc-900/40 transition">
+                    <td className="px-5 py-3.5 font-sans font-bold text-white">
+                      {item.trade}
+                    </td>
+                    <td className="px-5 py-3.5 font-sans text-zinc-400">
+                      {item.contractor_name}
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <span className="font-bold text-white">{item.actual_headcount}</span>
+                      <span className="text-zinc-500"> / {item.planned_headcount}</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right text-zinc-400">
+                      ₹{Number(item.wage_rate_per_day).toLocaleString("en-IN")}
+                    </td>
+                    <td className="px-5 py-3.5 text-right text-amber-400">
+                      {item.overtime_hours}h
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-bold text-rose-400">
+                      ₹{Math.round(totalItemBurn).toLocaleString("en-IN")}
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-bold">
+                      <span className={yieldPct >= 100 ? "text-emerald-400" : yieldPct >= 85 ? "text-amber-400" : "text-rose-400"}>
+                        {yieldPct.toFixed(1)}%
+                      </span>
+                      <span className="text-[10px] text-zinc-500 block font-normal">
+                        {item.achieved_output_qty}/{item.target_output_qty} {item.target_output_unit}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        item.synced_to_dpr 
+                          ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50" 
+                          : "bg-amber-950 text-amber-400 border border-amber-800/50"
+                      }`}>
+                        {item.synced_to_dpr ? "Synced" : "Draft"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+==================================================
+FILE: components/site/DPRFormModal.tsx
+==================================================
+"use client";
+
+import { useMemo, useRef, useState } from "react";
+import { uploadFileToBucket } from "@/lib/storage";
+import type { SiteDailyProgressReport, SiteDprMilestoneLog } from "@/types/construction";
+
+export interface DPRFormModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (report: SiteDailyProgressReport) => void;
+}
+
+const initialMilestones: SiteDprMilestoneLog[] = [
+  { title: "Structural Works", status: "Completed", note: "Core shell slab activity completed to planned lift." },
+  { title: "MEP Rough-in", status: "In Progress", note: "Service routing continues in north wing with coordinated access." },
+  { title: "Finishes", status: "Delayed", note: "Plaster trim progress dependent on façade fix-out sequencing." },
+];
+
+export function DPRFormModal({ open, onClose, onSubmit }: DPRFormModalProps) {
+  const [weather, setWeather] = useState({ condition: "Clear", temperatureC: 32, humidityPct: 58, windKph: 12 });
+  const [manpower, setManpower] = useState({ total: 148, subcontractors: 82, supervisors: 12 });
+  const [machinery, setMachinery] = useState({ active: 14, breakdown: "Crane 02 - minor hydraulic leak" });
+  const [narrative, setNarrative] = useState("Implemented staged concrete works and maintained schedule adherence with no critical safety incidents. Coordination on MEP trimming remains in progress.");
+  const [milestones, setMilestones] = useState<SiteDprMilestoneLog[]>(initialMilestones);
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const photoCount = useMemo(() => photos.length, [photos]);
+
+  if (!open) return null;
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+
+    try {
+      const uploaded = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const result = await uploadFileToBucket("site-dpr", file, "daily-progress");
+          return result.publicUrl ?? result.path;
+        }),
+      );
+      setPhotos((current) => [...current, ...uploaded]);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const submit = () => {
+    const report: SiteDailyProgressReport = {
+      id: `dpr-${Date.now()}`,
+      projectId: "GOMTI-NAGAR-PH1-FITOUT",
+      reportDate: new Date().toISOString(),
+      weather,
+      manpower,
+      machinery: { active: machinery.active, breakdown: machinery.breakdown ? [machinery.breakdown] : [] },
+      narrative,
+      milestoneLogs: milestones,
+      photos: photos.map((url, index) => ({ id: `photo-${index + 1}`, url, uploadedAt: new Date().toISOString() })),
+      status: "Draft",
+      createdAt: new Date().toISOString(),
+    };
+
+    onSubmit(report);
+    onClose();
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(2,6,23,0.72)", display: "grid", placeItems: "center", zIndex: 80 }}>
+      <div style={{ width: "min(1100px, calc(100vw - 32px))", maxHeight: "90vh", overflowY: "auto", background: "#0b1220", border: "1px solid rgba(148,163,184,0.2)", borderRadius: 24, padding: 24, color: "#e2e8f0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          <div>
+            <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>Daily Progress Report</div>
+            <h3 style={{ margin: "8px 0 0", fontSize: 28, letterSpacing: "-0.04em" }}>Site Diary Entry</h3>
+          </div>
+          <button type="button" onClick={onClose} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.18)", color: "#f8fafc", borderRadius: 999, width: 36, height: 36, cursor: "pointer" }}>×</button>
+        </div>
+
+        <div style={{ display: "grid", gap: 20 }}>
+          <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Weather</label>
+              <input value={weather.condition} onChange={(e) => setWeather((current) => ({ ...current, condition: e.target.value }))} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Temp °C</label>
+              <input type="number" value={weather.temperatureC} onChange={(e) => setWeather((current) => ({ ...current, temperatureC: Number(e.target.value) }))} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Humidity %</label>
+              <input type="number" value={weather.humidityPct} onChange={(e) => setWeather((current) => ({ ...current, humidityPct: Number(e.target.value) }))} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Wind kph</label>
+              <input type="number" value={weather.windKph} onChange={(e) => setWeather((current) => ({ ...current, windKph: Number(e.target.value) }))} style={fieldStyle} />
+            </div>
+          </section>
+
+          <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Total manpower</label>
+              <input type="number" value={manpower.total} onChange={(e) => setManpower((current) => ({ ...current, total: Number(e.target.value) }))} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Subcontractors</label>
+              <input type="number" value={manpower.subcontractors} onChange={(e) => setManpower((current) => ({ ...current, subcontractors: Number(e.target.value) }))} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Supervisors</label>
+              <input type="number" value={manpower.supervisors} onChange={(e) => setManpower((current) => ({ ...current, supervisors: Number(e.target.value) }))} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Active machinery</label>
+              <input type="number" value={machinery.active} onChange={(e) => setMachinery((current) => ({ ...current, active: Number(e.target.value) }))} style={fieldStyle} />
+            </div>
+          </section>
+
+          <div>
+            <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Machinery breakdown</label>
+            <textarea value={machinery.breakdown} onChange={(e) => setMachinery((current) => ({ ...current, breakdown: e.target.value }))} style={{ ...fieldStyle, minHeight: 100, resize: "vertical" }} />
+          </div>
+
+          <div>
+            <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Daily progress narrative</label>
+            <textarea value={narrative} onChange={(e) => setNarrative(e.target.value)} style={{ ...fieldStyle, minHeight: 120, resize: "vertical" }} />
+          </div>
+
+          <div>
+            <label style={{ display: "block", color: "#94a3b8", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Milestone logs</label>
+            <div style={{ display: "grid", gap: 10 }}>
+              {milestones.map((milestone, index) => (
+                <div key={`${milestone.title}-${index}`} style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr 1.4fr", gap: 8 }}>
+                  <input value={milestone.title} onChange={(e) => setMilestones((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, title: e.target.value } : entry))} style={fieldStyle} />
+                  <select value={milestone.status} onChange={(e) => setMilestones((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, status: e.target.value as SiteDprMilestoneLog["status"] } : entry))} style={fieldStyle}>
+                    {(["Completed", "In Progress", "Delayed"] as const).map((status) => <option key={status} value={status}>{status}</option>)}
+                  </select>
+                  <input value={milestone.note} onChange={(e) => setMilestones((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, note: e.target.value } : entry))} style={fieldStyle} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div
+            onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => { event.preventDefault(); setDragging(false); void handleFiles(event.dataTransfer.files); }}
+            style={{ border: `1.5px dashed ${dragging ? "#7dd3fc" : "rgba(148,163,184,0.35)"}`, background: "rgba(15,23,42,0.7)", borderRadius: 18, padding: 18 }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ color: "#7dd3fc", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase" }}>Photo capture</div>
+                <div style={{ marginTop: 6, color: "#e2e8f0" }}>{photoCount} photos attached</div>
+              </div>
+              <button type="button" onClick={() => fileInputRef.current?.click()} style={{ background: "#2563eb", border: "none", color: "#eff6ff", borderRadius: 12, padding: "10px 14px", cursor: "pointer", fontWeight: 700 }}>
+                {uploading ? "Uploading…" : "Add photos"}
+              </button>
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={(event) => void handleFiles(event.target.files)} />
+            <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {photos.map((url, index) => (
+                <img key={`${url}-${index}`} src={url} alt={`Field site photo ${index + 1}`} style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 12, border: "1px solid rgba(148,163,184,0.16)" }} />
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 8 }}>
+            <button type="button" onClick={onClose} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(148,163,184,0.18)", color: "#e2e8f0", borderRadius: 12, padding: "10px 14px", cursor: "pointer" }}>Cancel</button>
+            <button type="button" onClick={submit} style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", border: "none", color: "#eff6ff", borderRadius: 12, padding: "10px 18px", cursor: "pointer", fontWeight: 700 }}>Save DPR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const fieldStyle: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(15,23,42,0.8)",
+  border: "1px solid rgba(148,163,184,0.18)",
+  borderRadius: 12,
+  padding: "10px 12px",
+  color: "#f8fafc",
+  fontSize: 14,
+};
+

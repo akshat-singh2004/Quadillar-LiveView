@@ -4,11 +4,11 @@ import { useMemo, useState } from "react";
 import { createPunchListItem } from "@/app/lib/services";
 import type { PunchListItem, VisionDefectDetection, VisionDetectionStatus } from "@/types/construction";
 
-const demoPhoto = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1400&q=85";
+const demoPhoto = "";
 const seedDetections: VisionDefectDetection[] = [
-  { id: "vision-01", projectId: "proj-1", photoUrl: demoPhoto, defectType: "Concrete Honeycombing", confidence: 96, severity: "High", location: "North Tower / Level 04 / Grid C5", boundingBox: { x: 23, y: 29, width: 22, height: 18 }, status: "Unverified AI Flag", detectedAt: "2026-08-24T08:12:00.000Z" },
-  { id: "vision-02", projectId: "proj-1", photoUrl: demoPhoto, defectType: "Missing Guardrails", confidence: 91, severity: "Critical", location: "North Tower / Level 07 / Edge B2", boundingBox: { x: 61, y: 18, width: 27, height: 25 }, status: "Unverified AI Flag", detectedAt: "2026-08-24T08:09:00.000Z" },
-  { id: "vision-03", projectId: "proj-1", photoUrl: demoPhoto, defectType: "Exposed Rebar", confidence: 88, severity: "Medium", location: "Core / Level 03 / Column C2", boundingBox: { x: 42, y: 57, width: 18, height: 24 }, status: "Converted to Snag", punchItemId: "punch-vision-03", detectedAt: "2026-08-23T16:40:00.000Z" },
+  { id: "vision-01", projectId: "GOMTI-NAGAR-PH1-FITOUT", photoUrl: demoPhoto, defectType: "Concrete Honeycombing", confidence: 96, severity: "High", location: "North Tower / Level 04 / Grid C5", boundingBox: { x: 23, y: 29, width: 22, height: 18 }, status: "Unverified AI Flag", detectedAt: "2026-08-24T08:12:00.000Z" },
+  { id: "vision-02", projectId: "GOMTI-NAGAR-PH1-FITOUT", photoUrl: demoPhoto, defectType: "Missing Guardrails", confidence: 91, severity: "Critical", location: "North Tower / Level 07 / Edge B2", boundingBox: { x: 61, y: 18, width: 27, height: 25 }, status: "Unverified AI Flag", detectedAt: "2026-08-24T08:09:00.000Z" },
+  { id: "vision-03", projectId: "GOMTI-NAGAR-PH1-FITOUT", photoUrl: demoPhoto, defectType: "Exposed Rebar", confidence: 88, severity: "Medium", location: "Core / Level 03 / Column C2", boundingBox: { x: 42, y: 57, width: 18, height: 24 }, status: "Converted to Snag", punchItemId: "punch-vision-03", detectedAt: "2026-08-23T16:40:00.000Z" },
 ];
 
 const tabs: Array<{ label: string; status?: VisionDetectionStatus }> = [{ label: "All Detections" }, { label: "Unverified AI Flags", status: "Unverified AI Flag" }, { label: "Converted to Snags", status: "Converted to Snag" }];

@@ -6,7 +6,7 @@ import type { AuditEvent, TradePackage } from "@/types/construction";
 const defaultAuditEvents: AuditEvent[] = [
   {
     id: "AUD-01",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     timestamp: "2026-08-18T08:15:00.000Z",
     role: "General Contractor (GC) / Lead Consultant",
     action: "State Promoted to GFC",
@@ -15,7 +15,7 @@ const defaultAuditEvents: AuditEvent[] = [
   },
   {
     id: "AUD-02",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     timestamp: "2026-08-17T15:45:00.000Z",
     role: "Client / Asset Owner",
     action: "Change Order Signed",
@@ -24,7 +24,7 @@ const defaultAuditEvents: AuditEvent[] = [
   },
   {
     id: "AUD-03",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     timestamp: "2026-08-16T11:20:00.000Z",
     role: "Certified Special Inspector (Third-Party Testing Agency)",
     action: "Cube Strength Test Certified",
@@ -33,7 +33,7 @@ const defaultAuditEvents: AuditEvent[] = [
   },
   {
     id: "AUD-04",
-    projectId: "proj-1",
+    projectId: "GOMTI-NAGAR-PH1-FITOUT",
     timestamp: "2026-08-15T18:00:00.000Z",
     role: "General Contractor (GC) / Lead Consultant",
     action: "RFI Escalated to RFC",

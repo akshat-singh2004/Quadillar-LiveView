@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { RoleProvider } from "@/context/RoleContext";
-import { UnifiedHeader } from "@/components/layout/UnifiedHeader";
+import { AppShell } from "@/components/layout/AppShell";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,10 +20,9 @@ export default function RootLayout({
     <html lang="en" className="dark bg-zinc-950 text-zinc-100 antialiased">
       <body className={`${inter.className} min-h-screen bg-zinc-950 text-zinc-100`}>
         <RoleProvider>
-          <UnifiedHeader />
-          <main className="pt-12 min-h-screen">
+          <AppShell>
             {children}
-          </main>
+          </AppShell>
         </RoleProvider>
       </body>
     </html>

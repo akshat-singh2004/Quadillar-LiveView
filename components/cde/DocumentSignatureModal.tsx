@@ -42,7 +42,7 @@ export function DocumentSignatureModal({ open, documentName, documentType, onClo
     const certificateHash = await sha256(`${documentName}|${documentType}|${signer.name}|${signer.credential}|${signedAt}|${position.x}|${position.y}`);
     const nextRecord: DocumentSignatureRecord = {
       id: `sig-${Date.now()}`,
-      projectId: "proj-1",
+      projectId: "GOMTI-NAGAR-PH1-FITOUT",
       documentName,
       documentType,
       signer: signer.name,

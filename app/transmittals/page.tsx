@@ -22,7 +22,7 @@ export default function TransmittalsPage() {
     let mounted = true;
 
     async function load() {
-      const data = await fetchDashboardSnapshot("proj-1");
+      const data = await fetchDashboardSnapshot("GOMTI-NAGAR-PH1-FITOUT");
       if (mounted) {
         setSnapshot(data);
         setLoading(false);

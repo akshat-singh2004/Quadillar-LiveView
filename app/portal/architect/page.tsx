@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { fetchDashboardSnapshot, subscribeToProjectRealtime, updateCdeItemState } from "@/app/lib/services";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  fetchDashboardSnapshot,
+  subscribeToProjectRealtime,
+  updateCdeItemState,
+} from "@/app/lib/services";
 import { getArchitectView } from "@/lib/auth/portalGate";
 import { exportProjectSummaryCsv, exportProjectSummaryPdf } from "@/lib/export/summaryExporter";
 import { TelemetryErrorBoundary } from "@/components/analytics/TelemetryErrorBoundary";
@@ -11,6 +15,17 @@ import { QualityGovernanceTelemetry } from "@/components/quality/QualityGovernan
 import { MeasurementItpWidget } from "@/components/dashboard/MeasurementItpWidget";
 import { BackchargeVrWidget } from "@/components/dashboard/BackchargeVrWidget";
 import { QualityTelemetryWidget } from "@/components/dashboard/QualityTelemetryWidget";
+import {
+  Layers,
+  FileSpreadsheet,
+  Download,
+  CheckCircle2,
+  AlertTriangle,
+  Send,
+  CloudSun,
+  ShieldCheck,
+  Building2,
+} from "lucide-react";
 
 export default function ArchitectPortalPage() {
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
@@ -18,7 +33,7 @@ export default function ArchitectPortalPage() {
   useEffect(() => {
     let mounted = true;
     async function load() {
-      const data = await fetchDashboardSnapshot("proj-1");
+      const data = await fetchDashboardSnapshot("GOMTI-NAGAR-PH1-FITOUT");
       if (mounted) setSnapshot(data);
     }
     void load();
@@ -27,154 +42,215 @@ export default function ArchitectPortalPage() {
     };
   }, []);
 
-  useEffect(() => subscribeToProjectRealtime("proj-1", {
-    onCdeChange: (payload) => setSnapshot((current) => current ? { ...current, cdeItems: current.cdeItems.map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) } : current),
-    onRfiChange: (payload) => setSnapshot((current) => current ? { ...current, rfis: current.rfis.map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) } : current),
-    onChangeOrderChange: (payload) => setSnapshot((current) => current ? { ...current, changeOrders: current.changeOrders.map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) } : current),
-    onWirChange: (payload) => setSnapshot((current) => current ? { ...current, workInspectionRequests: payload.eventType === "DELETE" ? (current.workInspectionRequests ?? []).filter((item) => item.id !== payload.old.id) : (current.workInspectionRequests ?? []).some((item) => item.id === payload.new.id) ? (current.workInspectionRequests ?? []).map((item) => item.id === payload.new.id ? { ...item, ...payload.new } : item) : [...(current.workInspectionRequests ?? []), payload.new as WorkInspectionRequest] } : current),
-  }), []);
+  useEffect(() => {
+    return subscribeToProjectRealtime("GOMTI-NAGAR-PH1-FITOUT", {
+      onCdeChange: (payload: any) =>
+        setSnapshot((curr) =>
+          curr
+            ? { ...curr, cdeItems: curr.cdeItems.map((i) => (i.id === payload.new.id ? { ...i, ...payload.new } : i)) }
+            : curr
+        ),
+      onRfiChange: (payload: any) =>
+        setSnapshot((curr) =>
+          curr
+            ? { ...curr, rfis: curr.rfis.map((i) => (i.id === payload.new.id ? { ...i, ...payload.new } : i)) }
+            : curr
+        ),
+      onChangeOrderChange: (payload: any) =>
+        setSnapshot((curr) =>
+          curr
+            ? {
+                ...curr,
+                changeOrders: curr.changeOrders.map((i) => (i.id === payload.new.id ? { ...i, ...payload.new } : i)),
+              }
+            : curr
+        ),
+      onWirChange: (payload: any) =>
+        setSnapshot((curr) =>
+          curr
+            ? {
+                ...curr,
+                workInspectionRequests:
+                  payload.eventType === "DELETE"
+                    ? (curr.workInspectionRequests ?? []).filter((i) => i.id !== payload.old.id)
+                    : (curr.workInspectionRequests ?? []).some((i) => i.id === payload.new.id)
+                    ? (curr.workInspectionRequests ?? []).map((i) => (i.id === payload.new.id ? { ...i, ...payload.new } : i))
+                    : [...(curr.workInspectionRequests ?? []), payload.new as WorkInspectionRequest],
+              }
+            : curr
+        ),
+    });
+  }, []);
 
   const view = useMemo(() => (snapshot ? getArchitectView(snapshot) : null), [snapshot]);
 
   const publishGfc = async (item: CdeItem) => {
     if (!snapshot) return;
-    const updated = await updateCdeItemState(item.id, "Published", { status: "Approved", approved: true }, { role: "architect", name: "Architect Portal" });
-    if (updated) setSnapshot((current) => current ? { ...current, cdeItems: current.cdeItems.map((entry) => entry.id === updated.id ? updated : entry) } : current);
+    const updated = await updateCdeItemState(
+      item.id,
+      "Published",
+      { status: "Approved", approved: true },
+      { role: "architect", name: "Architect Portal" }
+    );
+    if (updated) {
+      setSnapshot((curr) =>
+        curr ? { ...curr, cdeItems: curr.cdeItems.map((entry) => (entry.id === updated.id ? updated : entry)) } : curr
+      );
+    }
   };
 
-  const pendingInspections = (snapshot?.workInspectionRequests ?? []).filter((item) => item.status === "Pending Inspection");
+  const pendingInspections = (snapshot?.workInspectionRequests ?? []).filter(
+    (item) => item.status === "Pending Inspection"
+  );
+
   const clashHealth = useMemo(() => {
     const total = Math.max(1, (snapshot?.bimClashes ?? []).length || 1);
     const resolved = (snapshot?.bimClashes ?? []).filter((item) => item.status === "Resolved").length;
     return { health: Math.round((resolved / total) * 100), open: total - resolved };
   }, [snapshot?.bimClashes]);
-  const weatherStatus = useMemo(() => {
-    const wind = 42;
-    const rain = 6.8;
-    if (wind >= 38 || rain >= 5) return { label: "Full Stoppage", color: "#ef4444" };
-    if (wind >= 30 || rain >= 3) return { label: "Restricted Weather Ops", color: "#f59e0b" };
-    return { label: "Normal Site Ops", color: "#22c55e" };
-  }, []);
 
-  if (!view) return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#050816", color: "#e2e8f0" }}>Loading design governance portal…</main>;
-
-  const portalContent = (
-    <main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}>
-      <div style={{ maxWidth: 1360, margin: "0 auto" }}>
-        <header style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>Architect / Consultant</div>
-            <h1 style={{ margin: 0, fontSize: 38, letterSpacing: "-0.04em" }}>Design Governance Portal</h1>
-          </div>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button type="button" onClick={() => exportProjectSummaryCsv({ projectName: "Quadillar Architect Summary", drawingRevisions: snapshot?.cdeItems ?? [], rfiLogs: snapshot?.rfis ?? [], changeOrders: snapshot?.changeOrders ?? [], fileName: "architect-summary" })} style={{ background: "#0ea5e9", color: "white", border: "none", borderRadius: 12, padding: "10px 16px", fontWeight: 700, cursor: "pointer" }}>Export CSV</button>
-            <button type="button" onClick={() => exportProjectSummaryPdf({ projectName: "Quadillar Architect Summary", drawingRevisions: snapshot?.cdeItems ?? [], rfiLogs: snapshot?.rfis ?? [], changeOrders: snapshot?.changeOrders ?? [], fileName: "architect-summary" })} style={{ background: "#22c55e", color: "#052e16", border: "none", borderRadius: 12, padding: "10px 16px", fontWeight: 700, cursor: "pointer" }}>Download PDF</button>
-          </div>
-        </header>
-
-        <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 22 }}>
-          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
-            <div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase" }}>Design Coordination Clash Health</div>
-            <div style={{ marginTop: 12, fontSize: 38, fontWeight: 700, color: "#67e8f9" }}>{clashHealth.health}%</div>
-            <div style={{ marginTop: 12, height: 10, borderRadius: 999, background: "rgba(148,163,184,0.12)", overflow: "hidden" }}><div style={{ width: `${clashHealth.health}%`, height: "100%", background: "linear-gradient(90deg, #22d3ee, #34d399)" }} /></div>
-            <div style={{ marginTop: 12, color: "#cbd5e1" }}>{clashHealth.open} clashes remain in active review.</div>
-          </div>
-
-          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
-            <div style={{ color: "#7dd3fc", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase" }}>Site Operating Weather Condition</div>
-            <div style={{ marginTop: 12, fontSize: 28, fontWeight: 700, color: weatherStatus.color }}>{weatherStatus.label}</div>
-            <div style={{ marginTop: 12, color: "#cbd5e1" }}>Wind 42 km/h • Rain 6.8 mm/hr</div>
-          </div>
-        </section>
-
-        <VerificationTelemetry />
-        <QualityGovernanceTelemetry />
-        <MeasurementItpWidget />
-        <BackchargeVrWidget />
-        <QualityTelemetryWidget />
-
-        <section style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 20, marginBottom: 22 }}>
-          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
-            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>CDE State Promotion Center</h2>
-            <div style={{ display: "grid", gap: 12 }}>
-              {view.cdeItems.map((item) => (
-                <div key={item.id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                    <div>
-                      <div style={{ fontWeight: 700 }}>{item.title}</div>
-                      <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>{item.container}</div>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span style={{ background: item.state === "Published" ? "#dcfce7" : "#fef3c7", color: item.state === "Published" ? "#166534" : "#b45309", borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 700 }}>{item.state}</span>
-                      <button type="button" disabled={item.state === "Published"} onClick={() => void publishGfc(item)} style={{ background: "#2563eb", color: "white", border: "none", borderRadius: 10, padding: "8px 12px", fontWeight: 700, cursor: item.state === "Published" ? "not-allowed" : "pointer", opacity: item.state === "Published" ? 0.5 : 1 }}>Approve to GFC</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
-            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Active Inquiries (RFIs)</h2>
-            <div style={{ display: "grid", gap: 12 }}>
-              {view.activeRfis.map((rfi) => (
-                <div key={rfi.id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
-                  <div style={{ fontWeight: 700 }}>{rfi.title}</div>
-                  <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>{rfi.ballInCourt} / {rfi.currentOwner}</div>
-                  <div style={{ marginTop: 10, color: "#dbeafe", fontSize: 12 }}>SLA: {rfi.slaHoursRemaining ?? 0}h remaining</div>
-                  <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-                    <button type="button" style={{ background: "#1d4ed8", color: "white", border: "none", borderRadius: 10, padding: "8px 12px", fontWeight: 700, cursor: "pointer" }}>Escalate to RFC</button>
-                    <button type="button" style={{ background: "transparent", color: "#e2e8f0", border: "1px solid #334155", borderRadius: 10, padding: "8px 12px", fontWeight: 700, cursor: "pointer" }}>Respond</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20, marginBottom: 22 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}><h2 style={{ margin: 0, fontSize: 22 }}>Pending Inspections Queue</h2><span style={{ color: "#fde68a", fontSize: 12 }}>{pendingInspections.length} awaiting review</span></div>
-          <div style={{ display: "grid", gap: 10, marginTop: 14 }}>{pendingInspections.filter((item) => item.discipline === "Concrete" || item.discipline === "Reinforcement").map((item) => <div key={item.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", background: "#111827", borderRadius: 12, padding: 12 }}><div><div style={{ fontWeight: 700 }}>{item.wirNumber} · {item.title}</div><div style={{ color: "#94a3b8", fontSize: 12, marginTop: 5 }}>{item.targetGridLocation} / {item.discipline}</div></div><span style={{ color: "#fca5a5", fontSize: 11, fontWeight: 700 }}>URGENT PRE-POUR</span></div>)}</div>
-        </section>
-
-        <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
-            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Submittal & Sample Queue</h2>
-            <div style={{ display: "grid", gap: 12 }}>
-              {view.submittals.map((submittal) => (
-                <div key={submittal.id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                    <div style={{ fontWeight: 700 }}>{submittal.title}</div>
-                    <span style={{ background: "#fef3c7", color: "#b45309", borderRadius: 999, padding: "6px 8px", fontSize: 11, fontWeight: 700 }}>{submittal.actionCode ?? "Pending"}</span>
-                  </div>
-                  <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>Trade: {submittal.trade}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 18, padding: 20 }}>
-            <h2 style={{ margin: "0 0 18px", fontSize: 22 }}>Milestone Quality Certifications</h2>
-            <div style={{ display: "grid", gap: 12 }}>
-              {view.milestoneRules.map((rule) => (
-                <div key={rule.rule_id} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 14, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                    <div style={{ fontWeight: 700 }}>{rule.verification_type.replace("_", " ")}</div>
-                    <span style={{ color: rule.is_verified ? "#4ade80" : "#fbbf24", fontSize: 11, fontWeight: 700 }}>{rule.is_verified ? "Certified" : "Open"}</span>
-                  </div>
-                  <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>{rule.description}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
-  );
+  if (!view) {
+    return (
+      <main className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center font-mono text-xs">
+        Loading Design Governance Portal...
+      </main>
+    );
+  }
 
   return (
-    <TelemetryErrorBoundary fallback={<main style={{ minHeight: "100vh", background: "#050816", color: "#e2e8f0", padding: 28 }}><div style={{ maxWidth: 720, margin: "0 auto", border: "1px solid rgba(148,163,184,0.2)", borderRadius: 18, background: "rgba(15,23,42,0.9)", padding: 24 }}>The design governance portal is unavailable right now. Please refresh or retry when connectivity is restored.</div></main>}>
-      {portalContent}
+    <TelemetryErrorBoundary
+      fallback={
+        <main className="min-h-screen bg-zinc-950 text-zinc-100 p-8 font-mono text-xs">
+          <div className="max-w-2xl mx-auto border border-zinc-800 bg-zinc-900 p-6 rounded-2xl">
+            Design governance portal unavailable. Check telemetry connection.
+          </div>
+        </main>
+      }
+    >
+      <main className="min-h-screen bg-zinc-950 text-zinc-100 p-6 sm:p-8 font-mono text-xs select-none">
+        <div className="max-w-[1400px] mx-auto space-y-6">
+          {/* HEADER */}
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-800 pb-5">
+            <div>
+              <div className="text-[10px] text-cyan-400 uppercase tracking-widest font-bold mb-1 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Principal Consultant / Architect Portal</span>
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
+                Design Governance &amp; CDE State Control
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() =>
+                  exportProjectSummaryCsv({
+                    projectName: "Quadillar Architect Summary",
+                    drawingRevisions: snapshot?.cdeItems ?? [],
+                    rfiLogs: snapshot?.rfis ?? [],
+                    changeOrders: snapshot?.changeOrders ?? [],
+                    fileName: "architect-summary",
+                  })
+                }
+                className="px-3.5 py-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 font-bold uppercase rounded text-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Export CSV</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  exportProjectSummaryPdf({
+                    projectName: "Quadillar Architect Summary",
+                    drawingRevisions: snapshot?.cdeItems ?? [],
+                    rfiLogs: snapshot?.rfis ?? [],
+                    changeOrders: snapshot?.changeOrders ?? [],
+                    fileName: "architect-summary",
+                  })
+                }
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase rounded text-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download PDF</span>
+              </button>
+            </div>
+          </header>
+
+          {/* VITAL METRICS */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-5 space-y-2">
+              <span className="text-[10px] text-cyan-400 uppercase font-bold tracking-widest block">
+                BIM Clash Resolution Index
+              </span>
+              <div className="text-3xl font-bold text-white tabular-nums">{clashHealth.health}%</div>
+              <div className="h-1.5 w-full bg-zinc-850 rounded-full overflow-hidden">
+                <div style={{ width: `${clashHealth.health}%` }} className="h-full bg-cyan-500 rounded-full" />
+              </div>
+              <div className="text-[11px] text-zinc-500">{clashHealth.open} clashes under coordination.</div>
+            </div>
+
+            <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-5 space-y-2">
+              <span className="text-[10px] text-amber-400 uppercase font-bold tracking-widest block">
+                Site Operating Weather Envelope
+              </span>
+              <div className="text-2xl font-bold text-emerald-400">Normal Site Ops Cleared</div>
+              <div className="text-[11px] text-zinc-500">Telemetry: Wind 14 km/h • Rain 0.0 mm/hr</div>
+            </div>
+          </section>
+
+          <VerificationTelemetry />
+          <QualityGovernanceTelemetry />
+          <MeasurementItpWidget />
+          <BackchargeVrWidget />
+          <QualityTelemetryWidget />
+
+          {/* CDE PROMOTION & ACTIVE RFIs */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <div className="lg:col-span-7 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3.5">
+              <h2 className="text-sm font-bold text-white uppercase">CDE State Promotion Center</h2>
+              <div className="space-y-3">
+                {view.cdeItems.map((item) => (
+                  <div key={item.id} className="p-3.5 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-bold text-white">{item.title}</div>
+                      <div className="text-[10px] text-zinc-500 mt-0.5">{item.container}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-zinc-900 border border-zinc-700 text-zinc-300">
+                        {item.state}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={item.state === "Published"}
+                        onClick={() => void publishGfc(item)}
+                        className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-bold uppercase text-[10px] disabled:opacity-50"
+                      >
+                        Approve to GFC
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3.5">
+              <h2 className="text-sm font-bold text-white uppercase">Active Inquiries (RFIs)</h2>
+              <div className="space-y-3">
+                {view.activeRfis.map((rfi) => (
+                  <div key={rfi.id} className="p-3.5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-2">
+                    <div className="font-bold text-white">{rfi.title}</div>
+                    <div className="text-[11px] text-zinc-400">
+                      Pending with: <strong className="text-cyan-400">{rfi.ballInCourt}</strong> ({rfi.currentOwner})
+                    </div>
+                    <div className="text-[10px] text-zinc-500">SLA: {rfi.slaHoursRemaining ?? 0}h remaining</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </TelemetryErrorBoundary>
   );
 }
