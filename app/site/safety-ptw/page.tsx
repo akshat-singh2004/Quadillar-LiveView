@@ -33,32 +33,8 @@ export interface PTWClearanceRecord {
   clearance_status: string;
 }
 
-const FALLBACK_CLEARANCES: PTWClearanceRecord[] = [
-  {
-    id: "clr-fb-1",
-    project_id: "PRJ-01-LIVE",
-    clearance_code: "CLR-LOTO-089",
-    permit_ref: "PTW-2026-082",
-    work_zone: "Basement 2 - Main Chiller Switchgear",
-    activity_type: "LOTO_ELECTRICAL_ISOLATION",
-    atmospheric_oxygen_pct: 20.9,
-    gas_test_cleared: true,
-    loto_padlock_tag_no: "LOTO-TAG-4412",
-    clearance_status: "AUTHORIZED_ACTIVE",
-  },
-  {
-    id: "clr-fb-2",
-    project_id: "PRJ-01-LIVE",
-    clearance_code: "CLR-O2-090",
-    permit_ref: "PTW-2026-083",
-    work_zone: "Underground Storm Drain Tank Zone 3",
-    activity_type: "CONFINED_SPACE_O2_ENTRY",
-    atmospheric_oxygen_pct: 20.8,
-    gas_test_cleared: true,
-    loto_padlock_tag_no: "LOTO-VALVE-1109",
-    clearance_status: "AUTHORIZED_ACTIVE",
-  },
-];
+const FALLBACK_CLEARANCES: PTWClearanceRecord[] = [];
+const fallbackClearances = FALLBACK_CLEARANCES;
 
 export default function SafetyPtwClearancePage() {
   const { project } = useActiveRole();

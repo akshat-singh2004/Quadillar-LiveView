@@ -17,7 +17,7 @@ export default async function RERAPage() {
   const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectCode = projectRow?.project_code || "GOMTI-PH1";
   const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
-  const contractValue = Number(projectRow?.contract_value) || 450000000;
+  const contractValue = projectRow?.contract_value != null ? Number(projectRow.contract_value) : 0;
 
   // 2. Compute Real Physical Progress & Expenditure from Database
   const [billRes, artifactRes] = await Promise.all([
@@ -36,9 +36,7 @@ export default async function RERAPage() {
     0
   );
 
-  const computedProgressPct = contractValue > 0
-    ? Math.min(100, Math.max(15, Number(((totalBilledWork / contractValue) * 100).toFixed(1))))
-    : 89.6;
+  const computedProgressPct = contractValue > 0 ? Math.min(100, Math.max(0, Number(((totalBilledWork / contractValue) * 100).toFixed(1)))) : 0;
 
   // 3. Map Real Statutory Artifacts with Type-Safe Cast
   const artifacts = artifactRes.data || [];
@@ -56,44 +54,7 @@ export default async function RERAPage() {
           status: ("Active" as unknown as StatutoryApproval["status"]),
           requiredRenewal: false,
         }))
-      : [
-          {
-            id: "app-01",
-            projectId,
-            approvalType: ("Municipal Building Sanction" as unknown as StatutoryApproval["approvalType"]),
-            authority: "LDA (Lucknow Development Authority)",
-            referenceNumber: "LDA/BP/2026/894",
-            issuedAt: "2026-01-15",
-            validUntil: "2028-12-31",
-            progressPercent: 92,
-            status: ("Active" as unknown as StatutoryApproval["status"]),
-            requiredRenewal: false,
-          },
-          {
-            id: "app-02",
-            projectId,
-            approvalType: ("Fire Safety Provisional NOC" as unknown as StatutoryApproval["approvalType"]),
-            authority: "Chief Fire Officer, Lucknow Fire Service",
-            referenceNumber: "FS/NOC/LKO-1044",
-            issuedAt: "2026-02-10",
-            validUntil: "2027-06-30",
-            progressPercent: 88,
-            status: ("Active" as unknown as StatutoryApproval["status"]),
-            requiredRenewal: true,
-          },
-          {
-            id: "app-03",
-            projectId,
-            approvalType: ("State Environmental Clearance" as unknown as StatutoryApproval["approvalType"]),
-            authority: "SEIAA Uttar Pradesh",
-            referenceNumber: "UP/SEIAA/EC/2025/312",
-            issuedAt: "2025-08-20",
-            validUntil: "2030-03-31",
-            progressPercent: 95,
-            status: ("Active" as unknown as StatutoryApproval["status"]),
-            requiredRenewal: false,
-          },
-        ];
+      : [];
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 font-mono text-xs select-none">
@@ -103,7 +64,7 @@ export default async function RERAPage() {
         projectCode={projectCode}
         quarterLabel="Q3 FY2026-27"
         actualProgress={computedProgressPct}
-        constructionCostIncurred={totalBilledWork || 45000000}
+        constructionCostIncurred={totalBilledWork ?? 0}
         contractValue={contractValue}
       />
     </div>

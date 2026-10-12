@@ -51,7 +51,7 @@ export default function CanonicalEvmScurvePage() {
   const [evVal, setEvVal] = useState('');
   const [acVal, setAcVal] = useState('');
 
-  const bacValue = Number((project as any)?.contract_value || 450000000);
+  const bacValue = (project as any)?.contract_value != null ? Number((project as any).contract_value) : 0;
 
   const loadEvmData = useCallback(async () => {
     setLoading(true);

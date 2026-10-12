@@ -71,7 +71,7 @@ export default async function ScheduleGanttPage() {
 
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
           <span className="text-[10px] text-zinc-500 uppercase block font-bold">Statutory Defense</span>
-          <div className="text-xl font-bold text-emerald-400 mt-1 tabular-nums">100% Notarized</div>
+          <div className="text-xl font-bold text-emerald-400 mt-1 tabular-nums">{activities && activities.length > 0 ? "100% Notarized" : "0% (No Activities)"}</div>
           <span className="text-[10px] text-zinc-500 block mt-0.5">Section 65B certified</span>
         </div>
       </div>

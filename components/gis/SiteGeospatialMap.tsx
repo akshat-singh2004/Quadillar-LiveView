@@ -3,18 +3,9 @@
 import { useState } from "react";
 import type { GisFeatureKind, GisMapFeature, GisZoneTelemetry } from "@/types/construction";
 
-const features: GisMapFeature[] = [
-  { id: "plot", projectId: "GOMTI-NAGAR-PH1-FITOUT", kind: "Plot Boundary", label: "Plot 01 boundary", coordinates: [{ x: 7, y: 8 }, { x: 91, y: 8 }, { x: 95, y: 52 }, { x: 11, y: 56 }], fillColor: "#38bdf822", strokeColor: "#67e8f9" },
-  { id: "north", projectId: "GOMTI-NAGAR-PH1-FITOUT", kind: "Building Footprint", label: "North Tower footprint", coordinates: [{ x: 25, y: 14 }, { x: 50, y: 13 }, { x: 52, y: 35 }, { x: 26, y: 36 }], fillColor: "#f8fafc33", strokeColor: "#f8fafc" },
-  { id: "south", projectId: "GOMTI-NAGAR-PH1-FITOUT", kind: "Building Footprint", label: "South podium footprint", coordinates: [{ x: 58, y: 25 }, { x: 83, y: 23 }, { x: 85, y: 46 }, { x: 59, y: 47 }], fillColor: "#f8fafc33", strokeColor: "#f8fafc" },
-  { id: "crane", projectId: "GOMTI-NAGAR-PH1-FITOUT", kind: "Crane Swing Radius", label: "Tower crane 02 swing radius", coordinates: [{ x: 63, y: 17 }, { x: 69, y: 16 }, { x: 75, y: 21 }, { x: 77, y: 29 }, { x: 74, y: 36 }, { x: 67, y: 37 }, { x: 61, y: 31 }, { x: 59, y: 23 }], fillColor: "#f59e0b2b", strokeColor: "#fbbf24", strokeDasharray: "2 1" },
-];
+const features: GisMapFeature[] = [];
 
-const zones: GisZoneTelemetry[] = [
-  { id: "zone-a", projectId: "GOMTI-NAGAR-PH1-FITOUT", zoneName: "North Tower / excavation", coordinates: { x: 18, y: 25 }, activeWorkers: 32, openPunchListItems: 4, equipment: ["EXC-07", "DZR-03"], status: "Watch" },
-  { id: "zone-b", projectId: "GOMTI-NAGAR-PH1-FITOUT", zoneName: "Core shell / Grid C", coordinates: { x: 55, y: 14 }, activeWorkers: 24, openPunchListItems: 1, equipment: ["CRN-02"], status: "Normal" },
-  { id: "zone-c", projectId: "GOMTI-NAGAR-PH1-FITOUT", zoneName: "Temporary power yard", coordinates: { x: 82, y: 48 }, activeWorkers: 8, openPunchListItems: 0, equipment: ["GEN-11"], status: "Normal" },
-];
+const zones: any[] = [];
 
 const kindColors: Record<GisFeatureKind, string> = { "Plot Boundary": "#67e8f9", "Building Footprint": "#f8fafc", "Crane Swing Radius": "#fbbf24" };
 
@@ -24,7 +15,17 @@ export function SiteGeospatialMap() {
   const [droneVisible, setDroneVisible] = useState(true);
 
   return <section style={panelStyle}><div style={toolbarStyle}><div><div style={eyebrowStyle}>GIS / reality capture</div><h2 style={titleStyle}>Site boundary & drone overlay</h2></div><div style={controlsStyle}><label style={controlLabel}>Drone opacity <input type="range" min="0" max="1" step="0.05" value={droneOpacity} onChange={(event) => setDroneOpacity(Number(event.target.value))} /></label><button type="button" onClick={() => setDroneVisible((current) => !current)} style={toggleButton}>{droneVisible ? "Hide orthomosaic" : "Show orthomosaic"}</button></div></div>
-    <div style={mapStyle}><div style={{ ...droneStyle, opacity: droneVisible ? droneOpacity : 0 }} /><svg viewBox="0 0 100 60" role="img" aria-label="Satellite site map with plot, building, crane and telemetry overlays" style={svgStyle}>{features.map((feature) => <polygon key={feature.id} points={feature.coordinates.map((point) => `${point.x},${point.y}`).join(" ")} fill={feature.fillColor} stroke={feature.strokeColor} strokeWidth={feature.kind === "Crane Swing Radius" ? 0.6 : 0.45} strokeDasharray={feature.strokeDasharray} />)}{zones.map((zone) => <g key={zone.id} onMouseEnter={() => setSelectedZone(zone)} onFocus={() => setSelectedZone(zone)} tabIndex={0} role="button" aria-label={`Telemetry for ${zone.zoneName}`}><circle cx={zone.coordinates.x} cy={zone.coordinates.y} r="2.2" fill={zone.status === "Watch" ? "#fbbf24" : "#34d399"} stroke="#020617" strokeWidth=".7" /><circle cx={zone.coordinates.x} cy={zone.coordinates.y} r="4" fill="none" stroke={zone.status === "Watch" ? "#fbbf24" : "#34d399"} strokeWidth=".35" opacity=".7" /></g>)}</svg>{selectedZone && <aside style={telemetryCard} onMouseLeave={() => setSelectedZone(null)}><div style={eyebrowStyle}>{selectedZone.status} telemetry</div><h3 style={{ margin: "7px 0 12px", fontSize: 18 }}>{selectedZone.zoneName}</h3><div style={detailGrid}><span>Active workers <strong>{selectedZone.activeWorkers}</strong></span><span>Open punch items <strong>{selectedZone.openPunchListItems}</strong></span><span>Equipment <strong>{selectedZone.equipment.join(", ")}</strong></span></div></aside>}</div>
+    <div style={mapStyle}><div style={{ ...droneStyle, opacity: droneVisible ? droneOpacity : 0 }} /><svg viewBox="0 0 100 60" role="img" aria-label="Satellite site map with plot, building, crane and telemetry overlays" style={svgStyle}>{features.length === 0 && zones.length === 0 && (
+        <g>
+          <line x1="0" y1="30" x2="100" y2="30" stroke="#1e293b" strokeWidth="0.3" strokeDasharray="2 2" />
+          <line x1="50" y1="0" x2="50" y2="60" stroke="#1e293b" strokeWidth="0.3" strokeDasharray="2 2" />
+          <circle cx="50" cy="30" r="14" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeDasharray="2 2" />
+          <circle cx="50" cy="30" r="24" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeDasharray="2 2" />
+          <text x="50" y="31" textAnchor="middle" fill="#64748b" fontSize="2.8" fontWeight="600" letterSpacing="0.08em">
+            NO ACTIVE GEOFENCES OR TELEMETRY PINS
+          </text>
+        </g>
+      )}{features.map((feature) => <polygon key={feature.id} points={feature.coordinates.map((point) => `${point.x},${point.y}`).join(" ")} fill={feature.fillColor} stroke={feature.strokeColor} strokeWidth={feature.kind === "Crane Swing Radius" ? 0.6 : 0.45} strokeDasharray={feature.strokeDasharray} />)}{zones.map((zone) => <g key={zone.id} onMouseEnter={() => setSelectedZone(zone)} onFocus={() => setSelectedZone(zone)} tabIndex={0} role="button" aria-label={`Telemetry for ${zone.zoneName}`}><circle cx={zone.coordinates.x} cy={zone.coordinates.y} r="2.2" fill={zone.status === "Watch" ? "#fbbf24" : "#34d399"} stroke="#020617" strokeWidth=".7" /><circle cx={zone.coordinates.x} cy={zone.coordinates.y} r="4" fill="none" stroke={zone.status === "Watch" ? "#fbbf24" : "#34d399"} strokeWidth=".35" opacity=".7" /></g>)}</svg>{selectedZone && <aside style={telemetryCard} onMouseLeave={() => setSelectedZone(null)}><div style={eyebrowStyle}>{selectedZone.status} telemetry</div><h3 style={{ margin: "7px 0 12px", fontSize: 18 }}>{selectedZone.zoneName}</h3><div style={detailGrid}><span>Active workers <strong>{selectedZone.activeWorkers}</strong></span><span>Open punch items <strong>{selectedZone.openPunchListItems}</strong></span><span>Equipment <strong>{selectedZone.equipment.join(", ")}</strong></span></div></aside>}</div>
     <div style={legendStyle}>{Object.entries(kindColors).map(([kind, color]) => <span key={kind}><i style={{ background: color }} />{kind}</span>)}<span><i style={{ background: "#34d399" }} />Live telemetry pin</span></div>
   </section>;
 }

@@ -261,7 +261,7 @@ export function LaborRosterTable({ initialRoster = [], projectId: propProjectId,
             <Activity className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="mt-2 text-2xl font-extrabold font-mono text-emerald-400">
-            {metrics.avgYield.toFixed(1)}%
+            {metrics.totalPlanned > 0 || metrics.totalActual > 0 ? `${metrics.avgYield.toFixed(1)}%` : "0.0%"}
           </div>
           <div className="text-[11px] text-zinc-400 mt-1">
             Measured output vs planned gang target

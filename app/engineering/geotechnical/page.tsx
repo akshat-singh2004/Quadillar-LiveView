@@ -28,7 +28,7 @@ export default async function GeotechnicalPage() {
     time: new Date(r.recorded_at || r.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
     wallDeflectionMm: Number(r.wall_deflection_mm || 0),
     prismSettlementMm: Number(r.prism_settlement_mm || 0),
-    piezometerLevelM: Number(r.piezometer_level_m || 2.6),
+    piezometerLevelM: r.piezometer_level_m != null ? Number(r.piezometer_level_m) : 0,
   }));
 
   return (

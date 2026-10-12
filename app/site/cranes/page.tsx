@@ -93,7 +93,7 @@ export default function CraneSlewRadarPage() {
       if (error || !data || data.length === 0) {
         setIsFallbackMode(true);
         setCranes(FALLBACK_CRANES);
-        setSelectedCrane(FALLBACK_CRANES[0]);
+        setSelectedCrane(null as any);
       } else {
         setIsFallbackMode(false);
         setCranes(data);
@@ -102,7 +102,7 @@ export default function CraneSlewRadarPage() {
     } catch {
       setIsFallbackMode(true);
       setCranes(FALLBACK_CRANES);
-      setSelectedCrane(FALLBACK_CRANES[0]);
+      setSelectedCrane(null as any);
     } finally {
       setLoading(false);
     }

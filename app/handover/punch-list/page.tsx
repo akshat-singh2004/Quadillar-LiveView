@@ -147,6 +147,10 @@ export default function PunchListAndHandoverPage() {
 
   const handleIssueTakingOverCertificate = async () => {
     const openCount = items.filter((i) => i.status !== "ARCHITECT_VERIFIED").length;
+    if (items.length === 0) {
+      setErrorMsg("Cannot issue Taking-Over Certificate: Zero handover snags or completion inspections recorded.");
+      return;
+    }
     if (openCount > 0) {
       setErrorMsg(`Cannot issue Taking-Over Certificate: ${openCount} snags remain unverified.`);
       return;
@@ -219,7 +223,7 @@ export default function PunchListAndHandoverPage() {
             <div className="bg-zinc-900 border border-zinc-800 p-2.5 font-mono text-xs">
               <span className="text-[10px] text-zinc-500 block uppercase">Closeout Verification Rate</span>
               <strong className="text-emerald-400 text-sm">
-                {totalItems > 0 ? Math.round((verifiedCount / totalItems) * 100) : 100}% Cleared
+                {totalItems > 0 ? `${Math.round((verifiedCount / totalItems) * 100)}% Cleared` : "NIL / PENDING INSPECTION"}
               </strong>
             </div>
           </div>
@@ -270,7 +274,7 @@ export default function PunchListAndHandoverPage() {
             <button
               type="button"
               onClick={handleIssueTakingOverCertificate}
-              disabled={submitting || openCount > 0 || totalItems === 0}
+              disabled={submitting || openCount > 0 || totalItems === 0 || totalItems === 0}
               className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold uppercase tracking-wider transition disabled:opacity-40"
             >
               <span>{submitting ? "Signing..." : "Issue Taking-Over Certificate"}</span>

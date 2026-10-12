@@ -24,6 +24,7 @@ export function CouncilStatusMatrix({ initialReport, projectId = "GOMTI-NAGAR-PH
   };
 
   const activeHolds = report?.verdicts.filter((v) => v.status === "ACTIVE_HOLD").length || 0;
+  const standbyCount = report?.verdicts.filter((v) => v.status === "STANDBY" || v.status === "STANDBY_NO_DATA").length || 0;
 
   return (
     <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 font-mono text-xs select-none space-y-4">
@@ -57,7 +58,7 @@ export function CouncilStatusMatrix({ initialReport, projectId = "GOMTI-NAGAR-PH
             ) : (
               <>
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>All 11 Governors Clear</span>
+                <span>{standbyCount > 0 ? `All 11 Clear (${standbyCount} Standby)` : "All 11 Governors Clear"}</span>
               </>
             )}
           </span>
@@ -78,7 +79,8 @@ export function CouncilStatusMatrix({ initialReport, projectId = "GOMTI-NAGAR-PH
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 pt-1">
         {(report?.verdicts || []).map((agent) => {
           const isHold = agent.status === "ACTIVE_HOLD";
-          const isStandby = agent.status === "STANDBY_NO_DATA";
+          const isStandby = agent.status === "STANDBY" || agent.status === "STANDBY_NO_DATA";
+          const isArmed = agent.status === "ARMED";
 
           return (
             <div
@@ -99,7 +101,9 @@ export function CouncilStatusMatrix({ initialReport, projectId = "GOMTI-NAGAR-PH
                   isHold
                     ? "bg-rose-950 text-rose-400 border border-rose-800"
                     : isStandby
-                    ? "bg-zinc-900 text-zinc-500 border border-zinc-800"
+                    ? "bg-amber-950/70 text-amber-400 border border-amber-800/80"
+                    : isArmed
+                    ? "bg-cyan-950 text-cyan-300 border border-cyan-800"
                     : "bg-emerald-950 text-emerald-400 border border-emerald-800"
                 }`}>
                   {agent.status}
@@ -107,10 +111,10 @@ export function CouncilStatusMatrix({ initialReport, projectId = "GOMTI-NAGAR-PH
               </div>
 
               <div className="text-[10px] text-zinc-500 font-sans mt-0.5 truncate">{agent.domain}</div>
-              <div className="text-[9px] text-cyan-400/80 font-mono mt-1 truncate">{agent.governingStandard}</div>
+              <div className="text-[9px] text-cyan-400/80 font-mono mt-1 truncate">{agent.governingStandard || agent.standard}</div>
 
               <p className="text-[10px] text-zinc-300 font-sans mt-2 line-clamp-2 leading-relaxed">
-                {agent.verdictText}
+                {agent.verdictText || agent.summary}
               </p>
             </div>
           );

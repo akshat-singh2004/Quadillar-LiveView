@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
-import {
+import { 
   Compass,
   Layers,
   FileText,
@@ -34,8 +34,7 @@ import {
   Camera,
   Activity,
   Scissors,
-  Box,
-} from "lucide-react";
+  Box, SlidersHorizontal } from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -131,19 +130,7 @@ export function Sidebar() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleSidebar();
-              }}
-              className="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
-              title="Withdraw Sidebar"
-              aria-label="Withdraw Sidebar"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+            
           </>
         ) : (
           <button
@@ -235,6 +222,18 @@ export function Sidebar() {
           />
         )}
       </div>
+    
+      {/* SYSTEM GOVERNANCE & SETTINGS LINK */}
+      <div className="p-3 border-t border-zinc-800 bg-zinc-950/80">
+        <a
+          href="/settings"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition group"
+        >
+          <SlidersHorizontal className="w-4 h-4 text-cyan-400 group-hover:rotate-45 transition-transform duration-200" />
+          <span>System Settings &amp; Limits</span>
+        </a>
+      </div>
+    
     </aside>
   );
 }

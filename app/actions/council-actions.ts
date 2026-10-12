@@ -108,6 +108,12 @@ export async function fetchCouncilAggregatedPulse(projectId = "GOMTI-NAGAR-PH1-F
     const clashes = clashesRes.data || [];
     const activeHardClashes = clashes.filter((c) => c.status === "OPEN_SPATIAL_HOLD").length;
 
+    // Explicit counts for telemetry presence calibration
+    const hydrationCount = hydration.length;
+    const musterCount = muster.length;
+    const fleetCount = fleet.length;
+    const permitsCount = permits.length;
+
     const totalActiveHolds =
       openNcrsCount +
       gasRevokedPermits +
@@ -129,6 +135,10 @@ export async function fetchCouncilAggregatedPulse(projectId = "GOMTI-NAGAR-PH1-F
       groundedFleetCount,
       openDelayDays,
       activeHardClashes,
+      hydrationCount,
+      musterCount,
+      fleetCount,
+      permitsCount,
       totalActiveHolds,
       synapseEvents: eventsRes.data || [],
     };
@@ -148,6 +158,10 @@ export async function fetchCouncilAggregatedPulse(projectId = "GOMTI-NAGAR-PH1-F
       groundedFleetCount: 0,
       openDelayDays: 0,
       activeHardClashes: 0,
+      hydrationCount: 0,
+      musterCount: 0,
+      fleetCount: 0,
+      permitsCount: 0,
       totalActiveHolds: 0,
       synapseEvents: [],
     };
@@ -164,9 +178,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Structural Quality Governor",
       domain: "Structural Quality",
       standard: "IS 456 / IS 14687",
+      governingStandard: "IS 456 / IS 14687",
       status: pulse.openNcrsCount > 0 ? "ACTIVE_HOLD" : "NOMINAL",
       metric: `${pulse.openNcrsCount} Open NCRs`,
       summary: pulse.openNcrsCount > 0 ? `Lien withheld: ₹${pulse.totalQualityLienInr.toLocaleString("en-IN")}` : "IS 456 Table 11 compliance confirmed",
+      verdictText: pulse.openNcrsCount > 0 ? `Lien withheld: ₹${pulse.totalQualityLienInr.toLocaleString("en-IN")}` : "IS 456 Table 11 compliance confirmed",
     },
     {
       agentName: "Argus",
@@ -174,9 +190,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "HSE & Environmental Governor",
       domain: "HSE & Environment",
       standard: "BOCW 1998 / IS 3696",
-      status: pulse.gasRevokedPermits > 0 ? "ACTIVE_HOLD" : "NOMINAL",
-      metric: pulse.gasRevokedPermits > 0 ? `${pulse.gasRevokedPermits} Gas Alerts` : "Wind Safe (≤38km/h)",
-      summary: pulse.gasRevokedPermits > 0 ? "Atmospheric safety breach in confined zone" : "Permits & environmental limits cleared",
+      governingStandard: "BOCW 1998 / IS 3696",
+      status: pulse.gasRevokedPermits > 0 ? "ACTIVE_HOLD" : pulse.permitsCount === 0 ? "STANDBY" : "NOMINAL",
+      metric: pulse.gasRevokedPermits > 0 ? `${pulse.gasRevokedPermits} Gas Alerts` : pulse.permitsCount === 0 ? "Awaiting Sensor Stream" : "Wind Safe (≤38km/h)",
+      summary: pulse.gasRevokedPermits > 0 ? "Atmospheric safety breach in confined zone" : pulse.permitsCount === 0 ? "Anemometer & gas telemetry offline. Manual HSE protocols active." : "Permits & environmental limits cleared",
+      verdictText: pulse.gasRevokedPermits > 0 ? "Atmospheric safety breach in confined zone" : pulse.permitsCount === 0 ? "Anemometer & gas telemetry offline. Manual HSE protocols active." : "Permits & environmental limits cleared",
     },
     {
       agentName: "Midas",
@@ -184,9 +202,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Commercial Waterfall Governor",
       domain: "Commercial & Billing",
       standard: "CPWD Works / FIDIC Cl. 14",
+      governingStandard: "CPWD Works / FIDIC Cl. 14",
       status: "NOMINAL",
       metric: `₹${(pulse.totalGrossCertifiedInr / 100000).toFixed(1)}L Gross`,
       summary: "5-Tier statutory retainage & tax deduction waterfall active",
+      verdictText: "5-Tier statutory retainage & tax deduction waterfall active",
     },
     {
       agentName: "Vulcan",
@@ -194,9 +214,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Materials & Metallurgy Governor",
       domain: "Materials & Metallurgy",
       standard: "CPWD Cl. 42 / IS 2502",
+      governingStandard: "CPWD Cl. 42 / IS 2502",
       status: pulse.penalDebitsInr > 0 ? "ACTIVE_HOLD" : "NOMINAL",
       metric: pulse.penalDebitsInr > 0 ? `₹${(pulse.penalDebitsInr / 1000).toFixed(0)}k Debit` : "Within ±3% Tol.",
       summary: pulse.penalDebitsInr > 0 ? "CPWD Cl. 42 penal recovery applied at 2x rate" : "1D BBS cutting scrap within ≤3.0%",
+      verdictText: pulse.penalDebitsInr > 0 ? "CPWD Cl. 42 penal recovery applied at 2x rate" : "1D BBS cutting scrap within ≤3.0%",
     },
     {
       agentName: "Daedalus",
@@ -204,9 +226,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Thermodynamics & Maturity Governor",
       domain: "Hydration & Maturity",
       standard: "ASTM C1074 / CIRIA C766",
-      status: pulse.thermalCrackHolds > 0 ? "ACTIVE_HOLD" : "NOMINAL",
-      metric: pulse.thermalCrackHolds > 0 ? `${pulse.thermalCrackHolds} ΔT Holds` : "Maturity Safe",
-      summary: pulse.thermalCrackHolds > 0 ? "Core-to-surface gradient ΔT > 20°C (crack risk)" : "Early thermal gradient within permissible limits",
+      governingStandard: "ASTM C1074 / CIRIA C766",
+      status: pulse.thermalCrackHolds > 0 ? "ACTIVE_HOLD" : pulse.hydrationCount === 0 ? "STANDBY" : "NOMINAL",
+      metric: pulse.thermalCrackHolds > 0 ? `${pulse.thermalCrackHolds} ΔT Holds` : pulse.hydrationCount === 0 ? "0 Loggers Paired" : "Maturity Safe",
+      summary: pulse.thermalCrackHolds > 0 ? "Core-to-surface gradient ΔT > 20°C (crack risk)" : pulse.hydrationCount === 0 ? "Concrete thermocouples unpaired. Log pour to activate ASTM C1074." : "Early thermal gradient within permissible limits",
+      verdictText: pulse.thermalCrackHolds > 0 ? "Core-to-surface gradient ΔT > 20°C (crack risk)" : pulse.hydrationCount === 0 ? "Concrete thermocouples unpaired. Log pour to activate ASTM C1074." : "Early thermal gradient within permissible limits",
     },
     {
       agentName: "Plutus",
@@ -214,9 +238,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Labor & Welfare Governor",
       domain: "Labor & BOCW",
       standard: "BOCW 1996 / Min Wages 1948",
-      status: pulse.ghostWorkersCount > 0 ? "ACTIVE_HOLD" : "NOMINAL",
-      metric: pulse.ghostWorkersCount > 0 ? `${pulse.ghostWorkersCount} Ghost Workers` : "100% Ingress Match",
-      summary: pulse.ghostWorkersCount > 0 ? `₹${pulse.ghostContraChargeInr.toLocaleString("en-IN")} contra-charge debited` : "Biometric turnstile anti-passback verified",
+      governingStandard: "BOCW 1996 / Min Wages 1948",
+      status: pulse.ghostWorkersCount > 0 ? "ACTIVE_HOLD" : pulse.musterCount === 0 ? "STANDBY" : "NOMINAL",
+      metric: pulse.ghostWorkersCount > 0 ? `${pulse.ghostWorkersCount} Ghost Workers` : pulse.musterCount === 0 ? "0 Muster Records" : "100% Ingress Match",
+      summary: pulse.ghostWorkersCount > 0 ? `₹${pulse.ghostContraChargeInr.toLocaleString("en-IN")} contra-charge debited` : pulse.musterCount === 0 ? "Biometric turnstiles idle. Shift muster sync armed." : "Biometric turnstile anti-passback verified",
+      verdictText: pulse.ghostWorkersCount > 0 ? `₹${pulse.ghostContraChargeInr.toLocaleString("en-IN")} contra-charge debited` : pulse.musterCount === 0 ? "Biometric turnstiles idle. Shift muster sync armed." : "Biometric turnstile anti-passback verified",
     },
     {
       agentName: "Ananke",
@@ -224,9 +250,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Fleet & Heavy Plant Governor",
       domain: "Fleet & Telematics",
       standard: "ISO 22400 / CPWD Form 31",
-      status: pulse.groundedFleetCount > 0 ? "ACTIVE_HOLD" : "NOMINAL",
-      metric: pulse.groundedFleetCount > 0 ? `${pulse.groundedFleetCount} Grounded` : "Fleet Online",
-      summary: pulse.groundedFleetCount > 0 ? "Asset grounded under safety or weather hold" : "ISO 22400 OEE and fuel consumption nominal",
+      governingStandard: "ISO 22400 / CPWD Form 31",
+      status: pulse.groundedFleetCount > 0 ? "ACTIVE_HOLD" : pulse.fleetCount === 0 ? "STANDBY" : "NOMINAL",
+      metric: pulse.groundedFleetCount > 0 ? `${pulse.groundedFleetCount} Grounded` : pulse.fleetCount === 0 ? "0 Units Paired" : "Fleet Online",
+      summary: pulse.groundedFleetCount > 0 ? "Asset grounded under safety or weather hold" : pulse.fleetCount === 0 ? "Heavy plant CAN bus gateway standby. Operating on gate logs." : "ISO 22400 OEE and fuel consumption nominal",
+      verdictText: pulse.groundedFleetCount > 0 ? "Asset grounded under safety or weather hold" : pulse.fleetCount === 0 ? "Heavy plant CAN bus gateway standby. Operating on gate logs." : "ISO 22400 OEE and fuel consumption nominal",
     },
     {
       agentName: "Chronos",
@@ -234,9 +262,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Schedule & 4D Progress Governor",
       domain: "4D Schedule & TIA",
       standard: "CPM Network / SCL Protocol",
+      governingStandard: "CPM Network / SCL Protocol",
       status: pulse.openDelayDays > 0 ? "ACTIVE_HOLD" : "NOMINAL",
       metric: pulse.openDelayDays > 0 ? `+${pulse.openDelayDays}d Delay` : "Schedule on Track",
       summary: pulse.openDelayDays > 0 ? "Contemporaneous critical path slippage flagged" : "Topological critical path float positive",
+      verdictText: pulse.openDelayDays > 0 ? "Contemporaneous critical path slippage flagged" : "Topological critical path float positive",
     },
     {
       agentName: "Themis",
@@ -244,9 +274,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Contract Claims & LD Governor",
       domain: "Legal Claims & LD",
       standard: "FIDIC Cl. 8.4 / CPWD Cl. 2",
+      governingStandard: "FIDIC Cl. 8.4 / CPWD Cl. 2",
       status: "NOMINAL",
       metric: "28d Time-Bar Active",
       summary: "Contractual notices tracked; unexcused delays assessed",
+      verdictText: "Contractual notices tracked; unexcused delays assessed",
     },
     {
       agentName: "Minerva",
@@ -254,9 +286,23 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
       title: "Spatial BIM & Clashes Governor",
       domain: "3D BIM Coordination",
       standard: "ISO 19650-2 / PAS 1192",
+      governingStandard: "ISO 19650-2 / PAS 1192",
       status: pulse.activeHardClashes > 0 ? "ACTIVE_HOLD" : "NOMINAL",
       metric: pulse.activeHardClashes > 0 ? `${pulse.activeHardClashes} Hard Clashes` : "Zero Clashes",
       summary: pulse.activeHardClashes > 0 ? "Volumetric collision blocks structural pour" : "3D AABB interference clear",
+      verdictText: pulse.activeHardClashes > 0 ? "Volumetric collision blocks structural pour" : "3D AABB interference clear",
+    },
+    {
+      agentName: "Hermes",
+      name: "Hermes",
+      title: "Evidentiary Vault & Digital Notary",
+      domain: "Evidentiary Vault & BSA 2023",
+      standard: "Section 65B / BSA 2023",
+      governingStandard: "Section 65B / BSA 2023",
+      status: "ARMED",
+      metric: "SHA-256 Merkle Chain",
+      summary: "Continuous cryptographic Merkle notarization & Section 65B custody active",
+      verdictText: "Continuous cryptographic Merkle notarization & Section 65B custody active",
     },
   ];
 
@@ -265,10 +311,11 @@ export async function runAutonomousCouncilAudit(projectId = "GOMTI-NAGAR-PH1-FIT
   return {
     timestamp: new Date().toISOString(),
     projectId,
-    totalGovernors: verdicts.length,
-    activeHoldsCount,
     verdicts,
-    summary: activeHoldsCount > 0 ? `${activeHoldsCount} active statutory holds detected` : "All 10 Governors nominal",
+    summary:
+      activeHoldsCount > 0
+        ? `${activeHoldsCount} active statutory holds detected`
+        : "All 11 Governors clear (statutory compliance nominal)",
     overallStatus: activeHoldsCount > 0 ? "HOLD" : "CLEAR",
   };
 }

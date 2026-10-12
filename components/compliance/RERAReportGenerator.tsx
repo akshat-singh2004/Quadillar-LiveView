@@ -55,12 +55,12 @@ export function RERAReportGenerator({
       projectName,
       projectCode,
       quarterLabel,
-      approvedProgress: 92.5,
+      approvedProgress: 0,
       actualProgress,
       soldInventoryUnits: 64,
       unsoldInventoryUnits: 18,
       constructionCostIncurred,
-      summary: `Actual physical progress is ${actualProgress}% against the approved RERA baseline of 92.5%. Capital incurred to date totals ${formattedCost} against the sanctioned contract sum.`,
+      summary: `Actual physical progress is ${actualProgress}% against the approved RERA baseline of 0.0%. Capital incurred to date totals ${formattedCost} against the sanctioned contract sum.`,
       formOneSummary: `Form 1 — Architectural Progress Certification: The project has achieved ${actualProgress}% actual measured site progress against sanctioned drawings for ${quarterLabel}. All structural stages remain under certified supervision.`,
       formTwoSummary: `Form 2 — Financial & Inventory Certification: Total certified construction expenditure stands at ${formattedCost}. Escrow withdrawals comply strictly with Section 4(2)(l)(D) of the RERA Act.`,
       signedBy: "Principal Architect / Certified SEOR",
@@ -85,12 +85,12 @@ export function RERAReportGenerator({
       projectName,
       projectCode,
       quarterLabel,
-      approvedProgress: 92.5,
+      approvedProgress: 0,
       actualProgress: avgApprovalProgress,
       soldInventoryUnits: 64,
       unsoldInventoryUnits: 18,
       constructionCostIncurred,
-      summary: `Actual physical progress is ${avgApprovalProgress}% against the approved RERA sanction baseline of 92.5%. Certified construction expenditure totals ${formattedCost}.`,
+      summary: `Actual physical progress is ${avgApprovalProgress}% against the approved RERA sanction baseline of 0.0%. Certified construction expenditure totals ${formattedCost}.`,
       formOneSummary: `Form 1 — Architectural Progress Certification: Measured physical progress of ${avgApprovalProgress}% reported for ${quarterLabel}. Inspection records and cube tests conform to approved structural drawings.`,
       formTwoSummary: `Form 2 — Financial & Inventory Certification: Certified expenditure is ${formattedCost} out of contract baseline ₹${(contractValue / 10000000).toFixed(2)} Cr.`,
       signedBy: "Principal Architect / Certified SEOR",
@@ -121,8 +121,13 @@ export function RERAReportGenerator({
           </button>
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          {timeline.map((approval) => {
+        {timeline.length === 0 ? (
+          <div className="mt-5 rounded-xl border border-dashed border-zinc-800 bg-zinc-950/40 p-8 text-center text-zinc-500 font-mono text-xs">
+            Zero municipal or environmental sanctions registered for active contract. Upload sanctioned drawings or provisional NOCs to track statutory compliance.
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+            {timeline.map((approval) => {
             const tone = badgeStyle[approval.state.tone];
             return (
               <div key={approval.id} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
@@ -166,6 +171,7 @@ export function RERAReportGenerator({
             );
           })}
         </div>
+      )}
       </section>
 
       <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-5 shadow-xl space-y-5">

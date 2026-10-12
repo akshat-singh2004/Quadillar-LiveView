@@ -14,23 +14,8 @@ import {
 } from "recharts";
 import type { GeotechnicalReading, PileLoadReading } from "@/types/construction";
 
-const defaultReadings: GeotechnicalReading[] = [
-  { time: "06:00", wallDeflectionMm: 8, prismSettlementMm: 4, piezometerLevelM: 2.6 },
-  { time: "09:00", wallDeflectionMm: 11, prismSettlementMm: 5, piezometerLevelM: 2.7 },
-  { time: "12:00", wallDeflectionMm: 14, prismSettlementMm: 7, piezometerLevelM: 2.8 },
-  { time: "15:00", wallDeflectionMm: 17, prismSettlementMm: 9, piezometerLevelM: 2.9 },
-  { time: "18:00", wallDeflectionMm: 16, prismSettlementMm: 10, piezometerLevelM: 2.8 },
-];
-
-const defaultPileCurve: PileLoadReading[] = [
-  { loadKN: 0, settlementMm: 0 },
-  { loadKN: 500, settlementMm: 2 },
-  { loadKN: 1000, settlementMm: 4 },
-  { loadKN: 1500, settlementMm: 7 },
-  { loadKN: 2000, settlementMm: 12 },
-  { loadKN: 2500, settlementMm: 20 },
-  { loadKN: 3000, settlementMm: 34 },
-];
+const defaultReadings: GeotechnicalReading[] = [];
+const defaultPileCurve: PileLoadReading[] = [];
 
 interface SettlementDisplacementChartProps {
   readings?: GeotechnicalReading[];
@@ -42,15 +27,16 @@ export function SettlementDisplacementChart({
   pileCurve = defaultPileCurve,
 }: SettlementDisplacementChartProps) {
   const [view, setView] = useState<"movement" | "pile">("movement");
-  const activeReadings = readings.length > 0 ? readings : defaultReadings;
-  const activePile = pileCurve.length > 0 ? pileCurve : defaultPileCurve;
+  const activeReadings = readings;
+  const activePile = pileCurve;
 
   const latest = activeReadings[activeReadings.length - 1];
   const actionBreaches = activeReadings.filter(
     (item) => item.wallDeflectionMm >= 25 || item.prismSettlementMm >= 20
   ).length;
 
-  const ultimateLoad = activePile[activePile.length - 1]?.loadKN || 3000;
+  const ultimateLoad =
+    activePile.length > 0 ? (activePile[activePile.length - 1]?.loadKN ?? 0) : 0;
   const elasticReboundLimit = 10;
 
   return (
@@ -93,73 +79,189 @@ export function SettlementDisplacementChart({
 
       {view === "movement" ? (
         <>
-          <div className="h-72 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={activeReadings} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
-                <XAxis dataKey="time" stroke="#71717a" fontSize={11} />
-                <YAxis stroke="#71717a" fontSize={11} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: 8, fontSize: 12 }}
-                  itemStyle={{ color: "#fafafa" }}
-                />
-                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
-                <ReferenceLine y={20} stroke="#f59e0b" strokeDasharray="5 5" label={{ value: "Warning (20mm)", fill: "#f59e0b", fontSize: 10 }} />
-                <ReferenceLine y={25} stroke="#ef4444" strokeDasharray="5 5" label={{ value: "Action (25mm)", fill: "#ef4444", fontSize: 10 }} />
-                <Line type="monotone" dataKey="wallDeflectionMm" name="Wall Deflection (mm)" stroke="#f97316" strokeWidth={2.5} />
-                <Line type="monotone" dataKey="prismSettlementMm" name="Prism Settlement (mm)" stroke="#38bdf8" strokeWidth={2.5} />
-                <Line type="monotone" dataKey="piezometerLevelM" name="Water Table (m)" stroke="#a78bfa" strokeWidth={2.5} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {activeReadings.length === 0 ? (
+            <div className="h-72 w-full flex flex-col items-center justify-center border border-dashed border-zinc-800 bg-zinc-950/40 rounded-xl text-zinc-500 font-mono text-xs">
+              <span>Zero optical prism settlement or inclinometer telemetry recorded.</span>
+              <span className="text-[10px] text-zinc-600 mt-1">
+                Awaiting IS 2911 / IS 1893 deep foundation sensor ingress stream.
+              </span>
+            </div>
+          ) : (
+            <div className="h-72 w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={activeReadings}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
+                  <XAxis dataKey="time" stroke="#71717a" fontSize={11} />
+                  <YAxis stroke="#71717a" fontSize={11} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#09090b",
+                      borderColor: "#27272a",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                    itemStyle={{ color: "#fafafa" }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+                  <ReferenceLine
+                    y={20}
+                    stroke="#f59e0b"
+                    strokeDasharray="5 5"
+                    label={{ value: "Warning (20mm)", fill: "#f59e0b", fontSize: 10 }}
+                  />
+                  <ReferenceLine
+                    y={25}
+                    stroke="#ef4444"
+                    strokeDasharray="5 5"
+                    label={{ value: "Action (25mm)", fill: "#ef4444", fontSize: 10 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="wallDeflectionMm"
+                    name="Wall Deflection (mm)"
+                    stroke="#f97316"
+                    strokeWidth={2.5}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="prismSettlementMm"
+                    name="Prism Settlement (mm)"
+                    stroke="#38bdf8"
+                    strokeWidth={2.5}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="piezometerLevelM"
+                    name="Water Table (m)"
+                    stroke="#a78bfa"
+                    strokeWidth={2.5}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-3 pt-3 border-t border-zinc-800 text-center">
             <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
-              <span className="text-zinc-500 text-[10px] uppercase block font-bold">Latest Wall Deflection</span>
-              <strong className="text-white text-sm mt-0.5 block tabular-nums">{latest?.wallDeflectionMm || 16} mm</strong>
+              <span className="text-zinc-500 text-[10px] uppercase block font-bold">
+                Latest Wall Deflection
+              </span>
+              <strong className="text-white text-sm mt-0.5 block tabular-nums">
+                {latest?.wallDeflectionMm != null
+                  ? `${latest.wallDeflectionMm} mm`
+                  : "0.0 mm"}
+              </strong>
             </div>
             <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
-              <span className="text-zinc-500 text-[10px] uppercase block font-bold">Latest Prism Settlement</span>
-              <strong className="text-white text-sm mt-0.5 block tabular-nums">{latest?.prismSettlementMm || 10} mm</strong>
+              <span className="text-zinc-500 text-[10px] uppercase block font-bold">
+                Latest Prism Settlement
+              </span>
+              <strong className="text-white text-sm mt-0.5 block tabular-nums">
+                {latest?.prismSettlementMm != null
+                  ? `${latest.prismSettlementMm} mm`
+                  : "0.0 mm"}
+              </strong>
             </div>
             <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
-              <span className="text-zinc-500 text-[10px] uppercase block font-bold">Action Limit Breaches</span>
-              <strong className={`text-sm mt-0.5 block tabular-nums ${actionBreaches > 0 ? "text-rose-400" : "text-emerald-400"}`}>
-                {actionBreaches > 0 ? `${actionBreaches} Alert(s)` : "Zero (Nominal)"}
+              <span className="text-zinc-500 text-[10px] uppercase block font-bold">
+                Action Limit Breaches
+              </span>
+              <strong
+                className={`text-sm mt-0.5 block tabular-nums ${
+                  actionBreaches > 0
+                    ? "text-rose-400"
+                    : activeReadings.length === 0
+                    ? "text-zinc-500"
+                    : "text-emerald-400"
+                }`}
+              >
+                {actionBreaches > 0
+                  ? `${actionBreaches} Alert(s)`
+                  : activeReadings.length === 0
+                  ? "NIL / NO SENSORS"
+                  : "Zero (Nominal)"}
               </strong>
             </div>
           </div>
         </>
       ) : (
         <>
-          <div className="h-72 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={activePile} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
-                <XAxis dataKey="loadKN" stroke="#71717a" fontSize={11} />
-                <YAxis stroke="#71717a" fontSize={11} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: 8, fontSize: 12 }}
-                  itemStyle={{ color: "#fafafa" }}
-                />
-                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
-                <ReferenceLine y={elasticReboundLimit} stroke="#f59e0b" strokeDasharray="5 5" label={{ value: "Elastic Limit (10mm)", fill: "#f59e0b", fontSize: 10 }} />
-                <Line type="monotone" dataKey="settlementMm" name="Pile Settlement (mm)" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {activePile.length === 0 ? (
+            <div className="h-72 w-full flex flex-col items-center justify-center border border-dashed border-zinc-800 bg-zinc-950/40 rounded-xl text-zinc-500 font-mono text-xs">
+              <span>Zero cyclic pile load test curves recorded.</span>
+              <span className="text-[10px] text-zinc-600 mt-1">
+                Log hydraulic jack pressure increments to plot settlement under IS 2911 (Part 4).
+              </span>
+            </div>
+          ) : (
+            <div className="h-72 w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={activePile}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
+                  <XAxis dataKey="loadKN" stroke="#71717a" fontSize={11} />
+                  <YAxis stroke="#71717a" fontSize={11} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#09090b",
+                      borderColor: "#27272a",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                    itemStyle={{ color: "#fafafa" }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+                  <ReferenceLine
+                    y={elasticReboundLimit}
+                    stroke="#f59e0b"
+                    strokeDasharray="5 5"
+                    label={{
+                      value: "Elastic Limit (10mm)",
+                      fill: "#f59e0b",
+                      fontSize: 10,
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="settlementMm"
+                    name="Pile Settlement (mm)"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-3 pt-3 border-t border-zinc-800 text-center">
             <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
-              <span className="text-zinc-500 text-[10px] uppercase block font-bold">Ultimate Load Capacity</span>
-              <strong className="text-white text-sm mt-0.5 block tabular-nums">{ultimateLoad.toLocaleString("en-IN")} kN</strong>
+              <span className="text-zinc-500 text-[10px] uppercase block font-bold">
+                Ultimate Load Capacity
+              </span>
+              <strong className="text-white text-sm mt-0.5 block tabular-nums">
+                {activePile.length > 0
+                  ? `${ultimateLoad.toLocaleString("en-IN")} kN`
+                  : "0 kN (PENDING TEST)"}
+              </strong>
             </div>
             <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
-              <span className="text-zinc-500 text-[10px] uppercase block font-bold">Elastic Rebound Limit</span>
-              <strong className="text-amber-400 text-sm mt-0.5 block tabular-nums">{elasticReboundLimit} mm</strong>
+              <span className="text-zinc-500 text-[10px] uppercase block font-bold">
+                Elastic Rebound Limit
+              </span>
+              <strong className="text-amber-400 text-sm mt-0.5 block tabular-nums">
+                {elasticReboundLimit} mm
+              </strong>
             </div>
             <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
-              <span className="text-zinc-500 text-[10px] uppercase block font-bold">Design Standard</span>
+              <span className="text-zinc-500 text-[10px] uppercase block font-bold">
+                Design Standard
+              </span>
               <strong className="text-cyan-400 text-sm mt-0.5 block">IS:2911 (Part 4)</strong>
             </div>
           </div>

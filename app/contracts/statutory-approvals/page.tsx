@@ -313,8 +313,8 @@ export default function CanonicalStatutoryApprovalsPage() {
                 }),
               ];
 
-        setPermits(defaults);
-        if (!selectedPermit) setSelectedPermit(defaults[0]);
+        setPermits([]);
+        if (!selectedPermit && defaults.length > 0) setSelectedPermit(defaults[0]);
       }
     } catch {
       // Local fallback

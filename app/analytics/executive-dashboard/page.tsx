@@ -25,7 +25,7 @@ export default function ExecutiveDashboardPage() {
   const earnedValue = 371000000; // ₹37.10 Cr
   const actualCost = 403200000; // ₹40.32 Cr
   const plannedValue = 353300000; // ₹35.33 Cr
-  const budgetAtCompletion = 1450000000; // ₹145.00 Cr
+  const budgetAtCompletion = 0;
 
   // Cost Performance Index (CPI) = EV / AC
   const cpi = earnedValue / actualCost; // 0.92 (Over budget)

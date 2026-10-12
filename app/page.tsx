@@ -37,7 +37,7 @@ export default async function RealityCommandRootPage() {
 
   const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
   const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
-  const contractBudget = Number(projectRow?.contract_value) || 450000000;
+  const contractBudget = projectRow?.contract_value != null ? Number(projectRow.contract_value) : 0;
 
   // Run autonomous council evaluation server-side
   const initialAuditReport = await evaluateAutonomousCouncil(projectId);

@@ -90,7 +90,7 @@ export default async function DailyProgressReportPage() {
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
           <span className="text-[10px] text-zinc-500 uppercase block font-bold">Weather / Shift Window</span>
           <div className="text-xl font-bold text-cyan-400 mt-1 tabular-nums">
-            {dprRow ? `${dprRow.weather_summary} | ${shiftHours}h` : "Clear / 32°C | 8.5h"}
+            {dprRow ? `${dprRow.weather_summary} | ${shiftHours}h` : "No Weather Stream Recorded | 0.0h"}
           </div>
           <span className="text-[10px] text-zinc-500 block mt-0.5">Site microclimate telemetry</span>
         </div>

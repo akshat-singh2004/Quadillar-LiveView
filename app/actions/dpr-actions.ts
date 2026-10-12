@@ -56,20 +56,14 @@ export async function compileDailyGovernanceDossier(payload: CompileDprPayload) 
   try {
     const supabase = getSupabase();
 
-    const [
-      musterRes,
-      pourCardsRes,
-      cubesRes,
-      ncrsRes,
-      fleetRes,
-      hindranceRes,
-    ] = await Promise.all([
+    const [musterRes, pourCardsRes, cubesRes, ncrsRes, fleetRes, hindranceRes, weatherRes] = await Promise.all([
       supabase.from("daily_labor_muster_rolls").select("*").eq("project_id", payload.projectId),
       supabase.from("digital_pour_cards").select("*").eq("project_id", payload.projectId),
       supabase.from("concrete_cube_tests").select("*").eq("project_id", payload.projectId),
       supabase.from("quality_ncr_register").select("*").eq("project_id", payload.projectId).neq("status", "CLOSED"),
       supabase.from("plant_machinery_telematics").select("*").eq("project_id", payload.projectId),
       supabase.from("site_hindrance_register").select("*").eq("project_id", payload.projectId).eq("status", "OPEN_CRITICAL_DELAY"),
+      supabase.from("iot_raw_telemetry_stream").select("raw_payload, created_at").eq("project_id", payload.projectId).eq("telemetry_category", "WEATHER_ANEMOMETER"),
     ]);
 
     const muster = musterRes.data || [];
@@ -94,6 +88,18 @@ export async function compileDailyGovernanceDossier(payload: CompileDprPayload) 
     const hindrances = hindranceRes.data || [];
     const delayHours = hindrances.reduce((sum, h) => sum + (Number(h.days_hindered) * 8 || 0), 0);
 
+    
+    // Calculate live peak wind from IoT stream
+    const weatherRows = (weatherRes?.data || []) as any[];
+    let maxWindKmh = 0;
+    for (const row of weatherRows) {
+      const spd = Number(row.raw_payload?.windSpeedKmh || row.raw_payload?.wind_speed_kmh || 0);
+      if (spd > maxWindKmh) maxWindKmh = spd;
+    }
+    const derivedWeather = maxWindKmh > 0
+      ? `Max Wind Gust: ${maxWindKmh} km/h (${maxWindKmh > 38 ? "IS 13367 BREACH / INTERLOCK TRIPPED" : "IS 13367 Safe"})`
+      : "Zero Weather Telemetry Logged / Sensors Standby";
+    
     const narrative = payload.summaryNarrative ||
       `Shift completed with ${totalWorkers} biometric-verified operatives on site. Poured ${concreteVolume} m³ structural concrete. Recorded ${cubesCount} cube compressive tests and ${openNcrsCount} active quality hold liens. Fleet operated ${equipHours}h at ${avgOee}% OEE.`;
 
@@ -103,8 +109,8 @@ export async function compileDailyGovernanceDossier(payload: CompileDprPayload) 
         project_id: payload.projectId,
         dossier_code: dossierCode,
         dpr_date: safeDate,
-        weather_summary: payload.weatherSummary || "Clear / Wind 14.5 km/h (IS 13367 Safe)",
-        peak_wind_speed_kmh: 14.5,
+        weather_summary: payload.weatherSummary || derivedWeather,
+        peak_wind_speed_kmh: payload.peakWindSpeedKmh != null ? Number(payload.peakWindSpeedKmh) : maxWindKmh,
         total_workers_punched: totalWorkers,
         ghost_workers_flagged: ghostWorkers,
         ghost_contra_charge_inr: ghostDebit,

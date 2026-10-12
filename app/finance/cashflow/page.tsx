@@ -22,7 +22,7 @@ function formatCurrency(value: number) {
 
 export default function CashFlowPage() {
   const evm = useMemo(() => {
-    const bac = 360000000;
+    const bac = 0;
     const ev = 249000000;
     const ac = 214000000;
     const cpi = (ev / ac) || 1;
