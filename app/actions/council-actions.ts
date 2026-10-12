@@ -72,7 +72,7 @@ export async function fetchCouncilAggregatedPulse(projectId = "GOMTI-NAGAR-PH1-F
       supabase.from("daily_labor_muster_rolls").select("ghost_workers_count, ghost_wage_debit_inr").eq("project_id", projectId),
       supabase.from("plant_machinery_telematics").select("operational_status, oee_pct").eq("project_id", projectId),
       supabase.from("site_hindrance_register").select("days_hindered, status").eq("project_id", projectId),
-      supabase.from("bim_spatial_clashes").select("status").eq("project_id", projectId),
+      supabase.from("bim_spatial_clashes").select("seor_waiver_status").eq("project_id", projectId),
       supabase.from("council_interagent_events").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(6),
     ]);
 
@@ -103,10 +103,10 @@ export async function fetchCouncilAggregatedPulse(projectId = "GOMTI-NAGAR-PH1-F
     const groundedFleetCount = fleet.filter((f) => f.operational_status === "GROUNDED_SAFETY_HOLD").length;
 
     const hindrances = hindranceRes.data || [];
-    const openDelayDays = hindrances.filter((h) => h.status === "OPEN_CRITICAL_DELAY").reduce((s, h) => s + (Number(h.days_hindered) || 0), 0);
+    const openDelayDays = hindrances.filter((h) => h.status !== "CLOSED" && h.status !== "RESOLVED").reduce((s, h) => s + (Number(h.days_hindered) || 0), 0);
 
     const clashes = clashesRes.data || [];
-    const activeHardClashes = clashes.filter((c) => c.status === "OPEN_SPATIAL_HOLD").length;
+    const activeHardClashes = clashes.filter((c: any) => c.seor_waiver_status === "UNAPPROVED_HOLD" || c.status === "OPEN_SPATIAL_HOLD").length;
 
     // Explicit counts for telemetry presence calibration
     const hydrationCount = hydration.length;
