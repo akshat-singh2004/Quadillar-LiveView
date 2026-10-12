@@ -1,0 +1,26 @@
+{
+  "statutoryHeader": {
+    "act": "Section 63 & 65B of the Bharatiya Sakshya Adhiniyam, 2023 (formerly Indian Evidence Act, 1872)",
+    "matter": "In the Matter of Statutory Commercial Arbitral Liens on Project GOMTI-NAGAR-PH1-FITOUT",
+    "certifyingAuthority": "Autonomous Governance Council Daemon (Agent Hermes)",
+    "systemIdentifier": "LiveView.OS Kernel v2.4 (PostgreSQL Append-Only Trigger Grid)",
+    "dateOfIssuance": "2026-10-12T07:08:38.853Z"
+  },
+  "cryptographicCustody": {
+    "latestMerkleRootHash": "6212afde210ffab6af2a613d3ec41ecc455ac5a69ebffebd0e1e7e1aafdcc0e0",
+    "actionTitle": "Midas RA Bill Certified with Council Liens: RA-BILL-04-8636",
+    "tamperResistanceStatus": "HARDENED_POSTGRES_IMMUTABLE_TRIGGER_ACTIVE",
+    "totalLoggedBlocks": 10
+  },
+  "adjudicatedWithholdings": {
+    "structuralQualityLienAegis": "₹18,00,000",
+    "laborContraChargePlutus": "₹12,950",
+    "aggregateLienWithheld": "₹18,12,950",
+    "activeHindranceExtensionClaims": 1
+  },
+  "statutoryAffidavitDeclaration": [
+    "1. The electronic records referenced herein were produced continuously during the ordinary course of site operations by automated IoT telemetry ingress rigs, CTM compression machines, and biometric turnstiles.",
+    "2. The computing systems operating LiveView.OS were operating properly and without systemic defect throughout the certified duration.",
+    "3. All state transitions are protected by database-level append-only triggers prohibiting UPDATE or DELETE mutations, anchoring every audit block into an immutable SHA-256 Merkle chain."
+  ]
+}
