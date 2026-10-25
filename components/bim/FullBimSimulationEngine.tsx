@@ -340,7 +340,8 @@ export default function FullBimSimulationEngine() {
     addBimMesh(clashNode, "CLASH_NODE_01", "MEP Trench Spatial Clash", "L0_PODIUM", "ZONE_PLAZA", 20, 20);
 
     let isDragging = false, prevX = 0, prevY = 0, prevDist = 0;
-    let sph = { r: 210, phi: Math.PI / 3.2, theta: Math.PI / 4.2 }; 
+    let sph = { r: 210, phi: Math.PI / 3.2, theta: Math.PI / 4.2 };
+    scene.userData.activeCamMode = "ORBIT"; 
 
     const updateCameraPos = () => {
       if (scene.userData.activeCamMode === "ORBIT") {
@@ -504,6 +505,7 @@ export default function FullBimSimulationEngine() {
   }, [timeOfDay, weatherMode, timelineWeek, renderMode]);
 
   useEffect(() => { if (sceneRef.current) { sceneRef.current.userData.weatherMode = weatherMode; } }, [weatherMode]);
+  useEffect(() => { if (sceneRef.current) { sceneRef.current.userData.activeCamMode = camMode; } }, [camMode]);
   useEffect(() => { if (sceneRef.current) { sceneRef.current.userData.isKioskMode = isKioskMode; } }, [isKioskMode]);
   useEffect(() => { if (sceneRef.current) { sceneRef.current.userData.showPitchDeck = showPitchDeck; } }, [showPitchDeck]);
 
