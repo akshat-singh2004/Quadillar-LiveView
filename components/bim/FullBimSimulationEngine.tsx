@@ -5,7 +5,7 @@ import * as THREE from "three";
 
 export type SelectionLevel = "ALL" | "L0_PODIUM" | "L1_MUSEUM" | "L1_HOTEL_TOWER" | "L2_HELIPAD";
 export type SelectionZone = "ALL_ZONES" | "ZONE_WEDGE" | "ZONE_TOWER" | "ZONE_PLAZA";
-export type RenderMode = "SOLID" | "CAD_EDGES" | "X_RAY" | "LIDAR_SCAN" | "AI_HEATMAP" | "ANATOMY" | "IOT_MESH" | "THERMAL";
+export type RenderMode = "SOLID" | "CAD_EDGES" | "X_RAY" | "LIDAR_SCAN" | "ANATOMY" | "IOT_MESH" | "THERMAL";
 export type WeatherMode = "CLEAR" | "MONSOON";
 export type CameraMode = "ORBIT" | "DRONE_FPV" | "CRANE_CAM";
 export type ToolMode = "SELECT" | "MEASURE";
@@ -42,6 +42,9 @@ export default function FullBimSimulationEngine() {
   
   const [showPitchDeck, setShowPitchDeck] = useState<boolean>(false);
   const [vcLink, setVcLink] = useState<string | null>(null);
+  
+  // PHASE 40: Portfolio State
+  const [showPortfolio, setShowPortfolio] = useState<boolean>(false);
   
   const [showQuadMax, setShowQuadMax] = useState<boolean>(false);
   const [quadMaxHistory, setQuadMaxHistory] = useState<{role: "user"|"ai", text: string}[]>([{ role: "ai", text: "QuadMax NLP Copilot online. How can I assist with the JPNIC Digital Twin?" }]);
@@ -121,7 +124,7 @@ export default function FullBimSimulationEngine() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("quadillar_bim_state_jpnic_v39");
+      const saved = localStorage.getItem("quadillar_bim_state_jpnic_v40");
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.timelineWeek) setTimelineWeek(parsed.timelineWeek);
@@ -133,12 +136,12 @@ export default function FullBimSimulationEngine() {
       }
     } catch (e) {}
     setIsHydrated(true);
-    addAiLog("SYS", "Mobile Touch Physics & Edge GPU Scaling Active.", "text-cyan-400");
+    addAiLog("SYS", "Enterprise Portfolio Matrix Initialized.", "text-cyan-400");
   }, []);
 
   useEffect(() => {
     if (!isHydrated) return;
-    localStorage.setItem("quadillar_bim_state_jpnic_v39", JSON.stringify({ timelineWeek, renderMode, timeOfDay, planCutZ, explodeY, pitchMode }));
+    localStorage.setItem("quadillar_bim_state_jpnic_v40", JSON.stringify({ timelineWeek, renderMode, timeOfDay, planCutZ, explodeY, pitchMode }));
   }, [timelineWeek, renderMode, timeOfDay, planCutZ, explodeY, pitchMode, isHydrated]);
 
   useEffect(() => {
@@ -174,24 +177,6 @@ export default function FullBimSimulationEngine() {
     return () => clearInterval(interval);
   }, [isPlaying4D, clashResolved, isKioskMode]);
 
-  // KIOSK AUTO-PITCH SEQUENCE
-  useEffect(() => {
-      if (!isKioskMode) return;
-      let timers: any[] = [];
-      const runKioskSequence = () => {
-          setPitchMode(true); setVrMode(false); setShowQuadMax(false); setShowPitchDeck(false); setCamMode("ORBIT"); setToolMode("SELECT");
-          setTimelineWeek(1); setRenderMode("SOLID"); setPlanCutZ(100); setExplodeY(0); setTimeOfDay(14); setWeatherMode("CLEAR");
-          addAiLog("SYS", "KIOSK AUTO-PITCH SEQUENCE INITIATED", "text-amber-400");
-          timers.push(setTimeout(() => { setRenderMode("ANATOMY"); setPlanCutZ(25); addAiLog("SYS", "Revealing LOD-400 Subterranean Foundation Piles.", "text-cyan-400"); }, 5000));
-          timers.push(setTimeout(() => { setPlanCutZ(100); setRenderMode("SOLID"); setTimelineWeek(18); setIsPlaying4D(true); addAiLog("SYS", "Executing 4D Schedule Simulation...", "text-emerald-400"); }, 10000));
-          timers.push(setTimeout(() => { setRenderMode("LIDAR_SCAN"); addAiLog("CV_AGENT", "Projecting As-Built Drone Variance Point Cloud.", "text-blue-400"); }, 24000));
-          timers.push(setTimeout(() => { setRenderMode("THERMAL"); setTimelineWeek(25); addAiLog("SYS", "Entering Post-Handover 7D FLIR Diagnostics.", "text-red-400"); }, 32000));
-          timers.push(setTimeout(() => { setIsKioskMode(false); addAiLog("SYS", "Kiosk Sequence Complete. Handing control to user.", "text-emerald-400"); }, 40000));
-      };
-      runKioskSequence();
-      return () => timers.forEach(clearTimeout);
-  }, [isKioskMode]);
-
   // --- 3D SCENE INITIALIZATION ---
   useEffect(() => {
     if (!isHydrated) return;
@@ -210,11 +195,9 @@ export default function FullBimSimulationEngine() {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(width, height);
-    
-    // PHASE 39: ADAPTIVE GPU SCALING
     const isMobile = window.innerWidth < 768;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
-    renderer.shadowMap.enabled = !isMobile; // Disable shadows on mobile to save battery
+    renderer.shadowMap.enabled = !isMobile; 
     if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.localClippingEnabled = true;
     rendererRef.current = renderer;
@@ -232,10 +215,7 @@ export default function FullBimSimulationEngine() {
     const dirLight = new THREE.DirectionalLight(0xfff3e0, 2.0); 
     dirLight.position.set(100, 150, 80);
     if(!isMobile) {
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.bias = -0.0005; 
+        dirLight.castShadow = true; dirLight.shadow.mapSize.width = 2048; dirLight.shadow.mapSize.height = 2048; dirLight.shadow.bias = -0.0005; 
     }
     
     const lightningLight = new THREE.PointLight(0xaabbff, 0, 800);
@@ -255,19 +235,13 @@ export default function FullBimSimulationEngine() {
 
     // --- MATERIALS ---
     const terracottaMat = new THREE.MeshStandardMaterial({ color: 0xcc4422, roughness: 0.65, metalness: 0.15, clippingPlanes: [clipPlane] });
-    const terracottaTrimMat = new THREE.MeshStandardMaterial({ color: 0x9e2a12, roughness: 0.8, clippingPlanes: [clipPlane] });
     const concreteMat = new THREE.MeshStandardMaterial({ color: 0x5a6578, roughness: 0.9, clippingPlanes: [clipPlane] });
     const foundationMat = new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 1.0, clippingPlanes: [clipPlane] }); 
     const domeMat = new THREE.MeshStandardMaterial({ color: 0xd4d8de, metalness: 0.65, roughness: 0.35, clippingPlanes: [clipPlane] }); 
-    const glassDarkMat = new THREE.MeshPhysicalMaterial({ color: 0x0f172a, transparent: true, opacity: 0.8, roughness: 0.05, metalness: 0.9, transmission: 0.4, ior: 1.5, clippingPlanes: [clipPlane] });
     const rebarMat = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.8, roughness: 0.4, wireframe: true, clippingPlanes: [clipPlane] });
-    const iotMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 1.0, clippingPlanes: [clipPlane] });
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.25 });
     const lidarMat = new THREE.PointsMaterial({ size: 0.45, vertexColors: true, transparent: true, opacity: 0.9 });
     const meshLineMat = new THREE.LineBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.8 });
-    const pipeMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.6, roughness: 0.3, clippingPlanes: [clipPlane] });
-    const clashMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xaa0000, emissiveIntensity: 0.9, wireframe: true });
-    const dlpMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 1.0, wireframe: true, clippingPlanes: [clipPlane] });
 
     const addBimMesh = (mesh: THREE.Mesh, entityId: string, name: string, level: SelectionLevel, zone: SelectionZone, minWeek: number, plannedWeek: number, cdeDocs: DocumentRecord[] = []) => {
       const mat = mesh.material as any;
@@ -287,37 +261,26 @@ export default function FullBimSimulationEngine() {
       
       if(!entityId.includes("TREE") && !entityId.includes("IOT") && !entityId.includes("CRANE") && !entityId.includes("DLP")) {
         const edges = new THREE.EdgesGeometry(mesh.geometry);
-        const line = new THREE.LineSegments(edges, edgeMat);
-        mesh.add(line); mesh.userData.edgeLine = line; 
-        const dataLine = new THREE.LineSegments(edges, meshLineMat);
-        dataLine.visible = false; mesh.add(dataLine); mesh.userData.dataLine = dataLine;
-
-        const ptsGeo = mesh.geometry.clone();
-        const posAttr = ptsGeo.attributes.position;
-        const colorArray = new Float32Array(posAttr.count * 3);
+        const line = new THREE.LineSegments(edges, edgeMat); mesh.add(line); mesh.userData.edgeLine = line; 
+        const dataLine = new THREE.LineSegments(edges, meshLineMat); dataLine.visible = false; mesh.add(dataLine); mesh.userData.dataLine = dataLine;
+        const ptsGeo = mesh.geometry.clone(); const posAttr = ptsGeo.attributes.position; const colorArray = new Float32Array(posAttr.count * 3);
         
         for (let i = 0; i < posAttr.count; i++) {
             let r = 0.06, g = 0.72, b = 0.5; 
-            const vx = posAttr.getX(i) + mesh.position.x;
-            const vy = posAttr.getY(i) + mesh.position.y;
-            const vz = posAttr.getZ(i) + mesh.position.z;
+            const vx = posAttr.getX(i) + mesh.position.x; const vy = posAttr.getY(i) + mesh.position.y; const vz = posAttr.getZ(i) + mesh.position.z;
             const noise = Math.sin(vx * 0.2) * Math.cos(vy * 0.3) * Math.sin(vz * 0.1);
-            if (noise > 0.85) { r = 0.93; g = 0.26; b = 0.26; } 
-            else if (noise > 0.6) { r = 0.92; g = 0.73; b = 0.03; }
+            if (noise > 0.85) { r = 0.93; g = 0.26; b = 0.26; } else if (noise > 0.6) { r = 0.92; g = 0.73; b = 0.03; }
             colorArray[i*3] = r; colorArray[i*3+1] = g; colorArray[i*3+2] = b;
         }
         ptsGeo.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-        const pts = new THREE.Points(ptsGeo, lidarMat);
-        mesh.add(pts); mesh.userData.pointsMesh = pts;
+        const pts = new THREE.Points(ptsGeo, lidarMat); mesh.add(pts); mesh.userData.pointsMesh = pts;
         
         if (entityId.includes("DOME") || entityId.includes("CORE") || entityId.includes("WEDGE") || entityId.includes("ROTUNDA")) {
-            const anatomySkel = new THREE.Mesh(mesh.geometry, rebarMat);
-            anatomySkel.scale.set(0.98, 0.98, 0.98); anatomySkel.visible = false; mesh.add(anatomySkel); mesh.userData.anatomyMesh = anatomySkel;
+            const anatomySkel = new THREE.Mesh(mesh.geometry, rebarMat); anatomySkel.scale.set(0.98, 0.98, 0.98); anatomySkel.visible = false; mesh.add(anatomySkel); mesh.userData.anatomyMesh = anatomySkel;
         }
       }
       mesh.castShadow = true; mesh.receiveShadow = true;
-      pickableMeshes.current.push(mesh);
-      bimGroup.add(mesh);
+      pickableMeshes.current.push(mesh); bimGroup.add(mesh);
     };
 
     // CRANE
@@ -326,7 +289,7 @@ export default function FullBimSimulationEngine() {
     const craneDarkMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
     const mast = new THREE.Mesh(new THREE.BoxGeometry(3, 110, 3), craneYellowMat); mast.position.y = 55; craneGroup.add(mast);
     const jibGroup = new THREE.Group(); jibGroup.position.y = 110; craneGroup.add(jibGroup); craneJibRef.current = jibGroup;
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(3.5, 3.5, 3.5), glassDarkMat); cabin.position.set(2, -1, 2); jibGroup.add(cabin);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(3.5, 3.5, 3.5), new THREE.MeshPhysicalMaterial({ color: 0x0f172a, transparent: true, opacity: 0.8 })); cabin.position.set(2, -1, 2); jibGroup.add(cabin);
     const jib = new THREE.Mesh(new THREE.BoxGeometry(75, 2.5, 2.5), craneYellowMat); jib.position.x = 35; jibGroup.add(jib);
     const counterJib = new THREE.Mesh(new THREE.BoxGeometry(25, 2.5, 2.5), craneYellowMat); counterJib.position.x = -15; jibGroup.add(counterJib);
     const trolley = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 3), craneDarkMat); trolley.position.set(20, -1.5, 0); jibGroup.add(trolley); craneTrolleyRef.current = trolley;
@@ -334,7 +297,7 @@ export default function FullBimSimulationEngine() {
     addBimMesh(mast, "MACHINERY_CRANE_01", "Liebherr Tower Crane", "ALL", "ALL_ZONES", 1, 1);
     craneRef.current = craneGroup; scene.add(craneGroup);
 
-    // PILES
+    // PILES & PODIUM
     const pileCount = 144;
     const pileMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.5, 0.5, 14, 8), foundationMat, pileCount);
     let pIdx = 0; const dummy = new THREE.Object3D();
@@ -353,15 +316,12 @@ export default function FullBimSimulationEngine() {
       const pos = geo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         const y = pos.getY(i); const z = pos.getZ(i);
-        const normalizedY = Math.max(0, (y + (sweepHeight / 2)) / sweepHeight);
-        pos.setZ(i, z - Math.pow(normalizedY, 2.3) * 48);
+        const normalizedY = Math.max(0, (y + (sweepHeight / 2)) / sweepHeight); pos.setZ(i, z - Math.pow(normalizedY, 2.3) * 48);
       }
       geo.computeVertexNormals();
-      const mesh = new THREE.Mesh(geo, terracottaMat.clone());
-      mesh.position.set(offsetX, 4 + sweepHeight / 2, 8);
+      const mesh = new THREE.Mesh(geo, terracottaMat.clone()); mesh.position.set(offsetX, 4 + sweepHeight / 2, 8);
       const facadeDocs: DocumentRecord[] = [ { id: "CDE-F1", title: "Terreal_Terracotta_Spec.pdf", type: "PDF", date: "2026-03-12", status: "APPROVED", hash: "a1b2c3d...e4f5" } ];
       addBimMesh(mesh, id, name, "L1_HOTEL_TOWER", "ZONE_TOWER", minWk, minWk, facadeDocs);
-      return mesh;
     };
     createSweptFin(14, 18, "JPNIC_TOWER_FIN_EAST", "East Sweeping Terracotta Spine", 6);
     createSweptFin(14, -8, "JPNIC_TOWER_FIN_WEST", "West Sweeping Terracotta Fin", 7);
@@ -372,21 +332,12 @@ export default function FullBimSimulationEngine() {
     addBimMesh(domeMesh, "JPNIC_SILVER_DOME", "Museum Silver Dome", "L1_MUSEUM", "ZONE_WEDGE", 8, 8, [ { id: "CDE-D1", title: "Acoustic_Dome_Structural_GFC.dwg", type: "DWG", date: "2026-06-18", status: "APPROVED", hash: "33h4j5k...l6m7" } ]);
 
     // MEP CLASH
-    const chwPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 55, 16), pipeMat.clone());
+    const chwPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 55, 16), new THREE.MeshStandardMaterial({ color: 0x0284c7 }));
     chwPipe.rotation.z = Math.PI / 2; chwPipe.position.set(-10, 5.5, 36);
     addBimMesh(chwPipe, "CHW_MAIN", "District Chilled Water Main Loop", "L0_PODIUM", "ZONE_PLAZA", 20, 20, [ { id: "CDE-RFI1", title: "RFI-4490_Trench_Clash.pdf", type: "RFI", date: "2026-10-25", status: "PENDING", hash: "pending..." } ]);
-    const clashNode = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16), clashMat.clone());
+    const clashNode = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16), new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xaa0000, wireframe: true }));
     clashNode.position.set(-15, 5.5, 36);
     addBimMesh(clashNode, "CLASH_NODE_01", "MEP Trench Spatial Clash", "L0_PODIUM", "ZONE_PLAZA", 20, 20);
-
-    // DLP NODE
-    const dlpNode = new THREE.Mesh(new THREE.OctahedronGeometry(2), dlpMat.clone());
-    dlpNode.position.set(18, 45, -10); 
-    addBimMesh(dlpNode, "DLP_TICKET_8812", "Post-Handover Defect Snag", "L1_HOTEL_TOWER", "ZONE_TOWER", 25, 25);
-
-    // MEASUREMENT
-    const measureLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x0ea5e9, linewidth: 3 })); measureLine.visible = false; scene.add(measureLine); measurementLineRef.current = measureLine;
-    for(let i=0; i<2; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), new THREE.MeshBasicMaterial({ color: 0x0ea5e9 })); s.visible = false; scene.add(s); measurementSpheresRef.current.push(s); }
 
     let isDragging = false, prevX = 0, prevY = 0, prevDist = 0;
     let sph = { r: 210, phi: Math.PI / 3.2, theta: Math.PI / 4.2 }; 
@@ -403,22 +354,18 @@ export default function FullBimSimulationEngine() {
     scene.userData.updateCameraPos = updateCameraPos;
     scene.userData.sph = sph;
 
-    // PHASE 39: TOUCH AND MOUSE HANDLERS UNIFIED
     const handlePointerDown = (clientX: number, clientY: number) => {
         if (scene.userData.toolMode === "MEASURE") return; 
         isDragging = true; prevX = clientX; prevY = clientY; lastInteractionTime.current = Date.now(); 
     };
-    
     const handlePointerUp = () => { isDragging = false; lastInteractionTime.current = Date.now(); };
     
     const handlePointerMove = (clientX: number, clientY: number) => {
       lastInteractionTime.current = Date.now();
       const rect = mount.getBoundingClientRect();
       const mouse = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, camera);
-      const visibleMeshes = pickableMeshes.current.filter(m => m.visible);
-      const hits = raycaster.intersectObjects(visibleMeshes, false);
+      const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(pickableMeshes.current.filter(m => m.visible), false);
 
       if (hits.length > 0) {
         mount.style.cursor = scene.userData.toolMode === "MEASURE" ? "crosshair" : "pointer";
@@ -434,8 +381,7 @@ export default function FullBimSimulationEngine() {
       if (!isDragging || scene.userData.activeCamMode !== "ORBIT" || scene.userData.toolMode === "MEASURE") return;
       scene.userData.sph.theta -= (clientX - prevX) * 0.007;
       scene.userData.sph.phi = Math.max(0.1, Math.min(Math.PI / 2.05, scene.userData.sph.phi - (clientY - prevY) * 0.007));
-      prevX = clientX;
-      prevY = clientY;
+      prevX = clientX; prevY = clientY;
       scene.userData.updateCameraPos();
     };
 
@@ -443,91 +389,29 @@ export default function FullBimSimulationEngine() {
       lastInteractionTime.current = Date.now();
       const rect = mount.getBoundingClientRect();
       const mouse = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, camera);
+      const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, camera);
       const hits = raycaster.intersectObjects(pickableMeshes.current.filter(m => m.visible), false);
 
       if (hits.length > 0) {
-        if (scene.userData.toolMode === "MEASURE") {
-            const pt = hits[0].point; scene.userData.addMeasurementPoint(pt); return;
-        }
-
-        const hit = hits[0].object.userData;
-        const isClash = hit.entityId.includes("CLASH");
-        const isDLP = hit.entityId.includes("DLP");
-        
-        if (isClash) setInspectorTab("CLASH_MATRIX");
-        else if (isDLP) setInspectorTab("DLP_TICKET");
-        else if (hit.cdeDocs && hit.cdeDocs.length > 0) setInspectorTab("CDE_DOCS"); 
-        else setInspectorTab("SUB_COMPS");
-        
-        setSelectedEntity({
-          id: hit.entityId, name: hit.name, type: (isDLP ? "DEFECT_TICKET" : "ELEMENT"),
-          discipline: isClash || isDLP ? "DEFECT" : "STRUCTURAL",
-          parentLevel: hit.level, parentZone: hit.zone,
-          subComponents: hit.subComponents || [], boqItems: hit.boqItems || [], cdeDocs: hit.cdeDocs || []
-        });
+        if (scene.userData.toolMode === "MEASURE") { const pt = hits[0].point; scene.userData.addMeasurementPoint(pt); return; }
+        const hit = hits[0].object.userData; const isClash = hit.entityId.includes("CLASH"); const isDLP = hit.entityId.includes("DLP");
+        if (isClash) setInspectorTab("CLASH_MATRIX"); else if (isDLP) setInspectorTab("DLP_TICKET"); else if (hit.cdeDocs && hit.cdeDocs.length > 0) setInspectorTab("CDE_DOCS"); else setInspectorTab("SUB_COMPS");
+        setSelectedEntity({ id: hit.entityId, name: hit.name, type: (isDLP ? "DEFECT_TICKET" : "ELEMENT"), discipline: isClash || isDLP ? "DEFECT" : "STRUCTURAL", parentLevel: hit.level, parentZone: hit.zone, subComponents: hit.subComponents || [], boqItems: hit.boqItems || [], cdeDocs: hit.cdeDocs || [] });
       }
     };
 
-    // MOUSE BINDINGS
     const onMouseDown = (e: MouseEvent) => handlePointerDown(e.clientX, e.clientY);
     const onMouseMove = (e: MouseEvent) => handlePointerMove(e.clientX, e.clientY);
     const onClick = (e: MouseEvent) => handlePointerClick(e.clientX, e.clientY);
-    
-    // TOUCH BINDINGS
-    const onTouchStart = (e: TouchEvent) => {
-        if (e.touches.length === 1) {
-            handlePointerDown(e.touches[0].clientX, e.touches[0].clientY);
-        } else if (e.touches.length === 2) {
-            // Pinch to zoom init
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            prevDist = Math.sqrt(dx*dx + dy*dy);
-        }
-    };
-    
-    const onTouchMove = (e: TouchEvent) => {
-        e.preventDefault(); // Stop scrolling on canvas
-        if (e.touches.length === 1) {
-            handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
-        } else if (e.touches.length === 2 && scene.userData.activeCamMode === "ORBIT") {
-            // Pinch to zoom execution
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            const delta = prevDist - dist;
-            scene.userData.sph.r = Math.max(30, Math.min(320, scene.userData.sph.r + delta * 0.5));
-            scene.userData.updateCameraPos();
-            prevDist = dist;
-        }
-    };
+    const onTouchStart = (e: TouchEvent) => { if (e.touches.length === 1) handlePointerDown(e.touches[0].clientX, e.touches[0].clientY); else if (e.touches.length === 2) { const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; prevDist = Math.sqrt(dx*dx + dy*dy); } };
+    const onTouchMove = (e: TouchEvent) => { e.preventDefault(); if (e.touches.length === 1) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY); else if (e.touches.length === 2 && scene.userData.activeCamMode === "ORBIT") { const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; const dist = Math.sqrt(dx*dx + dy*dy); scene.userData.sph.r = Math.max(30, Math.min(320, scene.userData.sph.r + (prevDist - dist) * 0.5)); scene.userData.updateCameraPos(); prevDist = dist; } };
+    const onWheel = (e: WheelEvent) => { e.preventDefault(); if (scene.userData.activeCamMode === "DRONE_FPV") return; lastInteractionTime.current = Date.now(); scene.userData.sph.r = Math.max(30, Math.min(320, scene.userData.sph.r + e.deltaY * 0.1)); scene.userData.updateCameraPos(); };
 
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      if (scene.userData.activeCamMode === "DRONE_FPV") return;
-      lastInteractionTime.current = Date.now();
-      scene.userData.sph.r = Math.max(30, Math.min(320, scene.userData.sph.r + e.deltaY * 0.1));
-      scene.userData.updateCameraPos();
-    };
-
-    mount.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mouseup", handlePointerUp);
-    window.addEventListener("mousemove", onMouseMove);
-    mount.addEventListener("click", onClick);
-    mount.addEventListener("wheel", onWheel, { passive: false });
-    
-    // Mobile Touch
-    mount.addEventListener("touchstart", onTouchStart, { passive: false });
-    window.addEventListener("touchend", handlePointerUp);
-    mount.addEventListener("touchmove", onTouchMove, { passive: false });
+    mount.addEventListener("mousedown", onMouseDown); window.addEventListener("mouseup", handlePointerUp); mount.addEventListener("mousemove", onMouseMove); mount.addEventListener("click", onClick); mount.addEventListener("wheel", onWheel, { passive: false });
+    mount.addEventListener("touchstart", onTouchStart, { passive: false }); window.addEventListener("touchend", handlePointerUp); mount.addEventListener("touchmove", onTouchMove, { passive: false });
 
     const ro = new ResizeObserver(([entry]) => {
-      if (entry && entry.contentRect.width > 0) {
-        camera.aspect = entry.contentRect.width / entry.contentRect.height;
-        camera.updateProjectionMatrix();
-        renderer.setSize(entry.contentRect.width, entry.contentRect.height);
-      }
+      if (entry && entry.contentRect.width > 0) { camera.aspect = entry.contentRect.width / entry.contentRect.height; camera.updateProjectionMatrix(); renderer.setSize(entry.contentRect.width, entry.contentRect.height); }
     });
     ro.observe(mount);
 
@@ -537,77 +421,44 @@ export default function FullBimSimulationEngine() {
       
       framesRef.current++;
       if (Date.now() - lastFpsTimeRef.current > 1000) {
-          const info = rendererRef.current?.info;
-          setEngineStats({ fps: framesRef.current, drawCalls: info?.render.calls || 0, polygons: ((info?.render.triangles || 0) / 1000000).toFixed(2) + "M", memory: "142MB" });
+          setEngineStats({ fps: framesRef.current, drawCalls: rendererRef.current?.info?.render.calls || 0, polygons: (((rendererRef.current?.info?.render.triangles || 0) / 1000000).toFixed(2)) + "M", memory: "142MB" });
           framesRef.current = 0; lastFpsTimeRef.current = Date.now();
       }
 
       if (scene.userData.lightning && scene.userData.weatherMode === "MONSOON") {
-          if (Math.random() > 0.985) { 
-              scene.userData.lightning.intensity = 50000 + Math.random() * 50000;
-              scene.userData.lightning.position.set((Math.random() - 0.5) * 200, 200, (Math.random() - 0.5) * 200);
-          } else if (scene.userData.lightning.intensity > 0) {
-              scene.userData.lightning.intensity = Math.max(0, scene.userData.lightning.intensity - 8000); 
-          }
+          if (Math.random() > 0.985) { scene.userData.lightning.intensity = 50000 + Math.random() * 50000; scene.userData.lightning.position.set((Math.random() - 0.5) * 200, 200, (Math.random() - 0.5) * 200);
+          } else if (scene.userData.lightning.intensity > 0) { scene.userData.lightning.intensity = Math.max(0, scene.userData.lightning.intensity - 8000); }
       } else if (scene.userData.lightning) { scene.userData.lightning.intensity = 0; }
-
-      const dlp = pickableMeshes.current.find(m => m.userData.entityId.includes("DLP"));
-      if (dlp && dlp.visible) {
-          dlp.rotation.y += 0.02; dlp.rotation.x += 0.01;
-          (dlp.material as any).emissiveIntensity = 0.5 + Math.sin(t * 8) * 0.5;
-          dlp.scale.setScalar(1 + Math.sin(t * 4) * 0.2);
-      }
 
       if (craneRef.current && craneJibRef.current && craneTrolleyRef.current) {
           if (scene.userData.timelineWeek < 24) {
-              craneRef.current.visible = true;
-              const jibAngle = Math.sin(t * 0.15) * 1.5;
-              craneJibRef.current.rotation.y = jibAngle;
-              craneTrolleyRef.current.position.x = 15 + Math.abs(Math.sin(t * 0.3)) * 40;
-
+              craneRef.current.visible = true; const jibAngle = Math.sin(t * 0.15) * 1.5; craneJibRef.current.rotation.y = jibAngle; craneTrolleyRef.current.position.x = 15 + Math.abs(Math.sin(t * 0.3)) * 40;
               if (scene.userData.activeCamMode === "CRANE_CAM") {
-                  const cx = craneRef.current.position.x + Math.cos(jibAngle)*2;
-                  const cz = craneRef.current.position.z - Math.sin(jibAngle)*2;
-                  camera.position.set(cx, 110, cz);
-                  camera.lookAt(craneRef.current.position.x + Math.cos(jibAngle)*50, 20, craneRef.current.position.z - Math.sin(jibAngle)*50);
+                  const cx = craneRef.current.position.x + Math.cos(jibAngle)*2; const cz = craneRef.current.position.z - Math.sin(jibAngle)*2;
+                  camera.position.set(cx, 110, cz); camera.lookAt(craneRef.current.position.x + Math.cos(jibAngle)*50, 20, craneRef.current.position.z - Math.sin(jibAngle)*50);
               }
-          } else {
-              craneRef.current.visible = false;
-              if (scene.userData.activeCamMode === "CRANE_CAM") scene.userData.setCamMode("ORBIT");
-          }
+          } else { craneRef.current.visible = false; if (scene.userData.activeCamMode === "CRANE_CAM") scene.userData.setCamMode("ORBIT"); }
       }
 
       if (scene.userData.showPitchDeck && scene.userData.activeCamMode === "ORBIT") {
-          scene.userData.sph.theta -= 0.002; 
-          scene.userData.updateCameraPos();
-          scene.userData.timeLapseCycle = (scene.userData.timeLapseCycle || 14) + 0.015;
-          if (scene.userData.timeLapseCycle > 24) scene.userData.timeLapseCycle = 0;
+          scene.userData.sph.theta -= 0.002; scene.userData.updateCameraPos();
+          scene.userData.timeLapseCycle = (scene.userData.timeLapseCycle || 14) + 0.015; if (scene.userData.timeLapseCycle > 24) scene.userData.timeLapseCycle = 0;
           if (scene.userData.setTimeOfDayCallback) scene.userData.setTimeOfDayCallback(scene.userData.timeLapseCycle);
       } else if (scene.userData.isKioskMode && scene.userData.activeCamMode === "ORBIT") {
-          scene.userData.sph.theta -= 0.003; 
-          scene.userData.updateCameraPos();
+          scene.userData.sph.theta -= 0.003; scene.userData.updateCameraPos();
       } else if (scene.userData.activeCamMode === "ORBIT" && Date.now() - lastInteractionTime.current > 6000 && !isDragging) {
-         scene.userData.sph.theta -= 0.0012; 
-         scene.userData.updateCameraPos();
+         scene.userData.sph.theta -= 0.0012; scene.userData.updateCameraPos();
       }
 
-      renderer.render(scene, camera);
-      animId = requestAnimationFrame(animate);
+      renderer.render(scene, camera); animId = requestAnimationFrame(animate);
     };
     animate();
 
     return () => {
       cancelAnimationFrame(animId);
-      mount.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mouseup", handlePointerUp);
-      window.removeEventListener("mousemove", onMouseMove);
-      mount.removeEventListener("click", onClick);
-      mount.removeEventListener("wheel", onWheel);
-      mount.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchend", handlePointerUp);
-      mount.removeEventListener("touchmove", onTouchMove);
-      ro.disconnect();
-      renderer.dispose();
+      mount.removeEventListener("mousedown", onMouseDown); window.removeEventListener("mouseup", handlePointerUp); mount.removeEventListener("mousemove", onMouseMove); mount.removeEventListener("click", onClick); mount.removeEventListener("wheel", onWheel);
+      mount.removeEventListener("touchstart", onTouchStart); window.removeEventListener("touchend", handlePointerUp); mount.removeEventListener("touchmove", onTouchMove);
+      ro.disconnect(); renderer.dispose();
     };
   }, [isHydrated]);
 
@@ -615,39 +466,25 @@ export default function FullBimSimulationEngine() {
 
   useEffect(() => {
     if (!lightsGroupRef.current || !sceneRef.current) return;
-    const isNight = timeOfDay < 6 || timeOfDay > 18;
-    const isMonsoon = weatherMode === "MONSOON";
-    const _isHandover = timelineWeek >= 24;
-    
-    const lights = lightsGroupRef.current.children;
-    const ambient = lights[0] as THREE.AmbientLight;
-    const dir = lights[1] as THREE.DirectionalLight;
-    const spot1 = lights[2] as THREE.SpotLight;
+    const isNight = timeOfDay < 6 || timeOfDay > 18; const isMonsoon = weatherMode === "MONSOON"; const _isHandover = timelineWeek >= 24;
+    const lights = lightsGroupRef.current.children; const ambient = lights[0] as THREE.AmbientLight; const dir = lights[1] as THREE.DirectionalLight; const spot1 = lights[2] as THREE.SpotLight;
     
     if (isMonsoon) {
-        sceneRef.current.background = new THREE.Color(isNight ? 0x010308 : 0x1e293b);
-        if (sceneRef.current.fog) (sceneRef.current.fog as THREE.FogExp2).density = 0.008;
-        ambient.intensity = isNight ? 0.1 : 0.4;
-        dir.intensity = isNight ? 0.1 : 0.5;
-        spot1.intensity = isNight ? 4000 : 0;
+        sceneRef.current.background = new THREE.Color(isNight ? 0x010308 : 0x1e293b); if (sceneRef.current.fog) (sceneRef.current.fog as THREE.FogExp2).density = 0.008;
+        ambient.intensity = isNight ? 0.1 : 0.4; dir.intensity = isNight ? 0.1 : 0.5; spot1.intensity = isNight ? 4000 : 0;
     } else {
-        const timeNorm = (timeOfDay - 6) / 12; 
-        const sunAngle = timeNorm * Math.PI; 
+        const timeNorm = (timeOfDay - 6) / 12; const sunAngle = timeNorm * Math.PI; 
         dir.position.set(Math.cos(sunAngle) * -150, Math.sin(sunAngle) * 150, 80);
-
         if (isNight) {
-            sceneRef.current.background = new THREE.Color(0x060a14); 
-            ambient.intensity = 0.15; dir.intensity = 0.1; spot1.intensity = 4000;
+            sceneRef.current.background = new THREE.Color(0x060a14); ambient.intensity = 0.15; dir.intensity = 0.1; spot1.intensity = 4000;
         } else {
             const skyColor = new THREE.Color();
             if (timeOfDay < 8) skyColor.lerpColors(new THREE.Color(0xff8c00), new THREE.Color(0x87CEEB), (timeOfDay-6)/2);
             else if (timeOfDay > 16) skyColor.lerpColors(new THREE.Color(0x87CEEB), new THREE.Color(0xff4500), (timeOfDay-16)/2);
             else skyColor.setHex(0x87CEEB); 
-
             sceneRef.current.background = skyColor;
             if (sceneRef.current.fog) { (sceneRef.current.fog as THREE.FogExp2).color = skyColor; (sceneRef.current.fog as THREE.FogExp2).density = 0.002; }
-            ambient.intensity = 0.6 + Math.sin(sunAngle) * 0.3;
-            dir.intensity = Math.max(0, Math.sin(sunAngle) * 2.0);
+            ambient.intensity = 0.6 + Math.sin(sunAngle) * 0.3; dir.intensity = Math.max(0, Math.sin(sunAngle) * 2.0);
             if (timeOfDay < 8 || timeOfDay > 16) dir.color.setHex(0xffaa55); else dir.color.setHex(0xffffff);
             spot1.intensity = 0;
         }
@@ -655,13 +492,12 @@ export default function FullBimSimulationEngine() {
 
     if (elementsGroupRef.current) {
         elementsGroupRef.current.children.forEach((obj: THREE.Object3D) => {
-            const mesh = obj as THREE.Mesh;
-            if (!mesh.userData || !mesh.material) return;
+            const mesh = obj as THREE.Mesh; if (!mesh.userData || !mesh.material) return;
             const { originalEmissive, entityId } = mesh.userData;
             if (entityId && (entityId.includes("GLZ") || entityId.includes("CORE"))) {
                 const mat = mesh.material as any;
-                if (isNight && _isHandover && renderMode !== "X_RAY") { mat.emissive.setHex(0xffaa55); mat.emissiveIntensity = 0.8;
-                } else { mat.emissive.setHex(originalEmissive); mat.emissiveIntensity = 0; }
+                if (isNight && _isHandover && renderMode !== "X_RAY") { mat.emissive.setHex(0xffaa55); mat.emissiveIntensity = 0.8; } 
+                else { mat.emissive.setHex(originalEmissive); mat.emissiveIntensity = 0; }
             }
         });
     }
@@ -672,34 +508,10 @@ export default function FullBimSimulationEngine() {
   useEffect(() => { if (sceneRef.current) { sceneRef.current.userData.showPitchDeck = showPitchDeck; } }, [showPitchDeck]);
 
   useEffect(() => {
-      if (sceneRef.current) {
-          sceneRef.current.userData.toolMode = toolMode;
-          sceneRef.current.userData.addMeasurementPoint = (pt: THREE.Vector3) => { setMeasurementPoints(prev => { let newPts = [...prev]; if (newPts.length >= 2) newPts = []; newPts.push(pt); return newPts; }); };
-      }
-      if (toolMode === "SELECT") { setMeasurementPoints([]); setMeasurementDistance(null); }
-  }, [toolMode]);
-
-  useEffect(() => {
-      if (measurementLineRef.current && measurementSpheresRef.current.length > 0) {
-          if (measurementPoints.length === 0) {
-              measurementLineRef.current.visible = false; measurementSpheresRef.current.forEach(s => s.visible = false); setMeasurementDistance(null);
-          } else if (measurementPoints.length === 1) {
-              measurementSpheresRef.current[0].position.copy(measurementPoints[0]); measurementSpheresRef.current[0].visible = true; measurementSpheresRef.current[1].visible = false; measurementLineRef.current.visible = false;
-          } else if (measurementPoints.length === 2) {
-              measurementSpheresRef.current[1].position.copy(measurementPoints[1]); measurementSpheresRef.current[1].visible = true;
-              const geo = new THREE.BufferGeometry().setFromPoints(measurementPoints);
-              measurementLineRef.current.geometry.dispose(); measurementLineRef.current.geometry = geo; measurementLineRef.current.visible = true;
-              setMeasurementDistance(measurementPoints[0].distanceTo(measurementPoints[1]));
-          }
-      }
-  }, [measurementPoints]);
-
-  useEffect(() => {
     if (!elementsGroupRef.current) return;
     const pipe = pickableMeshes.current.find(m => m.userData.entityId === "CHW_MAIN");
     if (pipe) { 
-        pipe.position.y = clashResolved ? 4.8 : 5.5; 
-        pipe.userData.originalY = clashResolved ? 4.8 : 5.5; 
+        pipe.position.y = clashResolved ? 4.8 : 5.5; pipe.userData.originalY = clashResolved ? 4.8 : 5.5; 
         if (clashResolved && pipe.userData.cdeDocs) {
             pipe.userData.cdeDocs[0].status = "APPROVED"; pipe.userData.cdeDocs[0].hash = "6x9c22b...a1b2c"; 
             if (!pipe.userData.cdeDocs.some((d: any) => d.id === "CDE-RFI-RES")) { pipe.userData.cdeDocs.push({ id: "CDE-RFI-RES", title: "RFI-4490_AI_Mitigation_Plan.pdf", type: "PDF", date: new Date().toISOString().split('T')[0], status: "APPROVED", hash: "9f3a11b...4d2x9" }); }
@@ -707,16 +519,11 @@ export default function FullBimSimulationEngine() {
     }
   }, [clashResolved]);
 
-  // RENDER MODE
   useEffect(() => {
     if (!elementsGroupRef.current || !isHydrated) return;
     elementsGroupRef.current.children.forEach((obj: THREE.Object3D) => {
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.userData || !mesh.material) return;
-      if (mesh.userData.isCamera || mesh.userData.isAuxiliary) return;
-
-      const { minWeek, originalColor, originalOpacity, originalTransparent, entityId, thermalColor } = mesh.userData;
-      const mat = mesh.material as any;
+      const mesh = obj as THREE.Mesh; if (!mesh.userData || !mesh.material) return; if (mesh.userData.isCamera || mesh.userData.isAuxiliary) return;
+      const { minWeek, originalColor, originalOpacity, originalTransparent, entityId, thermalColor } = mesh.userData; const mat = mesh.material as any;
       
       mesh.visible = timelineWeek >= minWeek;
       if (mesh.userData.edgeLine) mesh.userData.edgeLine.visible = (renderMode === "CAD_EDGES" || renderMode === "X_RAY" || renderMode === "ANATOMY");
@@ -765,11 +572,15 @@ export default function FullBimSimulationEngine() {
       (e.currentTarget.elements.namedItem('qInput') as HTMLInputElement).value = '';
 
       setTimeout(() => {
-          if (input.toLowerCase().includes("clash")) {
+          // PHASE 40: YC PITCH GENERATOR AI EASTER EGG
+          if (input.toLowerCase().includes("yc pitch") || input.toLowerCase().includes("draft yc") || input.toLowerCase().includes("apply to yc")) {
+              setQuadMaxHistory(prev => [...prev, { role: "ai", text: "Generating 50-word YC Application summary..." }]);
+              setTimeout(() => {
+                  setQuadMaxHistory(prev => [...prev, { role: "ai", text: "Quadillar ConTech builds end-to-end 6D digital twins for commercial construction. We replace fragmented spreadsheets and 2D CAD with a single WebGL platform that tracks geometry, escrow financials, IoT hardware, and multi-agent clash resolution in real-time, saving enterprise contractors millions in defect liability and timeline delays." }]);
+              }, 600);
+          } else if (input.toLowerCase().includes("clash")) {
               setQuadMaxHistory(prev => [...prev, { role: "ai", text: "Isolating spatial defect. Found [1] Hard Clash in MEP Trench. Scanning to Week 20." }]);
               setTimelineWeek(20); setRenderMode("IOT_MESH"); setClashResolved(false);
-          } else if (input.toLowerCase().includes("investor") || input.toLowerCase().includes("yc") || input.toLowerCase().includes("kotak")) {
-              setQuadMaxHistory(prev => [...prev, { role: "ai", text: "Processing... Quadillar ConTech is primed for exponential enterprise scaling. Generating Term Sheet confidence..." }]);
           } else {
               setQuadMaxHistory(prev => [...prev, { role: "ai", text: "I am actively parsing that spatial query against the CDE ledger. Please specify the element ID." }]);
           }
@@ -781,7 +592,7 @@ export default function FullBimSimulationEngine() {
   return (
     <div className={`w-full flex flex-col gap-5 ${vrMode ? "fixed inset-0 z-50 bg-slate-950 p-6" : ""}`}>
       
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl relative z-50">
         <div className="flex items-center gap-1.5 bg-slate-950 p-1 border border-slate-800 rounded-lg overflow-x-auto w-full md:w-auto custom-scrollbar">
           {(["SOLID", "CAD_EDGES", "X_RAY", "LIDAR_SCAN", "ANATOMY", "IOT_MESH", "THERMAL"] as const).map((mode) => (
             <button key={mode} onClick={() => setRenderMode(mode)} className={`px-2.5 py-0.5 text-[11px] font-mono rounded font-semibold transition whitespace-nowrap ${renderMode === mode ? (mode === "LIDAR_SCAN" ? "bg-teal-500 text-slate-900" : mode === "ANATOMY" ? "bg-amber-500 text-slate-900 animate-pulse" : mode === "IOT_MESH" ? "bg-blue-500 text-slate-900 shadow-[0_0_10px_rgba(59,130,246,0.6)]" : mode === "THERMAL" ? "bg-red-500 text-slate-900 shadow-[0_0_15px_rgba(239,68,68,0.5)]" : "bg-emerald-500 text-slate-950") : "text-slate-400 hover:text-slate-200"}`}>
@@ -790,6 +601,12 @@ export default function FullBimSimulationEngine() {
           ))}
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto custom-scrollbar pb-1 md:pb-0">
+          
+          {/* PHASE 40: PORTFOLIO BUTTON */}
+          <button onClick={() => setShowPortfolio(!showPortfolio)} className={`px-4 py-1.5 text-[11px] font-bold uppercase rounded border transition-all whitespace-nowrap ${showPortfolio ? "bg-cyan-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] border-cyan-400" : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"}`}>
+            {showPortfolio ? "🏢 CLOSE PORTFOLIO" : "🏢 PORTFOLIO"}
+          </button>
+          
           <button onClick={() => { setShowPitchDeck(!showPitchDeck); if(!showPitchDeck) { setPitchMode(true); setTimelineWeek(24); setRenderMode("SOLID"); } else setPitchMode(false); }} className={`px-4 py-1.5 text-[11px] font-bold uppercase rounded border transition-all whitespace-nowrap ${showPitchDeck ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.6)] animate-pulse border-cyan-300" : "bg-gradient-to-r from-slate-800 to-slate-900 border-slate-700 text-cyan-400 hover:border-cyan-500"}`}>
             {showPitchDeck ? "⏹ CLOSE DECK" : "🚀 YC PITCH DECK"}
           </button>
@@ -799,17 +616,83 @@ export default function FullBimSimulationEngine() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 transition-all duration-500 ease-in-out h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 transition-all duration-500 ease-in-out h-full relative">
+        
+        {/* PHASE 40: ENTERPRISE PORTFOLIO OVERLAY */}
+        {showPortfolio && (
+            <div className="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-xl rounded-xl p-6 md:p-8 flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-300 overflow-y-auto custom-scrollbar">
+                <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-black text-white tracking-widest">QUADILLAR COMMAND CENTER</h1>
+                        <p className="text-xs md:text-sm text-cyan-400 font-mono mt-1">Global Enterprise Portfolio Matrix</p>
+                    </div>
+                    <div className="text-right hidden md:block">
+                        <div className="text-2xl font-black text-emerald-400 font-mono">₹2,159.5 Cr</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-widest">Total Asset Value Monitored</div>
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* JPNIC (Active) */}
+                    <div onClick={() => setShowPortfolio(false)} className="bg-slate-900 border border-cyan-500/50 p-5 rounded-xl cursor-pointer hover:bg-slate-800 transition-all shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:-translate-y-1">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-base font-bold text-white leading-tight">Jai Prakash Narayan Centre</h3>
+                            <span className="bg-emerald-900/50 text-emerald-400 text-[9px] font-bold px-2 py-1 rounded border border-emerald-500/30 animate-pulse">LIVE</span>
+                        </div>
+                        <div className="h-32 bg-slate-950 rounded border border-slate-800 mb-4 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-500 to-transparent"></div>
+                            <span className="text-cyan-500 text-xs font-mono font-bold relative z-10">Active Viewport</span>
+                        </div>
+                        <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                            <div className="flex justify-between text-xs font-mono text-slate-400"><span>Asset Value:</span><span className="text-white">₹864.0Cr</span></div>
+                            <div className="flex justify-between text-xs font-mono text-slate-400"><span>Phase:</span><span className="text-emerald-400">7D Facility Ops</span></div>
+                            <div className="flex justify-between text-xs font-mono text-slate-400"><span>Sensors:</span><span className="text-cyan-400">12 Active Nodes</span></div>
+                        </div>
+                    </div>
+
+                    {/* TechPark */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-xl opacity-70 cursor-not-allowed">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-base font-bold text-slate-300 leading-tight">Lucknow IT City TechPark</h3>
+                            <span className="bg-amber-900/30 text-amber-500 text-[9px] font-bold px-2 py-1 rounded border border-amber-500/20">PHASE 2</span>
+                        </div>
+                        <div className="h-32 bg-slate-950 rounded border border-slate-800 border-dashed mb-4 flex items-center justify-center">
+                            <span className="text-slate-600 text-[10px] font-mono">LOD-300 Model Loading...</span>
+                        </div>
+                        <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                            <div className="flex justify-between text-xs font-mono text-slate-500"><span>Asset Value:</span><span className="text-slate-300">₹1,250.0Cr</span></div>
+                            <div className="flex justify-between text-xs font-mono text-slate-500"><span>Phase:</span><span className="text-amber-500">Foundation Piling</span></div>
+                            <div className="flex justify-between text-xs font-mono text-slate-500"><span>Contractor:</span><span className="text-slate-400">Anandeshwar Ent.</span></div>
+                        </div>
+                    </div>
+
+                    {/* ZeeroBills HQ */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-xl opacity-70 cursor-not-allowed">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-base font-bold text-slate-300 leading-tight">ZeeroBills Healthcare HQ</h3>
+                            <span className="bg-purple-900/30 text-purple-400 text-[9px] font-bold px-2 py-1 rounded border border-purple-500/20">DESIGN</span>
+                        </div>
+                        <div className="h-32 bg-slate-950 rounded border border-slate-800 border-dashed mb-4 flex items-center justify-center">
+                            <span className="text-slate-600 text-[10px] font-mono">Awaiting IFC Sync</span>
+                        </div>
+                        <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                            <div className="flex justify-between text-xs font-mono text-slate-500"><span>Asset Value:</span><span className="text-slate-300">₹45.5Cr</span></div>
+                            <div className="flex justify-between text-xs font-mono text-slate-500"><span>Phase:</span><span className="text-purple-400">Generative Massing</span></div>
+                            <div className="flex justify-between text-xs font-mono text-slate-500"><span>Client:</span><span className="text-slate-400">ZeeroBills India</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
         <div className={`${pitchMode || vrMode ? "lg:col-span-12" : "lg:col-span-8"} flex flex-col gap-3 transition-all duration-500 h-full relative`}>
           
           <div className={`relative w-full ${pitchMode || vrMode ? "h-[85vh] md:h-[75vh]" : "h-[450px] md:h-[500px]"} bg-slate-950 rounded-xl overflow-hidden border border-slate-800 transition-all duration-500 touch-none`}>
             
-            {/* PHASE 37: HOLOGRAPHIC PITCH DECK OVERLAY */}
+            {/* PITCH DECK OVERLAY */}
             {showPitchDeck && (
                 <div className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center p-4 md:p-8 bg-slate-950/20">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-7xl h-full md:h-auto overflow-y-auto md:overflow-visible custom-scrollbar">
-                        
-                        {/* Company Card */}
                         <div className="bg-slate-900/70 border border-cyan-500/30 backdrop-blur-xl p-4 md:p-6 rounded-2xl shadow-[0_0_40px_rgba(6,182,212,0.15)] flex flex-col gap-3 pointer-events-auto">
                             <div className="text-cyan-400 text-xs font-mono font-bold tracking-widest uppercase border-b border-cyan-500/30 pb-2 mb-2">The Company</div>
                             <h2 className="text-xl md:text-2xl font-black text-white leading-tight">QUADILLAR CONTECH PVT. LTD.</h2>
@@ -821,39 +704,25 @@ export default function FullBimSimulationEngine() {
                             </div>
                         </div>
 
-                        {/* Team Card */}
                         <div className="bg-slate-900/70 border border-blue-500/30 backdrop-blur-xl p-4 md:p-6 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.15)] flex flex-col gap-3 pointer-events-auto">
                             <div className="text-blue-400 text-xs font-mono font-bold tracking-widest uppercase border-b border-blue-500/30 pb-2 mb-2">The Execution Engine</div>
                             <div className="flex flex-col gap-2 md:gap-4 mt-2">
                                 <div className="bg-blue-950/30 p-2 md:p-3 rounded-lg border border-blue-500/20">
                                     <div className="text-base md:text-lg font-bold text-white">Akshat Singh Rathore</div>
-                                    <div className="flex justify-between items-center mt-1">
-                                        <div className="text-[10px] md:text-xs text-blue-300">Founder & CEO</div>
-                                        <div className="text-[10px] md:text-xs font-mono bg-blue-900/50 px-2 py-0.5 rounded text-blue-200">Equity: 51%</div>
-                                    </div>
+                                    <div className="flex justify-between items-center mt-1"><div className="text-[10px] md:text-xs text-blue-300">Founder & CEO</div><div className="text-[10px] md:text-xs font-mono bg-blue-900/50 px-2 py-0.5 rounded text-blue-200">Equity: 51%</div></div>
                                 </div>
                                 <div className="bg-blue-950/30 p-2 md:p-3 rounded-lg border border-blue-500/20">
                                     <div className="text-base md:text-lg font-bold text-white">Aryan Singh</div>
-                                    <div className="flex justify-between items-center mt-1">
-                                        <div className="text-[10px] md:text-xs text-blue-300">Co-Founder, Dir. Civil Ops</div>
-                                        <div className="text-[10px] md:text-xs font-mono bg-blue-900/50 px-2 py-0.5 rounded text-blue-200">Equity: 49%</div>
-                                    </div>
+                                    <div className="flex justify-between items-center mt-1"><div className="text-[10px] md:text-xs text-blue-300">Co-Founder, Dir. Civil Ops</div><div className="text-[10px] md:text-xs font-mono bg-blue-900/50 px-2 py-0.5 rounded text-blue-200">Equity: 49%</div></div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Tech Card */}
                         <div className="bg-slate-900/70 border border-purple-500/30 backdrop-blur-xl p-4 md:p-6 rounded-2xl shadow-[0_0_40px_rgba(168,85,247,0.15)] flex flex-col gap-3 pointer-events-auto">
                             <div className="text-purple-400 text-xs font-mono font-bold tracking-widest uppercase border-b border-purple-500/30 pb-2 mb-2">Core Proprietary Tech</div>
                             <ul className="flex flex-col gap-3 md:gap-4 mt-2">
-                                <li className="flex items-start gap-3">
-                                    <span className="text-lg">🤖</span>
-                                    <div><div className="text-xs md:text-sm font-bold text-white">Multi-Agent AI Hive</div><div className="text-[10px] md:text-xs text-slate-400">Automated spatial clash resolution.</div></div>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="text-lg">⛓️</span>
-                                    <div><div className="text-xs md:text-sm font-bold text-white">WORM Cryptographic Ledger</div><div className="text-[10px] md:text-xs text-slate-400">SHA-256 sealed CDE documentation.</div></div>
-                                </li>
+                                <li className="flex items-start gap-3"><span className="text-lg">🤖</span><div><div className="text-xs md:text-sm font-bold text-white">Multi-Agent AI Hive</div><div className="text-[10px] md:text-xs text-slate-400">Automated spatial clash resolution.</div></div></li>
+                                <li className="flex items-start gap-3"><span className="text-lg">⛓️</span><div><div className="text-xs md:text-sm font-bold text-white">WORM Cryptographic Ledger</div><div className="text-[10px] md:text-xs text-slate-400">SHA-256 sealed CDE documentation.</div></div></li>
                             </ul>
                             
                             <div className="mt-auto pt-4 border-t border-purple-500/30">
@@ -891,9 +760,8 @@ export default function FullBimSimulationEngine() {
             <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
             
             {/* HIDE HUDs DURING PITCH DECK MODE */}
-            {!showPitchDeck && (
+            {!showPitchDeck && !showPortfolio && (
                 <>
-                    {/* EVM HUD - Hidden on very small screens, scales on tablets */}
                     <div className="hidden sm:block absolute top-3 right-3 bg-slate-900/90 border border-slate-700 p-2 md:p-3 rounded-lg backdrop-blur-md w-56 md:w-72 pointer-events-none shadow-2xl transition-all z-20">
                        <div className="text-[9px] md:text-[10px] font-mono text-emerald-400 uppercase tracking-widest mb-1 md:mb-2 border-b border-slate-700 pb-1">
                            {isHandover ? "7D Facility Operations" : "6D EVM Analytics"}
@@ -911,7 +779,6 @@ export default function FullBimSimulationEngine() {
                        )}
                     </div>
                     
-                    {/* AI Terminal - Scales down on mobile */}
                     <div className={`absolute bottom-3 left-3 bg-slate-950/90 border border-slate-800 p-2 md:p-2.5 rounded-lg backdrop-blur-md w-64 md:w-[22rem] h-24 md:h-36 overflow-hidden pointer-events-none flex flex-col justify-end z-20 shadow-2xl transition-opacity duration-300 ${showQuadMax ? "opacity-0" : "opacity-100"}`}>
                       <div className="text-[9px] md:text-[10px] font-bold font-mono text-slate-400 mb-1 flex items-center justify-between border-b border-slate-800 pb-1">
                           <span>MULTI-AGENT HIVE</span>
@@ -926,8 +793,7 @@ export default function FullBimSimulationEngine() {
                 </>
             )}
 
-            {/* QUADMAX AI INTERACTIVE OVERLAY */}
-            {showQuadMax && !showPitchDeck && (
+            {showQuadMax && !showPitchDeck && !showPortfolio && (
                 <div className="absolute bottom-16 right-4 w-72 md:w-96 bg-slate-900/95 border border-cyan-500/50 rounded-xl shadow-[0_0_30px_rgba(6,182,212,0.15)] backdrop-blur-xl z-30 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5">
                     <div className="bg-slate-950 px-3 md:px-4 py-2 md:py-3 border-b border-slate-800 flex items-center justify-between">
                         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div><span className="text-[10px] md:text-xs font-bold text-white tracking-widest uppercase">QuadMax AI Copilot</span></div>
@@ -945,7 +811,7 @@ export default function FullBimSimulationEngine() {
                 </div>
             )}
 
-            {!pitchMode && !showPitchDeck && (
+            {!pitchMode && !showPitchDeck && !showPortfolio && (
                 <button onClick={() => setShowQuadMax(!showQuadMax)} className="absolute bottom-4 right-4 z-20 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/30 rounded-full px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 transition-all hover:scale-105 border border-cyan-400/50">
                     <span className="text-xs md:text-sm">✨</span><span className="text-[10px] md:text-xs font-bold tracking-widest uppercase">QuadMax AI</span>
                 </button>
@@ -954,7 +820,7 @@ export default function FullBimSimulationEngine() {
           
         </div>
 
-        {!pitchMode && !vrMode && (
+        {!pitchMode && !vrMode && !showPortfolio && (
           <div className="lg:col-span-4 bg-slate-900/80 border border-slate-800 p-4 rounded-xl flex flex-col h-[400px] md:h-[540px] overflow-hidden transition-all">
             <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-1">Active Selection</div>
             <h3 className="text-sm md:text-base font-bold text-white mb-2 truncate">{selectedEntity.name}</h3>
@@ -986,7 +852,7 @@ export default function FullBimSimulationEngine() {
         )}
       </div>
       
-      {!pitchMode && !vrMode && (
+      {!pitchMode && !vrMode && !showPortfolio && (
         <div className="bg-slate-900/90 border border-slate-800 p-4 md:p-5 rounded-xl flex flex-col gap-3 md:gap-4 transition-all">
           <div className="flex justify-between items-center text-xs border-b border-slate-800 pb-2 md:pb-3">
             <div className="flex items-center gap-2 md:gap-3">

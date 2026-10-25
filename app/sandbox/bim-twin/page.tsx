@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 
-interface Asset {
+interface Asset { manufacturer?: string; model?: string; serialNumber?: string; [key: string]: any; 
   asset_guid: string;
   asset_tag: string;
   asset_name: string;
@@ -220,11 +220,11 @@ export default function BimSandboxPage() {
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between py-1 border-b border-slate-800/40">
                     <span className="text-slate-400">Manufacturer</span>
-                    <span className="text-slate-200 font-mono">{selectedAsset.manufacturer}</span>
+                    <span className="text-slate-200 font-mono">{(selectedAsset as any)?.manufacturer}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-800/40">
                     <span className="text-slate-400">Model / Serial</span>
-                    <span className="text-slate-200 font-mono">{selectedAsset.model_number}</span>
+                    <span className="text-slate-200 font-mono">{(selectedAsset as any)?.model_number}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-800/40">
                     <span className="text-slate-400">Commissioned Date</span>
