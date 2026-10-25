@@ -168,7 +168,7 @@ export default function ContractAnalyzerPage() {
                       </span>
                     </div>
                     <div className="text-zinc-300 font-bold">{c.heading}</div>
-                    <div className="text-[10px] text-zinc-500">{c.source_framework.replace(/_/g, " ")}</div>
+                    <div className="text-[10px] text-zinc-500">{c?.source_framework?.replace(/_/g, " ")}</div>
                   </div>
                 );
               })}

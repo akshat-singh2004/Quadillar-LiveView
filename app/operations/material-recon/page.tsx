@@ -275,7 +275,7 @@ export default function MaterialReconciliationPage() {
                       <tr key={r.id} className={`hover:bg-zinc-900/50 transition ${isBreach ? 'bg-rose-950/10' : ''}`}>
                         <td className="p-3">
                           <span className="text-white font-bold block">{r.reconciliation_period}</span>
-                          <span className="text-[10px] text-cyan-400">{r.material_type.replace(/_/g, ' ')}</span>
+                          <span className="text-[10px] text-cyan-400">{r?.material_type?.replace(/_/g, ' ')}</span>
                         </td>
                         <td className="p-3 text-right text-zinc-300 font-bold">{Number(r.theoretical_consumption).toFixed(2)} {r.unit}</td>
                         <td className="p-3 text-right text-zinc-200">{Number(r.actual_consumption).toFixed(2)} {r.unit}</td>

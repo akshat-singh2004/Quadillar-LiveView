@@ -272,7 +272,7 @@ export default function VisionAiPage() {
                       <tr key={d.id} className="hover:bg-zinc-900/50 transition">
                         <td className="p-3">
                           <span className="text-white font-bold block">{d.detection_code}</span>
-                          <span className="text-[10px] text-cyan-400 font-mono">{d.defect_type.replace(/_/g, ' ')}</span>
+                          <span className="text-[10px] text-cyan-400 font-mono">{((d.defect_type ?? "")).replace(/_/g, ' ')}</span>
                         </td>
                         <td className="p-3 text-zinc-200 font-bold">{d.structural_element}</td>
                         <td className="p-3 text-zinc-400 font-mono text-[11px]">{d.location_grid}</td>
@@ -297,7 +297,7 @@ export default function VisionAiPage() {
                           <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                             isNcr ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-amber-950 text-amber-400 border border-amber-800'
                           }`}>
-                            {d.status.replace(/_/g, ' ')}
+                            {((d.status ?? "")).replace(/_/g, ' ')}
                           </span>
                         </td>
                         <td className="p-3 text-center">

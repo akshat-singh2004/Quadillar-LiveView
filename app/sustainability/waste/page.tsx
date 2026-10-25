@@ -270,7 +270,7 @@ export default function WasteDiversionPage() {
                       <span>{m.manifest_code}</span>
                       <span className="text-[10px] text-zinc-500 block">{m.manifest_date}</span>
                     </td>
-                    <td className="p-3 text-cyan-300 font-mono text-[11px]">{m.waste_category.replace(/_/g, " ")}</td>
+                    <td className="p-3 text-cyan-300 font-mono text-[11px]">{m?.waste_category?.replace(/_/g, " ")}</td>
                     <td className="p-3 text-zinc-300 font-sans">{m.disposal_facility}</td>
                     <td className="p-3 text-right font-bold text-emerald-400 font-mono text-sm">{m.quantity_mt} MT</td>
                     <td className="p-3 font-mono text-zinc-400">{m.weighbridge_slip_no}</td>

@@ -485,12 +485,12 @@ export default function CanonicalRetentionLedgerPage() {
       <h1 class="title">Statutory Retention Escrow &amp; Guarantee Release Certificate</h1>
       <div class="meta">Certificate Ref: ${rec.security_code} · Issue Date: ${new Date().toLocaleDateString("en-IN")} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${rec.status === "FULLY_RELEASED_DLP_END" ? "cleared" : "held"}">${rec.status.replace(/_/g, " ")}</span>
+    <span class="badge ${rec.status === "FULLY_RELEASED_DLP_END" ? "cleared" : "held"}">${rec?.status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
     <tr><th>Executing Contractor</th><td><strong>${rec.contractor_name}</strong></td><th>Trade Package</th><td>${rec.trade_package}</td></tr>
-    <tr><th>Security Classification</th><td>${rec.guarantee_type.replace(/_/g, " ")}</td><th>Financial Institution</th><td>${rec.issuing_financial_institution || "Client Escrow"}</td></tr>
+    <tr><th>Security Classification</th><td>${rec?.guarantee_type?.replace(/_/g, " ")}</td><th>Financial Institution</th><td>${rec.issuing_financial_institution || "Client Escrow"}</td></tr>
     <tr><th>Instrument Number</th><td><strong>${rec.instrument_reference || "Direct Retention Deductions"}</strong></td><th>Associated RA Bill</th><td>${rec.linked_ra_bill_no || "Contract Performance Security"}</td></tr>
     <tr><th>Validity Expiry Horizon</th><td>${rec.validity_expiry_date}</td><th>Defects Liability Period (DLP)</th><td><strong>${rec.dlp_period_months} Months</strong></td></tr>
   </table>
@@ -793,7 +793,7 @@ export default function CanonicalRetentionLedgerPage() {
                           {rec.security_code}
                         </span>
                         <span className="text-[10px] px-2 py-0.2 rounded bg-zinc-800 text-zinc-300 font-mono">
-                          {rec.guarantee_type.replace(/_/g, " ")}
+                          {rec?.guarantee_type?.replace(/_/g, " ")}
                         </span>
                         <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           isFull
@@ -802,7 +802,7 @@ export default function CanonicalRetentionLedgerPage() {
                             ? "bg-rose-950 text-rose-400 border border-rose-800/50"
                             : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                         }`}>
-                          {rec.status.replace(/_/g, " ")}
+                          {rec?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -848,7 +848,7 @@ export default function CanonicalRetentionLedgerPage() {
                   ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                   : "bg-rose-950 text-rose-400 border border-rose-800/50"
               }`}>
-                {selectedRecord.status.replace(/_/g, " ")}
+                {selectedRecord?.status?.replace(/_/g, " ")}
               </span>
             </div>
 
@@ -859,7 +859,7 @@ export default function CanonicalRetentionLedgerPage() {
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>Security Type:</span>
-                <span className="text-zinc-200">{selectedRecord.guarantee_type.replace(/_/g, " ")}</span>
+                <span className="text-zinc-200">{selectedRecord?.guarantee_type?.replace(/_/g, " ")}</span>
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>Issuing Bank / Escrow:</span>

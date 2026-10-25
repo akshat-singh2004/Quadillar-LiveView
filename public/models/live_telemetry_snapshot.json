@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-10-24T06:31:00.716Z",
+  "tick": 159,
+  "isDriftInjected": true,
+  "telemetry": {
+    "2f8a91b4-4e2a-49c8-9d7e-8c3120b08fa1": {
+      "tag": "VAV-1-NW-04",
+      "damper_angle": 44.1,
+      "drift_degrees": -0.9,
+      "airflow_cfm": 421,
+      "status": "ANOMALY_SLA_ACTIVE",
+      "sla_ticket": "DLP-TKT-2026-001"
+    },
+    "4f9b8c31-7e1b-42d9-8a6e-1b2090c07eb2": {
+      "tag": "AHU-L01-01",
+      "static_pressure_pa": 385.6,
+      "chw_return_temp_c": 11.21,
+      "status": "OPTIMAL"
+    },
+    "6d6b5a19-5c99-40b7-6e4c-9f0f70a05c94": {
+      "tag": "AST-FIRE-RSR-01",
+      "line_pressure_bar": 14.98,
+      "status": "VERIFIED_IS5290"
+    }
+  }
+}

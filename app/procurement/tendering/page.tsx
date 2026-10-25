@@ -447,7 +447,7 @@ export default function CanonicalTenderingPage() {
     if (!isTenderLeadOrDirector) return;
     setActionInProgress(`loi_${winningBid.id}`);
 
-    const loiCode = `LOI-${winningBid.tender_reference.replace("NIT-", "")}-01`;
+    const loiCode = `LOI-${winningBid?.tender_reference?.replace("NIT-", "")}-01`;
 
     const pkgUpdate: Partial<TenderPackageRecord> = {
       status: "AWARDED_LOI_ISSUED",
@@ -477,7 +477,7 @@ export default function CanonicalTenderingPage() {
       await (supabase as any).from("contract_work_orders").insert([
         {
           project_id: projectId,
-          work_order_number: `WO-${winningBid.tender_reference.replace("NIT-", "")}`,
+          work_order_number: `WO-${winningBid?.tender_reference?.replace("NIT-", "")}`,
           contractor_name: winningBid.bidder_name,
           trade_package: pkg.trade_package,
           awarded_cost_inr: winningBid.commercial_bid_total_inr,
@@ -632,7 +632,7 @@ export default function CanonicalTenderingPage() {
       <h1 class="title">Comparative Statement of Quotations &amp; Tender Scrutiny Note</h1>
       <div class="meta">Tender Ref: ${pkg.tender_reference} · NIT Publish Date: ${pkg.nit_publish_date} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${pkg.status === "AWARDED_LOI_ISSUED" ? "awarded" : "csq"}">${pkg.status.replace(/_/g, " ")}</span>
+    <span class="badge ${pkg.status === "AWARDED_LOI_ISSUED" ? "awarded" : "csq"}">${pkg?.status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
@@ -667,7 +667,7 @@ export default function CanonicalTenderingPage() {
           <td class="tar font-bold" style="color: ${b.variance_to_estimate_pct < 0 ? "#15803d" : "#b91c1c"};">
             ${b.variance_to_estimate_pct > 0 ? `+${b.variance_to_estimate_pct}%` : `${b.variance_to_estimate_pct}%`}
           </td>
-          <td class="tac font-bold">${b.qualification_status.replace(/_/g, " ")}</td>
+          <td class="tac font-bold">${b?.qualification_status?.replace(/_/g, " ")}</td>
         </tr>
       `).join("")}
       <tr class="total-row" style="background: #e0f2fe;">
@@ -903,7 +903,7 @@ export default function CanonicalTenderingPage() {
                             ? "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {pkg.status.replace(/_/g, " ")}
+                          {pkg?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -961,7 +961,7 @@ export default function CanonicalTenderingPage() {
                     ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                     : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                 }`}>
-                  {selectedPackage.status.replace(/_/g, " ")}
+                  {selectedPackage?.status?.replace(/_/g, " ")}
                 </span>
               </div>
             </div>

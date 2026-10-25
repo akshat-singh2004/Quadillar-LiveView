@@ -228,7 +228,7 @@ export default function SitePermitsRegistryPage() {
                     return (
                       <tr key={p.id} className="hover:bg-zinc-900/50 transition">
                         <td className="p-3 font-bold text-white font-mono">{p.permit_number}</td>
-                        <td className="p-3 text-cyan-300 font-mono text-[11px]">{p.permit_category.replace(/_/g, " ")}</td>
+                        <td className="p-3 text-cyan-300 font-mono text-[11px]">{p?.permit_category?.replace(/_/g, " ")}</td>
                         <td className="p-3 text-zinc-300">{p.location_zone}</td>
                         <td className="p-3 text-zinc-400">{p.subcontractor_name}</td>
                         <td className="p-3 font-mono text-zinc-400">
@@ -247,7 +247,7 @@ export default function SitePermitsRegistryPage() {
                                 : "bg-rose-950 text-rose-400 border-rose-800"
                             }`}
                           >
-                            {p.status.replace(/_/g, " ")}
+                            {p?.status?.replace(/_/g, " ")}
                           </span>
                         </td>
                         <td className="p-3 text-right">

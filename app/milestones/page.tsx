@@ -274,7 +274,7 @@ export default function GovernedMilestonesPage() {
                           ? "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                           : "bg-zinc-900 text-amber-400 border border-amber-800/50"
                       }`}>
-                        {ms.status.replace(/_/g, " ")}
+                        {ms?.status?.replace(/_/g, " ")}
                       </span>
                     </div>
                     <h2 className="text-lg font-bold text-white mt-1">{ms.title}</h2>

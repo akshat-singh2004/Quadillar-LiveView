@@ -506,9 +506,9 @@ export default function CanonicalSensorGatewayPage() {
 
   <table>
     <tr><th>Device Designation</th><td><strong>${dev.device_name}</strong></td><th>Hardware Model</th><td>${dev.manufacturer_model}</td></tr>
-    <tr><th>Device Classification</th><td>${dev.device_type.replace(/_/g, " ")}</td><th>Network Endpoint</th><td><code>${dev.ip_address_or_endpoint}</code></td></tr>
+    <tr><th>Device Classification</th><td>${dev?.device_type?.replace(/_/g, " ")}</td><th>Network Endpoint</th><td><code>${dev.ip_address_or_endpoint}</code></td></tr>
     <tr><th>Bound Viewing Window</th><td><strong>${dev.viewing_window_id}</strong></td><th>Mounting Grid Axis</th><td>${dev.location_grid} (+${dev.mounting_elevation_m}m)</td></tr>
-    <tr><th>Optical Azimuth (FOV)</th><td>${dev.fov_azimuth_degrees}° Horizontal</td><th>Edge AI Profile</th><td>${dev.ai_detection_profile.replace(/_/g, " ")}</td></tr>
+    <tr><th>Optical Azimuth (FOV)</th><td>${dev.fov_azimuth_degrees}° Horizontal</td><th>Edge AI Profile</th><td>${dev?.ai_detection_profile?.replace(/_/g, " ")}</td></tr>
   </table>
 
   <div class="box">
@@ -803,14 +803,14 @@ export default function CanonicalSensorGatewayPage() {
                           {dev.device_code}
                         </span>
                         <span className="text-[10px] px-2 py-0.2 rounded bg-zinc-800 text-zinc-300 font-mono">
-                          {dev.device_type.replace(/_/g, " ")}
+                          {dev?.device_type?.replace(/_/g, " ")}
                         </span>
                         <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           isOnline
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {dev.connection_status.replace(/_/g, " ")}
+                          {dev?.connection_status?.replace(/_/g, " ")}
                         </span>
                       </div>
 

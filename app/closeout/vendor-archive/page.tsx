@@ -382,7 +382,7 @@ export default function VendorArchiveCloseoutPage() {
   // Handle Settle & Discharge Execution (FIDIC Cl. 14.12)
   const handleExecuteDischarge = async (account: VendorFinalAccount) => {
     try {
-      const certNo = `DISCHARGE/${account.contractRef.replace(/[^a-zA-Z0-9]/g, "-")}/${new Date().getFullYear()}`;
+      const certNo = `DISCHARGE/${account?.contractRef?.replace(/[^a-zA-Z0-9]/g, "-")}/${new Date().getFullYear()}`;
       const success = await settleVendorFinalAccount(account.id, {
         settlementStatus: "DISCHARGED_ARCHIVED",
         fidicClause1412Discharged: true,

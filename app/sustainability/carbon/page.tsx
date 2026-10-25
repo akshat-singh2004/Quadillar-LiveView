@@ -248,7 +248,7 @@ export default function CanonicalCarbonPage() {
       ${materials.map((m) => `
         <tr>
           <td><strong>${m.material_name}</strong><div style="font-size: 10px; color: #64748b;">${m.specification_clause}</div></td>
-          <td>${m.scope_category.replace(/_/g, ' ')}</td>
+          <td>${m?.scope_category?.replace(/_/g, ' ')}</td>
           <td class="tar">${m.quantity} ${m.unit}</td>
           <td class="tar">${m.gross_emissions_tco2e.toFixed(2)}</td>
           <td class="tar" style="color: #15803d;">-${m.offset_savings_tco2e.toFixed(2)}</td>
@@ -455,7 +455,7 @@ export default function CanonicalCarbonPage() {
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">
-                            {m.scope_category.replace(/_/g, " ")}
+                            {m?.scope_category?.replace(/_/g, " ")}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-right font-bold text-zinc-200">
@@ -498,7 +498,7 @@ export default function CanonicalCarbonPage() {
               <div className="text-emerald-400 text-[11px]">{selectedRecord.specification_clause}</div>
               <div className="pt-2 border-t border-zinc-800/60 text-[11px] space-y-1">
                 <div className="text-zinc-400">Evidence Source: <strong className="text-zinc-200">{selectedRecord.verification_source}</strong></div>
-                <div className="text-zinc-400">Scope Level: <strong className="text-cyan-400">{selectedRecord.scope_category.replace(/_/g, " ")}</strong></div>
+                <div className="text-zinc-400">Scope Level: <strong className="text-cyan-400">{selectedRecord?.scope_category?.replace(/_/g, " ")}</strong></div>
               </div>
             </div>
 

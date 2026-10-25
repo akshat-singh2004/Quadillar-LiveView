@@ -157,12 +157,12 @@ export default function DrawingsMasterPage() {
                       <td className="p-3 text-zinc-400">{t.recipient_organization}</td>
                       <td className="p-3 text-center">
                         <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-zinc-800 text-zinc-300">
-                          {t.purpose_of_issue.replace(/_/g, ' ')}
+                          {t?.purpose_of_issue?.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="p-3 text-center">
                         <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                          {t.acknowledgement_status.replace(/_/g, ' ')}
+                          {t?.acknowledgement_status?.replace(/_/g, ' ')}
                         </span>
                       </td>
                     </tr>

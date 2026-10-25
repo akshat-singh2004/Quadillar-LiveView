@@ -282,7 +282,7 @@ export default function FieldPunchListPage() {
                         ? "bg-emerald-950 text-emerald-400 border-emerald-800"
                         : "bg-amber-950 text-amber-400 border-amber-800"
                     }`}>
-                      {i.status.replace(/_/g, " ")}
+                      {i?.status?.replace(/_/g, " ")}
                     </span>
 
                     {!isClosed && (

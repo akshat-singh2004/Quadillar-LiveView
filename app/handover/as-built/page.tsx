@@ -352,7 +352,7 @@ export default function AsBuiltAimHandoverPage() {
                                     {assets.map((asset) => (
                                         <tr key={asset.id} className="hover:bg-zinc-900/50 transition">
                                             <td className="p-2.5 font-bold text-cyan-400">{asset.asset_tag}</td>
-                                            <td className="p-2.5 text-zinc-200">{asset.system_category.replace(/_/g, " ")}</td>
+                                            <td className="p-2.5 text-zinc-200">{asset?.system_category?.replace(/_/g, " ")}</td>
                                             <td className="p-2.5 text-zinc-400">{asset.manufacturer}</td>
                                             <td className="p-2.5 text-zinc-300">{asset.grid_location}</td>
                                             <td className="p-2.5 text-emerald-400 font-bold">{asset.warranty_end_date}</td>

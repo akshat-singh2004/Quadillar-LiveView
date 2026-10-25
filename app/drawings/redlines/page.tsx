@@ -431,7 +431,7 @@ export default function InteractiveCdeCanvasPage() {
                 <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
                   <span className="font-bold text-white uppercase text-xs flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${getPinColor(selectedPin.pin_type).split(" ")[0]}`} />
-                    <span>{selectedPin.pin_type.replace(/_/g, " ")}</span>
+                    <span>{selectedPin?.pin_type?.replace(/_/g, " ")}</span>
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-zinc-400 uppercase">
                     {selectedPin.status}

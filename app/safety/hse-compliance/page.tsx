@@ -544,13 +544,13 @@ export default function SiteSafetyHsePage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase ${getSeverityBadge(inc.severity_level)}`}>
-                          {inc.severity_level.replace(/_/g, ' ')}
+                          {inc?.severity_level?.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-zinc-300">{inc.contractor_name}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase ${getStatusBadge(inc.status)}`}>
-                          {inc.status.replace(/_/g, ' ')}
+                          {inc?.status?.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">

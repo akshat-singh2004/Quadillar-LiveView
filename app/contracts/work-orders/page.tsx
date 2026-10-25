@@ -368,7 +368,7 @@ export default function CanonicalWorkOrdersPage() {
                     <h3 className="text-sm font-bold text-white mt-0.5">{selectedOrder.work_order_number} &mdash; {selectedOrder.trade_package}</h3>
                   </div>
                   <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800/50">
-                    {selectedOrder.status.replace(/_/g, " ")}
+                    {selectedOrder?.status?.replace(/_/g, " ")}
                   </span>
                 </div>
 

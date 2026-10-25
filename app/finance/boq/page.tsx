@@ -759,7 +759,7 @@ export default function CanonicalBoqPage() {
               </div>
               <div className="flex justify-between text-[11px] text-zinc-400">
                 <span>Category:</span>
-                <span className="text-cyan-300">{selectedItem.category.replace(/_/g, " ")}</span>
+                <span className="text-cyan-300">{selectedItem?.category?.replace(/_/g, " ")}</span>
               </div>
             </div>
 

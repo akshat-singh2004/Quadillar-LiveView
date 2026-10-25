@@ -314,7 +314,7 @@ export default function GateRegisterPage() {
                       <td className="p-3 text-right font-bold text-emerald-400 font-mono text-sm">{r.net_weight_mt} MT</td>
                       <td className="p-3 text-center">
                         <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                          {r.qc_inspection_status.replace(/_/g, " ")}
+                          {r?.qc_inspection_status?.replace(/_/g, " ")}
                         </span>
                       </td>
                     </tr>

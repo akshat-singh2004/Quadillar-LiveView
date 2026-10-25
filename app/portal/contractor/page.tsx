@@ -389,7 +389,7 @@ export default function ContractorPortalPage() {
                           ? "bg-amber-950 text-amber-400 border border-amber-800/50"
                           : "bg-rose-950 text-rose-400 border border-rose-800/50"
                       }`}>
-                        {sub.sample_status.replace("_", " ")}
+                        {sub?.sample_status?.replace("_", " ")}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-right font-sans text-zinc-400">

@@ -274,7 +274,7 @@ export default function SiteSafetyPage() {
                           ? "bg-cyan-950 text-cyan-400 border-cyan-800"
                           : "bg-amber-950 text-amber-400 border-amber-800"
                       }`}>
-                        {i.classification.replace(/_/g, " ")}
+                        {i?.classification?.replace(/_/g, " ")}
                       </span>
                     </div>
 
@@ -296,7 +296,7 @@ export default function SiteSafetyPage() {
                     <h3 className="text-sm font-bold text-white mt-0.5">{selectedIncident.title}</h3>
                   </div>
                   <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    {selectedIncident.capa_status.replace(/_/g, " ")}
+                    {selectedIncident?.capa_status?.replace(/_/g, " ")}
                   </span>
                 </div>
 

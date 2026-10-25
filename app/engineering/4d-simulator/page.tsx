@@ -164,7 +164,7 @@ export default function FourDSimulatorPage() {
                           ? "bg-cyan-950 text-cyan-400 border-cyan-800 animate-pulse"
                           : "bg-zinc-900 text-zinc-500 border-zinc-800"
                       }`}>
-                        {p.status.replace(/_/g, " ")}
+                        {p?.status?.replace(/_/g, " ")}
                       </span>
                     </div>
 

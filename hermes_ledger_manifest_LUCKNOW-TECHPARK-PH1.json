@@ -1,0 +1,1533 @@
+{
+  "project_id": "LUCKNOW-TECHPARK-PH1",
+  "project_name": "Lucknow IT City Technology Park - Tower A",
+  "sanctioned_contract_budget_inr": 45000000,
+  "cumulative_measured_work_inr": 45000000,
+  "contract_status": "COMPLETED_HANDED_OVER",
+  "generated_at": "2026-10-22T10:20:21.027Z",
+  "total_ledger_nodes": 42,
+  "genesis_node_hash": "cbb1fb28de36c403d4128d804975e23fd34bb360d9c324f5f475bde8cc1d0835",
+  "terminal_merkle_root": "abea83a1e0686b8ebf58a2a2ada2c513fd0d1eeae25ce7bb9288dde0883348f0",
+  "statutory_governance": {
+    "legal_evidence_act": "Section 63, Bharatiya Sakshya Adhiniyam, 2023",
+    "hash_algorithm": "SHA-256",
+    "chain_status": "CONTINUOUS_PARENT_LINKED"
+  },
+  "audit_chain": [
+    {
+      "sequence_index": 1,
+      "action_category": "PROJECT_INITIALIZED_GENESIS",
+      "merkle_node_hash": "cbb1fb28de36c403d4128d804975e23fd34bb360d9c324f5f475bde8cc1d0835",
+      "prev_deed_hash": "GENESIS_0000000000000000000000000000000000000000000000000000000000000000",
+      "created_at": "2026-10-22T08:01:00.524507+00:00",
+      "payload": {
+        "client": "UP Electronics Corporation Ltd (UPECL)",
+        "timestamp": "2026-10-22T08:01:00.524507+00:00",
+        "contractor": "Apex Structural Engineers & Infra Ltd",
+        "project_code": "TECHPARK-T1",
+        "project_name": "Lucknow IT City Technology Park - Tower A",
+        "admin_user_id": "00000000-0000-0000-0000-000000000001",
+        "contract_value": 45000000
+      }
+    },
+    {
+      "sequence_index": 2,
+      "action_category": "MOBILIZATION_ADVANCE_CERTIFIED",
+      "merkle_node_hash": "f2805059d0879e6e6ba7ef91d24e6d2722ad602ac35d2cbc1be2cca8ed4604b8",
+      "prev_deed_hash": "cbb1fb28de36c403d4128d804975e23fd34bb360d9c324f5f475bde8cc1d0835",
+      "created_at": "2026-10-22T08:19:41.71116+00:00",
+      "payload": {
+        "bank_name": "State Bank of India, Main Branch, Lucknow",
+        "ra_bill_ref": "RA-01-MOB-ADV",
+        "valid_until": "2027-10-31",
+        "certified_by": "Akshat Singh Rathore",
+        "gross_advance": 4500000,
+        "bank_guarantee_ref": "BG-2026-SBI-0091",
+        "interest_bearing_rate": "10% p.a. simple"
+      }
+    },
+    {
+      "sequence_index": 3,
+      "action_category": "EMB_BASELINE_SPECIFICATIONS_SEALED",
+      "merkle_node_hash": "1a6be7e45450d4c3c7d67320caa2e76cdc21cf871b0d28219748d5d3e2fe1f6a",
+      "prev_deed_hash": "f2805059d0879e6e6ba7ef91d24e6d2722ad602ac35d2cbc1be2cca8ed4604b8",
+      "created_at": "2026-10-22T09:00:18.465852+00:00",
+      "payload": {
+        "compliance": "CPWD Works Manual Clause 17 & IS 2911 (Part 1/Sec 2)",
+        "total_items": 4,
+        "sor_reference": "CPWD DSR 2023 Vol 1 & 2",
+        "signatory_engineer": "Akshat Singh Rathore",
+        "total_baseline_value": 27681750,
+        "substructure_wbs_scope": [
+          "Excavation",
+          "PCC Blinding",
+          "Bored Piles 600mm",
+          "Fe-550D Reinforcement"
+        ]
+      }
+    },
+    {
+      "sequence_index": 4,
+      "action_category": "POUR_CARD_INITIALIZED_AND_SEALED",
+      "merkle_node_hash": "b1f44b200e038510df347868fc8e80d1386237e61ea528094945a386ffc8c1fd",
+      "prev_deed_hash": "1a6be7e45450d4c3c7d67320caa2e76cdc21cf871b0d28219748d5d3e2fe1f6a",
+      "created_at": "2026-10-22T09:01:13.946229+00:00",
+      "payload": {
+        "depth_m": 18,
+        "diameter_mm": 600,
+        "pour_card_id": "POUR-TP-001",
+        "qc_inspector": "Akshat Singh Rathore",
+        "slump_flow_mm": 175,
+        "concrete_grade": "M35 Design Mix",
+        "mix_design_ref": "ACC-M35-DESIGN-2026-08",
+        "pour_timestamp": "2026-10-22T09:01:13.761Z",
+        "test_cubes_cast": 6,
+        "compliance_codes": [
+          "IS 2911 (Part 1/Sec 2)",
+          "IS 456:2000",
+          "CPWD Works Manual Cl 18"
+        ],
+        "reinforcement_cage": "6 Nos 20mm dia main Fe-550D + 8mm helical ties @ 150mm c/c",
+        "structural_element": "Initial Test Pile P-01 (Grid A1-Corner)",
+        "theoretical_volume_cum": 5.09,
+        "bentonite_slurry_density_g_ml": 1.08
+      }
+    },
+    {
+      "sequence_index": 5,
+      "action_category": "QC_PILE_INTEGRITY_AND_STRENGTH_CERTIFIED",
+      "merkle_node_hash": "25bae91950c3eab2e09c746e374fc5962f704c2429082faa75e8a67b86a2516b",
+      "prev_deed_hash": "b1f44b200e038510df347868fc8e80d1386237e61ea528094945a386ffc8c1fd",
+      "created_at": "2026-10-22T09:02:14.489777+00:00",
+      "payload": {
+        "certified_at": "2026-10-22T09:02:14.202Z",
+        "pour_card_ref": "POUR-TP-001",
+        "lab_report_ref": "NABL-LAB-2026-OCT-8842",
+        "pile_identifier": "P-01 (Grid A1-Corner)",
+        "testing_laboratory": "NABL Accredited Material Testing Lab, Lucknow",
+        "cube_testing_is_516": {
+          "concrete_grade": "M35",
+          "curing_age_days": 7,
+          "compliance_status": "PASSED_CRITERIA",
+          "specimen_results_mpa": [
+            27.4,
+            28.1,
+            27.9
+          ],
+          "min_expected_7d_strength_mpa": 24.5,
+          "percentage_of_characteristic": 79.4,
+          "average_achieved_strength_mpa": 27.8,
+          "design_characteristic_strength_mpa": 35
+        },
+        "superintending_engineer": "Akshat Singh Rathore",
+        "ndt_integrity_test_is_14893": {
+          "test_methodology": "Sonic Echo / Low-Strain Impact Pulse",
+          "instrument_serial": "PIT-QUAN-2024-91",
+          "anomalies_detected": "NONE",
+          "pile_length_tested_m": 18,
+          "wave_velocity_m_per_s": 3920,
+          "shaft_integrity_status": "CATEGORY_A_UNIMPAIRED",
+          "toe_reflection_detected": true
+        }
+      }
+    },
+    {
+      "sequence_index": 6,
+      "action_category": "RA_BILL_CERTIFIED_WITH_DEDUCTIONS",
+      "merkle_node_hash": "4a9878fcfb38fbf2567bf0e6ee22540005218ff8163f4dfa4c8cbcc88af6d810",
+      "prev_deed_hash": "25bae91950c3eab2e09c746e374fc5962f704c2429082faa75e8a67b86a2516b",
+      "created_at": "2026-10-22T09:03:13.190799+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 143250,
+          "clause_10b_mobilization_recovery_10pct": 286500
+        },
+        "ra_bill_ref": "RA-02-SUBSTRUCTURE-LOT1",
+        "work_package": "Substructure Piling Lot 1 & Excavation Trenching",
+        "approval_timestamp": "2026-10-22T09:03:13.020Z",
+        "certifying_officer": "Akshat Singh Rathore",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 2865000,
+        "net_payable_approved": 2435250,
+        "unrecovered_advance_balance": 4213500,
+        "cumulative_advance_recovered": 286500
+      }
+    },
+    {
+      "sequence_index": 7,
+      "action_category": "MASS_CONCRETE_RAFT_POUR_SEALED",
+      "merkle_node_hash": "26712ec521aaaf5d97c44eeaf5b464c5a0f0ff549665e5d87cd47959086393e8",
+      "prev_deed_hash": "4a9878fcfb38fbf2567bf0e6ee22540005218ff8163f4dfa4c8cbcc88af6d810",
+      "created_at": "2026-10-22T09:04:15.977178+00:00",
+      "payload": {
+        "w_c_ratio": 0.38,
+        "pour_card_id": "POUR-TP-002",
+        "concrete_grade": "M35 High-Durability Mix with Ground Granulated Blast-Furnace Slag",
+        "mix_design_ref": "ACC-M35-GGBS-MASS-2026-09",
+        "pour_start_time": "2026-10-21T23:04:15.662Z",
+        "structural_element": "Foundation Raft Slab - Grid A1-D4 (Thickness 1200mm)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "pour_completion_time": "2026-10-22T09:04:15.662Z",
+        "rebar_cage_inspection": {
+          "top_mesh": "Fe-550D 20mm @ 150mm c/c both ways",
+          "bottom_mesh": "Fe-550D 25mm @ 125mm c/c both ways",
+          "clear_cover_mm": 50,
+          "chair_supports_inspection": "PASSED"
+        },
+        "slump_flow_initial_mm": 180,
+        "total_volume_poured_cum": 350,
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "test_cube_specimens_cast": 18,
+        "thermal_hydration_telemetry": {
+          "curing_regime": "Continuous water ponding with insulating geotextile covers",
+          "compliance_status": "COMPLIANT_IS_456",
+          "delta_t_measured_c": 16.4,
+          "sensor_core_temp_c": 48.2,
+          "sensor_surface_temp_c": 31.8,
+          "max_permissible_delta_t_c": 20
+        }
+      }
+    },
+    {
+      "sequence_index": 8,
+      "action_category": "QC_RAFT_STRENGTH_AND_NDT_CLEARED",
+      "merkle_node_hash": "f31728cf230426ac28a073633e50c234b74e48159382eae8deb72d34bfcdb03d",
+      "prev_deed_hash": "26712ec521aaaf5d97c44eeaf5b464c5a0f0ff549665e5d87cd47959086393e8",
+      "created_at": "2026-10-22T09:05:39.854446+00:00",
+      "payload": {
+        "pour_card_ref": "POUR-TP-002",
+        "structural_element": "Foundation Raft Slab (Grid A1-D4)",
+        "clearance_timestamp": "2026-10-22T09:05:39.545Z",
+        "certifying_qa_engineer": "Akshat Singh Rathore",
+        "cube_test_series_is_516": {
+          "concrete_grade": "M35 Design Mix (GGBS replacement 35%)",
+          "specimens_tested_28d": 6,
+          "individual_readings_mpa": [
+            40.8,
+            41.5,
+            42.1,
+            40.5,
+            41.9,
+            40.6
+          ],
+          "average_28d_strength_mpa": 41.23,
+          "target_mean_strength_mpa": 43.25,
+          "characteristic_strength_fck_mpa": 35,
+          "acceptance_criteria_is_456_cl_15": "PASSED (f_avg >= f_ck + 4 N/mm2; min >= f_ck - 4 N/mm2)"
+        },
+        "chief_consultant_signoff": "Apex Structural Engineers & Infra Ltd",
+        "shuttering_and_load_release": "AUTHORIZED_FOR_SUPERSTRUCTURE_STAGGERING",
+        "curing_period_completed_days": 28,
+        "ndt_ultrasonic_pulse_velocity_is_13311": {
+          "equipment_model": "Proceq Pundit PL-200",
+          "is_13311_grading": "EXCELLENT_QUALITY (> 4.0 km/s)",
+          "surface_crack_evaluation": "NO_THERMAL_MICROFISSURES_DETECTED",
+          "transducer_frequency_khz": 54,
+          "measured_pulse_velocity_km_s": 4.35
+        }
+      }
+    },
+    {
+      "sequence_index": 9,
+      "action_category": "RA_BILL_03_RAFT_FOUNDATION_CERTIFIED",
+      "merkle_node_hash": "f1661c012b6f8d2d07ad082bc4a121f4a7ea3cab7aa35b0b933f23ee55751fea",
+      "prev_deed_hash": "f31728cf230426ac28a073633e50c234b74e48159382eae8deb72d34bfcdb03d",
+      "created_at": "2026-10-22T09:06:55.137084+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 262000,
+          "clause_10b_mobilization_recovery_10pct": 524000
+        },
+        "ra_bill_ref": "RA-03-RAFT-FOUNDATION",
+        "milestone_scope": "Foundation Raft Slab (350 cum M35) + Rebar Fixing (45 MT Fe-550D)",
+        "approval_timestamp": "2026-10-22T09:06:54.913Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 5240000,
+        "net_payable_approved": 4454000,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 3689500,
+        "cumulative_advance_recovered": 810500
+      }
+    },
+    {
+      "sequence_index": 10,
+      "action_category": "POUR_CARD_PLINTH_AND_COLUMNS_SEALED",
+      "merkle_node_hash": "5baae13772cc5d9aafe582f5291fbb94be5b89c0c279b6017f51d285d41c87da",
+      "prev_deed_hash": "f1661c012b6f8d2d07ad082bc4a121f4a7ea3cab7aa35b0b933f23ee55751fea",
+      "created_at": "2026-10-22T09:08:24.511719+00:00",
+      "payload": {
+        "w_c_ratio": 0.36,
+        "pour_card_id": "POUR-TP-003",
+        "concrete_grade": "M40 Design Mix (Pumpable)",
+        "mix_design_ref": "ACC-M40-PUMP-2026-11",
+        "pour_start_time": "2026-10-22T03:08:24.209Z",
+        "structural_element": "Plinth Tie Beams & Ground Floor Columns C1-C16 (Grid A1-D4)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "pour_completion_time": "2026-10-22T09:08:24.209Z",
+        "slump_flow_initial_mm": 165,
+        "total_volume_poured_cum": 120,
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "test_cube_specimens_cast": 12,
+        "ductile_detailing_is_13920": {
+          "compliance_status": "VERIFIED_IS_13920_2016",
+          "column_main_longitudinal_bars": "12 Nos 25mm dia Fe-550D",
+          "confinement_zone_lo_length_mm": 600,
+          "seismic_cross_ties_hook_angle": "135 degrees with 10d extension",
+          "lateral_ties_spacing_mid_height_mm": 150,
+          "lateral_ties_spacing_confinement_mm": 100
+        },
+        "formwork_inspection_is_14687": {
+          "type": "12mm BWP Film-Faced Plywood with Cuplock Staging",
+          "cover_blocks": "40mm factory-cured concrete spacers",
+          "inspection_verdict": "PASSED",
+          "permissible_tolerance_mm": 5,
+          "verticality_plumb_check_tolerance_mm": 3
+        }
+      }
+    },
+    {
+      "sequence_index": 11,
+      "action_category": "QC_COLUMNS_STRIPPING_AND_STRENGTH_SEALED",
+      "merkle_node_hash": "876768843f57e6d44e21a4c97f6fc2b97e0f9400ab640fd1ab2b627721675d1f",
+      "prev_deed_hash": "5baae13772cc5d9aafe582f5291fbb94be5b89c0c279b6017f51d285d41c87da",
+      "created_at": "2026-10-22T09:09:42.141202+00:00",
+      "payload": {
+        "pour_card_ref": "POUR-TP-003",
+        "chief_qa_signoff": "Apex Structural Engineers & Infra Ltd",
+        "clearance_status": "AUTHORIZED_FOR_FIRST_FLOOR_DECKING_STAGING",
+        "signoff_timestamp": "2026-10-22T09:09:41.680Z",
+        "structural_element": "GF Columns C1-C16 & Plinth Tie Beams (Grid A1-D4)",
+        "verticality_laser_survey": {
+          "survey_verdict": "COMPLIANT_WITHIN_TOLERANCE",
+          "instrument_used": "Leica Rugby Rotary Laser Level",
+          "max_measured_deviation_mm": 2.1,
+          "tolerance_limit_is_456_mm": 5
+        },
+        "cube_strength_series_is_516": {
+          "concrete_grade": "M40 Design Mix",
+          "acceptance_status": "PASSED_CRITERIA",
+          "percentage_of_fck": 81,
+          "specimen_age_days": 7,
+          "f_ck_target_28d_mpa": 40,
+          "min_expected_7d_mpa": 28,
+          "specimen_readings_mpa": [
+            31.8,
+            33.1,
+            32.3
+          ],
+          "average_7d_strength_mpa": 32.4
+        },
+        "shuttering_release_authorized_by": "Akshat Singh Rathore",
+        "formwork_stripping_is_456_table_11": {
+          "curing_methodology": "Hessian cloth wrapping with continuous automated drip sprinklers",
+          "vertical_surface_condition": "Smooth, zero honeycombing or segregation observed",
+          "effective_cover_verified_mm": 40,
+          "stripping_time_elapsed_hours": 24
+        }
+      }
+    },
+    {
+      "sequence_index": 12,
+      "action_category": "RA_BILL_04_PLINTH_AND_COLUMNS_CERTIFIED",
+      "merkle_node_hash": "4e54431d0da8d794aa582f80537ae7ea4971cde78741fda54ecb0865696c2859",
+      "prev_deed_hash": "876768843f57e6d44e21a4c97f6fc2b97e0f9400ab640fd1ab2b627721675d1f",
+      "created_at": "2026-10-22T09:10:53.500958+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 174000,
+          "clause_10b_mobilization_recovery_10pct": 348000
+        },
+        "ra_bill_ref": "RA-04-PLINTH-AND-COLUMNS",
+        "milestone_scope": "Plinth Tie Beams & GF Columns C1-C16 (120 cum M40 + 18.2 MT Fe-550D)",
+        "approval_timestamp": "2026-10-22T09:10:53.277Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 3480000,
+        "net_payable_approved": 2958000,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 3341500,
+        "cumulative_advance_recovered": 1158500
+      }
+    },
+    {
+      "sequence_index": 13,
+      "action_category": "POUR_CARD_FIRST_FLOOR_SLAB_SEALED",
+      "merkle_node_hash": "a1b2fbf1211fbe76949a06ab271e22537be1af8fc422d1cab2bee75167f0a449",
+      "prev_deed_hash": "4e54431d0da8d794aa582f80537ae7ea4971cde78741fda54ecb0865696c2859",
+      "created_at": "2026-10-22T09:13:00.327195+00:00",
+      "payload": {
+        "w_c_ratio": 0.38,
+        "pour_card_id": "POUR-TP-004",
+        "concrete_grade": "M35 Pumpable Design Mix",
+        "mix_design_ref": "ACC-M35-SLAB-PUMP-2026-14",
+        "pour_start_time": "2026-10-22T01:13:00.041Z",
+        "structural_element": "First Floor Suspended Slab & Spandrel Beams (Grid A1-D4)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "pour_completion_time": "2026-10-22T09:13:00.042Z",
+        "total_volume_poured_cum": 240,
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "reinforcement_inspection": {
+          "beam_cages": "25mm bottom tension + 20mm top hangers + 8mm 2-legged stirrups @ 125mm c/c",
+          "bottom_mat": "10mm Fe-550D @ 150mm c/c both directions",
+          "top_negative_bars": "12mm Fe-550D @ 125mm c/c over continuous supports",
+          "clear_cover_beams_mm": 35,
+          "clear_cover_slabs_mm": 25
+        },
+        "test_cube_specimens_cast": 18,
+        "mep_sleeve_conduit_clearance": {
+          "hvac_duct_openings": "4 Nos 600x400mm trimmed with diagonal extra rebar",
+          "electrical_junction_boxes": "64 Nos verified per drawing E-102",
+          "signoff_by_mep_consultant": "PASSED_FOR_CONCRETE_ENCAPSULATION",
+          "firefighting_sprinkler_sleeves": "16 Nos GI sleeves sleeved and foam-plugged"
+        },
+        "staging_and_falsework_is_14687": {
+          "system_type": "Cuplock Heavy-Duty Modular Staging with U-Head Jacks",
+          "prop_spacing_m": 1,
+          "diagonal_bracing": "Cross-braced every 3rd bay in both directions",
+          "inspection_verdict": "PASSED_STRUCTURAL_STABILITY",
+          "camber_applied_at_midspan_mm": 18,
+          "calculated_camber_per_is_456_mm": 20
+        },
+        "slump_flow_at_pump_discharge_mm": 170
+      }
+    },
+    {
+      "sequence_index": 14,
+      "action_category": "QC_FIRST_FLOOR_SLAB_STRENGTH_AND_DEFLECTION_CLEARED",
+      "merkle_node_hash": "2b90f341932b396349e244917ac5e6b49386a9cfad469ee85427f87372a964a1",
+      "prev_deed_hash": "a1b2fbf1211fbe76949a06ab271e22537be1af8fc422d1cab2bee75167f0a449",
+      "created_at": "2026-10-22T09:14:08.541623+00:00",
+      "payload": {
+        "pour_card_ref": "POUR-TP-004",
+        "clearance_status": "AUTHORIZED_FOR_FIRST_FLOOR_BRICKWORK_AND_L2_STAGING",
+        "signoff_timestamp": "2026-10-22T09:14:08.166Z",
+        "structural_element": "First Floor Suspended Slab & Spandrel Beams (Grid A1-D4)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "optical_deflection_survey": {
+          "survey_verdict": "PASSED_WELL_BELOW_SERVICEABILITY_LIMIT",
+          "survey_instrument": "Leica TS16 Total Station",
+          "critical_bay_span_m": 6,
+          "permissible_limit_mm": 17.14,
+          "measured_residual_deflection_mm": 4.6
+        },
+        "cube_strength_series_is_516": {
+          "concrete_grade": "M35 Pumpable Mix",
+          "percentage_of_fck": 112.57,
+          "specimens_tested_28d": 6,
+          "f_ck_characteristic_mpa": 35,
+          "individual_readings_mpa": [
+            38.7,
+            39.5,
+            40.2,
+            38.9,
+            39.8,
+            39.3
+          ],
+          "is_456_cl_15_acceptance": "PASSED_STRENGTH_CRITERIA",
+          "average_28d_strength_mpa": 39.4,
+          "target_mean_strength_mpa": 43.25
+        },
+        "formwork_stripping_is_456_table_11": {
+          "re_propping_adherence": "COMPLIANT_WITH_IS_456",
+          "concrete_surface_inspection": "Sound finish, no thermal cracks, no honeycombing, cover uniform",
+          "beam_soffit_props_retention_days": 21,
+          "slab_soffit_props_retention_days": 14
+        }
+      }
+    },
+    {
+      "sequence_index": 15,
+      "action_category": "RA_BILL_05_FIRST_FLOOR_SLAB_CERTIFIED",
+      "merkle_node_hash": "409a108d42bf28135537d49bed40c34e40117288cc5caeee7acb7d92c8cfa97a",
+      "prev_deed_hash": "2b90f341932b396349e244917ac5e6b49386a9cfad469ee85427f87372a964a1",
+      "created_at": "2026-10-22T09:15:33.396506+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 242500,
+          "clause_10b_mobilization_recovery_10pct": 485000
+        },
+        "ra_bill_ref": "RA-05-FIRST-FLOOR-SLAB",
+        "milestone_scope": "First Floor Suspended Slab & Spandrel Beams (240 cum M35 + 32.4 MT Fe-550D)",
+        "approval_timestamp": "2026-10-22T09:15:33.159Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 4850000,
+        "net_payable_approved": 4122500,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 2856500,
+        "cumulative_advance_recovered": 1643500
+      }
+    },
+    {
+      "sequence_index": 16,
+      "action_category": "POUR_CARD_SECOND_FLOOR_COLUMNS_AND_SHEAR_CORE_SEALED",
+      "merkle_node_hash": "650c916b4337d65af1ada28053f9c556d743aef22d1477b8afed115c72211b2a",
+      "prev_deed_hash": "409a108d42bf28135537d49bed40c34e40117288cc5caeee7acb7d92c8cfa97a",
+      "created_at": "2026-10-22T09:17:36.257265+00:00",
+      "payload": {
+        "w_c_ratio": 0.35,
+        "pour_card_id": "POUR-TP-005",
+        "concrete_grade": "M40 Self-Compacting / High-Pumpability Mix",
+        "mix_design_ref": "ACC-M40-SCC-CORE-2026-17",
+        "pour_start_time": "2026-10-22T02:17:35.979Z",
+        "structural_element": "Second Floor Columns C1-C16 & Core Shear Walls SW1-SW2 (Grid B2-C3)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "pour_completion_time": "2026-10-22T09:17:35.979Z",
+        "shuttering_inspection": {
+          "type": "Steel framed panel formwork with high-tensile through-tie rods",
+          "permissible_limit_mm": 5,
+          "release_agent_applied": "ECO-Form Water-Based Chemical Demoulding Agent",
+          "vertical_plumb_laser_reading_mm": 2.3
+        },
+        "slump_flow_initial_mm": 190,
+        "total_volume_poured_cum": 110,
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "test_cube_specimens_cast": 12,
+        "shear_wall_ductile_detailing_is_13920": {
+          "compliance_status": "VERIFIED_IS_13920_2016_SEISMIC_ZONE_III",
+          "wall_thickness_mm": 250,
+          "reinforcement_curtains": "Dual mat Fe-550D 12mm @ 150mm c/c both ways",
+          "boundary_element_detailing": "Confined with 10mm rectangular hoops @ 100mm c/c",
+          "mechanical_couplers_is_16172": "Class H parallel-threaded couplers verified across 64 bar joints"
+        }
+      }
+    },
+    {
+      "sequence_index": 17,
+      "action_category": "QC_L2_COLUMNS_AND_COUPLER_INTEGRITY_CLEARED",
+      "merkle_node_hash": "1d0d9b0e5efaaa43f6e704c13d2b28a589d1fa74cc5bf45fd649eaa51b099b62",
+      "prev_deed_hash": "650c916b4337d65af1ada28053f9c556d743aef22d1477b8afed115c72211b2a",
+      "created_at": "2026-10-22T09:18:50.371918+00:00",
+      "payload": {
+        "pour_card_ref": "POUR-TP-005",
+        "testing_agency": "NABL Certified Testing Facility, Lucknow",
+        "clearance_status": "AUTHORIZED_FOR_SECOND_FLOOR_DECK_FORMWORK",
+        "signoff_timestamp": "2026-10-22T09:18:50.014Z",
+        "structural_element": "Second Floor Columns C1-C16 & Core Shear Walls SW1-SW2",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "cube_strength_series_is_516": {
+          "concrete_grade": "M40 Self-Compacting Mix",
+          "acceptance_status": "PASSED_STRENGTH_CRITERIA",
+          "percentage_of_fck": 83,
+          "specimen_age_days": 7,
+          "f_ck_target_28d_mpa": 40,
+          "min_expected_7d_mpa": 28,
+          "specimen_readings_mpa": [
+            32.9,
+            33.6,
+            33.1
+          ],
+          "average_7d_strength_mpa": 33.2
+        },
+        "mechanical_coupler_test_is_16172": {
+          "coupler_type": "Class H Parallel-Threaded Mechanical Coupler",
+          "failure_mode": "PARENT_BAR_DUCTILE_FRACTURE_OUTSIDE_COUPLER",
+          "test_outcome": "FULLY_COMPLIANT_IS_16172",
+          "rebar_size_tested": "25mm Fe-550D",
+          "tested_tensile_values_mpa": [
+            710.5,
+            715,
+            712.8,
+            718.5
+          ],
+          "number_of_specimens_tested": 4,
+          "average_tensile_strength_mpa": 714.2,
+          "min_specified_tensile_strength_mpa": 687.5
+        },
+        "verticality_and_stripping_inspection": {
+          "cover_blocks_intact": true,
+          "surface_defect_check": "No honeycombing or cold joints detected in lift core shear walls",
+          "vertical_alignment_survey": "Total Station verified: Max deviation 1.8mm across 3.6m lift",
+          "stripping_elapsed_time_hours": 24
+        }
+      }
+    },
+    {
+      "sequence_index": 18,
+      "action_category": "RA_BILL_06_L2_COLUMNS_AND_SHEAR_CORE_CERTIFIED",
+      "merkle_node_hash": "e45ce05164a83dc367ea8aa90867fe656e1445424069dcd945fab2a108f1a5b7",
+      "prev_deed_hash": "1d0d9b0e5efaaa43f6e704c13d2b28a589d1fa74cc5bf45fd649eaa51b099b62",
+      "created_at": "2026-10-22T09:19:57.492881+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 162500,
+          "clause_10b_mobilization_recovery_10pct": 325000
+        },
+        "ra_bill_ref": "RA-06-L2-COLUMNS-SHEAR-CORE",
+        "milestone_scope": "L2 Columns C1-C16 & SW1-SW2 Shear Walls (110 cum M40 + 17.5 MT Fe-550D + 64 Couplers)",
+        "approval_timestamp": "2026-10-22T09:19:57.271Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 3250000,
+        "net_payable_approved": 2762500,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 2531500,
+        "cumulative_advance_recovered": 1968500
+      }
+    },
+    {
+      "sequence_index": 19,
+      "action_category": "POUR_CARD_SECOND_FLOOR_SLAB_SEALED",
+      "merkle_node_hash": "f74dd070a549b808d3d78adb1d6df521054f29da71400475b353ea8ffe3d0143",
+      "prev_deed_hash": "e45ce05164a83dc367ea8aa90867fe656e1445424069dcd945fab2a108f1a5b7",
+      "created_at": "2026-10-22T09:24:39.212519+00:00",
+      "payload": {
+        "w_c_ratio": 0.38,
+        "pour_card_id": "POUR-TP-006",
+        "concrete_grade": "M35 Pumpable Design Mix",
+        "mix_design_ref": "ACC-M35-SLAB-PUMP-2026-19",
+        "pour_start_time": "2026-10-22T01:24:38.881Z",
+        "structural_element": "Second Floor Suspended Slab & Perimeter Beams (Grid A1-D4)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "pour_completion_time": "2026-10-22T09:24:38.882Z",
+        "reinforcement_detailing": {
+          "bottom_mat": "10mm Fe-550D @ 150mm c/c both ways",
+          "spandrel_beams": "25mm bottom tension + 20mm top hangers + 8mm stirrups @ 125mm c/c",
+          "spacers_and_cover": "25mm factory-moulded mortar cover blocks verified @ 1m spacing",
+          "top_negative_rebar": "12mm Fe-550D @ 125mm c/c over continuous supports"
+        },
+        "total_volume_poured_cum": 240,
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "test_cube_specimens_cast": 18,
+        "mep_and_bms_encapsulation": {
+          "bms_fiber_conduits": "16 Nos rigid heavy-duty conduits locked",
+          "mep_clearance_status": "PASSED_FOR_CASTING",
+          "sanitary_shaft_cutouts": "6 Nos edge-shuttered and verified against drawing M-201",
+          "fire_damper_wall_sleeves": "8 Nos 450x450mm openings reinforced with diagonal trims"
+        },
+        "staging_and_multitier_propping": {
+          "staging_system": "Cuplock Heavy-Duty System with Swivel Base Jacks",
+          "inspection_verdict": "PASSED_STAGING_STABILITY",
+          "level_1_repropping_status": "Verified intact at 6.0m critical bay midspans",
+          "midspan_pre_camber_applied_mm": 18,
+          "calculated_camber_per_is_456_mm": 20
+        },
+        "slump_flow_at_pump_discharge_mm": 175
+      }
+    },
+    {
+      "sequence_index": 20,
+      "action_category": "QC_SECOND_FLOOR_SLAB_STRENGTH_AND_DEFLECTION_CLEARED",
+      "merkle_node_hash": "279ad9651600f85588d6365d018973bca0dac0ee712c53b10331293ea0cff3da",
+      "prev_deed_hash": "f74dd070a549b808d3d78adb1d6df521054f29da71400475b353ea8ffe3d0143",
+      "created_at": "2026-10-22T09:29:30.737929+00:00",
+      "payload": {
+        "pour_card_ref": "POUR-TP-006",
+        "clearance_status": "AUTHORIZED_FOR_SECOND_FLOOR_BRICKWORK_AND_ROOF_STAGING",
+        "signoff_timestamp": "2026-10-22T09:29:30.232Z",
+        "structural_element": "Second Floor Suspended Slab & Perimeter Spandrels (Grid A1-D4)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "optical_deflection_survey": {
+          "survey_verdict": "PASSED_SERVICEABILITY_CRITERIA",
+          "survey_instrument": "Leica TS16 Total Station",
+          "critical_bay_span_m": 6,
+          "permissible_limit_mm": 17.14,
+          "measured_residual_deflection_mm": 4.4
+        },
+        "cube_strength_series_is_516": {
+          "concrete_grade": "M35 Pumpable Mix",
+          "percentage_of_fck": 113.86,
+          "specimens_tested_28d": 6,
+          "f_ck_characteristic_mpa": 35,
+          "individual_readings_mpa": [
+            39.1,
+            40.4,
+            40,
+            39.5,
+            40.6,
+            39.5
+          ],
+          "is_456_cl_15_acceptance": "PASSED_STRENGTH_CRITERIA",
+          "average_28d_strength_mpa": 39.85,
+          "target_mean_strength_mpa": 43.25
+        },
+        "formwork_stripping_is_456_table_11": {
+          "re_propping_protocol": "COMPLIANT_WITH_IS_456",
+          "surface_defect_evaluation": "Monolithic, zero thermal fissures, no honeycombing, cover confirmed",
+          "beam_soffit_props_retention_days": 21,
+          "slab_soffit_props_retention_days": 14
+        }
+      }
+    },
+    {
+      "sequence_index": 21,
+      "action_category": "RA_BILL_07_SECOND_FLOOR_SLAB_CERTIFIED",
+      "merkle_node_hash": "e535f223514159189cb649b07467fdede3d0f40bf4889a04fea47bd7f9506bd7",
+      "prev_deed_hash": "279ad9651600f85588d6365d018973bca0dac0ee712c53b10331293ea0cff3da",
+      "created_at": "2026-10-22T09:44:08.921386+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 244000,
+          "clause_10b_mobilization_recovery_10pct": 488000
+        },
+        "ra_bill_ref": "RA-07-SECOND-FLOOR-SLAB",
+        "milestone_scope": "Second Floor Suspended Slab & Perimeter Spandrels (240 cum M35 + 32.8 MT Fe-550D)",
+        "approval_timestamp": "2026-10-22T09:44:08.651Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 4880000,
+        "net_payable_approved": 4148000,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 2043500,
+        "cumulative_advance_recovered": 2456500
+      }
+    },
+    {
+      "sequence_index": 22,
+      "action_category": "POUR_CARD_TERRACE_ROOF_AND_OHT_TOPPING_OUT_SEALED",
+      "merkle_node_hash": "6645db4a5f88c06d3dab5610d72515632c24cf79adcbf81a447a89f90e650ffa",
+      "prev_deed_hash": "e535f223514159189cb649b07467fdede3d0f40bf4889a04fea47bd7f9506bd7",
+      "created_at": "2026-10-22T09:45:17.396655+00:00",
+      "payload": {
+        "milestone": "STRUCTURAL_TOPPING_OUT_PRIMARY_FRAME",
+        "w_c_ratio": 0.36,
+        "pour_card_id": "POUR-TP-007",
+        "concrete_grade": "M35 Crystalline Waterproofed Design Mix",
+        "mix_design_ref": "ACC-M35-CRYST-WP-2026-21",
+        "pour_start_time": "2026-10-22T02:15:17.040Z",
+        "structural_element": "Terrace Roof Slab, Ring Beams, LMR Stub Walls & OHT Base (Grid A1-D4)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "pour_completion_time": "2026-10-22T09:45:17.040Z",
+        "total_volume_poured_cum": 210,
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "test_cube_specimens_cast": 18,
+        "terrace_drainage_and_fall": {
+          "designed_slope": "1:100 toward 8 Nos UPVC rainwater collection hoppers",
+          "pre_pour_screed_level_check": "VERIFIED_PER_DRAINAGE_SCHEME_D-01"
+        },
+        "integral_waterproofing_is_3370": {
+          "dosage_rate": "1% by weight of cementitious content",
+          "admixture_type": "Hydrophilic Crystalline Pore-Blocking Admixture",
+          "construction_joints": "PVC hydro-swelling waterstops fixed at all vertical joints",
+          "oht_base_slab_thickness_mm": 200,
+          "permeability_target_din_1048": "< 10mm penetration under 5 bar pressure"
+        },
+        "slump_flow_at_pump_discharge_mm": 165,
+        "electrical_and_lightning_bonding": {
+          "downconductor_continuity": "Bonded to structural columns C2, C4, C13, C15 per IS/IEC 62305",
+          "earth_electrode_pit_resistance_target_ohms": "< 1.0"
+        }
+      }
+    },
+    {
+      "sequence_index": 23,
+      "action_category": "QC_TERRACE_ROOF_AND_PONDING_TEST_CLEARED",
+      "merkle_node_hash": "2b2efea897b8d8549c30d19dd00c846d22bb6137ee53b0d94929b166cc1512be",
+      "prev_deed_hash": "6645db4a5f88c06d3dab5610d72515632c24cf79adcbf81a447a89f90e650ffa",
+      "created_at": "2026-10-22T09:46:27.905991+00:00",
+      "payload": {
+        "pour_card_ref": "POUR-TP-007",
+        "clearance_status": "AUTHORIZED_FOR_BRICK_BAT_COBA_AND_PARAPET_MASONRY",
+        "signoff_timestamp": "2026-10-22T09:46:27.558Z",
+        "structural_element": "Terrace Roof Slab, Ring Beams & Overhead Water Tank Base",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "cube_strength_series_is_516": {
+          "concrete_grade": "M35 Crystalline Waterproofed Mix",
+          "percentage_of_fck": 116.14,
+          "specimens_tested_28d": 6,
+          "f_ck_characteristic_mpa": 35,
+          "individual_readings_mpa": [
+            40.2,
+            41.1,
+            40.8,
+            39.9,
+            41.5,
+            40.4
+          ],
+          "is_456_cl_15_acceptance": "PASSED_STRENGTH_CRITERIA",
+          "average_28d_strength_mpa": 40.65,
+          "target_mean_strength_mpa": 43.25
+        },
+        "hydrostatic_ponding_test_is_3370": {
+          "compliance_status": "PASSED_IS_3370_PART_1",
+          "test_duration_hours": 72,
+          "water_head_tested_oht_m": 2,
+          "underside_ceiling_inspection": "ZERO_DAMPNESS_OR_SEEPAGE_DETECTED",
+          "construction_joint_waterstops": "Dry condition confirmed across all perimeter joints",
+          "standing_water_depth_terrace_mm": 100
+        },
+        "formwork_stripping_is_456_table_11": {
+          "surface_defect_check": "Free of honeycombing; crystalline self-healing matrix active",
+          "re_propping_compliance": "VERIFIED",
+          "slab_props_retention_days": 14,
+          "beam_soffit_props_retention_days": 21
+        }
+      }
+    },
+    {
+      "sequence_index": 24,
+      "action_category": "RA_BILL_08_TERRACE_ROOF_TOPPING_OUT_CERTIFIED",
+      "merkle_node_hash": "c671bf91965a9c20fcdd70be48f24224a4a8f2c75151f2841b7931ec43750356",
+      "prev_deed_hash": "2b2efea897b8d8549c30d19dd00c846d22bb6137ee53b0d94929b166cc1512be",
+      "created_at": "2026-10-22T09:47:39.927789+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 213000,
+          "clause_10b_mobilization_recovery_10pct": 426000
+        },
+        "ra_bill_ref": "RA-08-TERRACE-ROOF-TOPPING-OUT",
+        "milestone_scope": "Terrace Roof Slab, Ring Beams, LMR Stubs & OHT Base (210 cum M35 + 28.5 MT Fe-550D)",
+        "approval_timestamp": "2026-10-22T09:47:39.668Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 4260000,
+        "net_payable_approved": 3621000,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 1617500,
+        "cumulative_advance_recovered": 2882500
+      }
+    },
+    {
+      "sequence_index": 25,
+      "action_category": "EXECUTION_TERRACE_WEATHERPROOFING_AND_PARAPET_SEALED",
+      "merkle_node_hash": "87ae2e092baa8b485336b96540a5aead956d5389f9ccfa2cd86be17791af4fc1",
+      "prev_deed_hash": "c671bf91965a9c20fcdd70be48f24224a4a8f2c75151f2841b7931ec43750356",
+      "created_at": "2026-10-22T09:48:45.145418+00:00",
+      "payload": {
+        "work_package": "WP-08-TERRACE-ENVELOPE-WEATHERPROOFING",
+        "scope_description": "Brick Bat Coba System, Perimeter Parapets & Drainage Khurras",
+        "standards_applied": [
+          "CPWD Specifications 2019 Sub-head 12.11",
+          "IS 1346:1991 (Code of practice for waterproofing of roofs)",
+          "IS 456:2000 (Plain and Reinforced Concrete)"
+        ],
+        "chief_qa_inspection": "Apex Structural Engineers & Infra Ltd",
+        "verification_status": "PASSED_FIELD_INSPECTION",
+        "rcc_parapet_elements": {
+          "concrete_grade": "M25 Reinforced Concrete",
+          "parapet_height_mm": 1200,
+          "parapet_thickness_mm": 150,
+          "reinforcement_profile": "10mm Fe-550D @ 150mm c/c vertical & horizontal",
+          "coping_weather_drip_groove": "Provided on outer face to prevent streak stains"
+        },
+        "technical_parameters": {
+          "grouting_mix": "1:5 cement-sand mortar with integral liquid waterproofing compound",
+          "bonding_layer": "Polymer-modified cement slurry (1:4 with SBR latex @ 200 ml/bag)",
+          "curing_regime": "Continuous water ponding for 14 calendar days",
+          "surface_layer": "20mm 1:4 cement mortar with neat cement float & 300x300mm false joints",
+          "gradient_achieved": "1:100 toward 8 peripheral drainage outlets",
+          "khurras_installed": "8 Nos 600x600mm double-treated with GI lead flanges",
+          "vata_junction_fillets": "75mm radius coving along entire 180m parapet periphery",
+          "treated_terrace_area_sqm": 1200,
+          "average_coba_thickness_mm": 120
+        },
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "execution_completion_time": "2026-10-22T09:48:44.803Z"
+      }
+    },
+    {
+      "sequence_index": 26,
+      "action_category": "QC_TERRACE_COBA_AND_PARAPET_CLEARED",
+      "merkle_node_hash": "55a605a09d39398c7e79aa6b0ca81f1cfe3b2531338dac817c2e2dda98991685",
+      "prev_deed_hash": "87ae2e092baa8b485336b96540a5aead956d5389f9ccfa2cd86be17791af4fc1",
+      "created_at": "2026-10-22T09:50:09.838602+00:00",
+      "payload": {
+        "work_package_ref": "WP-08-TERRACE-ENVELOPE-WEATHERPROOFING",
+        "envelope_clearance": {
+          "drainage_status": "AUTHORIZED_FOR_WATER_DISCHARGE",
+          "subsequent_work_release": "AUTHORIZED_FOR_AAC_MASONRY_AND_MEP_VERTICAL_RISERS"
+        },
+        "structural_element": "Terrace Brick Bat Coba Insulation & 1200mm Perimeter Parapet",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "certification_timestamp": "2026-10-22T09:50:09.422Z",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "parapet_cube_test_series_is_516": {
+          "concrete_grade": "M25 Mix (Nominal 1:1:2 equivalent)",
+          "percentage_of_fck": 123.2,
+          "compliance_verdict": "PASSED_IS_456_SECTION_15",
+          "specimens_tested_28d": 6,
+          "f_ck_characteristic_mpa": 25,
+          "individual_readings_mpa": [
+            30.4,
+            31.2,
+            30.8,
+            30.1,
+            31.5,
+            30.8
+          ],
+          "average_28d_strength_mpa": 30.8
+        },
+        "hydrostatic_ponding_test_cpwd_12_11": {
+          "treated_area_sqm": 1200,
+          "khurras_drainage_test": "Full gravity discharge confirmed across 8 rainwater hoppers",
+          "watertightness_status": "PASSED_CPWD_SPECIFICATION",
+          "water_head_maintained_mm": 100,
+          "junction_coves_inspection": "All 180m perimeter vatas sound and uncracked",
+          "soffit_underside_inspection": "NO_DAMPNESS_OR_EFFLORESCENCE_OBSERVED",
+          "continuous_ponding_duration_days": 14
+        }
+      }
+    },
+    {
+      "sequence_index": 27,
+      "action_category": "RA_BILL_09_TERRACE_WEATHERPROOFING_AND_PARAPET_CERTIFIED",
+      "merkle_node_hash": "31fa5fe6c695bfb326c38b7c11d46b1bca7138d0548f8c3c82fcb9528720542f",
+      "prev_deed_hash": "55a605a09d39398c7e79aa6b0ca81f1cfe3b2531338dac817c2e2dda98991685",
+      "created_at": "2026-10-22T09:51:28.722796+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 112500,
+          "clause_10b_mobilization_recovery_10pct": 225000
+        },
+        "ra_bill_ref": "RA-09-TERRACE-WEATHERPROOFING-PARAPET",
+        "milestone_scope": "Terrace Brick Bat Coba (1200 sqm) + M25 Parapet (180 RMT) + 8 Drainage Khurras",
+        "approval_timestamp": "2026-10-22T09:51:28.477Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 2250000,
+        "net_payable_approved": 1912500,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 1392500,
+        "cumulative_advance_recovered": 3107500
+      }
+    },
+    {
+      "sequence_index": 28,
+      "action_category": "EXECUTION_AAC_MASONRY_AND_SEISMIC_BANDS_SEALED",
+      "merkle_node_hash": "32e09fb163d07e2645ff7fc4325e78d4b98176fe06e07acfb6035ec0e22449f6",
+      "prev_deed_hash": "31fa5fe6c695bfb326c38b7c11d46b1bca7138d0548f8c3c82fcb9528720542f",
+      "created_at": "2026-10-22T09:53:03.505094+00:00",
+      "payload": {
+        "work_package": "WP-09-AAC-MASONRY-AND-SEISMIC-BANDS",
+        "scope_description": "Exterior Facade Infill & Internal Dividers across GF, L1, L2",
+        "standards_applied": [
+          "IS 2185 (Part 3): 1984 - Autoclaved Cellular Concrete Blocks",
+          "IS 1905: 1987 - Code of Practice for Structural Use of Masonry",
+          "IS 4326: 2013 - Earthquake Resistant Design & Construction",
+          "CPWD Specifications 2019 - Sub-head 6.0 (Masonry Works)"
+        ],
+        "chief_qa_inspection": "Apex Structural Engineers & Infra Ltd",
+        "verification_status": "PASSED_FIELD_INSPECTION",
+        "technical_parameters": {
+          "block_type": "Grade 1 Aerated Autoclaved Concrete (Siporex / Magicrete)",
+          "jointing_medium": "Polymer-modified dry-mix adhesive mortar (3mm joint thickness)",
+          "block_dimensions": {
+            "external_walls_mm": "600 x 200 x 200 (Density: 580 kg/m3)",
+            "internal_partitions_mm": "600 x 200 x 100 / 150 (Density: 620 kg/m3)"
+          },
+          "breakdown_by_level": {
+            "first_floor_sqm": 615,
+            "ground_floor_sqm": 620,
+            "second_floor_sqm": 615
+          },
+          "total_masonry_area_sqm": 1850,
+          "expansion_isolation_joint": "15-20mm gap below soffits sealed with fire-rated low-expansion PU foam",
+          "plumb_and_alignment_survey": "Within +/- 3mm tolerance across all vertical runs",
+          "seismic_provisions_is_4326": {
+            "rcc_lintels": "M20 concrete lintels (200mm depth) over door/window openings with 200mm minimum bearing",
+            "continuous_sill_band": "75mm thick M20 concrete band with 2 Nos 8mm Fe-550D rebar below window sills",
+            "column_interface_anchorage": "GI butterfly wall-ties mechanically fastened every 600mm height"
+          }
+        },
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "execution_completion_time": "2026-10-22T09:53:03.087Z"
+      }
+    },
+    {
+      "sequence_index": 29,
+      "action_category": "QC_AAC_MASONRY_AND_SILL_BANDS_CLEARED",
+      "merkle_node_hash": "1c8a4a0b8e8782d22d73e86cda7743ca1c060c6c511d0e639df6007d11f6beee",
+      "prev_deed_hash": "32e09fb163d07e2645ff7fc4325e78d4b98176fe06e07acfb6035ec0e22449f6",
+      "created_at": "2026-10-22T09:56:07.798191+00:00",
+      "payload": {
+        "work_package_ref": "WP-09-AAC-MASONRY-AND-SEISMIC-BANDS",
+        "structural_element": "AAC Block Masonry Envelope & Seismic Bands (GF, L1, L2)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "certification_timestamp": "2026-10-22T09:56:07.422Z",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "aac_block_testing_is_2185_pt3": {
+          "grading_verdict": "GRADE_1_COMPLIANT",
+          "specimens_tested": 12,
+          "dry_density_kg_m3": 585,
+          "moisture_content_pct": 6.2,
+          "tested_strengths_mpa": [
+            4.5,
+            4.8,
+            4.6,
+            4.7,
+            4.5,
+            4.8,
+            4.6,
+            4.7,
+            4.5,
+            4.6,
+            4.7,
+            4.8
+          ],
+          "target_compressive_strength_mpa": 4,
+          "average_compressive_strength_mpa": 4.65
+        },
+        "joint_adhesion_and_shear_test": {
+          "adhesion_status": "PASSED_BOND_CRITERIA",
+          "failure_pattern": "COHESIVE_SUBSTRATE_FRACTURE_IN_BLOCK",
+          "testing_protocol": "Direct pull-off test on 3mm thin-bed polymer adhesive joint",
+          "measured_adhesion_mpa": 0.68,
+          "target_tensile_adhesion_mpa": 0.5
+        },
+        "seismic_band_cube_test_is_516": {
+          "concrete_grade": "M20 Mix for Continuous Sill Bands and Lintels",
+          "compliance_status": "PASSED_IS_456_SECTION_15",
+          "specimens_tested_28d": 6,
+          "f_ck_characteristic_mpa": 20,
+          "individual_readings_mpa": [
+            24.5,
+            25.1,
+            24.8,
+            24.2,
+            25.4,
+            24.8
+          ],
+          "average_28d_strength_mpa": 24.8
+        },
+        "laser_alignment_and_chasing_clearance": {
+          "permissible_limit_mm": 3,
+          "chasing_authorization": "AUTHORIZED_FOR_TWIN_BLADE_WALL_CHASERS_ONLY",
+          "max_measured_vertical_deviation_mm": 2.3,
+          "beam_soffit_isolation_gap_inspection": "PU foam compression gap intact across all bays"
+        }
+      }
+    },
+    {
+      "sequence_index": 30,
+      "action_category": "QC_AAC_MASONRY_AND_SILL_BANDS_CLEARED",
+      "merkle_node_hash": "f5f452336c17ecdf2550ca8fb3567b95f34e7c330242b9c147516206691ae247",
+      "prev_deed_hash": "1c8a4a0b8e8782d22d73e86cda7743ca1c060c6c511d0e639df6007d11f6beee",
+      "created_at": "2026-10-22T09:57:11.424029+00:00",
+      "payload": {
+        "work_package_ref": "WP-09-AAC-MASONRY-AND-SEISMIC-BANDS",
+        "structural_element": "AAC Block Masonry Envelope & Seismic Bands (GF, L1, L2)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "certification_timestamp": "2026-10-22T09:57:11.102Z",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "aac_block_testing_is_2185_pt3": {
+          "grading_verdict": "GRADE_1_COMPLIANT",
+          "specimens_tested": 12,
+          "dry_density_kg_m3": 585,
+          "moisture_content_pct": 6.2,
+          "tested_strengths_mpa": [
+            4.5,
+            4.8,
+            4.6,
+            4.7,
+            4.5,
+            4.8,
+            4.6,
+            4.7,
+            4.5,
+            4.6,
+            4.7,
+            4.8
+          ],
+          "target_compressive_strength_mpa": 4,
+          "average_compressive_strength_mpa": 4.65
+        },
+        "joint_adhesion_and_shear_test": {
+          "adhesion_status": "PASSED_BOND_CRITERIA",
+          "failure_pattern": "COHESIVE_SUBSTRATE_FRACTURE_IN_BLOCK",
+          "testing_protocol": "Direct pull-off test on 3mm thin-bed polymer adhesive joint",
+          "measured_adhesion_mpa": 0.68,
+          "target_tensile_adhesion_mpa": 0.5
+        },
+        "seismic_band_cube_test_is_516": {
+          "concrete_grade": "M20 Mix for Continuous Sill Bands and Lintels",
+          "compliance_status": "PASSED_IS_456_SECTION_15",
+          "specimens_tested_28d": 6,
+          "f_ck_characteristic_mpa": 20,
+          "individual_readings_mpa": [
+            24.5,
+            25.1,
+            24.8,
+            24.2,
+            25.4,
+            24.8
+          ],
+          "average_28d_strength_mpa": 24.8
+        },
+        "laser_alignment_and_chasing_clearance": {
+          "permissible_limit_mm": 3,
+          "chasing_authorization": "AUTHORIZED_FOR_TWIN_BLADE_WALL_CHASERS_ONLY",
+          "max_measured_vertical_deviation_mm": 2.3,
+          "beam_soffit_isolation_gap_inspection": "PU foam compression gap intact across all bays"
+        }
+      }
+    },
+    {
+      "sequence_index": 31,
+      "action_category": "RA_BILL_10_AAC_MASONRY_AND_SEISMIC_BANDS_CERTIFIED",
+      "merkle_node_hash": "20b703bc2a1994c79f1f25c1b72a2d75523ff31c1f6dfa101845243a013aab34",
+      "prev_deed_hash": "f5f452336c17ecdf2550ca8fb3567b95f34e7c330242b9c147516206691ae247",
+      "created_at": "2026-10-22T09:58:30.338571+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 142500,
+          "clause_10b_mobilization_recovery_10pct": 285000
+        },
+        "ra_bill_ref": "RA-10-AAC-MASONRY-ENVELOPE",
+        "milestone_scope": "AAC Block Masonry (1850 sqm across GF, L1, L2) + Continuous M20 Sill Bands & Lintels",
+        "approval_timestamp": "2026-10-22T09:58:29.981Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 2850000,
+        "net_payable_approved": 2422500,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 1107500,
+        "cumulative_advance_recovered": 3392500
+      }
+    },
+    {
+      "sequence_index": 32,
+      "action_category": "EXECUTION_PLASTERING_AND_MEP_FIRST_FIX_SEALED",
+      "merkle_node_hash": "1050056a6100338793fe445b02916977ee3ee2c8c3f227956690d8547e4b5535",
+      "prev_deed_hash": "20b703bc2a1994c79f1f25c1b72a2d75523ff31c1f6dfa101845243a013aab34",
+      "created_at": "2026-10-22T09:59:38.110523+00:00",
+      "payload": {
+        "work_package": "WP-10-PLASTERING-AND-MEP-FIRST-FIX",
+        "scope_description": "External 2-Coat Waterproof Plaster, Internal 12mm Plaster & MEP 1st Fix",
+        "standards_applied": [
+          "IS 1661:1972 (Code of Practice for Application of Cement Plaster Finishes)",
+          "IS 2402:1963 (Code of Practice for External Rendered Finishes)",
+          "CPWD Specifications 2019 Sub-head 11.1 & 11.13",
+          "NBC 2016 Part 8 (Building Services)"
+        ],
+        "chief_qa_inspection": "Apex Structural Engineers & Infra Ltd",
+        "verification_status": "PASSED_FIELD_INSPECTION",
+        "technical_parameters": {
+          "curing_regime": "Continuous water spray curing maintained for 10 calendar days",
+          "breakdown_surface_area": {
+            "external_facade_sqm": 1450,
+            "internal_walls_and_shafts_sqm": 1950
+          },
+          "joint_crack_mitigation": {
+            "anchoring": "GI u-staples @ 250mm c/c embedded in polymer bonding coat",
+            "locations": "All RCC column-to-masonry and beam-to-masonry junctions",
+            "mesh_type": "Alkali-Resistant (AR) Glass Fiber Mesh (145 g/m2)",
+            "placement_width_mm": 200
+          },
+          "mep_first_fix_verification": {
+            "electrical_conduits": "Heavy-duty 25mm FRLS UPVC embedded with GI modular junction boxes",
+            "conduit_chase_packing": "Non-shrink fiber-reinforced polymer repair mortar",
+            "hydrostatic_test_cpvc_piping": "Held at 10.0 kg/cm2 for 24 hours with zero pressure drop"
+          },
+          "total_plastered_surface_sqm": 3400,
+          "external_plaster_specifications": {
+            "backing_coat": "14mm thick 1:4 cement-coarse sand with integral crystalline waterproofing",
+            "finishing_coat": "6mm thick 1:3 cement-fine sand sponge float finish",
+            "grooves_and_drips": "15x10mm architectural V-grooves at floor junction lines",
+            "total_thickness_mm": 20
+          },
+          "internal_plaster_specifications": {
+            "mix_ratio": "1:4 cement-screened sand mortar",
+            "thickness_mm": 12,
+            "surface_quality": "True to plumb within +/- 2mm over 2m straight edge; right angles confirmed at all internal corners"
+          }
+        },
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "execution_completion_time": "2026-10-22T09:59:37.789Z"
+      }
+    },
+    {
+      "sequence_index": 33,
+      "action_category": "QC_PLASTERING_AND_MEP_FIRST_FIX_CLEARED",
+      "merkle_node_hash": "5328f574381b706ed833cdc9dd9aed5d2681d85919765e1279d08815aa4ec417",
+      "prev_deed_hash": "1050056a6100338793fe445b02916977ee3ee2c8c3f227956690d8547e4b5535",
+      "created_at": "2026-10-22T10:01:11.286715+00:00",
+      "payload": {
+        "clearance_status": "AUTHORIZED_FOR_VITRIFIED_FLOORING_AND_RA11_MEASUREMENT",
+        "work_package_ref": "WP-10-PLASTERING-AND-MEP-FIRST-FIX",
+        "structural_element": "Internal & External Plaster Finishes with MEP 1st Fix (GF, L1, L2)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "certification_timestamp": "2026-10-22T10:01:10.934Z",
+        "plaster_testing_is_1661": {
+          "inspection_status": "PASSED_CPWD_SECTION_11",
+          "crack_mitigation_check": "Zero hairline fissures across all AR-glass mesh interface joints",
+          "min_acceptable_limit_mpa": 0.3,
+          "hollow_drummy_tapping_survey": "Zero hollow spots detected across 3400 sqm surface",
+          "tensile_adhesion_pull_off_mpa": 0.48,
+          "permissible_straightedge_limit_mm": 3,
+          "straightedge_flatness_deviation_mm": 1.8
+        },
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "plumbing_pressure_signoff": {
+          "duration_hours": 24,
+          "signoff_status": "LEAK_FREE_CERTIFIED",
+          "concealed_lines_tested": "CPVC Hot & Cold Distribution + Sprinkler Feeds",
+          "pressure_drop_recorded": "0.0 kg/cm2",
+          "test_pressure_maintained_kg_cm2": 10
+        },
+        "electrical_megger_testing_is_732": {
+          "test_voltage_vdc": 500,
+          "compliance_status": "PASSED_IS_732_CODE_OF_PRACTICE",
+          "circuit_loop_continuity": "VERIFIED_ALL_CIRCUITS",
+          "earthing_resistance_ohms": 0.78,
+          "statutory_threshold_megohms": 1,
+          "insulation_resistance_phase_to_earth_megohms": 62.8,
+          "insulation_resistance_phase_to_neutral_megohms": 54.2
+        }
+      }
+    },
+    {
+      "sequence_index": 34,
+      "action_category": "RA_BILL_11_PLASTERING_AND_MEP_FIRST_FIX_CERTIFIED",
+      "merkle_node_hash": "55d1339d0ceaf1952ae6de2cf3c7120349b8a139a8020c163ef37f4422c5fca3",
+      "prev_deed_hash": "5328f574381b706ed833cdc9dd9aed5d2681d85919765e1279d08815aa4ec417",
+      "created_at": "2026-10-22T10:02:46.667881+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 134000,
+          "clause_10b_mobilization_recovery_10pct": 268000
+        },
+        "ra_bill_ref": "RA-11-PLASTERING-MEP-FIRST-FIX",
+        "milestone_scope": "External 20mm Plaster (1450 sqm) + Internal 12mm Plaster (1950 sqm) + AR-Glass Mesh + MEP 1st Fix",
+        "approval_timestamp": "2026-10-22T10:02:46.392Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 2680000,
+        "net_payable_approved": 2278000,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 839500,
+        "cumulative_advance_recovered": 3660500
+      }
+    },
+    {
+      "sequence_index": 35,
+      "action_category": "EXECUTION_FLOORING_AND_CEILING_GRID_SEALED",
+      "merkle_node_hash": "8441306f2ea4dffd3537b78a4501cc9f92c321587501265fc1795c84020184a6",
+      "prev_deed_hash": "55d1339d0ceaf1952ae6de2cf3c7120349b8a139a8020c163ef37f4422c5fca3",
+      "created_at": "2026-10-22T10:03:51.006303+00:00",
+      "payload": {
+        "work_package": "WP-11-FLOORING-AND-CEILING-FRAMEWORKS",
+        "scope_description": "Double-Charged Vitrified Tiling, Wet Area Waterproofing/Dado & False Ceiling Sub-Grid",
+        "standards_applied": [
+          "IS 15622:2017 (Pressed Ceramic Tiles - Group B1a)",
+          "IS 1443:1972 (Laying and Finishing of Cement Concrete Flooring Tiles)",
+          "IS 15477:2019 (Adhesives for Tile and Stone Installation)",
+          "CPWD Specifications 2019 Sub-heads 11.0 & 12.0"
+        ],
+        "chief_qa_inspection": "Apex Structural Engineers & Infra Ltd",
+        "verification_status": "PASSED_FIELD_INSPECTION",
+        "technical_parameters": {
+          "breakdown_by_zone": {
+            "office_floor_plates_sqm": 1880,
+            "lift_lobbies_and_corridors_sqm": 220,
+            "toilet_clusters_and_pantries_sqm": 100
+          },
+          "total_flooring_area_sqm": 2200,
+          "false_ceiling_grid_framing": {
+            "grid_system": "Galvanized steel T-grid (15mm profile) suspended from soffit",
+            "suspension_hangers": "6mm GI adjustable rod hangers anchored with M6 expansion wedge anchors @ 1200mm c/c",
+            "level_tolerances_mm": 1.5,
+            "clearance_for_diffusers_and_luminaires": "Verified with MEP layout drawings M-301 & E-205"
+          },
+          "wet_area_toilet_waterproofing": {
+            "dado_tiling": "Full-height 300x600mm glazed ceramic tiles up to 2400mm false ceiling height",
+            "coving_fillets": "50mm radius cement-polymer fillets at all sunken slab wall-floor junctions",
+            "membrane_system": "2 coats acrylic polymer-modified elastomeric waterproof coating with fiber mesh reinforcement",
+            "hydrostatic_ponding_check": "24-hour standing water test completed with zero underside seepage"
+          },
+          "vitrified_tiling_specifications": {
+            "type": "Double-charged vitrified tile (Group B1a, water absorption < 0.08%)",
+            "grout": "Stain-proof two-part epoxy grout",
+            "skirting": "100mm high vitrified tile skirting flush with finished plaster",
+            "mortar_bed": "40mm thick 1:4 cement-sand mortar with polymer adhesive slurry coat",
+            "joint_spacing_mm": 2,
+            "tile_dimensions_mm": "800 x 800 x 10"
+          }
+        },
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "execution_completion_time": "2026-10-22T10:03:50.468Z"
+      }
+    },
+    {
+      "sequence_index": 36,
+      "action_category": "QC_FLOORING_AND_CEILING_GRID_CLEARED",
+      "merkle_node_hash": "0efb9b524586cb7564c1844486486eadfbf9be10fba1d4d02b2a75b424c0a7b5",
+      "prev_deed_hash": "8441306f2ea4dffd3537b78a4501cc9f92c321587501265fc1795c84020184a6",
+      "created_at": "2026-10-22T10:04:46.153018+00:00",
+      "payload": {
+        "clearance_status": "AUTHORIZED_FOR_RA12_MEASUREMENT_AND_ELECTRICAL_SECOND_FIX",
+        "work_package_ref": "WP-11-FLOORING-AND-CEILING-FRAMEWORKS",
+        "structural_element": "Vitrified Tile Flooring, Wet Area Dado & Ceiling Grids (GF, L1, L2)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "certification_timestamp": "2026-10-22T10:04:45.834Z",
+        "acoustic_sounding_survey": {
+          "instrument_used": "Nylon-headed sounding mallet",
+          "area_surveyed_sqm": 2200,
+          "bedding_uniformity_status": "100_PERCENT_SOLID_BED_VERIFIED",
+          "drummy_hollow_tiles_identified": 0
+        },
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "ceiling_grid_laser_survey": {
+          "permissible_variance_mm": 2,
+          "rotary_laser_instrument": "Leica Rugby 680",
+          "hanger_rod_tension_check": "All M6 anchor connections certified load-bearing",
+          "measured_plane_variance_mm": 1.2
+        },
+        "surface_tolerances_and_lippage": {
+          "gradient_in_wet_areas": "1:80 positive slope toward floor traps confirmed",
+          "epoxy_grout_inspection": "Uniform flush finish with zero pinholes",
+          "permissible_lippage_limit_mm": 0.5,
+          "max_joint_lippage_measured_mm": 0.35
+        },
+        "tensile_pull_off_adhesion_is_15477": {
+          "failure_mode": "COHESIVE_SCREED_FRACTURE",
+          "compliance_status": "PASSED_TYPE_2_ADHESIVE_SPEC",
+          "measured_adhesion_mpa": 1.32,
+          "target_shear_adhesion_mpa": 1
+        }
+      }
+    },
+    {
+      "sequence_index": 37,
+      "action_category": "RA_BILL_12_FLOORING_AND_CEILING_GRID_CERTIFIED",
+      "merkle_node_hash": "f3b17721fc99c9a453512d3281fa948fc0818487e6ae1a8eee4512dfa829c505",
+      "prev_deed_hash": "0efb9b524586cb7564c1844486486eadfbf9be10fba1d4d02b2a75b424c0a7b5",
+      "created_at": "2026-10-22T10:06:05.467861+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 157500,
+          "clause_10b_mobilization_recovery_10pct": 315000
+        },
+        "ra_bill_ref": "RA-12-FLOORING-CEILING-GRID",
+        "milestone_scope": "Vitrified Tiling (2200 sqm) + Wet Area Waterproofing/Dado + False Ceiling Suspension Sub-Grid",
+        "approval_timestamp": "2026-10-22T10:06:05.160Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 3150000,
+        "net_payable_approved": 2677500,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "unrecovered_advance_balance": 524500,
+        "cumulative_advance_recovered": 3975500
+      }
+    },
+    {
+      "sequence_index": 38,
+      "action_category": "EXECUTION_MEP_SECOND_FIX_AND_ACOUSTIC_CEILINGS_SEALED",
+      "merkle_node_hash": "774c15c6c12d89e145d35723f5d78aabc53bf8b0b6d9594a0d60dbf7fe2ed8d7",
+      "prev_deed_hash": "f3b17721fc99c9a453512d3281fa948fc0818487e6ae1a8eee4512dfa829c505",
+      "created_at": "2026-10-22T10:07:12.614932+00:00",
+      "payload": {
+        "work_package": "WP-12-MEP-SECOND-FIX-AND-ARCHITECTURAL-FINISHES",
+        "scope_description": "Acoustic Ceiling Tiles, Electrical Wiring/Luminaires, Sanitaryware & Emulsion Painting",
+        "standards_applied": [
+          "IS 732:2019 (Code of Practice for Electrical Wiring Installations)",
+          "IS 2065:1983 (Code of Practice for Water Supply in Buildings)",
+          "IS 15489:2004 (Specification for Plastic Emulsion Paint)",
+          "CPWD Specifications 2019 Sub-head 13.0 (Finishing)",
+          "CPWD General Specifications for Electrical Works Part I (2023)"
+        ],
+        "chief_qa_inspection": "Apex Structural Engineers & Infra Ltd",
+        "verification_status": "PASSED_FIELD_INSPECTION",
+        "technical_parameters": {
+          "electrical_second_fix": {
+            "wiring_profile": "FRLS copper flexible multi-strand (1.5 sq.mm light / 2.5 sq.mm power / 4.0 sq.mm AC)",
+            "modular_accessories": "Polycarbonate fire-retardant plates with silver alloy contact switches",
+            "luminaires_installed": "420 Nos 36W LED 600x600mm recessed troffers (UGR < 19, 120 lm/W)",
+            "distribution_boards_dressed": "6 Nos 12-way vertical TPN DBs with 30mA RCCB earth protection"
+          },
+          "acoustic_ceiling_tiles": {
+            "material": "Micro-perforated bio-soluble mineral fiber tiles",
+            "dimensions_mm": "600 x 600 x 15 (Tegular Edge)",
+            "installed_area_sqm": 2100,
+            "acoustic_properties": "NRC 0.70, CAC 35 dB, RH 95% humidity resistance"
+          },
+          "internal_wall_painting": {
+            "top_coat": "2 coats low-VOC washable premium acrylic emulsion (coverage 1950 sqm)",
+            "wall_preparation": "2 coats acrylic wall putty followed by alkali-resistant primer"
+          },
+          "sanitary_fixtures_and_c_p_fittings": {
+            "urinals": "18 Nos sensor-operated vitreous china urinals",
+            "ewc_units": "24 Nos vitreous china wall-hung closets with concealed dual-flush tanks",
+            "cp_fittings": "Quarter-turn ceramic disc bib cocks and concealed stop valves",
+            "trap_seal_compliance": "Minimum 50mm water seal depth verified across all gully and P-traps"
+          }
+        },
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "execution_completion_time": "2026-10-22T10:07:12.205Z"
+      }
+    },
+    {
+      "sequence_index": 39,
+      "action_category": "QC_MEP_SECOND_FIX_AND_FINISHES_CLEARED",
+      "merkle_node_hash": "ddd52963471b1f097608eb5683521c38175f1afbd8debb6545507debab49aceb",
+      "prev_deed_hash": "774c15c6c12d89e145d35723f5d78aabc53bf8b0b6d9594a0d60dbf7fe2ed8d7",
+      "created_at": "2026-10-22T10:08:37.351562+00:00",
+      "payload": {
+        "clearance_status": "AUTHORIZED_FOR_RA13_MEASUREMENT_AND_FINAL_FINISHES",
+        "work_package_ref": "WP-12-MEP-SECOND-FIX-AND-ARCHITECTURAL-FINISHES",
+        "structural_element": "Internal Finishes, Luminaires, DBs & Sanitary Terminals (GF, L1, L2)",
+        "contractor_signatory": "Apex Structural Engineers & Infra Ltd",
+        "paint_adhesion_is_101": {
+          "testing_protocol": "Cross-cut lattice test (2mm spacing) per IS 101 Pt 5 Sec 2",
+          "classification_achieved": "CLASS_0_ASTM_5B",
+          "scrub_resistance_cycles": "> 2000 cycles",
+          "peeling_or_flaking_observed": "None (100% lattice square retention)"
+        },
+        "certification_timestamp": "2026-10-22T10:08:37.020Z",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "illumination_survey_is_3646": {
+          "ugr_rating": "< 19",
+          "compliance_status": "PASSED_IS_3646_OFFICE_LIGHTING",
+          "measured_average_lux": 435,
+          "workstations_sampled": 48,
+          "photometer_instrument": "Testo 540 Precision Lux Meter",
+          "working_plane_height_m": 0.75,
+          "statutory_threshold_lux": 400,
+          "uniformity_ratio_emin_eavg": 0.82
+        },
+        "electrical_safety_and_rcd_is_12640": {
+          "compliance_status": "PASSED_IS_12640_DISCRIMINATION",
+          "rcd_trip_test_current_ma": 30,
+          "measured_tripping_times_ms": [
+            22,
+            19,
+            24,
+            21,
+            20,
+            18
+          ],
+          "phase_balance_divergence_pct": 3.4,
+          "statutory_trip_time_limit_ms": 30,
+          "earthing_resistance_at_dbs_ohms": 0.72
+        },
+        "plumbing_and_sanitary_commissioning": {
+          "compliance_status": "PASSED_IS_2065_SANITARY_CODE",
+          "flushing_performance": "Complete evacuation with zero backflow",
+          "trap_seal_water_depth_mm": 55,
+          "dual_flush_volumes_liters": "3.0L / 6.0L verified per IS 2556",
+          "dynamic_water_pressure_bar": 3.5,
+          "statutory_minimum_trap_depth_mm": 50
+        }
+      }
+    },
+    {
+      "sequence_index": 40,
+      "action_category": "RA_BILL_13_MEP_SECOND_FIX_AND_FINISHES_CERTIFIED",
+      "merkle_node_hash": "5b8d8d4258fd1c6e9d8e360f88443faaabd16e01fc2ab3f44fd27600b1857a64",
+      "prev_deed_hash": "ddd52963471b1f097608eb5683521c38175f1afbd8debb6545507debab49aceb",
+      "created_at": "2026-10-22T10:09:57.680458+00:00",
+      "payload": {
+        "deductions": {
+          "clause_1a_retention_5pct": 262250,
+          "clause_10b_mobilization_recovery": 524500
+        },
+        "ra_bill_ref": "RA-13-MEP-SECOND-FIX-AND-FINISHES",
+        "milestone_scope": "Acoustic Ceilings (2100 sqm) + Electrical Fixtures/DBs + Sanitary Ware + Emulsion Painting (1950 sqm)",
+        "approval_timestamp": "2026-10-22T10:09:57.395Z",
+        "contractor_accepted": "Apex Structural Engineers & Infra Ltd",
+        "gross_work_certified": 5245000,
+        "net_payable_approved": 4458250,
+        "superintending_engineer": "Akshat Singh Rathore",
+        "cumulative_contract_metrics": {
+          "net_disbursed_to_contractor": 42750000,
+          "physical_progress_percentage": 100,
+          "total_certified_physical_work": 45000000,
+          "total_sanctioned_contract_value": 45000000,
+          "total_mobilization_advance_cleared": 4500000,
+          "total_retention_withheld_clause_1a": 2250000,
+          "remaining_mobilization_advance_balance": 0
+        }
+      }
+    },
+    {
+      "sequence_index": 41,
+      "action_category": "QC_INTEGRATED_COMMISSIONING_AND_FIRE_LIFE_SAFETY_CLEARED",
+      "merkle_node_hash": "21cb2313b4d92439445a700e0874b171987345dd1e8a8fe48ebac2c17557b956",
+      "prev_deed_hash": "5b8d8d4258fd1c6e9d8e360f88443faaabd16e01fc2ab3f44fd27600b1857a64",
+      "created_at": "2026-10-22T10:13:56.317108+00:00",
+      "payload": {
+        "clearance_status": "AUTHORIZED_FOR_FIRE_NOC_AND_OCCUPANCY_CERTIFICATE",
+        "work_package_ref": "WP-13-INTEGRATED-COMMISSIONING-AND-FLS",
+        "structural_element": "Tower A Integrated Building Systems, Fire Fighting & Emergency Standby",
+        "chief_qa_inspection": "Apex Structural Engineers & Infra Ltd",
+        "certification_timestamp": "2026-10-22T10:13:55.958Z",
+        "lead_structural_engineer": "Akshat Singh Rathore",
+        "regulatory_testing_witness": "UP State Fire Services & Electrical Safety Inspectorate",
+        "emergency_power_and_ats_cea": {
+          "dg_rating_kva": 250,
+          "load_percentage": 100,
+          "compliance_status": "PASSED_CEA_REGULATIONS_2023",
+          "voltage_stability": "415V +/- 0.8%",
+          "frequency_stability": "50.0 Hz +/- 0.3 Hz",
+          "statutory_ats_limit_sec": 15,
+          "ats_changeover_latency_sec": 7.8,
+          "load_bank_test_duration_hours": 2
+        },
+        "elevator_life_safety_is_14665": {
+          "elevators_tested": "3 Nos 13-Passenger High Speed Traction Lifts",
+          "overload_cutoff_sensors": "Calibrated to 110% rated load capacity",
+          "phase_1_fire_recall_test": "Immediate return to Ground Floor and park with doors open [VERIFIED]",
+          "ard_automatic_rescue_device": "Tested on simulated power outage: safely leveled at nearest landing floor"
+        },
+        "staircase_pressurization_survey": {
+          "smoke_extraction_cfm": "18,500 CFM exhaust verified per zone",
+          "statutory_nbc_range_pa": "50 Pa +/- 10% (45 to 55 Pa)",
+          "egress_door_opening_force_n": 78,
+          "statutory_max_opening_force_n": 100,
+          "measured_differential_pressure_pa": 52
+        },
+        "fire_suppression_and_pumps_nbc_part_4": {
+          "fire_fighting_status": "PASSED_NBC_PART_4_AND_IS_15105",
+          "main_electric_fire_pump": "2850 LPM @ 7.0 bar operating head verified",
+          "statutory_cutin_limit_sec": 15,
+          "jockey_pump_pressure_band_bar": "Auto ON at 6.0 bar / Auto OFF at 7.5 bar",
+          "diesel_standby_cutin_latency_sec": 9.2,
+          "terrace_oht_gravity_reserve_liters": 50000,
+          "sprinkler_inspector_test_flow_switch_trip_sec": 6.5
+        }
+      }
+    },
+    {
+      "sequence_index": 42,
+      "action_category": "STATUTORY_COMPLETION_AND_HANDOVER_SEALED",
+      "merkle_node_hash": "abea83a1e0686b8ebf58a2a2ada2c513fd0d1eeae25ce7bb9288dde0883348f0",
+      "prev_deed_hash": "21cb2313b4d92439445a700e0874b171987345dd1e8a8fe48ebac2c17557b956",
+      "created_at": "2026-10-22T10:15:11.503145+00:00",
+      "payload": {
+        "formal_signoff": {
+          "signoff_timestamp": "2026-10-22T10:15:11.157Z",
+          "client_representative": "UPECL Competent Authority",
+          "superintending_engineer": "Akshat Singh Rathore",
+          "contractor_representative": "Apex Structural Engineers & Infra Ltd"
+        },
+        "governing_clause": "CPWD General Conditions of Contract Clause 8 & 8A",
+        "project_metadata": {
+          "asset_name": "Lucknow IT City Technology Park - Tower A",
+          "project_id": "LUCKNOW-TECHPARK-PH1",
+          "lead_contractor": "Apex Structural Engineers & Infra Ltd",
+          "principal_employer": "Uttar Pradesh Electronics Corporation Limited (UPECL)",
+          "total_builtup_area_sqm": 4850,
+          "structural_configuration": "G + 2 Floors + Central Shear Core + Terrace OHT",
+          "telemetry_and_qc_authority": "Quadillar ConTech Pvt. Ltd."
+        },
+        "certificate_reference": "CPWD-CC-LUCKNOW-TECHPARK-TOWER-A-2026",
+        "statutory_approvals_manifest": {
+          "lift_safety_licence": "UP-LIFT-REG-2026-8891 (3 Passenger Traction Lifts)",
+          "up_fire_services_noc": "FS-UP-LKO-2026-NOC-4412 (Compliant with NBC 2016 Part 4)",
+          "building_occupancy_clearance": "RECOMMENDED_FOR_FINAL_OCCUPANCY_CERTIFICATE",
+          "electrical_inspectorate_ceig": "CEIG-LKO-FORM-A-APPROVED"
+        },
+        "digital_twin_and_bim_handover": {
+          "platform_telemetry": "Quadillar LiveView Project Ledger fully synchronized",
+          "as_built_model_spec": "LOD 500 Asset Information Model (BIM)",
+          "cryptographic_framework": "Hermes Merkle Ledger v2.4 (SHA-256 Chained)"
+        },
+        "evidentiary_compliance_bsa_2023": {
+          "certifier": "Akshat Singh Rathore, Lead Telemetry & Project Authority",
+          "chain_status": "CONTINUOUS_IMMUTABLE_CHAIN_FROM_GENESIS_TO_COMPLETION",
+          "hash_algorithm": "SHA-256",
+          "statutory_provision": "Section 63, Bharatiya Sakshya Adhiniyam, 2023"
+        },
+        "defect_liability_period_clause_17": {
+          "expiry_date": "2027-10-22",
+          "commencement_date": "2026-10-22",
+          "dlp_duration_months": 12,
+          "retention_release_condition": "Successful completion of 12-month DLP & issue of Final Maintenance Certificate"
+        },
+        "financial_and_contractual_closure": {
+          "completion_percentage": 100,
+          "net_disbursed_to_date_inr": 42750000,
+          "remaining_advance_balance_inr": 0,
+          "sanctioned_contract_value_inr": 45000000,
+          "final_gross_measured_value_inr": 45000000,
+          "mobilization_advance_amortized_pct": 100,
+          "security_retention_withheld_clause_1a_inr": 2250000
+        }
+      }
+    }
+  ]
+}

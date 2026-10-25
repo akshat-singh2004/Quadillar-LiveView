@@ -387,7 +387,7 @@ export default function CanonicalClaimsDisputesPage() {
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-white text-xs">{c.claim_reference}</span>
                             <span className="px-1.5 py-0.2 rounded bg-zinc-800 text-[10px] text-zinc-400">
-                              {c.category.replace(/_/g, " ")}
+                              {c?.category?.replace(/_/g, " ")}
                             </span>
                           </div>
                           <h3 className="text-zinc-200 font-bold mt-1 text-xs">{c.title}</h3>

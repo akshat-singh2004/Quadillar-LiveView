@@ -123,7 +123,7 @@ export default async function IPCPage() {
               <div className="text-[10px] uppercase tracking-wider text-zinc-500">Certificate Status</div>
               <div className="text-xs font-bold text-amber-400 flex items-center justify-end gap-1.5 mt-0.5">
                 <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                <span>{billRow?.status ? billRow.status.replace(/_/g, " ") : "Audit Vetting Cycle"}</span>
+                <span>{billRow?.status ? billRow?.status?.replace(/_/g, " ") : "Audit Vetting Cycle"}</span>
               </div>
             </div>
           </div>

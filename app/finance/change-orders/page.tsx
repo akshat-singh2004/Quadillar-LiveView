@@ -336,7 +336,7 @@ export default function PotentialChangeOrdersPage() {
                                   : 'bg-amber-950 text-amber-400 border border-amber-800'
                               }`}
                             >
-                              {p.status.replace(/_/g, ' ')}
+                              {p?.status?.replace(/_/g, ' ')}
                             </span>
                           </td>
                           <td className="p-3 text-center">
@@ -477,7 +477,7 @@ export default function PotentialChangeOrdersPage() {
                 
                 <div className="p-3 bg-neutral-900/50 border border-neutral-800">
                   <span className="text-[10px] text-neutral-500 uppercase block mb-1">Current Status</span>
-                  <div className="text-sm font-bold text-white uppercase">{selectedPco.status.replace(/_/g, ' ')}</div>
+                  <div className="text-sm font-bold text-white uppercase">{selectedPco?.status?.replace(/_/g, ' ')}</div>
                 </div>
               </div>
 

@@ -628,7 +628,7 @@ export default function CanonicalWorkforceTrackingPage() {
                           {rec.track_session_code}
                         </span>
                         <span className="text-[10px] px-2 py-0.2 rounded bg-zinc-800 text-zinc-300 font-mono">
-                          {rec.zone_classification.replace(/_/g, " ")}
+                          {rec?.zone_classification?.replace(/_/g, " ")}
                         </span>
                         <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           isFlaggedRecord
@@ -637,7 +637,7 @@ export default function CanonicalWorkforceTrackingPage() {
                             ? "bg-purple-950 text-purple-400 border border-purple-800/50"
                             : "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                         }`}>
-                          {rec.status.replace(/_/g, " ")}
+                          {rec?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -683,7 +683,7 @@ export default function CanonicalWorkforceTrackingPage() {
                   ? "bg-rose-950 text-rose-400 border border-rose-800/50"
                   : "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
               }`}>
-                {selectedRecord.status.replace(/_/g, " ")}
+                {selectedRecord?.status?.replace(/_/g, " ")}
               </span>
             </div>
 

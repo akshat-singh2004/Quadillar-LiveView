@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       projectId,
       targetDate,
       synapseEventsProcessed: synapseResults.processedCount,
-      dossierCode: dprResult.dossierCode || dprResult.data?.dossier_code || `DPR-${targetDate.replace(/-/g, "")}-DAEMON`,
+      dossierCode: dprResult.dossierCode || dprResult.data?.dossier_code || `DPR-${((targetDate ?? "")).replace(/-/g, "")}-DAEMON`,
       closeoutSealHash: seal.blockHash,
     });
   } catch (err: any) {

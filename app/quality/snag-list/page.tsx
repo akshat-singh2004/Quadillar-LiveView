@@ -532,9 +532,9 @@ export default function CanonicalSnagListPage() {
           <td><strong>${s.room_zone}</strong><br><span style="color: #64748b; font-size: 10px;">${s.location_grid}</span></td>
           <td>${s.trade_package}<br><span style="color: #64748b; font-size: 10px;">${s.contractor_name}</span></td>
           <td>${s.snag_title}</td>
-          <td class="tac font-bold" style="color: ${s.category === "CATEGORY_A_CRITICAL_BLOCKER" ? "#b91c1c" : "#0369a1"};">${s.category.replace(/_/g, " ").replace("CATEGORY ", "")}</td>
+          <td class="tac font-bold" style="color: ${s.category === "CATEGORY_A_CRITICAL_BLOCKER" ? "#b91c1c" : "#0369a1"};">${((s.category ?? "")).replace(/_/g, " ").replace("CATEGORY ", "")}</td>
           <td class="tar font-bold">₹${s.estimated_rectification_cost_inr.toLocaleString("en-IN")}</td>
-          <td class="tac font-bold" style="color: ${s.status === "SEOR_VERIFIED_DE_SNAGGED" ? "#15803d" : "#b91c1c"};">${s.status.replace(/_/g, " ")}</td>
+          <td class="tac font-bold" style="color: ${s.status === "SEOR_VERIFIED_DE_SNAGGED" ? "#15803d" : "#b91c1c"};">${((s.status ?? "")).replace(/_/g, " ")}</td>
         </tr>
       `).join("")}
       <tr class="total-row">
@@ -798,7 +798,7 @@ export default function CanonicalSnagListPage() {
                             ? "bg-amber-950 text-amber-400 border border-amber-800/50"
                             : "bg-zinc-800 text-zinc-300"
                         }`}>
-                          {snag.category.replace(/_/g, " ").replace("CATEGORY ", "")}
+                          {((snag.category ?? "")).replace(/_/g, " ").replace("CATEGORY ", "")}
                         </span>
                         <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           isCleared
@@ -807,7 +807,7 @@ export default function CanonicalSnagListPage() {
                             ? "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                             : "bg-zinc-800 text-zinc-300"
                         }`}>
-                          {snag.status.replace(/_/g, " ")}
+                          {((snag.status ?? "")).replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -854,7 +854,7 @@ export default function CanonicalSnagListPage() {
                   ? "bg-rose-950 text-rose-400 border border-rose-800/50"
                   : "bg-amber-950 text-amber-400 border border-amber-800/50"
               }`}>
-                {selectedSnag.status.replace(/_/g, " ")}
+                {((selectedSnag.status ?? "")).replace(/_/g, " ")}
               </span>
             </div>
 
@@ -905,7 +905,7 @@ export default function CanonicalSnagListPage() {
               <div className="space-y-1.5 text-[11px]">
                 <div className="flex justify-between text-zinc-400">
                   <span>Defect Categorization:</span>
-                  <span className="text-white font-bold">{selectedSnag.category.replace(/_/g, " ")}</span>
+                  <span className="text-white font-bold">{((selectedSnag.category ?? "")).replace(/_/g, " ")}</span>
                 </div>
                 <div className="flex justify-between text-zinc-400">
                   <span>Mandatory Rectification SLA Target:</span>

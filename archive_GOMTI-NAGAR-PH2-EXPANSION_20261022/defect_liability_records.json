@@ -1,0 +1,41 @@
+[
+  {
+    "id": "8ffb2664-a6ba-452e-92ac-6caf854f783f",
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "inspection_type": "12_MONTH_DLP_FINAL_INSPECTION",
+    "subsystem_audited": "Structural Frame & Foundations",
+    "observation_details": "Total differential settlement 0.8mm (within L/500). Raft core dry with zero micro-cracks. PT slabs deflection 6.2mm (within L/350).",
+    "open_defects_count": 0,
+    "compliance_status": "CLEARED_ZERO_DEFECTS",
+    "auditing_signatory": "Akshat Singh Rathore",
+    "deed_hash": "6844cea62d92919644b39971bbdb9bc75f840ac8efe90f98536de3a22c31e4b7",
+    "inspected_at": "2026-10-22T06:22:29.071827+00:00",
+    "created_at": "2026-10-22T06:22:29.071827+00:00"
+  },
+  {
+    "id": "96aa0a11-1c4b-4470-90df-efe4f53992a4",
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "inspection_type": "12_MONTH_DLP_FINAL_INSPECTION",
+    "subsystem_audited": "Façade Envelope & Weather-Seals",
+    "observation_details": "Glazing silicone gaskets intact. Zero water ingress or seal deterioration under monsoonal exposure.",
+    "open_defects_count": 0,
+    "compliance_status": "CLEARED_ZERO_DEFECTS",
+    "auditing_signatory": "Akshat Singh Rathore",
+    "deed_hash": "6844cea62d92919644b39971bbdb9bc75f840ac8efe90f98536de3a22c31e4b7",
+    "inspected_at": "2026-10-22T06:22:29.071827+00:00",
+    "created_at": "2026-10-22T06:22:29.071827+00:00"
+  },
+  {
+    "id": "42236cb2-5e2d-4d61-8492-f6cba0e66f9f",
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "inspection_type": "12_MONTH_DLP_FINAL_INSPECTION",
+    "subsystem_audited": "MEP, Fire Protection & Elevators",
+    "observation_details": "HVAC AHUs, 150mm fire wet riser (15 bar), traction elevators, and 11kV substation operating at 99.98% availability.",
+    "open_defects_count": 0,
+    "compliance_status": "CLEARED_ZERO_DEFECTS",
+    "auditing_signatory": "Akshat Singh Rathore",
+    "deed_hash": "6844cea62d92919644b39971bbdb9bc75f840ac8efe90f98536de3a22c31e4b7",
+    "inspected_at": "2026-10-22T06:22:29.071827+00:00",
+    "created_at": "2026-10-22T06:22:29.071827+00:00"
+  }
+]

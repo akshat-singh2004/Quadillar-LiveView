@@ -250,7 +250,7 @@ export default function SiteInventoryPage() {
                       <span className="font-bold text-white block">{i.material_name}</span>
                       <span className="text-[10px] text-cyan-400 font-mono">{i.item_code}</span>
                     </td>
-                    <td className="p-3 text-zinc-400 font-mono text-[11px]">{i.category.replace(/_/g, " ")}</td>
+                    <td className="p-3 text-zinc-400 font-mono text-[11px]">{i?.category?.replace(/_/g, " ")}</td>
                     <td className="p-3 text-zinc-300">{i.storage_location}</td>
                     <td className="p-3 text-right font-mono font-bold text-white">
                       {i.current_stock_qty} {i.unit}
@@ -267,7 +267,7 @@ export default function SiteInventoryPage() {
                           ? "bg-emerald-950 text-emerald-400 border-emerald-800"
                           : "bg-amber-950 text-amber-400 border-amber-800"
                       }`}>
-                        {i.stock_health.replace(/_/g, " ")}
+                        {i?.stock_health?.replace(/_/g, " ")}
                       </span>
                     </td>
                   </tr>

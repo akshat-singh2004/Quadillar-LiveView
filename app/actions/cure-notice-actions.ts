@@ -76,7 +76,7 @@ export async function issueStatutoryCureNotice(payload: IssueCureNoticePayload) 
 You are hereby formally notified that you are in material default of your contractual obligations under the covenants governing Project [${payload.projectId}].
 
 ### 2. SPECIFICATION OF DEFAULT
-- **Category of Default:** ${payload.defaultReason.replace(/_/g, " ")}
+- **Category of Default:** ${payload?.defaultReason?.replace(/_/g, " ")}
 - **Factual Particulars:** ${payload.specificDefaultDetails}
 - **Governing Contractual Clause:** ${payload.clauseInvoked}
 

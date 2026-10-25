@@ -288,7 +288,7 @@ export default function TakingOverCertificatePage() {
                       </td>
                       <td className="p-3 text-center">
                         <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                          {t.status.replace(/_/g, " ")}
+                          {t?.status?.replace(/_/g, " ")}
                         </span>
                       </td>
                     </tr>

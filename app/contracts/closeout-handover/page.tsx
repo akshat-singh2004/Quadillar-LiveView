@@ -381,7 +381,7 @@ export default function CanonicalCloseoutHandoverPage() {
       <h1 class="title">Project Completion Report &amp; As-Built Handover Certificate</h1>
       <div class="meta">Closeout Ref: ${arch.closeout_reference_no} · Practical Completion: ${arch.practical_completion_date} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${arch.stage === "PROJECT_ARCHIVED_CLOSED" ? "closed" : "active"}">${arch.stage.replace(/_/g, " ")}</span>
+    <span class="badge ${arch.stage === "PROJECT_ARCHIVED_CLOSED" ? "closed" : "active"}">${arch?.stage?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
@@ -635,7 +635,7 @@ export default function CanonicalCloseoutHandoverPage() {
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                         }`}>
-                          {arch.stage.replace(/_/g, " ")}
+                          {arch?.stage?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -680,7 +680,7 @@ export default function CanonicalCloseoutHandoverPage() {
                   ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                   : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
               }`}>
-                {selectedArchive.stage.replace(/_/g, " ")}
+                {selectedArchive?.stage?.replace(/_/g, " ")}
               </span>
             </div>
 

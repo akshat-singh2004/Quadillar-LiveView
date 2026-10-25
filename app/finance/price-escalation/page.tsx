@@ -539,12 +539,12 @@ export default function CanonicalPriceEscalationPage() {
       <h1 class="title">Statutory Escalation &amp; Price Variation Certificate</h1>
       <div class="meta">Claim Ref: ${claim.claim_reference_no} · Month: ${claim.billing_period_month} · Linked IPC: ${claim.linked_ra_bill_no} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${claim.status === "SEOR_CERTIFIED_FOR_BILLING" ? "certified" : "review"}">${claim.status.replace(/_/g, " ")}</span>
+    <span class="badge ${claim.status === "SEOR_CERTIFIED_FOR_BILLING" ? "certified" : "review"}">${claim?.status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
     <tr><th>Executing Contractor</th><td><strong>${claim.contractor_name}</strong></td><th>Parent Work Order Ref</th><td><strong>${claim.work_order_ref}</strong></td></tr>
-    <tr><th>Statutory Escalation Clause</th><td><strong>${claim.clause_type.replace(/_/g, " ")}</strong></td><th>Gross Work Done in Period (W)</th><td class="tar font-bold" style="font-size: 13px; color: #0369a1;">₹${claim.gross_work_done_inr.toLocaleString("en-IN")}</td></tr>
+    <tr><th>Statutory Escalation Clause</th><td><strong>${claim?.clause_type?.replace(/_/g, " ")}</strong></td><th>Gross Work Done in Period (W)</th><td class="tar font-bold" style="font-size: 13px; color: #0369a1;">₹${claim.gross_work_done_inr.toLocaleString("en-IN")}</td></tr>
     <tr><th>Base Tender Month (Base Index)</th><td><code>${baseIndexRecord.index_month_key}</code> (${baseIndexRecord.base_year})</td><th>Current Claim Month</th><td><code>${claim.billing_period_month}</code></td></tr>
   </table>
 
@@ -812,7 +812,7 @@ export default function CanonicalPriceEscalationPage() {
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                         }`}>
-                          {claim.status.replace(/_/g, " ")}
+                          {claim?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -827,7 +827,7 @@ export default function CanonicalPriceEscalationPage() {
                     </div>
 
                     <div>
-                      <div className="text-xs font-bold text-white">{claim.clause_type.replace(/_/g, " ")}</div>
+                      <div className="text-xs font-bold text-white">{claim?.clause_type?.replace(/_/g, " ")}</div>
                       <div className="text-[11px] text-cyan-400 font-mono mt-0.5">
                         Target IPC: <strong className="text-zinc-200">{claim.linked_ra_bill_no}</strong> &bull; {claim.contractor_name}
                       </div>
@@ -857,7 +857,7 @@ export default function CanonicalPriceEscalationPage() {
                   ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                   : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
               }`}>
-                {selectedClaim.status.replace(/_/g, " ")}
+                {selectedClaim?.status?.replace(/_/g, " ")}
               </span>
             </div>
 

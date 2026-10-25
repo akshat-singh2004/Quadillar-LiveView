@@ -113,7 +113,7 @@ export default async function CureNoticesPage() {
                   </div>
 
                   <div className="text-[11px] text-zinc-400 font-sans flex flex-wrap gap-x-5 gap-y-1">
-                    <span>Grounds: <strong className="text-rose-400">{notice.default_reason.replace(/_/g, " ")}</strong></span>
+                    <span>Grounds: <strong className="text-rose-400">{notice?.default_reason?.replace(/_/g, " ")}</strong></span>
                     <span>Clause: <strong className="text-zinc-200">{notice.clause_invoked}</strong></span>
                     <span>LD Exposure: <strong className="text-amber-400 font-mono">₹{Number(notice.liquidated_damages_exposure_inr).toLocaleString("en-IN")}</strong></span>
                     <span>PBG at Risk: <strong className="text-cyan-400 font-mono">₹{Number(notice.security_deposit_at_risk_inr).toLocaleString("en-IN")}</strong></span>

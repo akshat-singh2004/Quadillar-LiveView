@@ -107,7 +107,7 @@ export default async function LaborMusterPage() {
                       <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-800 text-emerald-300 font-bold text-[10px]">
                         {muster.muster_code}
                       </span>
-                      <strong className="text-white text-sm">{muster.trade_classification.replace("_", " ")}</strong>
+                      <strong className="text-white text-sm">{muster?.trade_classification?.replace("_", " ")}</strong>
                       <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold text-[9px]">
                         {muster.skill_tier}
                       </span>

@@ -390,7 +390,7 @@ export default async function DashboardPage() {
                           </td>
                           <td className="py-3 px-3 text-center">
                             <span className="px-2 py-0.5 border text-[10px] uppercase font-bold bg-emerald-950/40 border-emerald-800 text-emerald-400">
-                              {b.status.replace(/_/g, " ")}
+                              {b?.status?.replace(/_/g, " ")}
                             </span>
                           </td>
                         </tr>

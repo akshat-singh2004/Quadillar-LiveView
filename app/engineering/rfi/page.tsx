@@ -203,7 +203,7 @@ export default function CanonicalRfiPage() {
   // Bridge to DPR Hindrance Register
   const handleEscalateToHindrance = async (rfi: RfiRecord) => {
     setActionInProgress(`hindrance_${rfi.id}`);
-    const hindranceNo = `HIN-${new Date().getFullYear()}-${rfi.rfi_number.replace('RFI-', '')}`;
+    const hindranceNo = `HIN-${new Date().getFullYear()}-${rfi?.rfi_number?.replace('RFI-', '')}`;
 
     try {
       await (supabase as any).from('site_hindrance_register').insert([
@@ -238,7 +238,7 @@ export default function CanonicalRfiPage() {
   // Bridge to Potential Change Orders (PCO)
   const handlePromoteToVariation = async (rfi: RfiRecord) => {
     setActionInProgress(`variation_${rfi.id}`);
-    const pcoNo = `PCO-${new Date().getFullYear()}-${rfi.rfi_number.replace('RFI-', '')}`;
+    const pcoNo = `PCO-${new Date().getFullYear()}-${rfi?.rfi_number?.replace('RFI-', '')}`;
 
     try {
       await (supabase as any).from('potential_change_orders').insert([
@@ -363,7 +363,7 @@ export default function CanonicalRfiPage() {
       <div class="meta">RFI Number: ${rfi.rfi_number} · Project: ${projectName} (${projectId})</div>
     </div>
     <span class="badge ${rfi.status === 'ANSWERED' || rfi.status === 'CLOSED_CONCURRED' ? 'answered' : 'critical'}">
-      ${rfi.status.replace(/_/g, ' ')}
+      ${rfi?.status?.replace(/_/g, ' ')}
     </span>
   </div>
 
@@ -371,7 +371,7 @@ export default function CanonicalRfiPage() {
     <tr><th>Executing Contractor</th><td><strong>${rfi.contractor_entity}</strong></td><th>Technical Discipline</th><td>${rfi.discipline}</td></tr>
     <tr><th>Structural / Room Grid</th><td><strong>${rfi.location_grid}</strong></td><th>Target Drawing Reference</th><td><strong>${rfi.drawing_reference}</strong></td></tr>
     <tr><th>Specification Clause</th><td>${rfi.specification_clause || 'Standard CPWD / IS Codes'}</td><th>Assigned Consultant</th><td><strong>${rfi.assigned_consultant}</strong></td></tr>
-    <tr><th>SLA Response Target Date</th><td><strong>${rfi.sla_target_date}</strong></td><th>Priority Ranking</th><td><strong>${rfi.priority.replace(/_/g, ' ')}</strong></td></tr>
+    <tr><th>SLA Response Target Date</th><td><strong>${rfi.sla_target_date}</strong></td><th>Priority Ranking</th><td><strong>${rfi?.priority?.replace(/_/g, ' ')}</strong></td></tr>
   </table>
 
   <div class="box">
@@ -672,7 +672,7 @@ export default function CanonicalRfiPage() {
                                   : 'bg-zinc-800 text-zinc-300'
                               }`}
                           >
-                            {rfi.priority.replace(/_/g, ' ')}
+                            {rfi?.priority?.replace(/_/g, ' ')}
                           </span>
                           <span
                             className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${isItemAnswered
@@ -682,7 +682,7 @@ export default function CanonicalRfiPage() {
                                   : 'bg-cyan-950 text-cyan-400 border border-cyan-800/50'
                               }`}
                           >
-                            {rfi.status.replace(/_/g, ' ')}
+                            {rfi?.status?.replace(/_/g, ' ')}
                           </span>
                         </div>
 
@@ -727,7 +727,7 @@ export default function CanonicalRfiPage() {
                           : 'bg-cyan-950 text-cyan-400 border border-cyan-800/50'
                       }`}
                   >
-                    {selectedRfi.status.replace(/_/g, ' ')}
+                    {selectedRfi?.status?.replace(/_/g, ' ')}
                   </span>
                 </div>
 

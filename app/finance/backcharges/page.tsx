@@ -258,7 +258,7 @@ export default function BackchargesPage() {
                           <span className="text-[10px] text-cyan-400">{b.subcontractor_name}</span>
                         </td>
                         <td className="p-3">
-                          <span className="text-zinc-200 block font-semibold">{b.contra_category.replace(/_/g, ' ')}</span>
+                          <span className="text-zinc-200 block font-semibold">{b?.contra_category?.replace(/_/g, ' ')}</span>
                           {b.incident_or_ncr_ref && (
                             <span className="text-[10px] text-zinc-500 font-mono">Ref: {b.incident_or_ncr_ref}</span>
                           )}
@@ -275,7 +275,7 @@ export default function BackchargesPage() {
                               ? 'bg-rose-950 text-rose-400 border border-rose-800'
                               : 'bg-amber-950 text-amber-400 border border-amber-800'
                           }`}>
-                            {b.status.replace(/_/g, ' ')}
+                            {b?.status?.replace(/_/g, ' ')}
                           </span>
                         </td>
                         <td className="p-3 text-center">

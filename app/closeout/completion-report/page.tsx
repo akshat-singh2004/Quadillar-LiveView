@@ -377,7 +377,7 @@ function openCompletionDossier(pcr: ProjectCompletionReport, assets: FacilityAss
     <div><strong>Client:</strong> ${pcr.client_name}</div>
     <div><strong>Contractor:</strong> ${pcr.contractor_name}</div>
     <div><strong>WO No.:</strong> ${pcr.work_order_number}</div>
-    <div><strong>Status:</strong> ${pcr.status.replace(/_/g," ")}</div>
+    <div><strong>Status:</strong> ${pcr?.status?.replace(/_/g," ")}</div>
     <div><strong>Date:</strong> ${new Date().toLocaleDateString("en-IN", {day:"2-digit",month:"long",year:"numeric"})}</div>
   </div>
 
@@ -812,7 +812,7 @@ export default function CompletionReportPage() {
       await (supabase as any).from("facility_asset_handover").update(patch).eq("id", asset.id);
     } catch { /* optimistic */ }
     setAssets((prev) => prev.map((a) => a.id === asset.id ? { ...a, ...patch } : a));
-    showFeedback(`✓ ${asset.asset_name} → ${newStatus.replace(/_/g, " ")}`);
+    showFeedback(`✓ ${asset.asset_name} → ${((newStatus ?? "")).replace(/_/g, " ")}`);
     setActionId(null);
   };
 

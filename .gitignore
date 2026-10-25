@@ -42,3 +42,6 @@ next-env.d.ts
 
 .aider*
 
+
+.env*.local
+.env.local

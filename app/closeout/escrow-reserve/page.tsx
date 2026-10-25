@@ -1019,7 +1019,7 @@ export default function DefectEscrowReservePage() {
                               : "bg-slate-800 text-slate-400 border-slate-700"
                           }`}
                         >
-                          {item.status.replace("_", " ")}
+                          {item?.status?.replace("_", " ")}
                         </span>
                       </td>
                     </tr>
@@ -1090,7 +1090,7 @@ export default function DefectEscrowReservePage() {
                     <span className="text-xs text-slate-400">Rectification Debit</span>
                     <span className="text-lg font-bold text-rose-400">{fmtINR(claim.rectificationCostInr)}</span>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                      {claim.claimStatus.replace("_", " ")}
+                      {claim?.claimStatus?.replace("_", " ")}
                     </span>
                   </div>
                 </div>
@@ -1202,7 +1202,7 @@ export default function DefectEscrowReservePage() {
                                 : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                             }`}
                           >
-                            {item.transactionType.replace("_", " ")}
+                            {item?.transactionType?.replace("_", " ")}
                           </span>
                         </td>
 
@@ -1785,7 +1785,7 @@ export default function DefectEscrowReservePage() {
                       <tr key={t.id}>
                         <td className="p-2 border border-slate-800 print:border-gray-300">{fmtDate(t.transactionDate)}</td>
                         <td className="p-2 border border-slate-800 print:border-gray-300">{t.transactionRef}</td>
-                        <td className="p-2 border border-slate-800 print:border-gray-300 font-sans">{t.transactionType.replace("_", " ")}</td>
+                        <td className="p-2 border border-slate-800 print:border-gray-300 font-sans">{t?.transactionType?.replace("_", " ")}</td>
                         <td className="p-2 border border-slate-800 print:border-gray-300 font-sans">{t.beneficiaryOrRemitter}</td>
                         <td className="p-2 border border-slate-800 print:border-gray-300 text-right text-rose-400 print:text-black">
                           {t.transactionType.includes("DEBIT") || t.transactionType.includes("RELEASE") ? fmtINR(t.amountInr) : "—"}

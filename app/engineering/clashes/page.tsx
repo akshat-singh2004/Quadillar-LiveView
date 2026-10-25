@@ -305,7 +305,7 @@ export default function CanonicalBimClashesPage() {
           <td>${c.location_grid} (${c.grid_level})</td>
           <td class="tar ${c.penetration_depth_mm > 50 ? 'hard-clash' : ''}">${c.penetration_depth_mm} mm</td>
           <td>${c.assigned_trade}</td>
-          <td><strong>${c.status.replace(/_/g, ' ')}</strong></td>
+          <td><strong>${c?.status?.replace(/_/g, ' ')}</strong></td>
         </tr>
       `).join("")}
     </tbody>
@@ -509,14 +509,14 @@ export default function CanonicalBimClashesPage() {
                             ? "bg-rose-950 text-rose-400 border border-rose-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {c.clash_type.replace(/_/g, " ")}
+                          {c?.clash_type?.replace(/_/g, " ")}
                         </span>
                         <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           isApproved
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-zinc-800 text-zinc-300"
                         }`}>
-                          {c.status.replace(/_/g, " ")}
+                          {c?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 

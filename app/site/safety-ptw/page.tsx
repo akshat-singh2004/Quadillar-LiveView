@@ -168,13 +168,13 @@ export default function SafetyPtwClearancePage() {
                     <td className="p-3 text-cyan-400 font-mono">{c.permit_ref}</td>
                     <td className="p-3 text-zinc-300">
                       <div>{c.work_zone}</div>
-                      <div className="text-[10px] text-zinc-500 font-mono">{c.activity_type.replace(/_/g, " ")}</div>
+                      <div className="text-[10px] text-zinc-500 font-mono">{c?.activity_type?.replace(/_/g, " ")}</div>
                     </td>
                     <td className="p-3 text-right font-bold text-emerald-400 font-mono">{c.atmospheric_oxygen_pct}%</td>
                     <td className="p-3 text-zinc-300 font-mono">{c.loto_padlock_tag_no}</td>
                     <td className="p-3 text-center">
                       <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                        {c.clearance_status.replace(/_/g, " ")}
+                        {c?.clearance_status?.replace(/_/g, " ")}
                       </span>
                     </td>
                   </tr>

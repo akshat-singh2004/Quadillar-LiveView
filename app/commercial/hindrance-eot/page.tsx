@@ -105,7 +105,7 @@ export default async function HindranceEotPage() {
                         <span className="px-2 py-0.5 rounded bg-rose-950 border border-rose-800 text-rose-300 font-bold text-[10px]">
                           {h.hindrance_code}
                         </span>
-                        <strong className="text-white text-xs">{h.delay_category.replace(/_/g, " ")}</strong>
+                        <strong className="text-white text-xs">{h?.delay_category?.replace(/_/g, " ")}</strong>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                         isOpen ? "bg-rose-950 border border-rose-800 text-rose-300" : "bg-emerald-950 border border-emerald-800 text-emerald-300"

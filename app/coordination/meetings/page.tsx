@@ -180,7 +180,7 @@ export default function MeetingsCoordinationPage() {
   </div>
 
   <table>
-    <tr><th>Meeting Classification</th><td>${m.meeting_type.replace(/_/g, " ")}</td><th>Attendees Count</th><td>${m.attendees_count} Stakeholders Present</td></tr>
+    <tr><th>Meeting Classification</th><td>${m?.meeting_type?.replace(/_/g, " ")}</td><th>Attendees Count</th><td>${m.attendees_count} Stakeholders Present</td></tr>
   </table>
 
   <h3 style="margin-top: 24px; font-size: 14px;">Summary of Deliberations &amp; Site Directives</h3>
@@ -321,7 +321,7 @@ export default function MeetingsCoordinationPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Classification:</span>
-                    <strong className="text-cyan-300">{selectedMeeting.meeting_type.replace(/_/g, " ")}</strong>
+                    <strong className="text-cyan-300">{selectedMeeting?.meeting_type?.replace(/_/g, " ")}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Chairperson:</span>

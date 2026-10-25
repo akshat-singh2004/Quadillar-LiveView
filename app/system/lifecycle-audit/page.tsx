@@ -338,7 +338,7 @@ export default function CanonicalLifecycleAuditPage() {
       <h1 class="title">End-to-End Construction Lifecycle Verification Certificate</h1>
       <div class="meta">Audit Run: ${activeRun.run_code} · Date: ${new Date().toLocaleDateString("en-IN")} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${activeRun.overall_status === "PASSED_VERIFIED" ? "passed" : "executing"}">${activeRun.overall_status.replace(/_/g, " ")}</span>
+    <span class="badge ${activeRun.overall_status === "PASSED_VERIFIED" ? "passed" : "executing"}">${activeRun?.overall_status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
@@ -483,7 +483,7 @@ export default function CanonicalLifecycleAuditPage() {
               <Clock className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="text-lg font-bold text-white mt-2 truncate">
-              {activeRun.current_stage.replace(/_/g, " ")}
+              {activeRun?.current_stage?.replace(/_/g, " ")}
             </div>
             <div className="text-[11px] text-cyan-300 mt-1">Active stage-gate checkpoint</div>
           </div>
@@ -494,7 +494,7 @@ export default function CanonicalLifecycleAuditPage() {
               <ShieldCheck className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="text-2xl font-extrabold text-white mt-2">
-              {activeRun.overall_status.replace(/_/g, " ")}
+              {activeRun?.overall_status?.replace(/_/g, " ")}
             </div>
             <div className="text-[11px] text-zinc-500 mt-1">CPWD &amp; FIDIC Red Book protocol</div>
           </div>

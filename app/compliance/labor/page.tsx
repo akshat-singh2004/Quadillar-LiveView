@@ -512,7 +512,7 @@ export default function CanonicalLabourCompliancePage() {
       <h1 class="title">Statutory Register of Wages &amp; Compliance Audit</h1>
       <div class="meta">Filing Ref: ${rec.compliance_record_number} · Wage Period: ${rec.wage_period_month} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${rec.clause_19d_breach_flagged ? "breach" : "cleared"}">${rec.status.replace(/_/g, " ")}</span>
+    <span class="badge ${rec.clause_19d_breach_flagged ? "breach" : "cleared"}">${rec?.status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
@@ -824,7 +824,7 @@ export default function CanonicalLabourCompliancePage() {
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {rec.status.replace(/_/g, " ")}
+                          {rec?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -872,7 +872,7 @@ export default function CanonicalLabourCompliancePage() {
                   ? "bg-rose-950 text-rose-400 border border-rose-800/50"
                   : "bg-amber-950 text-amber-400 border border-amber-800/50"
               }`}>
-                {selectedRecord.status.replace(/_/g, " ")}
+                {selectedRecord?.status?.replace(/_/g, " ")}
               </span>
             </div>
 

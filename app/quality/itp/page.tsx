@@ -257,7 +257,7 @@ export default function ITPPage() {
                       <tr key={g.id} className="hover:bg-zinc-900/50 transition">
                         <td className="p-3">
                           <span className="text-white font-bold block">{g.gate_code}</span>
-                          <span className="text-[10px] text-zinc-500">{g.trade_discipline.replace(/_/g, ' ')}</span>
+                          <span className="text-[10px] text-zinc-500">{((g.trade_discipline ?? "")).replace(/_/g, ' ')}</span>
                         </td>
                         <td className="p-3">
                           <strong className="text-zinc-200 block">{g.inspection_item}</strong>
@@ -272,7 +272,7 @@ export default function ITPPage() {
                               ? 'bg-amber-950 text-amber-400 border border-amber-800'
                               : 'bg-zinc-800 text-zinc-300'
                           }`}>
-                            {g.gate_type.replace(/_/g, ' ')}
+                            {((g.gate_type ?? "")).replace(/_/g, ' ')}
                           </span>
                         </td>
                         <td className="p-3 text-zinc-400 max-w-xs truncate font-sans text-[11px]">
@@ -286,7 +286,7 @@ export default function ITPPage() {
                               ? 'bg-rose-950 text-rose-400 border border-rose-800'
                               : 'bg-amber-950 text-amber-400 border border-amber-800'
                           }`}>
-                            {g.status.replace(/_/g, ' ')}
+                            {((g.status ?? "")).replace(/_/g, ' ')}
                           </span>
                         </td>
                         <td className="p-3 text-center">

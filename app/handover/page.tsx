@@ -336,7 +336,7 @@ export default function SnagRegisterAndTocPage() {
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm text-white">{aggregates.activeToc.certificate_number}</span>
                 <span className="text-[9px] px-2 py-0.5 rounded font-bold uppercase bg-zinc-950 border border-zinc-700">
-                  {aggregates.activeToc.status.replace(/_/g, ' ')}
+                  {aggregates.activeToc?.status?.replace(/_/g, ' ')}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-400 font-sans">
@@ -459,7 +459,7 @@ export default function SnagRegisterAndTocPage() {
                             <span className="text-zinc-300 font-sans text-[11px]">{s.defect_description}</span>
                           </td>
                           <td className="p-2.5 text-zinc-400">
-                            <span className="text-cyan-400 block font-semibold">{s.trade_package.replace(/_/g, ' ')}</span>
+                            <span className="text-cyan-400 block font-semibold">{s?.trade_package?.replace(/_/g, ' ')}</span>
                             <span>{s.location_grid}</span>
                           </td>
                           <td className="p-2.5 text-center">
@@ -605,7 +605,7 @@ export default function SnagRegisterAndTocPage() {
               <div className="flex justify-between items-start border-b border-neutral-800 pb-3">
                 <div>
                   <span className="text-xs font-bold text-white block">{selectedSnag.item_code}</span>
-                  <h3 className="text-sm font-bold text-emerald-400 mt-0.5">{selectedSnag.trade_package.replace(/_/g, ' ')}</h3>
+                  <h3 className="text-sm font-bold text-emerald-400 mt-0.5">{selectedSnag?.trade_package?.replace(/_/g, ' ')}</h3>
                   <span className="text-[10px] text-neutral-400">{selectedSnag.location_grid}</span>
                 </div>
                 <button onClick={() => setSelectedSnag(null)} className="text-neutral-500 hover:text-neutral-300">

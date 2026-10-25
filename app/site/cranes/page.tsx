@@ -187,7 +187,7 @@ export default function CraneSlewRadarPage() {
 
           <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-sm">
             <span className="text-[10px] text-zinc-500 uppercase block font-semibold">Interlock Gate Status</span>
-            <div className="text-2xl font-bold text-emerald-400 mt-1">{active.interlock_status.replace(/_/g, " ")}</div>
+            <div className="text-2xl font-bold text-emerald-400 mt-1">{active?.interlock_status?.replace(/_/g, " ")}</div>
             <span className="text-[10px] text-zinc-500 mt-1 block">Anti-collision radar synced</span>
           </div>
         </div>
@@ -261,7 +261,7 @@ export default function CraneSlewRadarPage() {
                           ? "bg-emerald-950 text-emerald-400 border-emerald-800"
                           : "bg-amber-950 text-amber-400 border-amber-800"
                       }`}>
-                        {c.interlock_status.replace(/_/g, " ")}
+                        {c?.interlock_status?.replace(/_/g, " ")}
                       </span>
                     </div>
 

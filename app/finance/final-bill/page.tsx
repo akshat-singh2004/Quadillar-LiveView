@@ -383,7 +383,7 @@ export default function FinalBillAndPBGDischargePage() {
                       <div className="flex justify-between items-center font-bold">
                         <span className="text-white">{pbg.bg_reference_number}</span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${isDischarged ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}`}>
-                          {pbg.status.replace(/_/g, ' ')}
+                          {pbg?.status?.replace(/_/g, ' ')}
                         </span>
                       </div>
                       <div className="text-[11px] text-zinc-400">{pbg.issuing_bank_name} • Value: <strong className="text-emerald-400">{formatInr(Number(pbg.bg_amount_inr))}</strong></div>

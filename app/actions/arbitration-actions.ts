@@ -83,7 +83,7 @@ export async function compileArbitralDossier(payload: CompileArbitralDossierPayl
 *(Respondent)*  
 
 **DISPUTE REFERENCE:** ${dossierCode}  
-**JURISDICTION / FORUM:** ${payload.tribunalJurisdiction.replace(/_/g, " ")}  
+**JURISDICTION / FORUM:** ${payload?.tribunalJurisdiction?.replace(/_/g, " ")}  
 **PROJECT IDENTIFIER:** ${payload.projectId}  
 **TOTAL QUANTUM OF CLAIM:** ₹${Number(payload.claimedQuantumInr).toLocaleString("en-IN")}  
 **TOTAL EXTENSION OF TIME CLAIMED:** ${payload.delayDaysClaimed} Calendar Days  

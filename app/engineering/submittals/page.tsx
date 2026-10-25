@@ -245,7 +245,7 @@ export default function CanonicalSubmittalsPage() {
     );
     setSelectedSubmittal((prev) => (prev ? ({ ...prev, ...updatePayload } as SubmittalRecord) : null));
     setRemarks("");
-    setFeedbackMessage(`Submittal ${selectedSubmittal.submittal_number} endorsed with ${code.replace(/_/g, " ")}.`);
+    setFeedbackMessage(`Submittal ${selectedSubmittal.submittal_number} endorsed with ${((code ?? "")).replace(/_/g, " ")}.`);
     setTimeout(() => setFeedbackMessage(null), 3500);
     setActionInProgress(null);
   };
@@ -332,14 +332,14 @@ export default function CanonicalSubmittalsPage() {
       <div class="meta">Submittal Ref: ${sub.submittal_number} · Project: ${projectName} (${projectId})</div>
     </div>
     <span class="badge ${sub.review_code.includes("APPROVED") ? "code-a" : sub.review_code.includes("REVISE") ? "code-c" : "code-b"}">
-      ${sub.review_code.replace(/_/g, " ")}
+      ${sub?.review_code?.replace(/_/g, " ")}
     </span>
   </div>
 
   <table>
     <tr><th>Executing Contractor</th><td><strong>${sub.contractor_entity}</strong></td><th>Discipline &amp; Package</th><td>${sub.trade_package} (${sub.discipline})</td></tr>
     <tr><th>Manufacturer &amp; Brand</th><td><strong>${sub.manufacturer_brand}</strong></td><th>Supplier / Vendor</th><td>${sub.supplier_vendor}</td></tr>
-    <tr><th>Specification Clause</th><td>${sub.specification_clause || "CPWD Standard Specs"}</td><th>Submittal Type</th><td><strong>${sub.submittal_type.replace(/_/g, " ")}</strong></td></tr>
+    <tr><th>Specification Clause</th><td>${sub.specification_clause || "CPWD Standard Specs"}</td><th>Submittal Type</th><td><strong>${sub?.submittal_type?.replace(/_/g, " ")}</strong></td></tr>
     <tr><th>Submission Date</th><td>${sub.submission_date}</td><th>Review Due Date</th><td>${sub.review_deadline}</td></tr>
   </table>
 
@@ -626,7 +626,7 @@ export default function CanonicalSubmittalsPage() {
                           {sub.submittal_number}
                         </span>
                         <span className="text-[10px] px-2 py-0.2 rounded bg-zinc-800 text-zinc-300 font-mono">
-                          {sub.submittal_type.replace(/_/g, " ")}
+                          {sub?.submittal_type?.replace(/_/g, " ")}
                         </span>
                         <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           isCodeA
@@ -639,7 +639,7 @@ export default function CanonicalSubmittalsPage() {
                             ? "bg-rose-950 text-rose-400 border border-rose-800/50"
                             : "bg-zinc-800 text-zinc-400"
                         }`}>
-                          {sub.review_code.replace(/_/g, " ")}
+                          {sub?.review_code?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -689,7 +689,7 @@ export default function CanonicalSubmittalsPage() {
                   ? "bg-rose-950 text-rose-400 border border-rose-800/50"
                   : "bg-amber-950 text-amber-400 border border-amber-800/50"
               }`}>
-                {selectedSubmittal.review_code.replace(/_/g, " ")}
+                {selectedSubmittal?.review_code?.replace(/_/g, " ")}
               </span>
             </div>
 

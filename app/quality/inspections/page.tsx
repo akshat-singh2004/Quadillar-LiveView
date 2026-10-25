@@ -240,13 +240,13 @@ export default function QualityInspectionsPage() {
                 {wirs.map((w) => (
                   <tr key={w.id} className="hover:bg-zinc-900/50 transition">
                     <td className="p-3 font-bold text-white">{w.wir_number}</td>
-                    <td className="p-3 text-cyan-300 font-mono text-[11px]">{w.inspection_type.replace(/_/g, " ")}</td>
+                    <td className="p-3 text-cyan-300 font-mono text-[11px]">{((w.inspection_type ?? "")).replace(/_/g, " ")}</td>
                     <td className="p-3 text-zinc-300">{w.location_grid}</td>
                     <td className="p-3 text-zinc-400">{w.subcontractor_name}</td>
                     <td className="p-3 text-zinc-300 font-sans text-xs">{w.remarks}</td>
                     <td className="p-3 text-center">
                       <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                        {w.inspection_result.replace(/_/g, " ")}
+                        {((w.inspection_result ?? "")).replace(/_/g, " ")}
                       </span>
                     </td>
                   </tr>

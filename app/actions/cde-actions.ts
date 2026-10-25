@@ -60,7 +60,7 @@ export async function issueDrawingRevision(
         const timestamp = new Date().toISOString();
 
         // Calculate next revision code: R1 -> R2, R2 -> R3
-        const currentNum = parseInt(currentRevision.replace(/\D/g, ""), 10) || 1;
+        const currentNum = parseInt(((currentRevision ?? "")).replace(/\D/g, ""), 10) || 1;
         const nextRevision = `R${currentNum + 1}`;
 
         // 1. Update Drawing Status to GFC_PUBLISHED with bumped revision

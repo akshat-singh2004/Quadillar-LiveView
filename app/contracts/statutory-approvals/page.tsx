@@ -512,12 +512,12 @@ export default function CanonicalStatutoryApprovalsPage() {
       <h1 class="title">Statutory Sanction &amp; Permitting Clearance Docket</h1>
       <div class="meta">Permit Ref: ${perm.permit_reference_no} · Authority: ${perm.issuing_authority_name} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${perm.status === "SANCTIONED_GRANTED" ? "sanctioned" : "review"}">${perm.status.replace(/_/g, " ")}</span>
+    <span class="badge ${perm.status === "SANCTIONED_GRANTED" ? "sanctioned" : "review"}">${perm?.status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
     <tr><th>Clearance Title</th><td colspan="3"><strong>${perm.permit_title}</strong></td></tr>
-    <tr><th>Statutory Directorate</th><td><strong>${perm.authority_type.replace(/_/g, " ")}</strong></td><th>Lifecycle Stage</th><td><strong>${perm.lifecycle_stage.replace(/_/g, " ")}</strong></td></tr>
+    <tr><th>Statutory Directorate</th><td><strong>${perm?.authority_type?.replace(/_/g, " ")}</strong></td><th>Lifecycle Stage</th><td><strong>${perm?.lifecycle_stage?.replace(/_/g, " ")}</strong></td></tr>
     <tr><th>Municipal Application No.</th><td><code>${perm.application_number}</code></td><th>Application Lodged Date</th><td>${perm.application_date}</td></tr>
     <tr><th>Government Challan Fee Paid</th><td><strong>₹${perm.challan_fee_paid_inr.toLocaleString("en-IN")}</strong></td><th>Treasury Challan Receipt</th><td><code>${perm.challan_receipt_ref || "Verified Online"}</code></td></tr>
     <tr><th>Approval Grant Order Date</th><td><strong>${perm.approval_grant_date || "Pending Final Sanction"}</strong></td><th>Statutory Validity Expiry</th><td><strong>${perm.validity_expiry_date || "Five (5) Years from Grant"}</strong></td></tr>
@@ -764,12 +764,12 @@ export default function CanonicalStatutoryApprovalsPage() {
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {perm.status.replace(/_/g, " ")}
+                          {perm?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 
                       <span className="text-[10px] px-2 py-0.2 rounded bg-zinc-800 text-zinc-300 font-mono">
-                        {perm.lifecycle_stage.replace(/_/g, " ")}
+                        {perm?.lifecycle_stage?.replace(/_/g, " ")}
                       </span>
                     </div>
 
@@ -804,7 +804,7 @@ export default function CanonicalStatutoryApprovalsPage() {
                   ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                   : "bg-amber-950 text-amber-400 border border-amber-800/50"
               }`}>
-                {selectedPermit.status.replace(/_/g, " ")}
+                {selectedPermit?.status?.replace(/_/g, " ")}
               </span>
             </div>
 
@@ -812,7 +812,7 @@ export default function CanonicalStatutoryApprovalsPage() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <span className="text-zinc-500 block">Competent Directorate:</span>
-                  <strong className="text-white block mt-0.5">{selectedPermit.authority_type.replace(/_/g, " ")}</strong>
+                  <strong className="text-white block mt-0.5">{selectedPermit?.authority_type?.replace(/_/g, " ")}</strong>
                 </div>
                 <div>
                   <span className="text-zinc-500 block">Issuing Department:</span>

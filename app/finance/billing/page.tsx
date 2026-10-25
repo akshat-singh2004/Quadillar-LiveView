@@ -247,7 +247,7 @@ export default function FinanceBillingPage() {
                           ? "bg-emerald-950 text-emerald-400 border-emerald-800"
                           : "bg-amber-950 text-amber-400 border-amber-800"
                       }`}>
-                        {b.status.replace(/_/g, " ")}
+                        {b?.status?.replace(/_/g, " ")}
                       </span>
                     </td>
                   </tr>

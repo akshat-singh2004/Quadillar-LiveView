@@ -250,7 +250,7 @@ export default function SignatureGovernancePage() {
                   <tr key={r.id} className="hover:bg-zinc-900/50 transition">
                     <td className="p-3">
                       <span className="font-bold text-white block">{r.document_name}</span>
-                      <span className="text-[10px] text-cyan-400 font-mono">{r.document_type.replace(/_/g, " ")}</span>
+                      <span className="text-[10px] text-cyan-400 font-mono">{r?.document_type?.replace(/_/g, " ")}</span>
                     </td>
                     <td className="p-3 text-zinc-300">
                       <div>{r.signer_name}</div>
@@ -265,7 +265,7 @@ export default function SignatureGovernancePage() {
                     </td>
                     <td className="p-3 text-center">
                       <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                        {r.verification_status.replace(/_/g, " ")}
+                        {r?.verification_status?.replace(/_/g, " ")}
                       </span>
                     </td>
                   </tr>

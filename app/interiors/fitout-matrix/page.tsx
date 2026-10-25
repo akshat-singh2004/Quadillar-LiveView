@@ -367,7 +367,7 @@ export default function FitoutFinishesMatrixPage() {
                                                 return (
                                                     <tr key={g.id} className="hover:bg-zinc-900/50 transition">
                                                         <td className="p-2.5 text-white font-bold">{g.room_unit_number}</td>
-                                                        <td className="p-2.5 text-zinc-400">{g.zone_type.replace(/_/g, ' ')}</td>
+                                                        <td className="p-2.5 text-zinc-400">{g?.zone_type?.replace(/_/g, ' ')}</td>
                                                         <td className="p-2.5 text-center">
                                                             <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${g.mep_pressure_test_passed ? 'text-emerald-400 bg-emerald-950' : 'text-rose-400 bg-rose-950'}`}>
                                                                 {g.mep_pressure_test_passed ? '10 kg/cm² OK' : 'PENDING'}
@@ -390,7 +390,7 @@ export default function FitoutFinishesMatrixPage() {
                                                                             : 'bg-rose-950 text-rose-400 border border-rose-800'
                                                                     }`}
                                                             >
-                                                                {g.status.replace(/_/g, ' ')}
+                                                                {g?.status?.replace(/_/g, ' ')}
                                                             </span>
                                                         </td>
                                                         <td className="p-2.5 text-center">
@@ -597,7 +597,7 @@ export default function FitoutFinishesMatrixPage() {
                                             {furnishings.map((f) => (
                                                 <tr key={f.id} className="hover:bg-zinc-900/50 transition">
                                                     <td className="p-2.5 text-white font-bold">{f.room_unit_number}</td>
-                                                    <td className="p-2.5 text-zinc-400">{f.category.replace(/_/g, ' ')}</td>
+                                                    <td className="p-2.5 text-zinc-400">{f?.category?.replace(/_/g, ' ')}</td>
                                                     <td className="p-2.5 text-zinc-200">{f.item_description}</td>
                                                     <td className="p-2.5 text-cyan-400 font-bold">{f.batch_lot_number}</td>
                                                     <td className="p-2.5 text-right text-zinc-100">
@@ -615,7 +615,7 @@ export default function FitoutFinishesMatrixPage() {
                                                                     : 'bg-amber-950 text-amber-400 border border-amber-800'
                                                                 }`}
                                                         >
-                                                            {f.qc_verdict.replace(/_/g, ' ')}
+                                                            {f?.qc_verdict?.replace(/_/g, ' ')}
                                                         </span>
                                                     </td>
                                                 </tr>

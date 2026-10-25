@@ -243,7 +243,7 @@ export default function ProcurementGatePassPage() {
                   <tr key={p.id} className="hover:bg-zinc-900/50 transition">
                     <td className="p-3 font-bold text-white">
                       <span>{p.pass_number}</span>
-                      <span className="text-[10px] text-cyan-400 block">{p.pass_type.replace(/_/g, " ")}</span>
+                      <span className="text-[10px] text-cyan-400 block">{p?.pass_type?.replace(/_/g, " ")}</span>
                     </td>
                     <td className="p-3 text-zinc-200 font-sans">{p.item_description}</td>
                     <td className="p-3 text-zinc-400">
@@ -254,7 +254,7 @@ export default function ProcurementGatePassPage() {
                     <td className="p-3 font-mono text-zinc-300">{p.expected_return_date || "N/A (Non-Returnable)"}</td>
                     <td className="p-3 text-center">
                       <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-cyan-950 text-cyan-400 border border-cyan-800">
-                        {p.status.replace(/_/g, " ")}
+                        {p?.status?.replace(/_/g, " ")}
                       </span>
                     </td>
                   </tr>

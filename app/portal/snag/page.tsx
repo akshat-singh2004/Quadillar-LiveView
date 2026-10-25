@@ -269,7 +269,7 @@ export default function ClientSnagReportingPortal() {
                     ? "bg-cyan-950 text-cyan-400 border-cyan-800"
                     : "bg-amber-950 text-amber-400 border-amber-800"
                 }`}>
-                  {s.status.replace(/_/g, " ")}
+                  {s?.status?.replace(/_/g, " ")}
                 </span>
               </div>
             ))}

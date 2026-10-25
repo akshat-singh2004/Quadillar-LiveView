@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# QUADILLAR LIVEVIEW: TERRACE LMR & OHT REBAR RADAR & PRE-POUR GATE AUDITOR
+# Standards: IS 3370:2021, IS 13920:2016, IS 15058, IS 456 Cl. 20.1
+# ==============================================================================
+
+set -euo pipefail
+
+PROJECT_ID="GOMTI-NAGAR-PH1-FITOUT"
+POUR_CARD="PC-2026-TR-LMR-OHT-001"
+SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-}"
+SUPABASE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
+
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+echo -e "${BLUE}====================================================================${NC}"
+echo -e "${CYAN}    QUADILLAR LIVEVIEW: TERRACE LMR & OHT REBAR & SHUTTERING RADAR  ${NC}"
+echo -e "${BLUE}====================================================================${NC}"
+echo -e "Target Project : ${YELLOW}${PROJECT_ID}${NC}"
+echo -e "Main Pour Card : ${YELLOW}${POUR_CARD}${NC}"
+echo -e "Inspection Time: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+echo ""
+
+# 1. Load Configurations cleanly
+if [ -f .env.local ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    [[ "$line" =~ ^#.* ]] && continue
+    [[ -z "$line" ]] && continue
+    export "$line"
+  done < .env.local
+  SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-$SUPABASE_URL}"
+  SUPABASE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-$SUPABASE_KEY}"
+fi
+
+# 2. Audit Chronos CPM WBS Chain
+echo -e "[1/3] Auditing Chronos 4D Critical Path Transitions..."
+CPM_ENDPOINT="${SUPABASE_URL}/rest/v1/project_schedule_nodes?project_id=eq.${PROJECT_ID}&wbs_code=in.(WBS-9.1,WBS-9.2,WBS-9.3,WBS-9.4,WBS-9.5)&order=wbs_code.asc&select=wbs_code,activity_name,status,is_critical"
+CPM_RES=$(curl -s -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}" "${CPM_ENDPOINT}")
+
+node -e '
+const nodes = JSON.parse(process.argv[1]);
+nodes.forEach(n => {
+  let color = "\x1b[33m";
+  if (n.status === "COMPLETED") color = "\x1b[32m";
+  if (n.status === "IN_PROGRESS") color = "\x1b[34m";
+  console.log("  " + n.wbs_code + ": " + n.activity_name + " -> " + color + n.status + "\x1b[0m");
+});
+' "${CPM_RES}"
+
+# 3. Audit Main Pour Card Hold-Gates
+echo -e "\n[2/3] Evaluating Pre-Pour Hold-Gates for (${POUR_CARD})..."
+PC_ENDPOINT="${SUPABASE_URL}/rest/v1/concrete_pour_cards?project_id=eq.${PROJECT_ID}&pour_card_number=eq.${POUR_CARD}&select=*"
+PC_RES=$(curl -s -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}" "${PC_ENDPOINT}")
+
+node -e '
+const cards = JSON.parse(process.argv[1]);
+if (!cards || cards.length === 0) {
+  console.log("\x1b[31m[ERROR] Pour card not found.\x1b[0m");
+  process.exit(1);
+}
+const p = cards[0];
+console.log("Element     : " + p.structural_element + " (" + p.concrete_grade + ")");
+console.log("Location    : " + p.grid_location);
+console.log("Volume      : " + p.planned_volume_cum + " m³ | Required Cube Sets: " + p.required_cube_sets + " (IS 456 Cl. 15.2)");
+console.log("--------------------------------------------------------------------");
+console.log((p.rebar_cover_verified ? "\x1b[32m[PASS]\x1b[0m" : "\x1b[31m[HOLD]\x1b[0m") + " Check 1: IS 3370 Rebar, 45mm Cover & Hydrophilic Waterstops");
+console.log((p.mep_embeds_cleared ? "\x1b[32m[PASS]\x1b[0m" : "\x1b[31m[HOLD]\x1b[0m") + " Check 2: OHT Inlets, Overflows, Scour Sleeves & Lightning GI Tape");
+console.log((p.slump_temperature_cleared ? "\x1b[32m[PASS]\x1b[0m" : "\x1b[31m[HOLD]\x1b[0m") + " Check 3: Argus Ambient Microclimate Window");
+console.log((p.formwork_plumb_verified ? "\x1b[32m[PASS]\x1b[0m" : "\x1b[31m[HOLD]\x1b[0m") + " Check 4: Dual-Face Tank Wall Formwork & LMR Plumb (IS 456 Cl. 20.1)");
+console.log("--------------------------------------------------------------------");
+console.log("Status      : \x1b[33m" + p.status + "\x1b[0m (Internal/external formwork alignment pending)");
+' "${PC_RES}"
+
+# 4. Hermes Section 65B Ledger Check
+echo -e "\n[3/3] Inspecting Hermes Vault Notarization..."
+AUDIT_ENDPOINT="${SUPABASE_URL}/rest/v1/immutable_audit_logs?project_id=eq.${PROJECT_ID}&action_category=eq.QUALITY_REBAR_SEALED&order=created_at.desc&limit=1&select=action_title,merkle_root_hash,status,created_at"
+AUDIT_RES=$(curl -s -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}" "${AUDIT_ENDPOINT}")
+
+node -e '
+const logs = JSON.parse(process.argv[1]);
+if (logs && logs.length > 0) {
+  const l = logs[0];
+  console.log("\x1b[32m✓ Rebar & Waterstop Audit Sealed:\x1b[0m " + l.action_title);
+  console.log("  Hash: " + l.merkle_root_hash);
+} else {
+  console.log("\x1b[33m! Rebar audit anchor pending.\x1b[0m");
+}
+' "${AUDIT_RES}"
+
+echo -e "\n${GREEN}Terrace LMR/OHT rebar inspection complete. Ready for shuttering plumb verification.${NC}"

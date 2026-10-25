@@ -798,7 +798,7 @@ export default function VariationsDeviationsDashboard() {
       ...computedItems.map((it) => [
         it.boq_item_ref,
         `${it.deviation_type} (${it.deviation_limit_pct}%)`,
-        `"${it.description.replace(/"/g, '""')}"`,
+        `"${it?.description?.replace(/"/g, '""')}"`,
         it.agreement_qty,
         it.executed_qty,
         it.permissibleLimitQty,
@@ -836,7 +836,7 @@ export default function VariationsDeviationsDashboard() {
         const derived = ei.sanctioned_unit_rate || prime + cpOh;
         return [
           ei.item_code,
-          `"${ei.description.replace(/"/g, '""')}"`,
+          `"${ei?.description?.replace(/"/g, '""')}"`,
           ei.unit,
           mat,
           lab,

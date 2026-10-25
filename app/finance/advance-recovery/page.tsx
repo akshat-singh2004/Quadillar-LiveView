@@ -523,12 +523,12 @@ export default function CanonicalAdvanceRecoveryPage() {
       <h1 class="title">Statutory Mobilization Advance &amp; Recovery Ledger</h1>
       <div class="meta">Sanction Ref: ${adv.advance_sanction_ref} · Disbursed: ${adv.disbursement_date} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${adv.status === "FULLY_RECOVERED_CLOSED" ? "closed" : "active"}">${adv.status.replace(/_/g, " ")}</span>
+    <span class="badge ${adv.status === "FULLY_RECOVERED_CLOSED" ? "closed" : "active"}">${adv?.status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
     <tr><th>Executing Subcontractor</th><td><strong>${adv.contractor_name}</strong></td><th>Parent Work Order Ref</th><td><strong>${adv.work_order_ref}</strong></td></tr>
-    <tr><th>Advance Classification</th><td><strong>${adv.advance_type.replace(/_/g, " ")}</strong></td><th>Simple Interest Rate</th><td><strong>${adv.simple_interest_rate_pct}% per annum</strong></td></tr>
+    <tr><th>Advance Classification</th><td><strong>${adv?.advance_type?.replace(/_/g, " ")}</strong></td><th>Simple Interest Rate</th><td><strong>${adv.simple_interest_rate_pct}% per annum</strong></td></tr>
     <tr><th>Original Contract Value</th><td>₹${adv.contract_value_inr.toLocaleString("en-IN")}</td><th>Sanctioned Advance Quantum</th><td class="tar" style="font-size: 13px; font-weight: bold; color: #0369a1;">₹${adv.sanctioned_advance_inr.toLocaleString("en-IN")}</td></tr>
     <tr><th>Bank Guarantee Ref (BGMA)</th><td><code>${adv.bg_reference_no}</code> (${adv.bg_bank_name})</td><th>Bank Guarantee Amount</th><td class="tar font-bold">₹${adv.bg_amount_inr.toLocaleString("en-IN")} (110%)</td></tr>
   </table>
@@ -791,7 +791,7 @@ export default function CanonicalAdvanceRecoveryPage() {
                             ? "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {adv.status.replace(/_/g, " ")}
+                          {adv?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 

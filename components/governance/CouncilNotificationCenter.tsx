@@ -1,5 +1,6 @@
 "use client";
 
+import { MiniClashViewport3D } from "@/components/bim/MiniClashViewport3D";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { interlockAudio } from "@/lib/audio/interlock-chime";

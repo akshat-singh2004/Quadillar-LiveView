@@ -124,7 +124,7 @@ export default function StatutoryHashVerifierPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-300">
                                     <div>
                                         <span className="text-[10px] text-zinc-500 uppercase block">Statutory Entity</span>
-                                        <strong className="text-white">{result.entity_type.replace(/_/g, " ")}</strong>
+                                        <strong className="text-white">{result?.entity_type?.replace(/_/g, " ")}</strong>
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-zinc-500 uppercase block">Registered Document Code</span>

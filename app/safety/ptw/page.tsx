@@ -105,7 +105,7 @@ export default async function PermitToWorkPage() {
                       <span className="px-2 py-0.5 rounded bg-rose-950 border border-rose-800 text-rose-300 font-bold text-[10px]">
                         {permit.permit_number}
                       </span>
-                      <strong className="text-white text-sm">{permit.permit_type.replace("_", " ")}</strong>
+                      <strong className="text-white text-sm">{permit?.permit_type?.replace("_", " ")}</strong>
                       <span className="text-zinc-500 text-xs">({permit.location_zone})</span>
                     </div>
 

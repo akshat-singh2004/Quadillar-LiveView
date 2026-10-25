@@ -472,7 +472,7 @@ export default function ProcurementTendersPage() {
                               : 'bg-cyan-950 text-cyan-400 border border-cyan-800'
                             }`}
                         >
-                          {t.status.replace(/_/g, ' ')}
+                          {t?.status?.replace(/_/g, ' ')}
                         </span>
                       </div>
                       <div className="text-xs font-bold text-zinc-200">{t.package_name}</div>

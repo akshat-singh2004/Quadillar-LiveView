@@ -371,12 +371,12 @@ export default function CanonicalSubmittalsPage() {
       <h1 class="title">Material Approval Request (MAR / Submittal)</h1>
       <div class="meta">Submittal Ref: ${sub.submittal_number} (${sub.revision}) · Project: ${project.name} (${project.id})</div>
     </div>
-    <span class="badge ${sub.review_code === 'CODE_A_APPROVED' ? 'code-a' : sub.review_code === 'CODE_B_APPROVED_AS_NOTED' ? 'code-b' : 'code-c'}">${sub.review_code.replace(/_/g, ' ')}</span>
+    <span class="badge ${sub.review_code === 'CODE_A_APPROVED' ? 'code-a' : sub.review_code === 'CODE_B_APPROVED_AS_NOTED' ? 'code-b' : 'code-c'}">${sub?.review_code?.replace(/_/g, ' ')}</span>
   </div>
 
   <table>
     <tr><th>Item Title</th><td colspan="3"><strong>${sub.title}</strong></td></tr>
-    <tr><th>Specification Ref</th><td>${sub.spec_section}</td><th>Submittal Type</th><td>${sub.submittal_type.replace(/_/g, ' ')}</td></tr>
+    <tr><th>Specification Ref</th><td>${sub.spec_section}</td><th>Submittal Type</th><td>${sub?.submittal_type?.replace(/_/g, ' ')}</td></tr>
     <tr><th>Manufacturer / Model</th><td><strong>${sub.manufacturer_brand}</strong></td><th>Executing Trade</th><td>${sub.contractor_name} (${sub.trade_package})</td></tr>
     <tr><th>Submission Date</th><td>${sub.submission_date}</td><th>14-Day Review SLA</th><td>${sub.review_sla_deadline}</td></tr>
   </table>
@@ -595,7 +595,7 @@ export default function CanonicalSubmittalsPage() {
                             ? "bg-rose-950 text-rose-400 border border-rose-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {sub.review_code.replace(/_/g, " ")}
+                          {sub?.review_code?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -733,7 +733,7 @@ export default function CanonicalSubmittalsPage() {
             ) : (
               <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono text-center text-xs flex items-center justify-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                <span>Review Code Locked ({selectedSubmittal.review_code.replace(/_/g, " ")})</span>
+                <span>Review Code Locked ({selectedSubmittal?.review_code?.replace(/_/g, " ")})</span>
               </div>
             )}
 

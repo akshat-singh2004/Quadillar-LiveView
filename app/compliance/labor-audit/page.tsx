@@ -183,7 +183,7 @@ export default function LaborCompliancePage() {
   </div>
 
   <div class="status-box ${selectedRecord.compliance_status === 'COMPLIANT_CLEARED' ? 'cleared' : 'blocked'}">
-    COMMERCIAL PAYMENT GATE: ${selectedRecord.compliance_status.replace(/_/g, ' ')}
+    COMMERCIAL PAYMENT GATE: ${selectedRecord?.compliance_status?.replace(/_/g, ' ')}
   </div>
 
   <table>
@@ -376,7 +376,7 @@ export default function LaborCompliancePage() {
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-rose-950 text-rose-400 border border-rose-800/50 animate-pulse"
                         }`}>
-                          {item.compliance_status.replace(/_/g, " ")}
+                          {item?.compliance_status?.replace(/_/g, " ")}
                         </span>
                       </div>
                       <div className="text-xs font-semibold text-zinc-200">

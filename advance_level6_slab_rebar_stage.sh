@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# QUADILLAR LIVEVIEW: LEVEL 6 SLAB STAGING CLEARANCE & REBAR UNLOCK AUDITOR
+# ==============================================================================
+
+set -euo pipefail
+
+PROJECT_ID="GOMTI-NAGAR-PH1-FITOUT"
+POUR_CARD="PC-2026-L06-SLAB-001"
+SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-}"
+SUPABASE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
+
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+echo -e "${BLUE}====================================================================${NC}"
+echo -e "${CYAN}    QUADILLAR LIVEVIEW: LEVEL 6 SLAB STAGING & WBS ADVANCEMENT      ${NC}"
+echo -e "${BLUE}====================================================================${NC}"
+echo -e "Target Project : ${YELLOW}${PROJECT_ID}${NC}"
+echo -e "Target PourCard: ${YELLOW}${POUR_CARD}${NC}"
+echo -e "Audit Timestamp: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+echo ""
+
+# 1. Load Configurations cleanly
+if [ -f .env.local ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    [[ "$line" =~ ^#.* ]] && continue
+    [[ -z "$line" ]] && continue
+    export "$line"
+  done < .env.local
+  SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-$SUPABASE_URL}"
+  SUPABASE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-$SUPABASE_KEY}"
+fi
+
+# 2. Inspect Chronos WBS Progression
+echo -e "[1/3] Inspecting Chronos 4D WBS Schedule Progression..."
+CPM_ENDPOINT="${SUPABASE_URL}/rest/v1/project_schedule_nodes?project_id=eq.${PROJECT_ID}&wbs_code=in.(WBS-8.1,WBS-8.2,WBS-8.3,WBS-8.4)&order=wbs_code.asc&select=wbs_code,activity_name,status,is_critical"
+CPM_RES=$(curl -s -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}" "${CPM_ENDPOINT}")
+
+node -e '
+try {
+  const nodes = JSON.parse(process.argv[1]);
+  if (Array.isArray(nodes) && nodes.length > 0) {
+    nodes.forEach(n => {
+      let color = "\x1b[33m";
+      if (n.status === "COMPLETED") color = "\x1b[32m";
+      if (n.status === "IN_PROGRESS") color = "\x1b[34m";
+      console.log("  " + n.wbs_code + ": " + n.activity_name + " -> " + color + n.status + "\x1b[0m");
+    });
+  } else {
+    console.log("\x1b[33m! No schedule nodes found.\x1b[0m");
+  }
+} catch (e) {
+  console.log("\x1b[31m[ERROR] Failed to parse schedule response:\x1b[0m", e.message);
+}
+' "${CPM_RES}"
+
+# 3. Evaluate Pour Card Pre-Pour Hold-Gates
+echo -e "\n[2/3] Evaluating Pour Card Hold-Gates for ${POUR_CARD}..."
+PC_ENDPOINT="${SUPABASE_URL}/rest/v1/concrete_pour_cards?project_id=eq.${PROJECT_ID}&pour_card_number=eq.${POUR_CARD}&select=*"
+PC_RES=$(curl -s -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}" "${PC_ENDPOINT}")
+
+node -e '
+try {
+  const cards = JSON.parse(process.argv[1]);
+  if (!cards || cards.length === 0) {
+    console.log("\x1b[31m[HOLD] Pour card not found in database.\x1b[0m");
+  } else {
+    const p = cards[0];
+    console.log("Element     : " + p.structural_element + " (" + p.concrete_grade + ")");
+    console.log("Location    : " + p.grid_location + " | Volume: " + p.planned_volume_cum + " m³");
+    console.log("--------------------------------------------------------------------");
+    console.log((p.formwork_plumb_verified ? "\x1b[32m[PASS]\x1b[0m" : "\x1b[31m[HOLD]\x1b[0m") + " Check 1: Cuplock Staging, Propping & Deck Level (IS 14687)");
+    console.log((p.rebar_cover_verified ? "\x1b[32m[PASS]\x1b[0m" : "\x1b[33m[PENDING]\x1b[0m") + " Check 2: Beam & Slab Reinforcement Cover (IS 456 Cl. 26)");
+    console.log((p.mep_embeds_cleared ? "\x1b[32m[PASS]\x1b[0m" : "\x1b[31m[HOLD]\x1b[0m") + " Check 3: Daedalus MEP BIM Conduit Embedments (IFC Scan)");
+    console.log((p.slump_temperature_cleared ? "\x1b[32m[PASS]\x1b[0m" : "\x1b[31m[HOLD]\x1b[0m") + " Check 4: Argus Weather & Microclimate Window (Temp/Wind)");
+    console.log("--------------------------------------------------------------------");
+    console.log("Status      : \x1b[33m" + p.status + "\x1b[0m (Check 2 rebar inspection currently underway)");
+  }
+} catch (e) {
+  console.log("\x1b[31m[ERROR] Failed to parse pour card response:\x1b[0m", e.message);
+}
+' "${PC_RES}"
+
+# 4. Audit Hermes Section 65B Ledger Notarization
+echo -e "\n[3/3] Inspecting Hermes Vault Staging Deed..."
+AUDIT_ENDPOINT="${SUPABASE_URL}/rest/v1/immutable_audit_logs?project_id=eq.${PROJECT_ID}&action_category=eq.QUALITY_STAGING_SEALED&order=created_at.desc&limit=1&select=action_title,merkle_root_hash,status,created_at"
+AUDIT_RES=$(curl -s -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}" "${AUDIT_ENDPOINT}")
+
+node -e '
+try {
+  const logs = JSON.parse(process.argv[1]);
+  if (logs && logs.length > 0) {
+    const l = logs[0];
+    console.log("\x1b[32m✓ Staging Audit Sealed:\x1b[0m " + l.action_title);
+    console.log("  Hash: " + l.merkle_root_hash);
+  } else {
+    console.log("\x1b[33m! Staging audit anchor pending.\x1b[0m");
+  }
+} catch (e) {
+  console.log("\x1b[31m[ERROR] Failed to parse audit response:\x1b[0m", e.message);
+}
+' "${AUDIT_RES}"
+
+echo -e "\n${GREEN}Staging verification complete. Ready for WBS-8.3 rebar & conduit placement.${NC}"

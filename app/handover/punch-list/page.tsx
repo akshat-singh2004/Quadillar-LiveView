@@ -392,7 +392,7 @@ export default function PunchListAndHandoverPage() {
                     return (
                       <tr key={item.id} className="hover:bg-zinc-900/50 transition">
                         <td className="p-2.5 font-bold text-cyan-400">{item.item_code}</td>
-                        <td className="p-2.5 text-zinc-300 font-bold">{item.category.replace(/_/g, " ")}</td>
+                        <td className="p-2.5 text-zinc-300 font-bold">{item?.category?.replace(/_/g, " ")}</td>
                         <td className="p-2.5 text-zinc-400">{item.grid_location}</td>
                         <td className="p-2.5 text-zinc-400">{item.assigned_trade}</td>
                         <td className="p-2.5 text-white font-sans max-w-sm truncate">{item.description}</td>

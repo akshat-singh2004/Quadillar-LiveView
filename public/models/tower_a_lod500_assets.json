@@ -1,0 +1,110 @@
+[
+  {
+    "asset_guid": "2f8a91b4-4e2a-49c8-9d7e-8c3120b08fa1",
+    "asset_tag": "VAV-1-NW-04",
+    "asset_name": "VAV Terminal Unit 1-NW-04 (Grid C3-D4)",
+    "discipline": "MEP_HVAC",
+    "sub_system": "Air Distribution",
+    "floor_level": "Level 1",
+    "spatial_coordinates": { "x": 14.5, "y": 22.3, "z": 3.2 },
+    "grid_location": "Bay C3-D4",
+    "manufacturer": "Carrier / Belimo",
+    "model_number": "35J-08-AFB24",
+    "serial_number": "BEL-2026-88192-UP",
+    "commissioning_date": "2026-10-18",
+    "warranty_expiry": "2027-10-21",
+    "defect_ticket_ref": "DLP-TKT-2026-001",
+    "criticality": "HIGH",
+    "design_parameters": {
+      "nominal_airflow_cfm": 450,
+      "min_airflow_cfm": 120,
+      "max_damper_angle_deg": 90.0,
+      "supply_air_temp_c": 13.5
+    },
+    "telemetry_thresholds": {
+      "cfm_tolerance_pct": 10.0,
+      "max_actuator_drift_deg": 1.5,
+      "max_delta_temp_c": 3.0
+    }
+  },
+  {
+    "asset_guid": "4f9b8c31-7e1b-42d9-8a6e-1b2090c07eb2",
+    "asset_tag": "AHU-L01-01",
+    "asset_name": "Chilled Water Double-Skin AHU 12,000 CFM",
+    "discipline": "MEP_HVAC",
+    "sub_system": "Central Plant",
+    "floor_level": "Level 1",
+    "spatial_coordinates": { "x": 3.2, "y": 18.5, "z": 0.1 },
+    "grid_location": "AHU Room Bay A1-B2",
+    "manufacturer": "Voltas / Daikin",
+    "model_number": "D-AHU-12000-CW",
+    "serial_number": "VOLT-LKO-2026-041",
+    "commissioning_date": "2026-10-15",
+    "warranty_expiry": "2027-10-21",
+    "defect_ticket_ref": null,
+    "criticality": "CRITICAL",
+    "design_parameters": {
+      "cfm_capacity": 12000,
+      "fan_motor_kw": 18.5,
+      "chw_inlet_temp_c": 7.0,
+      "chw_outlet_temp_c": 12.5
+    },
+    "telemetry_thresholds": {
+      "max_static_pressure_pa": 550,
+      "vibration_limit_mm_s": 2.8,
+      "max_motor_temp_c": 65.0
+    }
+  },
+  {
+    "asset_guid": "5e7c6b20-6d0a-41c8-7f5d-0a1080b06da3",
+    "asset_tag": "LT-PNL-L01",
+    "asset_name": "415V 1600A Main Floor Distribution Panel",
+    "discipline": "MEP_ELECTRICAL",
+    "sub_system": "Power Distribution",
+    "floor_level": "Level 1",
+    "spatial_coordinates": { "x": 1.8, "y": 4.5, "z": 0.0 },
+    "grid_location": "Electrical Shaft Bay A4",
+    "manufacturer": "Schneider Electric",
+    "model_number": "BlokSeT-1600-4P",
+    "serial_number": "SCHN-2026-IND-9912",
+    "commissioning_date": "2026-10-12",
+    "warranty_expiry": "2027-10-21",
+    "defect_ticket_ref": null,
+    "criticality": "CRITICAL",
+    "design_parameters": {
+      "rated_voltage_v": 415,
+      "incomer_rating_a": 1600,
+      "fault_level_ka": 50
+    },
+    "telemetry_thresholds": {
+      "max_busbar_temp_c": 70.0,
+      "phase_imbalance_max_pct": 5.0
+    }
+  },
+  {
+    "asset_guid": "6d6b5a19-5c99-40b7-6e4c-9f0f70a05c94",
+    "asset_tag": "AST-FIRE-RSR-01",
+    "asset_name": "Fire Landing Valve & Wet Riser (L05)",
+    "discipline": "FIRE_LIFE_SAFETY",
+    "sub_system": "Wet Riser Suppression",
+    "floor_level": "Level 5",
+    "spatial_coordinates": { "x": 11.2, "y": 2.8, "z": 17.2 },
+    "grid_location": "Fire Stairwell 2 Bay B5",
+    "manufacturer": "Safeguard / Newage",
+    "model_number": "LV-63-GM-IS5290",
+    "serial_number": "SG-FIRE-2026-1021",
+    "commissioning_date": "2026-10-10",
+    "warranty_expiry": "2027-10-21",
+    "defect_ticket_ref": null,
+    "criticality": "LIFE_SAFETY",
+    "design_parameters": {
+      "static_pressure_bar": 15.0,
+      "flow_rate_lpm": 900,
+      "valve_size_mm": 63
+    },
+    "telemetry_thresholds": {
+      "min_pressure_bar": 12.0,
+      "max_pressure_bar": 16.5
+    }
+  }
+]

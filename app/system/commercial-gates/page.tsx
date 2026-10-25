@@ -289,7 +289,7 @@ export default function CanonicalCommercialGatesPage() {
       ${auditLogs.map((l) => `
         <tr>
           <td>${new Date(l.created_at).toLocaleString("en-IN")}</td>
-          <td><strong>${l.gate_type.replace(/_/g, " ")}</strong></td>
+          <td><strong>${l?.gate_type?.replace(/_/g, " ")}</strong></td>
           <td><code>${l.triggering_source_ref}</code></td>
           <td><strong>${l.target_ra_bill_ref}</strong></td>
           <td class="tar font-bold" style="color: ${l.deduction_amount_inr > 0 ? "#b91c1c" : "#0369a1"};">
@@ -568,13 +568,13 @@ export default function CanonicalCommercialGatesPage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-white">{log.gate_type.replace(/_/g, " ")}</span>
+                      <span className="font-bold text-white">{log?.gate_type?.replace(/_/g, " ")}</span>
                       <span className={`px-2 py-0.2 rounded text-[9px] font-bold uppercase ${
                         log.is_active_blocker
                           ? "bg-rose-950 text-rose-400 border border-rose-800/50 animate-pulse"
                           : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                       }`}>
-                        {log.action_severity.replace(/_/g, " ")}
+                        {log?.action_severity?.replace(/_/g, " ")}
                       </span>
                     </div>
 

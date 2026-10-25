@@ -187,7 +187,7 @@ export default function DroneSurveysPage() {
                     <td className="p-3 text-right text-white font-mono">{s.stockpile_tonnage_mt}</td>
                     <td className="p-3 text-center">
                       <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                        {s.orthomosaic_status.replace(/_/g, " ")}
+                        {s?.orthomosaic_status?.replace(/_/g, " ")}
                       </span>
                     </td>
                   </tr>

@@ -415,7 +415,7 @@ export default function CanonicalSecuredAdvancePage() {
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-white">{adv.advance_ref_number}</span>
                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-amber-400 font-bold uppercase">
-                          {adv.status.replace(/_/g, ' ')}
+                          {adv?.status?.replace(/_/g, ' ')}
                         </span>
                       </div>
                       <div className="text-xs font-semibold text-zinc-200">{adv.material_description}</div>

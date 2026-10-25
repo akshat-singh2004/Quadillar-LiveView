@@ -648,7 +648,7 @@ export default function DlpBgTrackerPage() {
   const handleReleaseBg = async (bg: BankGuarantee) => {
     if (!isPrivileged || !gate?.canRelease) return;
     setActionId(`release_${bg.id}`);
-    const letterRef = `REL-BG-${bg.bg_number.replace(/\//g, "-")}-FINAL`;
+    const letterRef = `REL-BG-${bg?.bg_number?.replace(/\//g, "-")}-FINAL`;
     const patch: Partial<BankGuarantee> = {
       status: "RELEASED",
       release_auth_by: roleLabel,
@@ -702,7 +702,7 @@ export default function DlpBgTrackerPage() {
       await (supabase as any).from("dlp_defects").update(patch).eq("id", defect.id);
     } catch { /* optimistic */ }
     patchDefect(defect.id, patch);
-    showFeedback(`✓ Defect ${defect.defect_number} advanced to ${next.replace(/_/g, " ")}.`);
+    showFeedback(`✓ Defect ${defect.defect_number} advanced to ${((next ?? "")).replace(/_/g, " ")}.`);
     setActionId(null);
   };
 
@@ -1133,7 +1133,7 @@ export default function DlpBgTrackerPage() {
                         className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg px-2 py-1 outline-none">
                         <option value="ALL">All Status</option>
                         {(["OPEN","NOTIFIED","IN_RECTIFICATION","RECTIFIED","VERIFIED_CLOSED","DEFAULTED"] as DefectStatus[]).map((s) => (
-                          <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
+                          <option key={s} value={s}>{((s ?? "")).replace(/_/g, " ")}</option>
                         ))}
                       </select>
                       <select value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)}

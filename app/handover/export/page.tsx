@@ -195,7 +195,7 @@ export default function HandoverDossierExportPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-white">{d.dossier_code}</span>
                     <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                      {d.status.replace(/_/g, " ")}
+                      {d?.status?.replace(/_/g, " ")}
                     </span>
                   </div>
                   <h3 className="text-sm font-bold text-zinc-200 font-sans">{d.title}</h3>

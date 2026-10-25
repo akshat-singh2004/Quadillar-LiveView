@@ -275,10 +275,10 @@ export default function SafetyPermitsPage() {
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-white">{p.permit_number}</span>
                     <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                      {p.status.replace(/_/g, " ")}
+                      {p?.status?.replace(/_/g, " ")}
                     </span>
                   </div>
-                  <div className="text-xs text-zinc-200 font-bold">{p.permit_type.replace(/_/g, " ")}</div>
+                  <div className="text-xs text-zinc-200 font-bold">{p?.permit_type?.replace(/_/g, " ")}</div>
                   <div className="text-[10px] text-zinc-400">{p.work_location} &bull; {p.contractor_name}</div>
                 </div>
               ))}
@@ -298,7 +298,7 @@ export default function SafetyPermitsPage() {
 
                 <div className="space-y-3">
                   <div className="p-4 bg-zinc-950 border border-zinc-800 rounded space-y-2 text-xs">
-                    <div><span className="text-zinc-500">Operation:</span> <strong className="text-white ml-1">{selectedPermit.permit_type.replace(/_/g, " ")}</strong></div>
+                    <div><span className="text-zinc-500">Operation:</span> <strong className="text-white ml-1">{selectedPermit?.permit_type?.replace(/_/g, " ")}</strong></div>
                     <div><span className="text-zinc-500">Zone:</span> <span className="text-zinc-200 ml-1">{selectedPermit.work_location}</span></div>
                     <div><span className="text-zinc-500">Contractor:</span> <span className="text-zinc-200 ml-1">{selectedPermit.contractor_name}</span></div>
                   </div>

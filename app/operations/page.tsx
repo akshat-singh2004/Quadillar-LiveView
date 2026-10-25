@@ -222,14 +222,14 @@ export default function OperationsPage() {
                           {asset.asset_tag}
                         </span>
                         <span className="text-[10px] px-2 py-0.2 rounded bg-zinc-800 text-zinc-300 font-mono">
-                          {asset.category.replace("_", " ")}
+                          {asset?.category?.replace("_", " ")}
                         </span>
                         <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           asset.status === "Operational"
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50 animate-pulse"
                         }`}>
-                          {asset.status.replace("_", " ")}
+                          {asset?.status?.replace("_", " ")}
                         </span>
                       </div>
                       <div className="text-xs font-semibold text-zinc-200">

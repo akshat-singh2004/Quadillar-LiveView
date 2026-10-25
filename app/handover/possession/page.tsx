@@ -243,7 +243,7 @@ export default function CustomerPossessionPage() {
                         ? "bg-amber-950 text-amber-400 border-amber-800"
                         : "bg-cyan-950 text-cyan-400 border-cyan-800"
                     }`}>
-                      {r.possession_status.replace(/_/g, " ")}
+                      {r?.possession_status?.replace(/_/g, " ")}
                     </span>
 
                     {!isDelivered && pending === 0 && (

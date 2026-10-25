@@ -210,7 +210,7 @@ export default function SiteQrPage() {
                       filter === t ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
                     }`}
                   >
-                    {t === "ALL" ? "All Tags" : t.replace("_", " ")}
+                    {t === "ALL" ? "All Tags" : ((t ?? "")).replace("_", " ")}
                   </button>
                 ))}
               </div>

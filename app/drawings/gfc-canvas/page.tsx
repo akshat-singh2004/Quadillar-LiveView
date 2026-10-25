@@ -439,7 +439,7 @@ export default function GFCSpatialRedlinePage() {
                                     <div className="flex items-center gap-2">
                                         <span className="font-bold text-amber-400">{selectedRedline.pin_code}</span>
                                         <span className="text-[10px] px-1.5 py-0.5 rounded uppercase font-bold bg-neutral-900 border border-neutral-700 text-neutral-300">
-                                            {selectedRedline.category.replace(/_/g, ' ')}
+                                            {selectedRedline?.category?.replace(/_/g, ' ')}
                                         </span>
                                     </div>
                                     <p className="text-xs text-neutral-200 font-sans">{selectedRedline.description}</p>
@@ -655,7 +655,7 @@ export default function GFCSpatialRedlinePage() {
                                                 <div className="text-xs truncate">{d.sheet_title}</div>
                                                 <div className="flex justify-between items-center text-[9px] pt-1 border-t border-zinc-850">
                                                     <span className={isApproved ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
-                                                        {d.iso19650_status.replace(/_/g, ' ')}
+                                                        {d?.iso19650_status?.replace(/_/g, ' ')}
                                                     </span>
                                                     <span className="text-zinc-500">{d.discipline}</span>
                                                 </div>

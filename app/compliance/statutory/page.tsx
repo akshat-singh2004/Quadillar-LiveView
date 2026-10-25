@@ -333,7 +333,7 @@ export default function CanonicalStatutoryCompliancePage() {
       <h1 class="title">${cfg.name}</h1>
       <div class="meta">RERA Registration: <strong>${record.registration_number}</strong> · Project: ${project.name}</div>
     </div>
-    <span class="badge ${record.status === 'DIGITALLY_SEALED' ? 'sealed' : 'pending'}">${record.status.replace(/_/g, ' ')}</span>
+    <span class="badge ${record.status === 'DIGITALLY_SEALED' ? 'sealed' : 'pending'}">${record?.status?.replace(/_/g, ' ')}</span>
   </div>
 
   <table>
@@ -571,7 +571,7 @@ export default function CanonicalStatutoryCompliancePage() {
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {form.status.replace(/_/g, " ")}
+                          {form?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 

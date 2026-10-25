@@ -221,7 +221,7 @@ export default function TurnstileScannerPage() {
                       <div className="pt-2 border-t border-zinc-800 flex gap-1">
                         {lastScan.worker.permittedZones.map((z) => (
                           <span key={z} className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-[9px] font-mono">
-                            {z.replace(/_/g, " ")}
+                            {((z ?? "")).replace(/_/g, " ")}
                           </span>
                         ))}
                       </div>

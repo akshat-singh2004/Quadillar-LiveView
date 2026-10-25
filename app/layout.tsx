@@ -1,3 +1,5 @@
+import { QuadMaxOverlay } from "@/components/copilot/QuadMaxOverlay";
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -24,6 +26,8 @@ export default function RootLayout({
             {children}
           </AppShell>
         </RoleProvider>
+        
+        <QuadMaxOverlay />
       </body>
     </html>
   );

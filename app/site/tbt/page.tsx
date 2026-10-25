@@ -331,7 +331,7 @@ export default function ToolboxTalkPage() {
                     <h3 className="text-sm font-bold text-white mt-0.5">{selectedTbt.topic}</h3>
                   </div>
                   <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    {selectedTbt.status.replace(/_/g, " ")}
+                    {selectedTbt?.status?.replace(/_/g, " ")}
                   </span>
                 </div>
 

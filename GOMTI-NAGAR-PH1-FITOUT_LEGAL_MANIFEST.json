@@ -1,0 +1,2062 @@
+{
+  "evidence_standard": "Indian Evidence Act Section 65B / Bharatiya Sakshya Adhiniyam 2023",
+  "project_id": "GOMTI-NAGAR-PH1-FITOUT",
+  "jurisdiction": "Lucknow, Uttar Pradesh, India",
+  "certifying_authority": {
+    "signatory_name": "Akshat Singh Rathore",
+    "designation": "Principal Architect & Quality Director",
+    "organization": "Quadillar ConTech Pvt. Ltd."
+  },
+  "commercial_summary": {
+    "total_bills_certified": 16,
+    "cumulative_gross_inr": 8517334,
+    "cumulative_net_inr": 8006293.96,
+    "statutory_bocw_cess_inr": 85173.34,
+    "terminal_status": "STATUTORILY_CLOSED_DISCHARGED"
+  },
+  "final_defect_clearance": {
+    "id": "ea8aec68-a2ef-4bb2-be4a-c80906debd28",
+    "project_id": "GOMTI-NAGAR-PH1-FITOUT",
+    "certificate_ref": "FDCC-2027-GOMTI-001",
+    "inspection_date": "2026-10-21",
+    "dlp_duration_months": 12,
+    "total_snags_logged": 2,
+    "total_snags_rectified": 2,
+    "outstanding_snags_count": 0,
+    "tranche_2_retention_released_inr": 212933.35,
+    "bank_guarantee_released_ref": "BG-HDFC-2026-RET-001",
+    "total_final_disbursed_inr": 8432160.66,
+    "statutory_clearance_status": "FINAL_CLEARANCE_CERTIFIED",
+    "signatory_name": "Akshat Singh Rathore",
+    "signatory_role": "Principal Architect & Quality Director",
+    "master_indemnity_hash": "91b110f1b1b3e026234f682e89213029c7f107db28b3c9d9c1cbd83fc91a4957",
+    "created_at": "2026-10-21T09:39:07.345266+00:00",
+    "updated_at": "2026-10-21T09:39:07.345266+00:00"
+  },
+  "active_amc_agreements": [
+    {
+      "id": "dea0ea16-137d-464a-85e5-664813c980ce",
+      "project_id": "GOMTI-NAGAR-PH1-FITOUT",
+      "contract_ref": "AMC-HVAC-2027-01",
+      "vendor_entity_name": "LG Authorized Thermal Solutions",
+      "trade_scope": "Comprehensive VRF Plant & FCU Maintenance",
+      "target_asset_tags": [
+        "AST-HVAC-ODU-01",
+        "AST-HVAC-FCU-L04-01",
+        "AST-HVAC-FCU-L05-01"
+      ],
+      "annual_contract_value_inr": 285000,
+      "billing_frequency": "QUARTERLY",
+      "start_date": "2026-10-21",
+      "end_date": "2027-10-21",
+      "emergency_response_sla_hours": 4,
+      "contract_status": "ACTIVE_OPERATIONAL",
+      "signatory_name": "Akshat Singh Rathore",
+      "deed_hash": "7e9cfd2adf3fc3f32a11466ad62dc7d85f1e00ba8190e90c1d778431b6fcdbb3",
+      "created_at": "2026-10-21T09:42:30.729744+00:00",
+      "updated_at": "2026-10-21T09:42:30.729744+00:00"
+    },
+    {
+      "id": "69dea661-8048-4563-bce0-69abbbca6945",
+      "project_id": "GOMTI-NAGAR-PH1-FITOUT",
+      "contract_ref": "AMC-FIRE-2027-01",
+      "vendor_entity_name": "Safeguard Fire Engineers Ltd",
+      "trade_scope": "Wet Riser, Hydrant, Landing Valves & Fire Door Integrity",
+      "target_asset_tags": [
+        "AST-FIRE-RSR-01",
+        "AST-ARCH-DOOR-01"
+      ],
+      "annual_contract_value_inr": 120000,
+      "billing_frequency": "QUARTERLY",
+      "start_date": "2026-10-21",
+      "end_date": "2027-10-21",
+      "emergency_response_sla_hours": 2,
+      "contract_status": "ACTIVE_OPERATIONAL",
+      "signatory_name": "Akshat Singh Rathore",
+      "deed_hash": "7e9cfd2adf3fc3f32a11466ad62dc7d85f1e00ba8190e90c1d778431b6fcdbb3",
+      "created_at": "2026-10-21T09:42:30.729744+00:00",
+      "updated_at": "2026-10-21T09:42:30.729744+00:00"
+    },
+    {
+      "id": "3261637b-a49d-454b-a576-9a403e045773",
+      "project_id": "GOMTI-NAGAR-PH1-FITOUT",
+      "contract_ref": "AMC-ELEC-2027-01",
+      "vendor_entity_name": "Schneider Industrial Services",
+      "trade_scope": "800A Busduct Periodic Thermography & Sub-Main Distribution Board Diagnostics",
+      "target_asset_tags": [
+        "AST-ELEC-BUS-01",
+        "AST-ELEC-SMDB-L05"
+      ],
+      "annual_contract_value_inr": 90000,
+      "billing_frequency": "SEMI_ANNUAL",
+      "start_date": "2026-10-21",
+      "end_date": "2027-10-21",
+      "emergency_response_sla_hours": 4,
+      "contract_status": "ACTIVE_OPERATIONAL",
+      "signatory_name": "Akshat Singh Rathore",
+      "deed_hash": "7e9cfd2adf3fc3f32a11466ad62dc7d85f1e00ba8190e90c1d778431b6fcdbb3",
+      "created_at": "2026-10-21T09:42:30.729744+00:00",
+      "updated_at": "2026-10-21T09:42:30.729744+00:00"
+    }
+  ],
+  "cryptographic_chain": {
+    "total_immutable_events": 279,
+    "audit_chain": [
+      {
+        "sequence_id": "9b08b823-df53-49bc-88fb-97e5116613c3",
+        "timestamp": "2026-10-08T09:49:15.836+00:00",
+        "action": "Labor Roster Synced to DPR for 2026-10-08",
+        "category": "DPR_LABOR_SYNC",
+        "hash": "96700cd7f8a55d973aa932b9c0806b801aaf9b2a6eb23004d85341d9994c3956"
+      },
+      {
+        "sequence_id": "65592d39-f731-4b5b-bdf9-05d90850c1ed",
+        "timestamp": "2026-10-12T05:30:38.974+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "2d0384fcf95c54c389283ea8417174ba2a4c885d913332d4084e2a6d255c4db6"
+      },
+      {
+        "sequence_id": "5bfcdfa8-3db6-4b07-996e-c12d1bcd6938",
+        "timestamp": "2026-10-12T05:31:01.385+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "74b418be448b3554bf235fbf2106e192554d33e4916593333bfcc62a56b5ee3b"
+      },
+      {
+        "sequence_id": "e740af01-412e-4370-bd3b-d99c0bef6f80",
+        "timestamp": "2026-10-12T05:31:01.818+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "e1b952510ad7ebb4e86fceff31a010785d8846739a1f7f015eb07a0473ef6dc7"
+      },
+      {
+        "sequence_id": "0fa93e3a-065f-44a5-a758-4aee18e7b5df",
+        "timestamp": "2026-10-12T05:34:57.987+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-7449 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "d17ef5c23fd09b2578ecf98722df5c44dc72e73d193433740fdb790bdb001186"
+      },
+      {
+        "sequence_id": "c6ea9aa4-cad8-4ec9-905a-e8ad4073265d",
+        "timestamp": "2026-10-12T05:34:58.369+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "c53cf5954f7821f28af8323188ffa517c477d0ac19ba7ab217bfe15db3fc9304"
+      },
+      {
+        "sequence_id": "ca526a5d-7d46-45ac-a3c3-8286fe49c6df",
+        "timestamp": "2026-10-12T06:02:38.082+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "346d721bfd66d279ceaafdfee47a8d20578e348fc4b13e67af1e6e9cbb287b81"
+      },
+      {
+        "sequence_id": "19e0a300-a724-4dc9-a297-bc2f0c2abd37",
+        "timestamp": "2026-10-12T06:02:38.781+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "affbccdd7fedc4288d880fdcbc26051a5053d9806abf612fb4d09fb67da8cfe6"
+      },
+      {
+        "sequence_id": "8ffbb106-1043-4a39-96fc-f7bd4fb2b742",
+        "timestamp": "2026-10-12T06:02:39.429+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "8239f709b63ae3e56deed6ced784b5c10eeae64fcd378c634af9e0e627a700d5"
+      },
+      {
+        "sequence_id": "df499ef1-0475-49eb-91dc-1fe8c24f1872",
+        "timestamp": "2026-10-12T06:02:40.086+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "1f01a405fb15ce5bd640510deadbcffb080cefe3b83e248f07e7be2efbbccaab"
+      },
+      {
+        "sequence_id": "c8dbcb59-1608-4744-aa7f-865086a2027a",
+        "timestamp": "2026-10-12T06:02:40.583+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "37ca06d619b9bc1146eabd104f7c43d0d928c4d3c29e4e617864ebf37a762cfd"
+      },
+      {
+        "sequence_id": "c9ee986f-49f6-4ffd-9f04-761cb90efcfd",
+        "timestamp": "2026-10-12T06:02:40.963+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "29d733aa1141220b42cdf17d2a58706eb0ea4814d6b50df98dd623da0e373a05"
+      },
+      {
+        "sequence_id": "13744266-772e-4597-be6c-5fb5306f807d",
+        "timestamp": "2026-10-12T06:02:41.442+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "ebbdbba47da3a6ab75b397e3fb7e8875ec4ee1c97245d55958643e8dd167b567"
+      },
+      {
+        "sequence_id": "d4ec361f-5e00-4ae8-bc97-f4dda852f632",
+        "timestamp": "2026-10-12T06:02:41.681+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b05d581a47de5f4ff23b588ca647ee3cddeae21b3961ba07f3ed4f15f4380c41"
+      },
+      {
+        "sequence_id": "fe1caa51-9ffc-4a1d-945e-7b624c300c3f",
+        "timestamp": "2026-10-12T06:02:42.163+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "3bf01ee3e6744b2659f9b289af82b8c15137e526d62a5cbfa91934a375e075e3"
+      },
+      {
+        "sequence_id": "5225cc96-de63-496a-8dc8-7bddb8124977",
+        "timestamp": "2026-10-12T06:02:42.527+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "9455e0b7effbedf8e8f1aad507ea7053582c904903f4bba2bfc763cb3c4552bc"
+      },
+      {
+        "sequence_id": "7a0901d9-407b-4209-99cf-df45a2feae37",
+        "timestamp": "2026-10-12T06:02:42.89+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "6468fe1240b83fb12e7346da2da2caa17452d0e3651fa63293898da67721ca0c"
+      },
+      {
+        "sequence_id": "e87d9c58-5839-404c-8ab8-b1e2b2c49396",
+        "timestamp": "2026-10-12T06:02:43.716+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "b69673426bb7fb41af39331acfc964dfbe19f2ace138dc1e7bca0a3e5ae94a0a"
+      },
+      {
+        "sequence_id": "56447c7f-872a-4d47-ac37-040c8f7804fd",
+        "timestamp": "2026-10-12T06:02:43.939+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "83321b4729aa9b92682e1319f1484f6d29d18937f806a598c035d3aa83142741"
+      },
+      {
+        "sequence_id": "ff379d04-28fd-4b30-bdde-b77e96dba4dd",
+        "timestamp": "2026-10-12T06:02:45.558+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-5077 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "bd6cf9497b3da2353bbf780d2a6aa072c55a670b692849e6c87a9be9061410f9"
+      },
+      {
+        "sequence_id": "ec396268-2ea4-4a32-88b8-b2b63d97717e",
+        "timestamp": "2026-10-12T06:02:45.904+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "1225fd479ca3ebf6170cab662483b5877170b94433a13b82403c61c0353eb11d"
+      },
+      {
+        "sequence_id": "d90637be-3940-439d-911f-fb7331b65b02",
+        "timestamp": "2026-10-12T06:05:03.539+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "1eed650a441105133d43a1707f479c16e863674c74e32e5ba2191f895f027061"
+      },
+      {
+        "sequence_id": "d7a2d9b6-d7c4-4433-8ea1-0b9f97a7fcac",
+        "timestamp": "2026-10-12T06:05:04.278+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "c3701c2a4c6817691c0677754a51b4318198af98bb49571b11f3b86c606614c0"
+      },
+      {
+        "sequence_id": "654877bf-34a8-42bd-acbe-482266d2810d",
+        "timestamp": "2026-10-12T06:05:04.933+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "cf9ab969e7826461056759c362f3d84535e803d11a4de64ccc2b29eb731e9af1"
+      },
+      {
+        "sequence_id": "9f891674-5303-4df3-b98d-ebe193e659bd",
+        "timestamp": "2026-10-12T06:05:05.702+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b0ddf488facdd5b585bd93dc28358a9cc24d646414728d9a433f049a9dfa6249"
+      },
+      {
+        "sequence_id": "afc86cd1-3c3b-42e8-a27f-1c322c0c0096",
+        "timestamp": "2026-10-12T06:05:06.692+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "1ee4cdd7d3683a8cf5b3ed7e8aa300307829ce637119beb08262bd72e4c60c61"
+      },
+      {
+        "sequence_id": "8cc55ebd-83ca-452a-9054-ae861a9593bd",
+        "timestamp": "2026-10-12T06:05:07.382+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "68be6409352150b69375353c8176fea6b29cf35f7e3ddddf96a5ec93b338e471"
+      },
+      {
+        "sequence_id": "068ab175-70c2-40bb-9bcd-1944b613041c",
+        "timestamp": "2026-10-12T06:05:08.226+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "a52ce6d3e985301cb9b2f9c391be0ec555906e43df52f84731c47ff108851c61"
+      },
+      {
+        "sequence_id": "2ae8d2fc-df63-4f2b-bdf5-226244f9f129",
+        "timestamp": "2026-10-12T06:05:08.475+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "1ce34daae1f9947b966319816513af9ca357af45b9a071f66a7ea39819696b1a"
+      },
+      {
+        "sequence_id": "88ab9293-209e-498f-8e38-56d907c9b34a",
+        "timestamp": "2026-10-12T06:05:09.027+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "6f5148e4a056a527cee5ec6c8bfdf57b95461a1a47ea1c9ff1eb5f2e3ab098a2"
+      },
+      {
+        "sequence_id": "f15a01a9-da9c-4fc7-9d09-b092d70f0b27",
+        "timestamp": "2026-10-12T06:05:09.407+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "d691361172519b75267e149e11a8b2a8ff9ca72645169b0e61e8f3c9ef491ad3"
+      },
+      {
+        "sequence_id": "aaa4e8df-4c69-4fd9-83a3-bc10c8482838",
+        "timestamp": "2026-10-12T06:05:09.779+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "1261a45cf70cd3cf07e14ee1ce1c6baaed13eb4395792479e143c23cf008356a"
+      },
+      {
+        "sequence_id": "0267d112-bec4-4d97-bca8-1ec2068fe6d4",
+        "timestamp": "2026-10-12T06:05:10.655+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "ec4f92ec8c1b1a2dab0ae4158147fe7e6968f78617848599bd1aff43d721bcb3"
+      },
+      {
+        "sequence_id": "641a43a6-485c-4a35-a991-1555a1e8f236",
+        "timestamp": "2026-10-12T06:05:10.896+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "cd45f0f0e5a50940bc76d5711f5e59b0024aa06af07c9daaa2c39eab2538ebcc"
+      },
+      {
+        "sequence_id": "551c0c51-6cd5-441e-8776-49ba616bca60",
+        "timestamp": "2026-10-12T06:05:12.419+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-1990 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "0454dcd77e46f9fe2f05fc1d4562ecd9194c5c12bb5a02e64e493f66bc10e4b3"
+      },
+      {
+        "sequence_id": "da1e578b-8973-40a7-8a6c-7b92ff2d5ef7",
+        "timestamp": "2026-10-12T06:05:12.766+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "3a2741a640db418f1331bd04015dc233b0ff4c369d16a5e3dff857efbddc3c3e"
+      },
+      {
+        "sequence_id": "de187453-80f2-47f5-98d2-742d75525905",
+        "timestamp": "2026-10-12T06:09:48.502+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "475ecbe9e9df635466975ca0c0875c7c4458c1d934f438ddd2a183ac363f460e"
+      },
+      {
+        "sequence_id": "26f767be-0479-4141-8f22-8f50aaa22197",
+        "timestamp": "2026-10-12T06:09:49.358+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b6f6ff55353283e02ad76a043e6d8e4cfc797a78e536985aca81f4e51fe90b24"
+      },
+      {
+        "sequence_id": "ec20f521-3c9c-48c7-abe9-444a0aa741b7",
+        "timestamp": "2026-10-12T06:09:50.035+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "54ba2d2a2cd423ca79de37917d6d75571196a20bd3b8171571ad95eaa77ee834"
+      },
+      {
+        "sequence_id": "5e6d025d-3236-47b6-8a87-18ecf24d6513",
+        "timestamp": "2026-10-12T06:09:50.766+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "2cf773c8772aadf37b0fa526e6a561f40a6b99efb67713882763650844127d1a"
+      },
+      {
+        "sequence_id": "5d4ffa59-7ae7-4e21-97b0-e7d8ef50faf7",
+        "timestamp": "2026-10-12T06:09:51.465+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "99cae1c4b38a8dd1484df0507e074f373be8fac5928976262c57b181a2f6c21b"
+      },
+      {
+        "sequence_id": "13d2e4c3-6447-4dce-9fec-169d4ac3d86e",
+        "timestamp": "2026-10-12T06:09:51.827+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "912d2cda1b53a5ae445d314695423f1b272cd9a23eb6dd740c69daf2b695e9ac"
+      },
+      {
+        "sequence_id": "d141db99-a416-44b5-9ea7-f6de68c15bd3",
+        "timestamp": "2026-10-12T06:09:52.321+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "ca0606daf8250259662e70e12cf4b1bc5bda465a0d95b27e8c8aff502204f3b5"
+      },
+      {
+        "sequence_id": "f4b07fb3-3a20-43af-bfca-94c28f34774d",
+        "timestamp": "2026-10-12T06:09:52.545+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "fe6ce3244bf9f2de2b27ed40f6326f859a1cf11707bfb1718179bd2b42a4afa4"
+      },
+      {
+        "sequence_id": "8a5d5cff-2dc3-4e97-82e3-06ef427ad651",
+        "timestamp": "2026-10-12T06:09:53.023+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "f57226850713315df10979384a5baaefb1724fce94dce53d0e4d958e04201e62"
+      },
+      {
+        "sequence_id": "1d08761e-afb9-43e3-ac24-cfa861c77373",
+        "timestamp": "2026-10-12T06:09:53.382+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "a7ed35f75c0c5e32b94899df0b02ee5eb03e33b3fa055f5fd77348ed032b41bd"
+      },
+      {
+        "sequence_id": "aa60d3e2-9809-414c-9391-da7596480fa9",
+        "timestamp": "2026-10-12T06:09:53.705+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "940b60cb853aafcd1a0e9a1323215ea13b84b4b762f96d097fbb7af209e2de08"
+      },
+      {
+        "sequence_id": "16659f73-397e-4747-bf75-ab9034a20eb1",
+        "timestamp": "2026-10-12T06:09:54.544+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "78efea9ff72884f3415696b838c43447911f06d82d45266c508eba6ddb4f8f9c"
+      },
+      {
+        "sequence_id": "c1e4d9aa-fcdb-4364-9c6a-3e06229e49b7",
+        "timestamp": "2026-10-12T06:09:54.776+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b03a3577be3f30ed83920c319b71e8ed14ca019c2b5e9d953f8a1af3026800d3"
+      },
+      {
+        "sequence_id": "2de2258b-104a-493a-b4bf-7fd2ec9a5f06",
+        "timestamp": "2026-10-12T06:09:56.073+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-5778 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "5daf08f1a7902a9a528de15631d8df19f25cabf01c6ce7a35bf95497a8225839"
+      },
+      {
+        "sequence_id": "cfd024f9-8cbc-462f-b4b3-f358ad6b24b0",
+        "timestamp": "2026-10-12T06:09:56.417+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "107fffadc43f06a5e586dbf55440c8919d72d55e47b1befaded83a03c4cae784"
+      },
+      {
+        "sequence_id": "2069f0ec-0f94-49cf-8482-0c44a77ef676",
+        "timestamp": "2026-10-12T06:14:49.14+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "7498f80419c89353641567b1db6369210d64cad2f04db01b28c29e79081da7bd"
+      },
+      {
+        "sequence_id": "e1f49720-d563-4084-9e97-ea74a7559dd1",
+        "timestamp": "2026-10-12T06:14:50.503+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "e98109cf24b6690a14beb01f520daa3f6e6fdf3d085322393a419a7068f37aee"
+      },
+      {
+        "sequence_id": "11dd66a5-1ae4-4fc0-b78f-e947479b8cb6",
+        "timestamp": "2026-10-12T06:14:51.776+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "26f5856bad89260dfb9382eb32c3879854e033f5ba7c014f4f29b2e460098cc3"
+      },
+      {
+        "sequence_id": "e0371dc1-7c73-44c0-b646-23dc9132da0b",
+        "timestamp": "2026-10-12T06:14:52.74+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "f77b415273fe35a35af31c07caf1c73e4dc97e3cb475202f8a53635852a4a35d"
+      },
+      {
+        "sequence_id": "e902798d-4028-4755-bd22-fc5d0a944e0f",
+        "timestamp": "2026-10-12T06:14:53.487+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "97d80675e89657c51bf0899dc2de66531cb3711416c45316a34b112f25cf2609"
+      },
+      {
+        "sequence_id": "1a870ab5-798d-4851-a8a1-7282f056ae2a",
+        "timestamp": "2026-10-12T06:14:54.051+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "f3e613eb07a8281d1dbdd25b53b515af12fe35e223f181ecdba1d7365457a749"
+      },
+      {
+        "sequence_id": "7d168ceb-be34-4e9e-ad5f-a386eb0aa5dd",
+        "timestamp": "2026-10-12T06:14:55.122+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "28f10e1aaa61fc6d6abc470cf1c35582050c879d479380983fe767dcf7067a6b"
+      },
+      {
+        "sequence_id": "7f1b3714-94b4-4f6d-9838-0ebf9a138782",
+        "timestamp": "2026-10-12T06:14:55.443+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "12d703ea4605fd523b93544f64d0a9c94c8cbf5dbbd61b00ccbbce18e9abe133"
+      },
+      {
+        "sequence_id": "df1d6e29-eb45-406b-8f00-e2b3a19e2ae7",
+        "timestamp": "2026-10-12T06:14:55.962+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "974b2b647cdda2ce63d42cef7ac6f901ac23c0c0de644c9e6637d2839818cfe7"
+      },
+      {
+        "sequence_id": "797dbefb-7a67-4f94-b326-db55247bb804",
+        "timestamp": "2026-10-12T06:14:56.35+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "205612a1d0b8650f62da3a05b31b89e04f551ba840c2862d6d0753ab53408c03"
+      },
+      {
+        "sequence_id": "074eb792-1617-473e-bc91-8ab0b98ba316",
+        "timestamp": "2026-10-12T06:14:56.838+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "7287587c2426f4f2e66a7c1acb295524dbd24dce2d11df2cb48ffcaf3e90dcbc"
+      },
+      {
+        "sequence_id": "e92ac520-6906-417b-8372-8e2e6e194aeb",
+        "timestamp": "2026-10-12T06:14:57.756+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "a7d940ce1af7ce4461c9d980b1547452d273748c751f4a02c6813b4326e0ad79"
+      },
+      {
+        "sequence_id": "e4922d6c-22bc-4e92-8271-6c18a62e66a4",
+        "timestamp": "2026-10-12T06:14:58.007+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "3e95af3161971c162e97ba7eb377957e0fc184dcca9b76878ee58f5516e60da9"
+      },
+      {
+        "sequence_id": "efa60e74-c316-4c4f-9661-6f777f0e631c",
+        "timestamp": "2026-10-12T06:14:59.387+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-9048 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "7fd7912f54f3b4c5e9f213c54950ad24d90270ff4a29dede928bee5d3df760b6"
+      },
+      {
+        "sequence_id": "3523b31a-f18c-40a3-8214-e8dee09a571e",
+        "timestamp": "2026-10-12T06:14:59.76+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "b1a49b43673ffa450178081fc8127a4e47c0e8bcd1c606382adf7f9365e503ba"
+      },
+      {
+        "sequence_id": "e5be27f5-cf7e-44ea-93c3-146044ce9016",
+        "timestamp": "2026-10-12T06:17:34.961+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "1ac154cfc17fbf0f7aa7c1448feb4c21c5d268913b3f7d6bfb43992dc33f45e2"
+      },
+      {
+        "sequence_id": "02ba8166-1678-4b0e-b68a-78320ce1729b",
+        "timestamp": "2026-10-12T06:17:35.707+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "7367730c5f112325b7cf10872b5784b4a183d8c76674cf1d15a91282c3702b64"
+      },
+      {
+        "sequence_id": "8a6f4762-1b4e-41cf-aa66-a6ebdb76a4eb",
+        "timestamp": "2026-10-12T06:17:36.387+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "0856358a522375b01f11bf69275b864938870b57313450dcd647c9dda8e57ae8"
+      },
+      {
+        "sequence_id": "41661165-15ce-4efc-b6d0-b5345cc8085b",
+        "timestamp": "2026-10-12T06:17:37.039+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "e552663f9dad42e96e567afcca9bf0b398ca357cec879fc97f5b0bbf0c7e6201"
+      },
+      {
+        "sequence_id": "4d78b09c-308f-4128-9ba3-f85aa453c6b9",
+        "timestamp": "2026-10-12T06:17:37.517+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "6793eea4c4aac19a6bfddc04184f6264cc2b93e36e523d096800511bce7829ef"
+      },
+      {
+        "sequence_id": "2153dff9-48c0-4006-91c6-dfec0978784e",
+        "timestamp": "2026-10-12T06:17:37.882+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "7a398f98c342e3f09e84bbc4a8c2302ca4039c8692b0a6e3807c21a0e0b7b731"
+      },
+      {
+        "sequence_id": "44824201-56c1-47e0-8325-c34189c1851c",
+        "timestamp": "2026-10-12T06:17:38.347+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "3585540fe2ad9d6cc33960a972fce09347e916f09193e6f414bf557122336102"
+      },
+      {
+        "sequence_id": "d0cb696c-3620-4aa5-80a9-05f86687d35f",
+        "timestamp": "2026-10-12T06:17:38.591+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "d451f3e8aa3f65fdbbbf997dd80a8e045d516f84005e3f6dffd12648c7f6fd83"
+      },
+      {
+        "sequence_id": "e9a28c58-3d0b-4fc2-92e4-2c784b510eb8",
+        "timestamp": "2026-10-12T06:17:39.065+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "bc95265b49d4f97b3ba81f42d9b1e8b30d76d193f8a78617a82fd839196d4f69"
+      },
+      {
+        "sequence_id": "e65089b5-27f8-4777-aa88-085e29bfcc7a",
+        "timestamp": "2026-10-12T06:17:39.418+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "5d89b23453b26f2b00f0ccfabe84ae6b11eaa1215d644015814e65346432ad9e"
+      },
+      {
+        "sequence_id": "892522c9-6491-49e7-895a-402f92428608",
+        "timestamp": "2026-10-12T06:17:39.756+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "87dbf823fe892ac7ae78a6ff24dcb40512d0496c8e4a89d7cced3d1bbf80013d"
+      },
+      {
+        "sequence_id": "7c8e4e96-4a11-4762-8167-f347ef74d63c",
+        "timestamp": "2026-10-12T06:17:40.544+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "58bc2ffc5913caccc3c9460e8f2da8fc544ebd64e0f42d4871620e7c1ae012d5"
+      },
+      {
+        "sequence_id": "e9a8fde2-d0fb-40b3-a715-4134875672aa",
+        "timestamp": "2026-10-12T06:17:40.762+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b6220820753d4546172070f42e1470db8a582651873404c101c41284623cc338"
+      },
+      {
+        "sequence_id": "bc11b2db-e645-4b06-8d72-fe9442c29697",
+        "timestamp": "2026-10-12T06:17:42.206+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-1780 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "f2deeec5fd802b33b0545e89425371a6e640406247345fc952f5a3ff88039b81"
+      },
+      {
+        "sequence_id": "4cba9a98-b331-4054-84af-f18902a7221c",
+        "timestamp": "2026-10-12T06:17:42.558+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "431b22ff96dc71efcf0a3614da5f02dedfa2a1bcd39eac63d789fdcec43abc68"
+      },
+      {
+        "sequence_id": "4c6481ab-1139-473f-b2f0-9f5689c9ddfb",
+        "timestamp": "2026-10-12T06:20:10.36+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "e47931ff09b5ecfe3f207fcc0050c21668b7c7d046f0573a485650477c2cd1e1"
+      },
+      {
+        "sequence_id": "e106bee4-2163-4bd6-afa0-2bbed6249c7c",
+        "timestamp": "2026-10-12T06:20:11.137+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "9b1aeb1da138cbebafe323f46d56570b69eebea1e07dc57ea598f90a58b2b4a4"
+      },
+      {
+        "sequence_id": "bb761e82-dbf7-41f3-b2dd-ef84794963b5",
+        "timestamp": "2026-10-12T06:20:11.818+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "8350f1420fffd683dd771c5e71a82df68d91cdc8e7dfe7f0071a79020905c9b1"
+      },
+      {
+        "sequence_id": "c0cbdf36-20f8-4853-bdb0-456250283e92",
+        "timestamp": "2026-10-12T06:20:12.49+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "9589c1df8921278c08db491ac9c825532c49ef99eb83b75be2c53a6349662a54"
+      },
+      {
+        "sequence_id": "2304c891-f697-4919-ac8b-a162536567c7",
+        "timestamp": "2026-10-12T06:20:12.957+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "6915f2f43ba7cf75cd7ebbdf79689230ed9883a2a9b73e455c10c0f78a0827f0"
+      },
+      {
+        "sequence_id": "c1322a15-02d6-4238-9368-0cae9232c71f",
+        "timestamp": "2026-10-12T06:20:13.352+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "60fab0d86853a4ba0135c9a6effc98cf6002b1886baaf6ae2202e49049f77cc7"
+      },
+      {
+        "sequence_id": "b107b3bb-761e-4905-bb7c-70cf0cf88ff0",
+        "timestamp": "2026-10-12T06:20:13.858+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "5804fac9da2d492e730adfb57e22313e248df6e1be1f6bd5528cb888817435fb"
+      },
+      {
+        "sequence_id": "2595d173-1156-4723-ba1f-2ebf86e5b47b",
+        "timestamp": "2026-10-12T06:20:14.086+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "f2805ba14d85a5c015893b006f984e58d1a45f643fafe31dfac4e871272bbde3"
+      },
+      {
+        "sequence_id": "e58e9188-0eda-4f13-9395-9083d10bb212",
+        "timestamp": "2026-10-12T06:20:14.575+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "ff8218928e827cfa797df9c9bfc4996c917c74f6e15469ac5e708b5bced873dc"
+      },
+      {
+        "sequence_id": "20d42d60-4857-451d-bce8-c2ee841aab41",
+        "timestamp": "2026-10-12T06:20:14.936+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "3800e5f2bfed16c03a6de20538dd79e1988c0c8738a0b99c4a462d44303f326b"
+      },
+      {
+        "sequence_id": "0a8c0144-19d5-41c6-a720-6995118c019c",
+        "timestamp": "2026-10-12T06:20:15.314+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "804433a76c54a19aaaac09109a7c5c54df99eadc78dff4eb8c4eb20e623f6249"
+      },
+      {
+        "sequence_id": "06a95e4b-5125-4f38-9606-af4ad272a0ef",
+        "timestamp": "2026-10-12T06:20:16.157+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "1662279d3423545f608d35c8a2ed812f6697c1a45f91bfa018aa5257f5a818a5"
+      },
+      {
+        "sequence_id": "ff294b3c-1d18-461b-b4ba-6834c5b44dbc",
+        "timestamp": "2026-10-12T06:20:16.405+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "4050ecfb81e0ebda5b27c7f723a28f0e9a87def84bc103c86896e332b079c3db"
+      },
+      {
+        "sequence_id": "429cb372-53b1-464b-934e-794beff61b5f",
+        "timestamp": "2026-10-12T06:20:17.762+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-7441 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "4d4e10206d12df5e1b4dc8ca4eb2b1e35d836921b7ec9318d61d92eb124af187"
+      },
+      {
+        "sequence_id": "6cabaabc-8fb6-4277-b5d5-e81fb008b46a",
+        "timestamp": "2026-10-12T06:20:18.098+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "655df38dc39aee0230a9cbbbb8bd259d35e200ad7158a2e1248abd78a1dc1605"
+      },
+      {
+        "sequence_id": "5a1aa248-f39e-442c-8410-bc2dc541bc12",
+        "timestamp": "2026-10-12T06:23:23.084+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b36f3d5e04eb412dcd928ccb0706673286ea5e096ccab401e36fb2bdf02f6b0e"
+      },
+      {
+        "sequence_id": "042b38ef-be63-4655-9de4-524aebef551a",
+        "timestamp": "2026-10-12T06:23:23.814+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "d142cddf1d72f47d3b383e2fc0e1c2705fd3c32b227236b54d5cab882859fad6"
+      },
+      {
+        "sequence_id": "dbd3278a-b909-42cd-93b2-9bdb850a1aa7",
+        "timestamp": "2026-10-12T06:23:24.796+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "9a8a1e6507bfd812eb5b85baf43a1f59ae0f033d3942c7eefebaa5030f50e990"
+      },
+      {
+        "sequence_id": "ce881c9f-d8af-4746-87fc-03c4a4a8539f",
+        "timestamp": "2026-10-12T06:23:25.614+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "7c80aede727c7144dd9a485142bc5cfe8921a2007005178ac4079d8dec67a4c7"
+      },
+      {
+        "sequence_id": "e054abaf-0c53-475f-b317-cb3d5d1fe9db",
+        "timestamp": "2026-10-12T06:23:26.235+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "192d38fe0d7dd304e6adf827585ec8e19c52d133a370840e6af24c2fc934a5e2"
+      },
+      {
+        "sequence_id": "55e9f58b-2086-4b40-b2ad-f7f54950a5f5",
+        "timestamp": "2026-10-12T06:23:26.627+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b805f4be1b5b6fe69929f406c5ac929f3527d2b88199298e342e898e3a5cd165"
+      },
+      {
+        "sequence_id": "b95f686f-ad57-4936-a043-3e7a5f940cb3",
+        "timestamp": "2026-10-12T06:23:27.183+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "dbf07a5d572fd0bb7b1688ff17e6151875674b33f86ab3cc789dcacc9cd6ffb0"
+      },
+      {
+        "sequence_id": "82509317-7d66-4759-b016-9726a51131ae",
+        "timestamp": "2026-10-12T06:23:27.43+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "86ef049194f679a99fb691ffb6af10a76bf02f88ffa46998a561b0fb1bd579b8"
+      },
+      {
+        "sequence_id": "7de7755b-ba7e-441d-abe2-605c59b46f02",
+        "timestamp": "2026-10-12T06:23:27.958+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "14a0dfe087f65995e8744e359e5c0ecb592505a4aaa800b02ad9f994d9c18d10"
+      },
+      {
+        "sequence_id": "50b7fc89-61d6-4a7e-96b9-d3d6db66aec5",
+        "timestamp": "2026-10-12T06:23:28.355+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "d0167196d0c55e57f8ae07125a5a63a940b473d54fba2d2f3a717514f6ee0c8c"
+      },
+      {
+        "sequence_id": "5cdc5abe-491b-4192-9591-7b0dad4ad6a9",
+        "timestamp": "2026-10-12T06:23:28.754+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "0c7cdd8bba4c8fe18f73930a1cafd9eee754cb2988a1ded366e1a6372b30d572"
+      },
+      {
+        "sequence_id": "ec71cd59-dc90-4020-9355-92625423f2db",
+        "timestamp": "2026-10-12T06:23:29.791+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "98e6d7eba01799d235119cf80ead1d5f9040aaaef692c29afb83a07862cd8087"
+      },
+      {
+        "sequence_id": "18fa32ec-70ab-4d73-8ad4-a86fdf513077",
+        "timestamp": "2026-10-12T06:23:30.044+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "51a617f48a647a3fb49e21bf0079298a9028635afe787131e981590782d2ce16"
+      },
+      {
+        "sequence_id": "79e531b7-0234-4ced-87c4-8b0c9e2dfbb8",
+        "timestamp": "2026-10-12T06:23:31.57+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-1229 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "a365ec6cc8071c19e428909e8183c25ab1bae4474bc5a9cf944c2d62c84df8dd"
+      },
+      {
+        "sequence_id": "87d0c228-ab9d-4161-bddc-052814349fd1",
+        "timestamp": "2026-10-12T06:23:31.984+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "0810a102a5fafba216e7c9f16ab277f87cb8bbae0b386ae32e6937ee3591e9de"
+      },
+      {
+        "sequence_id": "02094764-9179-4960-898f-10b2815bf3dc",
+        "timestamp": "2026-10-12T06:26:16.49+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "fbccd5ee59085f855169e47515a3e2040f61c53fda9877bb0d08f6e83a8f72bb"
+      },
+      {
+        "sequence_id": "09d5576d-0b6e-43d8-94dc-9337e7c9cbed",
+        "timestamp": "2026-10-12T06:26:17.242+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "a9f5c239a40b160f5d82e9cc57ba748514365d8ada003f629d89d4b89f19b705"
+      },
+      {
+        "sequence_id": "fa0a3087-2d94-4612-ba73-fc1ae03643b4",
+        "timestamp": "2026-10-12T06:26:17.91+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "a1befd3b8e7611657de28912ad6d2e478d9c22c63f09c0f2daa859165b04a6c6"
+      },
+      {
+        "sequence_id": "4bef17ca-1c91-4596-9e2a-396d679b4b86",
+        "timestamp": "2026-10-12T06:26:18.66+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "86da17feac62bee3db9fce08f894e0adcd259004b5337fe6800c1ccd1808d356"
+      },
+      {
+        "sequence_id": "96d7b9ea-028e-4cab-bdcf-db743472b303",
+        "timestamp": "2026-10-12T06:26:19.13+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "911a137f240552cf153758d37bc5bb5dde988f1e85fc0a423d8f0212c1c88d8e"
+      },
+      {
+        "sequence_id": "ab6a7759-7ecc-4a3f-b191-987114976c66",
+        "timestamp": "2026-10-12T06:26:19.497+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "58ec7cfbc819c20983268a1c81038b092a9ed5d437a63a2a4930c9634b98aa8e"
+      },
+      {
+        "sequence_id": "5c288610-ff9f-47bb-a7dd-618db4a9e1e4",
+        "timestamp": "2026-10-12T06:26:19.971+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "e11fc41d3e5d2272498a5748c6355f0ed7796da740df001bac8a2fee2e1a2caa"
+      },
+      {
+        "sequence_id": "c201294e-aea7-4cfb-acec-92350d729055",
+        "timestamp": "2026-10-12T06:26:20.207+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "81d2a3b62b60ee90e5b331576cd174c6b2d21cd7b5427967cd687175c48b6fcf"
+      },
+      {
+        "sequence_id": "8a0274c7-b592-4080-8aa9-35f570a935c0",
+        "timestamp": "2026-10-12T06:26:20.692+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "d732a54858d12ecdd23762e9f3cf4b70cbdebd0621a35e7d2226c0fe464ff476"
+      },
+      {
+        "sequence_id": "0de7529d-2b02-43c8-9df3-896afe23e0f3",
+        "timestamp": "2026-10-12T06:26:21.058+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "422f99a66bc6c5396bbe6f4302f7a8ea072e6a277532c9ac3f7d5b8c73a21656"
+      },
+      {
+        "sequence_id": "91c369ae-220b-4f11-91ac-5c7e6c58bb2d",
+        "timestamp": "2026-10-12T06:26:21.409+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "ecbcb0c517e530690cb4ce3e65a183854d51f110b05a66a690d2acc87a1bf271"
+      },
+      {
+        "sequence_id": "44c089ad-6bfb-4683-96fc-72095e4cb34d",
+        "timestamp": "2026-10-12T06:26:22.274+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "a90ce55ada4c250ba655bc58d7c304677bedfe7c74c318534cee33d3988fc203"
+      },
+      {
+        "sequence_id": "0dcc7d0b-9474-4ce5-aa44-f69972795652",
+        "timestamp": "2026-10-12T06:26:22.517+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "ade3961a953f5937db69765ee69f90b99c254a0f493220008e0370b4956036e0"
+      },
+      {
+        "sequence_id": "7c3b1291-45c9-48c9-805d-2611d0d98e4b",
+        "timestamp": "2026-10-12T06:26:23.889+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-3602 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "22cb65ce6ca0275bff0a0018850e5b77d8d696a7d5bc020280970f40129e8b5e"
+      },
+      {
+        "sequence_id": "bd9dbe8f-ba5c-452f-bee9-918ac21ef46b",
+        "timestamp": "2026-10-12T06:26:24.245+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "3a8469114bb24de7f0a9d6472078c3f4de9abcc908a9f8d08ea328bf181d1d5d"
+      },
+      {
+        "sequence_id": "234e07c8-59ed-4ab8-9813-e99f6fa1e408",
+        "timestamp": "2026-10-12T06:29:51.274+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "f5770b2ab271d5d12df61c09839fdf83459a9e6fbe9d587eaef3575d756eab1c"
+      },
+      {
+        "sequence_id": "d61d211a-3c44-4c98-9935-1e6904275e5a",
+        "timestamp": "2026-10-12T06:29:52.045+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "ef6a79d805044c90bce4859bbe269e08319fb1463e8eb86dac83e4323fdd1d37"
+      },
+      {
+        "sequence_id": "37260fc7-a1a8-4b20-96bb-9df4b1cf6085",
+        "timestamp": "2026-10-12T06:29:52.661+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "bfc0dfa57c73ac35cb7f68742691cb633b35ae90147c9f6b43f1f34d9fbf98a2"
+      },
+      {
+        "sequence_id": "bb58d9c8-9f55-49fa-aead-58a247d731bb",
+        "timestamp": "2026-10-12T06:29:53.335+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "f77a0d301a31c5831c28fc1584f89a8cfe82a9876685acc70f621b543dfdb98d"
+      },
+      {
+        "sequence_id": "5368bb98-87fc-4a2f-a277-134de0b3d530",
+        "timestamp": "2026-10-12T06:29:53.835+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "95683a540f7687ed5b8096b88d1e2442bb90dda4aea795cc60af0fb74c50cf9d"
+      },
+      {
+        "sequence_id": "53f00e61-e867-4051-8650-909320e993c0",
+        "timestamp": "2026-10-12T06:29:54.168+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b8b64c8839ae336fa41dc23039888d17f7711e30a74b0289be0d85f606688ed0"
+      },
+      {
+        "sequence_id": "9ee9fd2c-e77e-48b5-9d89-5bf9c2fa2954",
+        "timestamp": "2026-10-12T06:29:54.826+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "64738ca47b48a8d75ef8a1d2b2e68a05cd03a71f7924cdf90ee364d794c1a86a"
+      },
+      {
+        "sequence_id": "5f43a08e-4c81-434f-afb4-d224dd634343",
+        "timestamp": "2026-10-12T06:29:55.051+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "bdf2850caca00042393d205646577f0b0aa3b735466db83f2511e8aac20b92fa"
+      },
+      {
+        "sequence_id": "2112083e-054c-41b8-a037-406b72f1266e",
+        "timestamp": "2026-10-12T06:29:55.53+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "5184d2cdabb6f89e61899715f5c5a3bce940d5edf1d4d0ac85144b09f54468cd"
+      },
+      {
+        "sequence_id": "beb6a93e-d0c6-4f6c-8b4b-9d8782b1903a",
+        "timestamp": "2026-10-12T06:29:55.869+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "778bb99ddf43a431ce36035ca628aa78550c2166cf812014eb58cf658f258446"
+      },
+      {
+        "sequence_id": "b321427d-68b4-4eaa-8b02-f3dce8bfc88a",
+        "timestamp": "2026-10-12T06:29:56.236+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "6865f7417bc7adaa7c0903ef34a571d90224fd96372987cfda1e571a5b28dcc9"
+      },
+      {
+        "sequence_id": "14c10feb-3258-4e40-9293-9d7e09b816f0",
+        "timestamp": "2026-10-12T06:29:57.013+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "6aafdb204934b9243dc74e4bca93fe98294e69430ec9cfe95bde9150babb6215"
+      },
+      {
+        "sequence_id": "945efb95-b8c8-4197-801a-95b94cc01247",
+        "timestamp": "2026-10-12T06:29:57.252+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "ee907e17695b6bfc6937134125133d89fcbe8239042ecdbfd60594657d6d767b"
+      },
+      {
+        "sequence_id": "9595c929-0299-4771-85d3-40cc209c6951",
+        "timestamp": "2026-10-12T06:29:58.672+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-8370 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "c41a18bce7ba7df52464ba8c6ebf2ffc7fe0e36d1ed39ce54caa33fedc31df16"
+      },
+      {
+        "sequence_id": "44a31f76-9f29-4588-b95c-f2c05a937f4a",
+        "timestamp": "2026-10-12T06:29:58.989+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "30757e2a628f4e9502ac9a98eda09ed0dda7c5846b84e39521b357322ebddb0e"
+      },
+      {
+        "sequence_id": "535d2f9c-65be-4134-9768-40b8ce66e0e4",
+        "timestamp": "2026-10-12T06:46:37.043+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "3f070b457c833bb24cfe7ee78bbf698bfb2a5a6d55277443a6aab5c3919c2824"
+      },
+      {
+        "sequence_id": "fce239a9-860a-4f37-98c8-27ec3f09f9e6",
+        "timestamp": "2026-10-12T06:46:38.013+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "088563d8552f46d6507380938c6f953ca71f9c637eabd6c8a60554e89191bed4"
+      },
+      {
+        "sequence_id": "2a538278-2c19-43a9-a2a6-efdb33987aac",
+        "timestamp": "2026-10-12T06:46:38.674+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "c27584e0242a1e75d79db0af8d80c7139822256cdbbc084dd887c449e513a4a5"
+      },
+      {
+        "sequence_id": "d431a78d-c0d3-4051-9a11-e11479991173",
+        "timestamp": "2026-10-12T06:46:39.392+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "7d9b52be5b19e4ce45ab2d914ba21584846572fea82bfff108abf30a739ae60e"
+      },
+      {
+        "sequence_id": "64f46cec-8219-46f9-9d88-5da57225d9f8",
+        "timestamp": "2026-10-12T06:46:39.89+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "4dd5543c79e8b08b8cd9ee7d99d931847f50adbe6a3718965dbbf8825f02a666"
+      },
+      {
+        "sequence_id": "d3063a46-55ae-4f5d-8ec3-5c11d6dfbb3e",
+        "timestamp": "2026-10-12T06:46:40.258+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "66c1c02b55359cfc08a52c54b9add99057037a7b9499bab02c9e8dfa3fde59a3"
+      },
+      {
+        "sequence_id": "0e447cdb-094c-459e-8ec5-b76e19602e8c",
+        "timestamp": "2026-10-12T06:46:40.736+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "c536f490589485259c683fed6949185321eb87a6a6cf73a42a8827e3ca589600"
+      },
+      {
+        "sequence_id": "3590efe9-cc9a-4c5a-bb31-d2f19313bdce",
+        "timestamp": "2026-10-12T06:46:40.969+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "95d0d4e554b14b9c795cbb9ed398013a7a1940c45393ddfe076ae94f092420be"
+      },
+      {
+        "sequence_id": "e4f8f01a-adab-44c4-a47d-bae85f488d42",
+        "timestamp": "2026-10-12T06:46:41.471+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "d404c8356ac93b26cbaf3cf5ad62e9f7feb5b1e8827e18cef34c4921dab82a85"
+      },
+      {
+        "sequence_id": "ad2b9592-c099-4573-8a3f-e2399598428d",
+        "timestamp": "2026-10-12T06:46:41.821+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "b03b794a494d30b0db4d8f2362a93790d369dbff09548436298668dd251e9c9f"
+      },
+      {
+        "sequence_id": "e0abab46-f0e2-4a47-8d1d-9deb66ef036a",
+        "timestamp": "2026-10-12T06:46:42.151+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "f3c8a46a1c40450fa88d7572562b54c87fd3e7a11768a3bd07d6b298a901d142"
+      },
+      {
+        "sequence_id": "eca0b2eb-ac58-4070-8708-d5065141ea4c",
+        "timestamp": "2026-10-12T06:46:43.03+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "7da1549e88a4a403361c497604c53530acf0d3e839beca7635cbf5d1aa3c54ee"
+      },
+      {
+        "sequence_id": "f929c3d1-fefc-4428-b5ec-6bf23876ae9e",
+        "timestamp": "2026-10-12T06:46:43.25+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "45a769da4c113046100f6032b3c56114df401b5ea9d2fb3a7bb19dec344b6dd9"
+      },
+      {
+        "sequence_id": "d7c7f698-db25-49c9-b5f4-b69c806b4d2a",
+        "timestamp": "2026-10-12T06:46:45.004+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-4523 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "16b5df43a43a38550a5c726c5ac08fb5c854216b916c7e1de1ef4a588fc8ee14"
+      },
+      {
+        "sequence_id": "4898c35c-d823-46ab-bbf0-a5730c9f19ab",
+        "timestamp": "2026-10-12T06:46:45.332+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "411fbe031457973a439bf141f1ce490c935b0e69aee05ef4ea2431b2e35a2847"
+      },
+      {
+        "sequence_id": "198ceb78-b12b-4cb2-b97d-5c479f48dbb8",
+        "timestamp": "2026-10-12T06:51:10.472+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "ac82154513fb00f71c0bfe0d4fbfe4844201ef09b6789c0d97f88c4a8b7ab179"
+      },
+      {
+        "sequence_id": "c5778b7d-3ef9-403f-ba64-5f6076c8f129",
+        "timestamp": "2026-10-12T06:51:11.337+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "f4a4c3dfa0ea5213405da06c83aedc352258c578ed71406145005025862383e1"
+      },
+      {
+        "sequence_id": "2a1fc6ea-9b50-4a67-91b3-6846c810d05e",
+        "timestamp": "2026-10-12T06:51:12.075+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "759b352deece21f6a48c56a3804f0ecfa9c3d928ff58a8f0a887dde715a49e61"
+      },
+      {
+        "sequence_id": "ec9a6ecd-a1f7-4be6-aa55-48da44233803",
+        "timestamp": "2026-10-12T06:51:12.794+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "a15c4368de2f0adc02da40bcac0636bbf2c9f85ff34404b75e6a1b427c9776d0"
+      },
+      {
+        "sequence_id": "9ff38b76-6d87-4921-84f5-627f15dafca9",
+        "timestamp": "2026-10-12T06:51:13.358+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "61cfd1da87c0fea779ec08c1bcd5f5a64be9bff81d3164dd2a48e6f0cc1a382c"
+      },
+      {
+        "sequence_id": "bf29956c-7f5a-41b1-b03a-92fdde538bb5",
+        "timestamp": "2026-10-12T06:51:13.755+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "297c9a3027aec85510b7227d01b4f04c06d06129017dad2b0fea6c5cc48583f0"
+      },
+      {
+        "sequence_id": "4b40bade-6842-41ee-ba99-b55412a66c9c",
+        "timestamp": "2026-10-12T06:51:14.344+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "67f52d7a15f5293869ae8f3ead48b47e68419947f97cf3ab337f87850c212dc9"
+      },
+      {
+        "sequence_id": "bcfeefdb-959c-4fb1-886e-cd0eadf7babf",
+        "timestamp": "2026-10-12T06:51:14.612+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "d8ab0b297c58d6e87c1be8222127388e6173995af6ffd0ced0cd477e643468e7"
+      },
+      {
+        "sequence_id": "8b289278-5501-4c73-9da9-63f0aaca017a",
+        "timestamp": "2026-10-12T06:51:15.152+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "3c1119b53640cffb8ca0cf926c76f3439d11de1ea460968b1dfc6aba7dbf695f"
+      },
+      {
+        "sequence_id": "e4eb1567-4ce9-4c62-ad7b-a97bde605037",
+        "timestamp": "2026-10-12T06:51:15.562+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "52bbe79c8643b61cd383e553e2ed591757afbf91b43f94519505ddbcc8943dc1"
+      },
+      {
+        "sequence_id": "74f81e8f-97f7-4d6b-9dd9-d6eacfd6377f",
+        "timestamp": "2026-10-12T06:51:15.991+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "a9ea5c4c898d97a6ac5a33e61633912aeae407a71ce17d9d367368642bd5f1b5"
+      },
+      {
+        "sequence_id": "1c5716aa-55a2-48d9-a538-7f26cc6c4415",
+        "timestamp": "2026-10-12T06:51:16.945+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "fde10410ac2218a0d40d5b70df8ee02ebf5857eaea0111d99823618a0cf4f4ce"
+      },
+      {
+        "sequence_id": "734f2300-49b6-40b0-99b1-1f47b0d12d65",
+        "timestamp": "2026-10-12T06:51:17.222+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "42c1aa5035ae1a32d71d2a876f635263880cadaa9cb4c0feb6762082da1eec0f"
+      },
+      {
+        "sequence_id": "7dbe636d-04f8-4df2-bc92-9ed587d8fefe",
+        "timestamp": "2026-10-12T06:51:18.847+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-8352 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "47941a32cb30e0bae88ac1001a68edc4321a485cbe76c6dc036e336795625d27"
+      },
+      {
+        "sequence_id": "eaa589ef-e98e-47d8-887b-51d2fcb770bc",
+        "timestamp": "2026-10-12T06:51:19.244+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "dba7b205d28f282db341b3c201f01d9db6cc80071f04e97897fb82e78176ee47"
+      },
+      {
+        "sequence_id": "2dcf2eb3-08ae-4983-a337-bcc3a9a3849b",
+        "timestamp": "2026-10-12T06:55:29.472+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "cb1e588bfab2ee5e527749b3c3acfca08ca050182e1999dfb9095029063ce50c"
+      },
+      {
+        "sequence_id": "80d04c4d-1fc2-46f8-81d1-11d65bc5137d",
+        "timestamp": "2026-10-12T06:55:30.421+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "cc7af8ae270de14d781cdd95660efa6aa4c771302050b7e8b30dbdcdc587f9be"
+      },
+      {
+        "sequence_id": "aba7ab0d-94c3-438b-852a-f12a9badc2fe",
+        "timestamp": "2026-10-12T06:55:31.178+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "1a0e5928d41088410980d55d1ac2255115d96fc1494d3b71d4eb9bf49cf60e61"
+      },
+      {
+        "sequence_id": "de340803-2a68-4e92-a106-052a03808981",
+        "timestamp": "2026-10-12T06:55:31.962+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "ed1adef40f5697acb65ec99840e27e6e474accf5413a3a74cfadcb746f91c471"
+      },
+      {
+        "sequence_id": "7f16ddb9-113d-4a2f-a133-11d5efe0fc44",
+        "timestamp": "2026-10-12T06:55:32.532+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "c096acc4a8b322d224ee8067c72b2eb3c5a018ded1a9847f2b8c335486e6d7dd"
+      },
+      {
+        "sequence_id": "bdf590c0-4bba-44a4-8db9-4b1674c8a566",
+        "timestamp": "2026-10-12T06:55:32.93+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "faa851526bd057680d163680619cf730671ff7aef01ccb103d74097283c8bcc4"
+      },
+      {
+        "sequence_id": "6dc82b07-7abd-4e4d-97f4-c21fc8c32094",
+        "timestamp": "2026-10-12T06:55:33.481+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "d3ecf8b8887677e7473f9125189ac079580a9ef61eadce52702c497c2876c994"
+      },
+      {
+        "sequence_id": "edc3cf91-65cb-4346-8c53-0699a709b397",
+        "timestamp": "2026-10-12T06:55:33.732+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "e053ae113e420b55dd2a267680d4d3c2118150144b6f82a30d1481249a9ed598"
+      },
+      {
+        "sequence_id": "05d59774-1ee5-4af3-a16a-32edd0692872",
+        "timestamp": "2026-10-12T06:55:34.272+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "65bbc452ce8b9f3448fb0512fbf5cd31a0abac4cf71b755b2c0d16f1e4296aca"
+      },
+      {
+        "sequence_id": "6024c8de-8376-4214-8fa0-1147fcf0ac3f",
+        "timestamp": "2026-10-12T06:55:34.689+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "0006b5262a08f10bce38551df3fc598a240191c393d0481fa448988ff08cd8a4"
+      },
+      {
+        "sequence_id": "58ab1b21-571b-4117-8954-899ae6e02c9e",
+        "timestamp": "2026-10-12T06:55:35.108+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "70b805ae7cc92a180a633dda24218dacd7c5fa39f566d091ba493a5c5c5a6d0c"
+      },
+      {
+        "sequence_id": "b6a5304d-34ad-458f-bbc1-b36d9b2c8de9",
+        "timestamp": "2026-10-12T06:55:36.101+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "7261294bd8bab6fcdfc2e49d169efbedb386e7d2b5c6b0028dafce7110545ac6"
+      },
+      {
+        "sequence_id": "dc66a088-3b6a-4f75-8121-7a5ded5d04b9",
+        "timestamp": "2026-10-12T06:55:36.383+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "d4af8c2130357ee230ec0fb3cfbdb5b95e414ccf8fb622c60584c196ab5326c0"
+      },
+      {
+        "sequence_id": "e147ec9a-fee8-4f11-a6c4-3ba55bd791df",
+        "timestamp": "2026-10-12T06:55:37.847+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-7536 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "ef64f74692a17b826a67c090f84c9b0c462240336848156ad235ef42c1d3c980"
+      },
+      {
+        "sequence_id": "e64a1480-7e0a-4808-9e7c-7b02da913dc5",
+        "timestamp": "2026-10-12T06:55:38.231+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "a551aa3a14cc698c9516261d2e3bb2bcb7e72ef54e2a94429b13ccad78625c9f"
+      },
+      {
+        "sequence_id": "64f8c72c-a909-486d-873c-0d9d6e5c6a8c",
+        "timestamp": "2026-10-12T06:59:04.601+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "20b1d5f293cafeb0006ebe8245753b4498cefc6224ed4bcfd59b5ba7065323a6"
+      },
+      {
+        "sequence_id": "6e2efa82-5469-4466-9c3e-86014531260e",
+        "timestamp": "2026-10-12T06:59:05.311+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "4990b4d4089b6c61da5cc7100930f681b01936458866f7c2dad16c07193663e2"
+      },
+      {
+        "sequence_id": "5bdafef2-d2f8-4649-98e8-b5ba58a7cb2b",
+        "timestamp": "2026-10-12T06:59:05.96+00:00",
+        "action": "IoT Ingress Processed: TURNSTILE-GATE-01 [BIOMETRIC_TURNSTILE]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "e60194d282a0fcf7addcceb5375b4b857379d6cd0871c3b735b4b4b50dd7cc53"
+      },
+      {
+        "sequence_id": "7325ab31-ab49-4ec3-8760-501bbd4aa317",
+        "timestamp": "2026-10-12T06:59:06.686+00:00",
+        "action": "IoT Ingress Processed: GAS-PROBE-BSMT-02 [ATMOSPHERIC_GAS_SENSOR]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "b594d274bf5642257f0b66d821749ff987dee7bbc0cb58c0aea3692287e0e06c"
+      },
+      {
+        "sequence_id": "78f3a86a-21a3-4862-9794-eaefe148959c",
+        "timestamp": "2026-10-12T06:59:07.17+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "581307fb5ecaee126c3c4b976be57922d5ce158746920070fa2bb0fe2a3f09e7"
+      },
+      {
+        "sequence_id": "fef6c744-e1bc-4a66-99da-17c728da2b8c",
+        "timestamp": "2026-10-12T06:59:07.534+00:00",
+        "action": "IoT Ingress Processed: ANEMOMETER-CRANE-01 [WEATHER_ANEMOMETER]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "ccd7c56fbea51b6f101a471175dd7ac05d3fef8c69852d4c460530f9c8505f84"
+      },
+      {
+        "sequence_id": "cdff5109-6e1b-40b6-b8b1-fd25f1d7ae18",
+        "timestamp": "2026-10-12T06:59:08.06+00:00",
+        "action": "CIRIA C766 Thermal Hold: PC-RAFT-BAY-03 (ΔT=24.5°C)",
+        "category": "QUALITY_THERMAL_GRADIENT_BREACH",
+        "hash": "476794fe107c3414a466253c3903aae99ce7ff3fc8ef967cf5eecc4f0edd9d43"
+      },
+      {
+        "sequence_id": "ca323165-8acd-4c54-92e5-1de58818522d",
+        "timestamp": "2026-10-12T06:59:08.269+00:00",
+        "action": "IoT Ingress Processed: RTD-NODE-RAFT-01 [THERMOCOUPLE_RTD]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "133a2a8524799f46cb8507a690b89e72198616f110478886235b7890b6981878"
+      },
+      {
+        "sequence_id": "e1f9d22b-bede-44d0-a784-7b77a7c27b55",
+        "timestamp": "2026-10-12T06:59:08.771+00:00",
+        "action": "Council Synapse: Argus (HSE Governor) -> Ananke (Fleet Governor) [WEATHER_CUTOFF_TRIGGERED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "c0b1a150e1a8aad0bdb04be4e03433d5865f3669f35b6e57fe548f6aa733befd"
+      },
+      {
+        "sequence_id": "616423f6-6328-44fe-af00-94bd3961ae37",
+        "timestamp": "2026-10-12T06:59:09.112+00:00",
+        "action": "Plant Telematics Logged: TC-01 (30.5% OEE)",
+        "category": "FLEET_ASSET_TELEMETRY",
+        "hash": "2d798ba0f0093a4e7920ea9f2ca9e595ae76813cdd008bb38b4e3032b77ee22c"
+      },
+      {
+        "sequence_id": "5988377e-05b7-435e-9ad3-4d6bab92d47e",
+        "timestamp": "2026-10-12T06:59:09.464+00:00",
+        "action": "IoT Ingress Processed: CANBUS-CRANE-TC1 [EQUIPMENT_CANBUS]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "af0eb32d27750a2d7c9adfc57d9faf43eb98a06bbcd0b9eeb0b4de91dd5bb219"
+      },
+      {
+        "sequence_id": "573aeb1d-0baa-41a4-b5c2-64d4dddfd841",
+        "timestamp": "2026-10-12T06:59:10.38+00:00",
+        "action": "Council Synapse: Aegis (Quality Governor) -> Midas (Commercial Governor) [STRUCTURAL_NCR_ISSUED]",
+        "category": "COUNCIL_A2A_COMMUNICATION",
+        "hash": "f7e9c26d126fb0f70d7aa167b7d7b4491fecd6750b64fe675b8584dc38175062"
+      },
+      {
+        "sequence_id": "72cf1083-4d2e-4924-ba29-ef35e5e0cef5",
+        "timestamp": "2026-10-12T06:59:10.619+00:00",
+        "action": "IoT Ingress Processed: CTM-DIGITAL-RIG-01 [CTM_LOAD_CELL]",
+        "category": "IOT_TELEMETRY_INGRESS",
+        "hash": "1c4d4cd84ad9e3e7073e4b1967cdb2ffad1b28bab75296e93facb5e09ca167a6"
+      },
+      {
+        "sequence_id": "dff9c2ab-093e-482c-ba9b-8b8119196a3d",
+        "timestamp": "2026-10-12T06:59:11.963+00:00",
+        "action": "Statutory Daily Governance Dossier Sealed: DPR-20261012-1670 (2026-10-12)",
+        "category": "GOVERNANCE_DPR_SEALED",
+        "hash": "573d55fd7f8265dd277c4d06e184ef55cd9afff28ad2e776986da5c31b928635"
+      },
+      {
+        "sequence_id": "2fc76bd3-a63b-422b-871a-f60521f3f78b",
+        "timestamp": "2026-10-12T06:59:12.289+00:00",
+        "action": "Midnight Shift Closeout Finalized: 2026-10-12",
+        "category": "CRON_SHIFT_CLOSEOUT_FINALIZED",
+        "hash": "e75a40354b3c9c0d066a18869659dc815ab623014f4b4425434bb018150a0d56"
+      },
+      {
+        "sequence_id": "a19426d9-a890-4625-8b76-7e40be54db75",
+        "timestamp": "2026-10-12T07:04:08.806+00:00",
+        "action": "Midas RA Bill Certified with Council Liens: RA-BILL-04-8636",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "6212afde210ffab6af2a613d3ec41ecc455ac5a69ebffebd0e1e7e1aafdcc0e0"
+      },
+      {
+        "sequence_id": "491b1d7b-cc26-4e38-ad30-c4409eeef825",
+        "timestamp": "2026-10-12T07:09:57.044+00:00",
+        "action": "Midas RA Bill Certified with Council Liens: RA-BILL-04-6902",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "9bced55c532e565ae49aa80b55f704462df38c37ab5701956101f1978455b946"
+      },
+      {
+        "sequence_id": "23a9abb6-0418-48fb-bf61-2af13a3a1226",
+        "timestamp": "2026-10-12T07:12:27.292+00:00",
+        "action": "Midas RA Bill Certified with Council Liens: RA-BILL-04-7117",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "bd92f50317fb0624961b5c3dba649a296204e8759ef2e553988c4eb402da440a"
+      },
+      {
+        "sequence_id": "4d361a98-7c34-4d16-8627-f7aad5466a34",
+        "timestamp": "2026-10-12T07:14:31.831+00:00",
+        "action": "Aegis Quality Hold Released: 4 NCRs Closed Post IS 516 Core Testing",
+        "category": "QUALITY_IS456_NCR_CLOSED",
+        "hash": "d9e67aeebd9f2a2caf128bc49673c0288b2a4f9f77ddf850f3e10fc80ac4d9d7"
+      },
+      {
+        "sequence_id": "20ba7e75-6da6-49ac-8000-279430180a4e",
+        "timestamp": "2026-10-12T08:09:21.451+00:00",
+        "action": "3D Clash Resolved: CLASH-MEP-0605 (SEOR_SLEEVED)",
+        "category": "BIM_CLASH_SEOR_RELEASE",
+        "hash": "fffaff179a6613df3a7e39329556da6702c974f2e82e6ee54709cb2f1c471671"
+      },
+      {
+        "sequence_id": "a62ddb63-e4e3-4f8e-883f-28b57e078065",
+        "timestamp": "2026-10-12T08:12:28.28+00:00",
+        "action": "3D Clash Resolved: CLASH-MEP-3058 (SEOR_SLEEVED)",
+        "category": "BIM_CLASH_SEOR_RELEASE",
+        "hash": "815c2f60dade47e63d8300e04b85dbb84abc5cf02d820ad53e9f5ee3dfb10200"
+      },
+      {
+        "sequence_id": "afc84bc7-db61-468c-9014-3ae8e5381aef",
+        "timestamp": "2026-10-12T08:50:48.805+00:00",
+        "action": "Project Initialized: Baseline Zero-State Established",
+        "category": "SYSTEM_GENESIS",
+        "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "sequence_id": "815fcf48-fac5-40cc-bbc5-b5712d62ee7d",
+        "timestamp": "2026-10-12T09:43:17.784+00:00",
+        "action": "Minerva Spatial Hold Engaged: 150mm Pipe Pierces PT Beam Bay 2",
+        "category": "BIM_SPATIAL_COLLISION_LOGGED",
+        "hash": "49246d3ef50b29300fbda89b92670fc8600488cc4da3d28634d228b9477b6d19"
+      },
+      {
+        "sequence_id": "57f75bce-9865-4067-8402-6a4b7c180f9a",
+        "timestamp": "2026-10-15T08:34:47.08+00:00",
+        "action": "Daedalus Thermal Gradient Hold: ΔT 26.3°C (Girder TG-01)",
+        "category": "THERMAL_HYDRATION_HOLD_ENGAGED",
+        "hash": "5b7fb74a440d16e82b760871da938cb1ba7ac2bdabaa8c2439d1f3180b0788c7"
+      },
+      {
+        "sequence_id": "18bf87a2-2701-4f59-928a-9cc669bcab48",
+        "timestamp": "2026-10-15T08:40:03.623+00:00",
+        "action": "Plutus Labor Fraud Alert: 12 Ghost Workers Flagged on Muster MUST-2026-BOCW-014",
+        "category": "LABOR_BOCW_MUSTER_AUDITED",
+        "hash": "8eb53a93eac6a2adbcabcc58394cab6c6a80f8c20d044a8495520d871742fb4e"
+      },
+      {
+        "sequence_id": "d0f2298a-7948-4fce-8fb3-4ef21377c2b7",
+        "timestamp": "2026-10-15T10:33:56.545+00:00",
+        "action": "Aegis Structural Quality Hold: IS 456 Table 11 Cube Failure on NCR-2026-STR-042",
+        "category": "AEGIS_QUALITY_LIEN_ENGAGED",
+        "hash": "e9671ae1ceec49a9ee6e0e8954f081d640dcc524f72bfde5beb989088dc3fc67"
+      },
+      {
+        "sequence_id": "8fd5d8ac-1e48-4bf1-920f-ce524286f72a",
+        "timestamp": "2026-10-15T10:47:12.391+00:00",
+        "action": "Aegis Structural Quality Clearance: IS 456 Cl. 17.4.3 Core Acceptance on NCR-2026-STR-042",
+        "category": "AEGIS_QUALITY_LIEN_RELEASED",
+        "hash": "30aa3fe55f4d52c8fd59fbdf5b1e0fc7a40b97c475446f7960cfe623343beca2"
+      },
+      {
+        "sequence_id": "914f12e8-ff4b-4a4b-bd03-826de0c495ec",
+        "timestamp": "2026-10-16T05:43:12.353262+00:00",
+        "action": "CPWD Cl. 14 Withholding Lien Released: NCR-2026-STR-042",
+        "category": "COMMERCIAL_LIEN_RELEASE",
+        "hash": "30aa3fe55f4d52c8fd59fbdf5b1e0fc7a40b97c475446f7960cfe623343beca2"
+      },
+      {
+        "sequence_id": "26d73e32-79bd-443a-b780-3169a05876b9",
+        "timestamp": "2026-10-16T05:44:59.409814+00:00",
+        "action": "CPWD Cl. 14 Withholding Lien Released: NCR-2026-STR-042",
+        "category": "COMMERCIAL_LIEN_RELEASE",
+        "hash": "30aa3fe55f4d52c8fd59fbdf5b1e0fc7a40b97c475446f7960cfe623343beca2"
+      },
+      {
+        "sequence_id": "7189a574-dc4c-4a31-a8f3-98d9b5873344",
+        "timestamp": "2026-10-16T05:48:16.873509+00:00",
+        "action": "CPWD Cl. 14 Withholding Lien Released: NCR-2026-STR-042",
+        "category": "COMMERCIAL_LIEN_RELEASE",
+        "hash": "30aa3fe55f4d52c8fd59fbdf5b1e0fc7a40b97c475446f7960cfe623343beca2"
+      },
+      {
+        "sequence_id": "6dc6cb72-5fd6-4285-a427-c19ef21fcb53",
+        "timestamp": "2026-10-16T06:59:20.771923+00:00",
+        "action": "RA Bill 01 Statutory Certification & IPC Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "cd789a8c16a3cc73f6467f7f0df23f40bf60ba71b343cb1676722c2bbd242bb3"
+      },
+      {
+        "sequence_id": "a62b9389-09e1-4043-a9d6-dcf922052ef8",
+        "timestamp": "2026-10-16T07:01:40.440185+00:00",
+        "action": "Section 65B Statutory Certificate Sealed: RA-2026-001",
+        "category": "STATUTORY_EVIDENCE_65B",
+        "hash": "57b69b4f02cb290bbe72229869d014fc57d50e57b9b0f4ca4cab275251368847"
+      },
+      {
+        "sequence_id": "7277d60b-5e6a-4ef1-be01-65b44935a548",
+        "timestamp": "2026-10-16T07:12:26.635124+00:00",
+        "action": "Pre-Pour Inspection Clearance: PC-2026-L04-001",
+        "category": "QUALITY_POUR_AUTHORIZED",
+        "hash": "b7fc094948902e9fc0ef2f40f86d74ad17cf32a554c08a1810fb0dea0c395853"
+      },
+      {
+        "sequence_id": "2b0b483d-c446-4503-b52d-28e42c80923b",
+        "timestamp": "2026-10-16T07:17:59.693992+00:00",
+        "action": "Pour Casting Completed & 4x Triplicate Sets Ingested: PC-2026-L04-001",
+        "category": "QUALITY_CASTING_SEALED",
+        "hash": "e41b50d31d05ad95fe4bce8f6b8bd73841498135b3377cbd210e2f2c56e9d4e3"
+      },
+      {
+        "sequence_id": "56d322bb-7651-4e8d-b2c5-aa4f35e365aa",
+        "timestamp": "2026-10-16T07:24:59.535838+00:00",
+        "action": "RA Bill 02 Statutory Certification & IPC-02 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "22c867283d85f14bfcaf0e79aa5579ed38cdf373ad4054b0f268498416596b93"
+      },
+      {
+        "sequence_id": "a7fe79b2-1526-49f2-88ea-738292e11cbf",
+        "timestamp": "2026-10-16T07:35:24.668069+00:00",
+        "action": "Milestone Kickoff: Level 5 Superstructure Columns",
+        "category": "STATUTORY_MILESTONE_KICKOFF",
+        "hash": "598ea6b9cf22acd315188885c71c6a876db3ebc8486152ec47da753148c93a54"
+      },
+      {
+        "sequence_id": "96232788-4b9f-4c21-81cd-3ec53f065ffa",
+        "timestamp": "2026-10-16T07:36:48.964692+00:00",
+        "action": "Kicker Optical Survey Clearance & Pour Sealed: PC-2026-L05-KICKER-001",
+        "category": "QUALITY_KICKER_POUR_SEALED",
+        "hash": "579a713ef97d6648d714933a5e1761790ea4e48c1e5aa1196605d882e30da06a"
+      },
+      {
+        "sequence_id": "8afa7b95-a791-4734-93a5-fe071315f6d0",
+        "timestamp": "2026-10-16T07:38:46.376874+00:00",
+        "action": "IS 13920 Rebar Cage Inspection Sealed: COL-L05-01..16",
+        "category": "QUALITY_REBAR_SEALED",
+        "hash": "b5cb04674e44334839990ffaa075ca2ccd490b12313dca6431f0bcef76592c5c"
+      },
+      {
+        "sequence_id": "a78eea42-1a8c-4aa8-bd0e-0aba82362fbe",
+        "timestamp": "2026-10-16T07:40:19.878684+00:00",
+        "action": "Main Column Casting & 3x Triplicate Sets Ingested: PC-2026-L05-COL-001",
+        "category": "QUALITY_COLUMN_POUR_SEALED",
+        "hash": "c87a68b4b052f5e6c892e29e365c12a738d405c8434281bc3a9ece9e8cc203ca"
+      },
+      {
+        "sequence_id": "af806b68-1219-460e-98cc-8fcec35c276e",
+        "timestamp": "2026-10-16T07:45:04.081134+00:00",
+        "action": "RA Bill 03 Statutory Certification & IPC-03 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "b0d1937cb6d524835f119b39f887d93bb2dfc01cf3858b0cb7dc52c2fabd6e0b"
+      },
+      {
+        "sequence_id": "e4f532b3-ab7b-444b-b5bc-91659bfc7226",
+        "timestamp": "2026-10-16T07:45:20.893459+00:00",
+        "action": "Level 5 Cuplock Staging & BBS Design Clearance: BBS-L05-SLAB-01",
+        "category": "QUALITY_DESIGN_APPROVAL",
+        "hash": "f365a0f246e23ae42cf2b0442956ce72d5c49ce64f12e8841ef4a366542aeb33"
+      },
+      {
+        "sequence_id": "cc09c0c2-183e-4922-9a2e-9a7aaa5232c5",
+        "timestamp": "2026-10-16T07:46:49.222353+00:00",
+        "action": "Level 5 Cuplock Staging & BBS Design Clearance: BBS-L05-SLAB-01",
+        "category": "QUALITY_DESIGN_APPROVAL",
+        "hash": "84ad74e94102062e0003ba74b08029352766a0691c1fdb8cf052af9f6225f053"
+      },
+      {
+        "sequence_id": "2697d3c2-ae91-4803-a8e7-3190c48e5c58",
+        "timestamp": "2026-10-16T07:49:00.485712+00:00",
+        "action": "Cuplock Staging & Deck Level Sealed: PC-2026-L05-SLAB-001",
+        "category": "QUALITY_STAGING_SEALED",
+        "hash": "e85d7b3eb9d7b22e430308d53320b7074a1d44d3fce4997baa2b32987e8733eb"
+      },
+      {
+        "sequence_id": "1154eed7-fd3a-4054-abeb-eb4f8739ec6b",
+        "timestamp": "2026-10-16T07:50:48.838864+00:00",
+        "action": "Pre-Pour Final Authorization Sealed: PC-2026-L05-SLAB-001",
+        "category": "QUALITY_POUR_AUTHORIZED",
+        "hash": "9362c20872ac6d9dc0f1d45c3848009646cde3edc0f497a602b44f00578ab2b0"
+      },
+      {
+        "sequence_id": "da19392a-7e35-4ac7-9375-25b4315b9be5",
+        "timestamp": "2026-10-16T07:52:25.92848+00:00",
+        "action": "Level 5 Slab Casting Completed & 4x Triplicate Sets Ingested: PC-2026-L05-SLAB-001",
+        "category": "QUALITY_CASTING_SEALED",
+        "hash": "35297dfed22fa16076a9433bf71849f3b8fa0d94d60b33371908e960b764dc5f"
+      },
+      {
+        "sequence_id": "dea8fa62-e1a7-4641-acfc-33d0750ea745",
+        "timestamp": "2026-10-16T07:54:50.28098+00:00",
+        "action": "RA Bill 04 Statutory Certification & IPC-04 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "317a97c0e341cac104ef44269caf6ab0d33b0189508bb736a1b50b8f08f5b105"
+      },
+      {
+        "sequence_id": "90f87d8c-fdb8-444c-9a4f-fd437831726c",
+        "timestamp": "2026-10-16T07:57:30.192495+00:00",
+        "action": "Milestone Kickoff: Level 6 Superstructure Columns",
+        "category": "STATUTORY_MILESTONE_KICKOFF",
+        "hash": "d37ff09e6689f205077db99cab60336c5eb0b11043f147718981d1457d8bc8d6"
+      },
+      {
+        "sequence_id": "35f4e6f4-1a44-445a-af02-907e32a18e40",
+        "timestamp": "2026-10-16T08:01:38.656465+00:00",
+        "action": "Level 6 Kicker Optical Survey Clearance & Pour Sealed: PC-2026-L06-KICKER-001",
+        "category": "QUALITY_KICKER_POUR_SEALED",
+        "hash": "17c45eeb9a8a027070798d70fd42db7cc3451963489dbb6e87a06c57ce2ec2ce"
+      },
+      {
+        "sequence_id": "c095ded6-cb9c-4adb-b45c-44dfb4b27751",
+        "timestamp": "2026-10-16T08:04:15.049473+00:00",
+        "action": "IS 13920 Rebar Cage Inspection Sealed: COL-L06-01..16",
+        "category": "QUALITY_REBAR_SEALED",
+        "hash": "e75b4604c77648816e5b2ad9d37821146401b5f15a87de558ced0a06cc8583ad"
+      },
+      {
+        "sequence_id": "5207b735-2fd5-4b1d-8979-96f334637cfe",
+        "timestamp": "2026-10-16T08:05:56.767296+00:00",
+        "action": "Level 6 Main Column Casting & 3x Triplicate Sets Ingested: PC-2026-L06-COL-001",
+        "category": "QUALITY_COLUMN_POUR_SEALED",
+        "hash": "bcbd3901a35c1146ba9234d711d029d9132e3ae8394a5c699ce40218acf24d31"
+      },
+      {
+        "sequence_id": "3576afd1-407d-463b-b195-fa8bd4d707f8",
+        "timestamp": "2026-10-16T08:08:06.238698+00:00",
+        "action": "RA Bill 05 Statutory Certification & IPC-05 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "d18bae0b8fb292114b8af3d9ba666b998609fe0038e1a8e618ea2cdefa893921"
+      },
+      {
+        "sequence_id": "8b4222b8-89c6-40bd-880e-53ee25176dbf",
+        "timestamp": "2026-10-16T08:11:34.00378+00:00",
+        "action": "Cuplock Staging & Deck Level Sealed: PC-2026-L06-SLAB-001",
+        "category": "QUALITY_STAGING_SEALED",
+        "hash": "8388ec4190cf2cb6b3dbead16bdc3720faaf55c93da26126a897d935cda866ea"
+      },
+      {
+        "sequence_id": "7e368d57-531a-4270-9d26-22ac0a8db283",
+        "timestamp": "2026-10-16T08:14:06.218399+00:00",
+        "action": "Cuplock Staging & Deck Level Sealed: PC-2026-L06-SLAB-001",
+        "category": "QUALITY_STAGING_SEALED",
+        "hash": "943cf9623e432f0299ac87fa86dd15fa12a2b7e19a7948d3fc5105917e3bcd73"
+      },
+      {
+        "sequence_id": "6cdea082-4d6c-45da-9c5a-2995f5990477",
+        "timestamp": "2026-10-16T08:15:36.518915+00:00",
+        "action": "Pre-Pour Final Authorization Sealed: PC-2026-L06-SLAB-001",
+        "category": "QUALITY_POUR_AUTHORIZED",
+        "hash": "cd135e5371e69de2f36fdcd854170c78d093f348c7b14d3b18cc716c4cdc72cb"
+      },
+      {
+        "sequence_id": "5b73ce31-e172-474b-abcc-c7ae1bba1fdc",
+        "timestamp": "2026-10-16T08:17:27.853093+00:00",
+        "action": "Level 6 Slab Casting Completed & 4x Triplicate Sets Ingested: PC-2026-L06-SLAB-001",
+        "category": "QUALITY_CASTING_SEALED",
+        "hash": "f67584c821071d90cb2c325fb789e4e1085ec7d8950c08e133222402d8f5a976"
+      },
+      {
+        "sequence_id": "2eae8576-d47a-41c4-b871-059e4792bbe6",
+        "timestamp": "2026-10-16T08:19:24.272728+00:00",
+        "action": "RA Bill 06 Statutory Certification & IPC-06 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "dee882b338c9cdabd17e8bed0796a78fed4524ad60803e0e5788f7dd3798600b"
+      },
+      {
+        "sequence_id": "b364ee7c-0b83-49f4-98bc-36c69627fb36",
+        "timestamp": "2026-10-16T09:00:03.842907+00:00",
+        "action": "Milestone Kickoff: Terrace, LMR & OHT Superstructure",
+        "category": "STATUTORY_MILESTONE_KICKOFF",
+        "hash": "cc69857f7b8ad8266275b73aa4ff66a579ae103f7b98c026760c948d8c6e61d6"
+      },
+      {
+        "sequence_id": "0ac9f758-97b4-4352-b333-509e2ef41957",
+        "timestamp": "2026-10-16T09:01:14.79614+00:00",
+        "action": "Terrace & OHT Kicker Optical Survey Clearance & Pour Sealed: PC-2026-TR-KICKER-001",
+        "category": "QUALITY_KICKER_POUR_SEALED",
+        "hash": "1a1f3cdd8696a7d100022dcdab3b6899542ff6d42eb9ffbfdc3ca9829dee4d8d"
+      },
+      {
+        "sequence_id": "aa4fadbc-11a1-4584-8de1-7aba464be5a3",
+        "timestamp": "2026-10-16T09:03:10.074247+00:00",
+        "action": "IS 3370 OHT Rebar & Swellable Waterstop Sealed: PC-2026-TR-LMR-OHT-001",
+        "category": "QUALITY_REBAR_SEALED",
+        "hash": "cb6c6aa1323b97de791eb1cf4bdfdb9f46fea14248cc85dc721af06c7b096cd8"
+      },
+      {
+        "sequence_id": "65272d11-fa1e-415f-b387-cb01d3c2bff4",
+        "timestamp": "2026-10-16T09:05:11.317452+00:00",
+        "action": "LMR Columns & OHT Walls M40 Pour Sealed: PC-2026-TR-LMR-OHT-001",
+        "category": "QUALITY_CASTING_SEALED",
+        "hash": "278ea907b4b6e3a96d7f790bbc4980567f02fbd9f61bd7856de6f1e6af6894f4"
+      },
+      {
+        "sequence_id": "8cc3db81-b062-4a90-b485-d6ac14c23a2c",
+        "timestamp": "2026-10-16T09:06:55.168491+00:00",
+        "action": "RA Bill 07 Statutory Certification & IPC-07 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "e93b1a5d7af16549cb7705f264b67aacad3b397df48c72a33788f7199cb5f5ca"
+      },
+      {
+        "sequence_id": "8c1ed78b-4ad4-4676-b946-e57437c7cdde",
+        "timestamp": "2026-10-16T09:08:55.786566+00:00",
+        "action": "OHT Top Roof Slab M40 Pour Sealed: PC-2026-TR-OHT-SLAB-001",
+        "category": "QUALITY_CASTING_SEALED",
+        "hash": "2ef74d94f6b2fa831733fda2f7fa6cb6e66a044a2851cc054364d50c888c9f62"
+      },
+      {
+        "sequence_id": "327ea226-8c06-4486-a28e-9819945b71ff",
+        "timestamp": "2026-10-16T09:13:05.362824+00:00",
+        "action": "RA Bill 08 Statutory Certification & IPC-08 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "b81754bc974687e2446d99bf387cadddff4802efe3f6d879f185779016ac778f"
+      },
+      {
+        "sequence_id": "0d14b229-3052-4a25-8b43-077e9bf860c0",
+        "timestamp": "2026-10-16T09:19:05.874642+00:00",
+        "action": "IS 3370 Hydrostatic Testing & 7-Day Soak Initiated: TEST-2026-TR-OHT-001",
+        "category": "QUALITY_HYDROSTATIC_INITIATED",
+        "hash": "6dd1454e6edc5451c60b97517bf122e1a100116691197e222f2f1457f981d709"
+      },
+      {
+        "sequence_id": "c7721f8c-b865-41bf-90a4-e8550a4fba34",
+        "timestamp": "2026-10-16T09:20:52.867056+00:00",
+        "action": "Practical Structural Completion & IS 3370 Water-Tightness Certified: TEST-2026-TR-OHT-001",
+        "category": "STATUTORY_MILESTONE_COMPLETION",
+        "hash": "0c97555a9a54beea490f6418a93507fa52e047b23ddfc87981c6d7252e3bce13"
+      },
+      {
+        "sequence_id": "1fd64871-e454-4bf9-aa95-088751231674",
+        "timestamp": "2026-10-16T09:29:03.287431+00:00",
+        "action": "RCC Structural Stability Certificate & De-Propping Clearance Sealed",
+        "category": "STATUTORY_STRUCTURAL_COMPLETION",
+        "hash": "08fe844285cc57c4768198f46349a6a2b471f22c817e6d1bf2c478cf3ccdcf0b"
+      },
+      {
+        "sequence_id": "1324c726-2ed0-4c01-b8d6-83d332196efb",
+        "timestamp": "2026-10-16T09:31:40.000778+00:00",
+        "action": "Level 4 & 5 AAC Block Masonry & Seismic Bands Certified: AUDIT-L04-L05-AAC",
+        "category": "QUALITY_MASONRY_CERTIFIED",
+        "hash": "eadaf5cacd7ce5528935fa2e3ddbb1dc1195592d51b220dd7354f26db9f42f54"
+      },
+      {
+        "sequence_id": "f006ebb3-3a60-43dc-8bb9-0499c41d1d5f",
+        "timestamp": "2026-10-16T09:33:38.894876+00:00",
+        "action": "RA Bill 09 Statutory Certification & IPC-09 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "20994b5153c53236f67636ce4e9e156b3446cc88a39df088ad870ac79c441c9a"
+      },
+      {
+        "sequence_id": "246f9d57-359e-4bdc-8870-aa1b7966c476",
+        "timestamp": "2026-10-16T09:35:45.531754+00:00",
+        "action": "MEP High-Side Vertical Risers & Busduct Certified: WBS-10.2",
+        "category": "QUALITY_MEP_CERTIFIED",
+        "hash": "195f75647872f171611990102de640361c07312d69e75eb25abd30c2444c649f"
+      },
+      {
+        "sequence_id": "927ffc52-e9c9-4351-b240-a659db4a134d",
+        "timestamp": "2026-10-16T09:37:28.434797+00:00",
+        "action": "RA Bill 10 Statutory Certification & IPC-10 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "f4a34ad53d742c7a1375d10e48dd4caedacf8f89951d2fd9b438d61e640dea7c"
+      },
+      {
+        "sequence_id": "46e30c4d-5459-4228-8ce3-c2a794789d5e",
+        "timestamp": "2026-10-16T09:40:34.989611+00:00",
+        "action": "Terrace APP Waterproofing & 72-Hr Ponding Test Certified: AUDIT-TR-WPR-001",
+        "category": "QUALITY_WATERPROOFING_CERTIFIED",
+        "hash": "23aa8b5ad194f7ff389ec70757fe34647a271473e871543abb1d2f6498497e7c"
+      },
+      {
+        "sequence_id": "e54ff3b6-ea13-42d1-a98e-a66ce1814120",
+        "timestamp": "2026-10-16T09:42:31.971024+00:00",
+        "action": "RA Bill 11 Statutory Certification & IPC-11 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "7ea7385981647e9ff565b2f870f2a12f5de62f963f428dec910aa90728de60a2"
+      },
+      {
+        "sequence_id": "df2ff19b-d4b6-4539-908b-aa5856a776af",
+        "timestamp": "2026-10-16T09:44:54.512078+00:00",
+        "action": "Phase 2 Fitout Sign-Off: Internal Gypsum & Floor Screed Certified",
+        "category": "QUALITY_FINISHES_CERTIFIED",
+        "hash": "403dc1341f692d1dcbef1bbb9f59cf1f9071c1ff8bc2519bbac5f5ca76045c35"
+      },
+      {
+        "sequence_id": "2a9dc878-4087-40de-a595-37da7d0e7d0b",
+        "timestamp": "2026-10-16T09:47:29.199764+00:00",
+        "action": "RA Bill 12 Statutory Certification & IPC-12 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "06f3c2a6b4f6353d3ec73c57a7de9bd643506e5084d0d810597b55cb635fad42"
+      },
+      {
+        "sequence_id": "25a90259-022e-49d8-a7b8-c7b396ab4bce",
+        "timestamp": "2026-10-16T09:49:48.990585+00:00",
+        "action": "High-Performance DGU Facade Glazing Certified: AUDIT-FACADE-GLZ-001",
+        "category": "QUALITY_GLAZING_CERTIFIED",
+        "hash": "498c1d834220be5e88f0a974de22b7307b0823777b36ce77734a3a50e26f2f85"
+      },
+      {
+        "sequence_id": "4109bb67-c21f-480f-9b1f-bf3b673570e8",
+        "timestamp": "2026-10-16T10:16:37.420267+00:00",
+        "action": "RA Bill 13 Statutory Certification & IPC-13 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "9cc774b5dcf3a480202a7242c34016f4f1d5b9ead86b3ddcbbe0d9ffd544689c"
+      },
+      {
+        "sequence_id": "cc2bbb89-d31b-40d6-8199-aa89de333275",
+        "timestamp": "2026-10-16T10:19:28.947076+00:00",
+        "action": "Fire Doors & Egress Ironmongery Certified: AUDIT-DOOR-FD120-001",
+        "category": "QUALITY_DOORS_CERTIFIED",
+        "hash": "89ad35d187edca041a95c562cd7d9f26634e34205da449e213e87b9fa380e2d1"
+      },
+      {
+        "sequence_id": "24a6d40e-03b8-480a-800b-100959c25335",
+        "timestamp": "2026-10-21T09:02:52.886871+00:00",
+        "action": "RA Bill 14 Statutory Certification & IPC-14 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "acbe6db4000b98994b08b2294df237e9ae344f712ef4c762d4f2ade091107def"
+      },
+      {
+        "sequence_id": "0a9226be-4ed0-42db-b9a6-fa329ead396b",
+        "timestamp": "2026-10-21T09:07:53.598418+00:00",
+        "action": "Acoustic Ceilings, Millwork & VRF HVAC Certified: AUDIT-HVAC-CEIL-001",
+        "category": "QUALITY_HVAC_FINISHES_CERTIFIED",
+        "hash": "0fb7712522912b4e346bec2a050666af9b93cadc8f7b7bdf90cd067a99ccdadf"
+      },
+      {
+        "sequence_id": "9c8caeeb-fc5f-46bf-b51d-c65bccba3c4f",
+        "timestamp": "2026-10-21T09:10:47.186861+00:00",
+        "action": "RA Bill 15 Statutory Certification & IPC-15 Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "5a7644cd44d6d8104b29bd84af57cb23c4f633fa3542ed18524711e6d7ea4441"
+      },
+      {
+        "sequence_id": "e66633ce-4723-4c71-9500-ff0b7c7b192d",
+        "timestamp": "2026-10-21T09:10:47.186861+00:00",
+        "action": "Integrated Systems Pre-Commissioning & Occupancy Audit Certified",
+        "category": "STATUTORY_OCCUPANCY_CERTIFIED",
+        "hash": "69963a0f8b1d45d83f413d4eb4ee0e26f2233d17d759999e3e077c701caf8234"
+      },
+      {
+        "sequence_id": "975d9e1f-98ed-4c0a-be6c-914b5fd117b1",
+        "timestamp": "2026-10-21T09:13:31.427203+00:00",
+        "action": "Final RA Bill 16 Statutory Certification & Final IPC Issuance",
+        "category": "COMMERCIAL_BILLING_CERTIFIED",
+        "hash": "da4ce0e80a9c656b664d1b9dbbe5c26e62e8f6dd6a29d2b60a719267828355ad"
+      },
+      {
+        "sequence_id": "20395cd0-4105-426d-8b30-6f63de6c78a4",
+        "timestamp": "2026-10-21T09:13:31.427203+00:00",
+        "action": "Master Virtual Completion Certificate (VCC) & Project Handover Sealed",
+        "category": "STATUTORY_PROJECT_HANDOVER_SEALED",
+        "hash": "765c2b1cfdb9f5e2e9b410bb434ff6af32fca60212b7c922c77375ace9748340"
+      },
+      {
+        "sequence_id": "42bd8249-e022-4527-af27-2e0614271864",
+        "timestamp": "2026-10-21T09:15:36.699311+00:00",
+        "action": "Defect Liability Period (DLP) Escrow & Extended Warranty Regime Sealed",
+        "category": "STATUTORY_DLP_ESCROW_SEALED",
+        "hash": "e864b6930dd699e38ec94c1efd86a83f4441d3d905b772cc53981d777f7dbc6c"
+      },
+      {
+        "sequence_id": "2be78554-5919-4bae-8e55-9601a53b8df9",
+        "timestamp": "2026-10-21T09:17:19.36641+00:00",
+        "action": "Tranche 1 Security Retention Liquidation (50% BG Release) Authorized",
+        "category": "COMMERCIAL_RETENTION_RELEASE",
+        "hash": "1f6fe3f1d862964fa0434142f5b2749f70466cd2c74026db4e37394be4c003fa"
+      },
+      {
+        "sequence_id": "95197b5a-dd32-43b9-bc43-28965f195048",
+        "timestamp": "2026-10-21T09:17:19.36641+00:00",
+        "action": "DLP Latent Defect Resolution Certified: DLP-2026-L05-001",
+        "category": "DLP_DEFECT_RESOLVED",
+        "hash": "14cf10c8f6984cc0c6e0d2942d8e087dfc65adde0801279f2c61bc85af465781"
+      },
+      {
+        "sequence_id": "2b3a28fe-9242-4962-8e12-83bddb3c5e42",
+        "timestamp": "2026-10-21T09:19:19.72755+00:00",
+        "action": "LOD 500 As-Built Digital Twin & COBie 2.4 Handover Sealed",
+        "category": "STATUTORY_BIM_LOD500_HANDOVER",
+        "hash": "42d8addd2c83a4c7f9887d3e06d14fd136ff845761cdef5706e94dea79c0c934"
+      },
+      {
+        "sequence_id": "22db0533-cf0f-43c2-bd86-7cfd8ece4189",
+        "timestamp": "2026-10-21T09:21:16.096419+00:00",
+        "action": "Autonomous DLP Incident Spawned: DLP-AUTO-20261021-092116",
+        "category": "DLP_DEFECT_DETECTED",
+        "hash": "2ae32068e0aa524626116dc8d4f55728b7badb8b36410f8124eca590af1c7647"
+      },
+      {
+        "sequence_id": "022c72a0-9339-4714-9432-9506b8a42c96",
+        "timestamp": "2026-10-21T09:22:53.581431+00:00",
+        "action": "Autonomous DLP Incident Resolved: DLP-AUTO-20261021-092116",
+        "category": "DLP_DEFECT_RESOLVED",
+        "hash": "d98592ca855ac4220be28bb132c809ba9710f6e4315cb6e3e1ae6430bf4e412a"
+      },
+      {
+        "sequence_id": "a0b7a75c-66e9-4164-879c-4ad772f9bc17",
+        "timestamp": "2026-10-21T09:26:34.975175+00:00",
+        "action": "PPM Maintenance Certified: PPM-2026-FIR-001",
+        "category": "PPM_MAINTENANCE_CERTIFIED",
+        "hash": "139b6c79caf69db8d9cc51c03ba2588869ad8a0afb18a4678950a812ad59860e"
+      },
+      {
+        "sequence_id": "cfa7172d-618a-4bd4-b75d-7c1d5b064bcd",
+        "timestamp": "2026-10-21T09:33:43.084357+00:00",
+        "action": "Quarterly DLP Compliance Dossier Certified: DOSSIER-DLP-Q1-2026-2027",
+        "category": "DLP_QUARTERLY_AUDIT_SEALED",
+        "hash": "1f2ad42fb0ba910bc939f2e3465ddbc9e0a7668662e251ec1bedf8fcb5392323"
+      },
+      {
+        "sequence_id": "f29ec9b4-8a8c-4583-97b5-ccf977e2950c",
+        "timestamp": "2026-10-21T09:39:07.345266+00:00",
+        "action": "Final Defect Clearance Certificate (FDCC) & Escrow Liquidation Sealed",
+        "category": "FINAL_DLP_INDEMNITY_SEALED",
+        "hash": "91b110f1b1b3e026234f682e89213029c7f107db28b3c9d9c1cbd83fc91a4957"
+      },
+      {
+        "sequence_id": "76555931-8f1b-4206-8148-e2a3e054009f",
+        "timestamp": "2026-10-21T09:42:30.729744+00:00",
+        "action": "Post-DLP Annual Maintenance Contracts (AMC) Executed",
+        "category": "POST_DLP_AMC_SEALED",
+        "hash": "7e9cfd2adf3fc3f32a11466ad62dc7d85f1e00ba8190e90c1d778431b6fcdbb3"
+      }
+    ]
+  },
+  "compiled_at": "2026-10-21T09:44:38.030Z",
+  "manifest_integrity_sha256": "28836c1fe72c5fc208e6852073e96551c73dd1cefc72ad618a205b3ba357ff3d"
+}

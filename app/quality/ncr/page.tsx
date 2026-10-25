@@ -382,7 +382,7 @@ export default function QualityNcrManagementPage() {
                           </td>
                           <td className="p-2.5">
                             <span className="text-zinc-300 block font-semibold">
-                              {n.seor_disposition.replace(/_/g, ' ')}
+                              {((n.seor_disposition ?? "")).replace(/_/g, ' ')}
                             </span>
                             {n.seor_signatory_hash && (
                               <span className="text-[9px] text-emerald-400 font-mono block">SEOR SIGNED</span>
@@ -524,7 +524,7 @@ export default function QualityNcrManagementPage() {
                 </div>
                 <div>
                   <span className="text-neutral-500 block text-[10px]">CURRENT STATUS</span>
-                  <span className="text-white font-bold uppercase">{selectedNcr.status.replace(/_/g, ' ')}</span>
+                  <span className="text-white font-bold uppercase">{((selectedNcr.status ?? "")).replace(/_/g, ' ')}</span>
                 </div>
               </div>
 

@@ -583,7 +583,7 @@ export default function AiBoqEstimationPage() {
                       </div>
                       <div className="flex items-center gap-2 mt-1 text-[10px] text-zinc-500 font-mono">
                         <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">
-                          {item.bimElementType.replace("IFC_", "")}
+                          {item?.bimElementType?.replace("IFC_", "")}
                         </span>
                         {item.ifcGuid && <span>GUID: {item.ifcGuid}</span>}
                         {item.drawingSheetRef && <span>• {item.drawingSheetRef}</span>}
@@ -1137,7 +1137,7 @@ export default function AiBoqEstimationPage() {
                     {subheadSummaries.map((sub, idx) => (
                       <tr key={idx} className="hover:bg-zinc-50">
                         <td className="py-2 px-3 font-mono font-bold text-zinc-800">
-                          {sub.subHeadCode.replace("SUB_", "SH-")}
+                          {sub?.subHeadCode?.replace("SUB_", "SH-")}
                         </td>
                         <td className="py-2 px-3 font-medium text-zinc-800">{sub.subHeadTitle}</td>
                         <td className="py-2 px-3 text-center font-mono">{sub.itemCount}</td>

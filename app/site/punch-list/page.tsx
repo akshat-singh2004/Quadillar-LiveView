@@ -214,7 +214,7 @@ export default function SitePunchListPage() {
                               : "bg-amber-950 text-amber-400 border-amber-800"
                           }`}
                         >
-                          {i.severity_tier.replace(/_/g, " ")}
+                          {i?.severity_tier?.replace(/_/g, " ")}
                         </span>
                       </div>
                       <p className="text-xs text-zinc-200 font-sans leading-relaxed">{i.defect_description}</p>

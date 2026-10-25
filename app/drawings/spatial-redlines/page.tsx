@@ -282,7 +282,7 @@ export default function SpatialRedlinesPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-white">{selectedRedline.markup_title}</span>
                     <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-950 text-amber-400 border border-amber-800">
-                      {selectedRedline.category.replace(/_/g, " ")}
+                      {selectedRedline?.category?.replace(/_/g, " ")}
                     </span>
                   </div>
                   <div className="text-[10px] text-zinc-400 mt-1">Author: {selectedRedline.author_role}</div>
@@ -300,7 +300,7 @@ export default function SpatialRedlinesPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Status:</span>
-                    <span className="text-emerald-400 font-bold">{selectedRedline.resolution_status.replace(/_/g, " ")}</span>
+                    <span className="text-emerald-400 font-bold">{selectedRedline?.resolution_status?.replace(/_/g, " ")}</span>
                   </div>
                 </div>
               </div>

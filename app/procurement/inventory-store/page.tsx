@@ -360,7 +360,7 @@ export default function InventoryStorePage() {
             )}
           </div>
           <div className="text-xs text-slate-400 mt-2 truncate font-medium">
-            {metrics.lowStockList.map((i) => i.itemCode.replace("MAT-", "")).join(", ") || "All stock optimal"}
+            {metrics.lowStockList.map((i) => i?.itemCode?.replace("MAT-", "")).join(", ") || "All stock optimal"}
           </div>
           <div
             className={`absolute top-0 right-0 h-full w-1 ${
@@ -490,7 +490,7 @@ export default function InventoryStorePage() {
                       : "bg-slate-800/80 text-slate-400 hover:text-white"
                   }`}
                 >
-                  {cat === "ALL" ? "All Categories" : cat.replace("_", " ")}
+                  {cat === "ALL" ? "All Categories" : ((cat ?? "")).replace("_", " ")}
                 </button>
               ))}
             </div>
@@ -702,7 +702,7 @@ export default function InventoryStorePage() {
                         >
                           {sheet.physicalVerificationStatus === "VERIFIED_ACCEPTED"
                             ? "ACCEPTED"
-                            : sheet.physicalVerificationStatus.replace("_", " ")}
+                            : sheet?.physicalVerificationStatus?.replace("_", " ")}
                         </span>
                       </td>
                       <td className="p-3 text-center">
@@ -806,7 +806,7 @@ export default function InventoryStorePage() {
                               : "bg-indigo-950 text-indigo-300 border border-indigo-700"
                           }`}
                         >
-                          {entry.transactionType.replace(/_/g, " ")}
+                          {entry?.transactionType?.replace(/_/g, " ")}
                         </span>
                       </td>
                       <td className="p-3 text-cyan-400 font-semibold">{entry.referenceVoucherNo}</td>

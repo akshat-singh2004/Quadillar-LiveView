@@ -290,7 +290,7 @@ export default function SiteWorkforceMusterPage() {
               <tbody className="divide-y divide-zinc-800/60 bg-zinc-950/40">
                 {muster.map((m) => (
                   <tr key={m.id} className="hover:bg-zinc-900/50 transition">
-                    <td className="p-3 font-bold text-white font-mono">{m.trade_name.replace(/_/g, " ")}</td>
+                    <td className="p-3 font-bold text-white font-mono">{m?.trade_name?.replace(/_/g, " ")}</td>
                     <td className="p-3 text-zinc-300 font-sans">{m.contractor_name}</td>
                     <td className="p-3 text-right font-bold text-cyan-400 font-mono text-sm">{m.headcount_deployed}</td>
                     <td className="p-3 text-right text-zinc-400 font-mono">{m.normal_working_hours} hrs</td>

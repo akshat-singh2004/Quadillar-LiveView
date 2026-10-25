@@ -1,0 +1,41 @@
+{
+  "project_master.json": {
+    "record_count": 1,
+    "sha512": "b95556d4facbcd66409c69170eaff6dae6e01116d74563b110176648ff4735a7882ce57f988ca154a07ba025e6387a6e284eb3e30fe9fbdfe745ccd463f1b2c9"
+  },
+  "hermes_audit_ledger.json": {
+    "record_count": 24,
+    "sha512": "f61999e39f15ffb566b2516afb70f4af9a06114303bcc214af011ac1ba8dbe89e9f34c48d5c853dbf1aebd9eb90412373ef7587585c99ededcacf0b041656a0c"
+  },
+  "running_account_bills.json": {
+    "record_count": 10,
+    "sha512": "247daad4d3da52a27a1a7717f7c1755e2a0bf6f5ab1337e472ec4f072d857cd7320414d5b912877638817dbdd858e66a785d5a36666ec13e6aecfb52e9b083f9"
+  },
+  "electronic_measurement_book.json": {
+    "record_count": 31,
+    "sha512": "efcb15b5500a0933dd923a9a5bbdd8071cbab0ba96ae1da70297f438ea3fea65622183e0489672246683d78e42bba9cf0ce58ce0404d78733b495582c0e299dd"
+  },
+  "concrete_pour_cards.json": {
+    "record_count": 7,
+    "sha512": "ae799db8cdecd75d8d3deb9917306153fd985bb456927435b79c932fc6014b9741075453f5cc475a59bf25e94e2cd99ff909664b61cbad43783b886d5e90e07b"
+  },
+  "pile_integrity_records.json": {
+    "record_count": 4,
+    "sha512": "f22c05db30ef50a12a2521a371210fb3c79968913af3893254c6c0d009ec1210a796db9b802b9920d3f7cd48b2dad5bd100ea52c8e88ec59dfc6c5035d851ecb"
+  },
+  "pt_stressing_records.json": {
+    "record_count": 8,
+    "sha512": "f4b107160d8511edce4e9f377f0a11487c5370e8e2e81004430a4e1f14912695c8394138bd18d39fc90b7875dda483b3643dc671d3a4b59b42e4434ec3ce71a8"
+  },
+  "commissioning_test_records.json": {
+    "record_count": 4,
+    "sha512": "c707fc705b383c0011a66aca75991d273729cde5f80195b15088bf8f52bec21afff67e22c884ff220be7d412c6598516cfa2ec8778041a93e448e2e394732bcb"
+  },
+  "defect_liability_records.json": {
+    "record_count": 3,
+    "sha512": "06adb8d253e8bd6cd72f7fa4ac190ebf7df6ceb81acf8c1f4b4c5606c989ee54ddf1cbeb01f4f6ee1a021421f6c48f9845075330a5cc961f99148f49a8521add"
+  },
+  "SECTION_63_BSA_EVIDENCE_CERTIFICATE.txt": {
+    "sha512": "3b7f85ecd7fadeb9d9f9582911b14d9dccd974823711f7fb4bd18795154437c0446afe66d5cd50442ddfc544a57e7beaff3575ab05971b44f692e024c5981000"
+  }
+}

@@ -574,7 +574,7 @@ export default function CanonicalClientBillingPage() {
       <h1 class="title">GST Tax Invoice &amp; Client Interim Payment Certificate</h1>
       <div class="meta">Invoice No: ${inv.invoice_number} · Billing Period: ${inv.billing_period_start} to ${inv.billing_period_end} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${inv.status === "RERA_ESCROW_RECONCILED" || inv.status === "PAYMENT_RECEIVED" ? "reconciled" : "submitted"}">${inv.status.replace(/_/g, " ")}</span>
+    <span class="badge ${inv.status === "RERA_ESCROW_RECONCILED" || inv.status === "PAYMENT_RECEIVED" ? "reconciled" : "submitted"}">${inv?.status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
@@ -880,7 +880,7 @@ export default function CanonicalClientBillingPage() {
                             ? "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {inv.status.replace(/_/g, " ")}
+                          {inv?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -925,7 +925,7 @@ export default function CanonicalClientBillingPage() {
                   ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                   : "bg-cyan-950 text-cyan-400 border border-cyan-800/50"
               }`}>
-                {selectedInvoice.status.replace(/_/g, " ")}
+                {selectedInvoice?.status?.replace(/_/g, " ")}
               </span>
             </div>
 

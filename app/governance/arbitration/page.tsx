@@ -98,12 +98,12 @@ export default async function ArbitrationWarRoomPage() {
 
                   <span className="px-2.5 py-0.5 rounded bg-emerald-950 border border-emerald-800 text-emerald-300 text-[9px] font-bold uppercase flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                    <span>{dossier.status.replace(/_/g, " ")}</span>
+                    <span>{dossier?.status?.replace(/_/g, " ")}</span>
                   </span>
                 </div>
 
                 <div className="text-[11px] text-zinc-400 font-sans flex flex-wrap gap-x-5 gap-y-1">
-                  <span>Forum: <strong className="text-zinc-200">{dossier.tribunal_jurisdiction.replace(/_/g, " ")}</strong></span>
+                  <span>Forum: <strong className="text-zinc-200">{dossier?.tribunal_jurisdiction?.replace(/_/g, " ")}</strong></span>
                   <span>Claimant: <strong className="text-zinc-200">{dossier.claimant_entity}</strong></span>
                   <span>Respondent: <strong className="text-zinc-200">{dossier.respondent_entity}</strong></span>
                   <span>Quantum: <strong className="text-emerald-400 font-mono">₹{Number(dossier.claimed_quantum_inr).toLocaleString("en-IN")}</strong></span>

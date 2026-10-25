@@ -421,12 +421,12 @@ export default function CanonicalPerformanceSecurityPage() {
       <h1 class="title">Bank Guarantee &amp; Performance Security Register (Form 32)</h1>
       <div class="meta">Instrument Ref: ${s.instrument_code} · Issue Date: ${s.issue_date} · Project: ${projectName} (${projectId})</div>
     </div>
-    <span class="badge ${s.status === "ACTIVE_SECURED" || s.status === "AMORTIZING_ADVANCE" ? "active" : "pending"}">${s.status.replace(/_/g, " ")}</span>
+    <span class="badge ${s.status === "ACTIVE_SECURED" || s.status === "AMORTIZING_ADVANCE" ? "active" : "pending"}">${s?.status?.replace(/_/g, " ")}</span>
   </div>
 
   <table>
     <tr><th>Executing Contractor</th><td><strong>${s.contractor_name}</strong></td><th>Parent Work Order Ref</th><td><strong>${s.work_order_ref}</strong></td></tr>
-    <tr><th>Instrument Classification</th><td>${s.instrument_type.replace(/_/g, " ")}</td><th>Trade Package</th><td>${s.trade_package}</td></tr>
+    <tr><th>Instrument Classification</th><td>${s?.instrument_type?.replace(/_/g, " ")}</td><th>Trade Package</th><td>${s.trade_package}</td></tr>
     <tr><th>Issuing Commercial Bank</th><td><strong>${s.issuing_bank_name}</strong></td><th>Branch Location</th><td>${s.bank_branch_location}</td></tr>
     <tr><th>Instrument Bond / BG No.</th><td><code>${s.instrument_reference_no}</code></td><th>Claim Expiry Deadline</th><td><strong>${s.claim_expiry_deadline}</strong></td></tr>
   </table>
@@ -709,14 +709,14 @@ export default function CanonicalPerformanceSecurityPage() {
                           {sec.instrument_code}
                         </span>
                         <span className="text-[10px] px-2 py-0.2 rounded bg-zinc-800 text-zinc-300 font-mono">
-                          {sec.instrument_type.replace(/_/g, " ")}
+                          {sec?.instrument_type?.replace(/_/g, " ")}
                         </span>
                         <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           isSecured
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                             : "bg-amber-950 text-amber-400 border border-amber-800/50"
                         }`}>
-                          {sec.status.replace(/_/g, " ")}
+                          {sec?.status?.replace(/_/g, " ")}
                         </span>
                       </div>
 
@@ -762,7 +762,7 @@ export default function CanonicalPerformanceSecurityPage() {
                   ? "bg-emerald-950 text-emerald-400 border border-emerald-800/50"
                   : "bg-amber-950 text-amber-400 border border-amber-800/50"
               }`}>
-                {selectedSec.status.replace(/_/g, " ")}
+                {selectedSec?.status?.replace(/_/g, " ")}
               </span>
             </div>
 

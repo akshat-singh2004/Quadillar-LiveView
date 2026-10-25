@@ -1,0 +1,43 @@
+================================================================================
+  CERTIFICATE OF ELECTRONIC EVIDENCE UNDER SECTION 63 OF THE BHARATIYA SAKSHYA
+  ADHINIYAM, 2023 (CORRESPONDING TO SECTION 65B OF THE INDIAN EVIDENCE ACT, 1872)
+================================================================================
+
+1. PROJECT IDENTIFICATION:
+   - Project Name    : Gomti Nagar Commercial Tower Phase 2 Vertical Expansion (L7-L14)
+   - Project ID      : GOMTI-NAGAR-PH2-EXPANSION
+   - Tenant / Site   : Gomti Nagar Extension, Lucknow, Uttar Pradesh, India
+   - Sanctioned Sum  : INR 2,45,00,000.00 (Two Crore Forty-Five Lakhs)
+   - Principal Client: Lucknow Commercial Infrastructure Development Corp. (LCIDC)
+   - Lead Contractor : Apex Structural Engineers & Infra Ltd
+
+2. COMPUTING ENVIRONMENT & CUSTODY ATTESTATION:
+   I, Akshat Singh Rathore, in my capacity as Principal Architect & Quality Director
+   of Quadillar ConTech Pvt. Ltd., do hereby certify that:
+   (a) The electronic records comprising Form 23 Electronic Measurement Book (EMB),
+       Running Account Bills (RA-01 to RA-FINAL), Concrete Pour Cards, Thermal Logs,
+       and Post-Tensioning Stressing Records were produced by the Quadillar LiveView
+       enterprise telemetry system during the ordinary course of operations.
+   (b) The computer system, database servers, and cryptographic ledger engines were
+       operating properly without compromise to security, data integrity, or accuracy.
+   (c) No unauthorized alterations or manual database overrides have occurred; the
+       target project is sealed under status 'PERMANENT_ARCHIVE_LOCKED' with engine-level
+       write triggers active.
+
+3. CRYPTOGRAPHIC MERKLE AUDIT TRAIL SUMMARY:
+   - Total Chained Deeds     : 24 Nodes
+   - Genesis Hash Identifier : GENESIS_0000000000000000000000000000000000000000000000000000000000000000
+   - Final Ledger Root Hash  : 108dc7661411d89cae4cb1309b4a1601572e27f3a6ab665615c516936a6e122c
+   - Virtual Completion Ref  : VCC-2026-GOMTI-PH2-001
+   - Final Defect Clearance  : FDCC-2027-GOMTI-PH2-001
+   - As-Built BIM 7D Model   : https://hermes.quadillar.com/vault/bim/GOMTI_PH2_LOD500_ASBUILT.ifc
+
+4. ATTESTATION & LEGAL SEAL:
+   This electronic evidence is authentic, immutable, and admissible in judicial and
+   arbitration proceedings under Section 63(4) of the Bharatiya Sakshya Adhiniyam, 2023.
+
+   Executed at Lucknow, Uttar Pradesh, India.
+   Signatory : Akshat Singh Rathore
+   Role      : Founder & Chief Executive Officer / Quality Director
+   Entity    : Quadillar ConTech Private Limited
+================================================================================

@@ -162,7 +162,7 @@ export default function RealityCapturePage() {
           <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-sm">
             <span className="text-[10px] text-zinc-500 uppercase block font-semibold">Geometric Variance Status</span>
             <div className={`text-2xl font-bold mt-1 ${active.status === "VARIANCE_FLAGGED" ? "text-amber-400" : "text-emerald-400"}`}>
-              {active.status.replace(/_/g, " ")}
+              {active?.status?.replace(/_/g, " ")}
             </div>
             <span className="text-[10px] text-zinc-500 mt-1 block">Compared to Revit 2026 GFC model</span>
           </div>
@@ -277,7 +277,7 @@ export default function RealityCapturePage() {
                           ? "bg-amber-950 text-amber-400 border-amber-800"
                           : "bg-emerald-950 text-emerald-400 border-emerald-800"
                       }`}>
-                        {c.status.replace(/_/g, " ")}
+                        {c?.status?.replace(/_/g, " ")}
                       </span>
                     </div>
 

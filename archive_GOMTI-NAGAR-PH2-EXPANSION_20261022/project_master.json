@@ -1,0 +1,31 @@
+[
+  {
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "appointing_party_id": null,
+    "project_name": "Gomti Nagar Commercial Tower Phase 2 Vertical Expansion (L7-L14)",
+    "project_code": "GOMTI-PH2",
+    "contract_value": 24500000,
+    "created_at": "2026-10-21T09:55:20.735226+00:00",
+    "tier": "COMMERCIAL",
+    "active_stage": "FULL_STATUTORY_DISCHARGE",
+    "committed_capital": 24500000,
+    "target_start_date": "2026-10-21",
+    "target_completion_date": "2028-04-21",
+    "agreement_ref_no": "AGR-LCIDC-2026-PH2-001",
+    "client_entity_name": "Lucknow Commercial Infrastructure Development Corp.",
+    "client_contact_email": null,
+    "client_contact_phone": null,
+    "contractor_entity_name": "Apex Structural Engineers & Infra Ltd",
+    "stipulated_start_date": "2026-10-21",
+    "stipulated_completion_date": "2028-04-21",
+    "legal_deed_url": null,
+    "legal_deed_sha256": "6844cea62d92919644b39971bbdb9bc75f840ac8efe90f98536de3a22c31e4b7",
+    "sanction_plan_url": null,
+    "sanction_authority_ref": null,
+    "bim_model_url": "https://hermes.quadillar.com/vault/bim/GOMTI_PH2_LOD500_ASBUILT.ifc",
+    "status": "PERMANENT_ARCHIVE_LOCKED",
+    "created_by": null,
+    "gcc_protocol": "CPWD Works Manual / FIDIC Red Book",
+    "updated_at": "2026-10-22T06:22:29.071827+00:00"
+  }
+]

@@ -50,7 +50,7 @@ function getSupabase() {
 // ----------------------------------------------------------------------------
 export async function compileDailyGovernanceDossier(payload: CompileDprPayload) {
   const safeDate = payload.dprDate || new Date().toISOString().slice(0, 10);
-  const dossierCode = `DPR-${safeDate.replace(/-/g, "")}-${Date.now().toString().slice(-4)}`;
+  const dossierCode = `DPR-${((safeDate ?? "")).replace(/-/g, "")}-${Date.now().toString().slice(-4)}`;
   const compiler = payload.compiledBy || "Autonomous Governance Council";
 
   try {

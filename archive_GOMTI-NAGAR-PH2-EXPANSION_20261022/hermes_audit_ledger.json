@@ -1,0 +1,434 @@
+[
+  {
+    "id": 1,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 1,
+    "prev_deed_hash": "GENESIS_0000000000000000000000000000000000000000000000000000000000000000",
+    "action_category": "PROJECT_CHARTER_NTP_SEALED",
+    "payload_json": {
+      "details": "Project GOMTI-NAGAR-PH2-EXPANSION initialized in master projects registry. Budget: ₹2,45,00,000.00. Seismic Zone III parameters set. WBS-01.1 active. Master Deed: 9c196812539a68abc92cf59d986deb43324efcdcba8ab65cfd85323ce8137b1b",
+      "module_ref": "Project Master Registry / Hermes Vault",
+      "legacy_hash": "9c196812539a68abc92cf59d986deb43324efcdcba8ab65cfd85323ce8137b1b",
+      "action_title": "Notice to Proceed (NTP) & Phase 2 Project Charter Sealed",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T09:55:20.735226+00:00"
+    },
+    "merkle_node_hash": "602a97eff76069a67d5c852eabda22ef846b1a3b9a92ff75dccdc7de04a90d0b",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 2,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 2,
+    "prev_deed_hash": "602a97eff76069a67d5c852eabda22ef846b1a3b9a92ff75dccdc7de04a90d0b",
+    "action_category": "COMMERCIAL_MOBILIZATION_CERTIFIED",
+    "payload_json": {
+      "details": "Bank Guarantee BG-ICICI-2026-MOB-001 for ₹24,50,000.00 confirmed via SFMS. RA-01 certified for ₹24,50,000.00 under CPWD GCC Clause 10B. Deed: 3d6d294d3b57c557734a5abe320f46b36422a89d8ba81d36471ecb79874dc953",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "3d6d294d3b57c557734a5abe320f46b36422a89d8ba81d36471ecb79874dc953",
+      "action_title": "Mobilization Advance Disbursed (RA-2026-PH2-001) against ICICI Bank Guarantee",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:04:26.654736+00:00"
+    },
+    "merkle_node_hash": "5dd0ceb9a6c8891532b3ea900d2717e29baa620d8d864285b527648d7e12ae3a",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 3,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 3,
+    "prev_deed_hash": "5dd0ceb9a6c8891532b3ea900d2717e29baa620d8d864285b527648d7e12ae3a",
+    "action_category": "GEOTECH_STRATA_CERTIFIED",
+    "payload_json": {
+      "details": "Strata 12.5m - 18.5m approved as pile founding bed (SPT N=44, SBC=430 kN/m²). IS 2911 compliance certified. WBS-01.1 completed, WBS-01.2 active. Deed: 98a8ca502f7b70a5ddc81f90e6d754880cc1598b5a35ec12a2a0d1b530a23f89",
+      "module_ref": "Aegis Quality / Daedalus Geotechnical",
+      "legacy_hash": "98a8ca502f7b70a5ddc81f90e6d754880cc1598b5a35ec12a2a0d1b530a23f89",
+      "action_title": "Geotechnical Borelog BH-PH2-01 & Pile Termination Strata Approved",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:04:26.654736+00:00"
+    },
+    "merkle_node_hash": "440b4481ac86da2ce54b961a9358ebd442412e837f7f24c05829a03c28951d42",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 4,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 4,
+    "prev_deed_hash": "440b4481ac86da2ce54b961a9358ebd442412e837f7f24c05829a03c28951d42",
+    "action_category": "PILING_QUALITY_INTEGRITY_CERTIFIED",
+    "payload_json": {
+      "details": "32 bored piles (600mm dia, 18m depth, M35 RMC) cast via tremie under PC-PH2-PIL-001. 100% Category A uniform core verified. WBS-01.2 completed. Deed: a3c7452d26128de754153185beb9a2706bb4688478f20a9ef975d147d3cdfb3c",
+      "module_ref": "Aegis Quality / Structural Piling Gate",
+      "legacy_hash": "a3c7452d26128de754153185beb9a2706bb4688478f20a9ef975d147d3cdfb3c",
+      "action_title": "Substructure Piling (32 Nos) & ASTM D5882 Sonic Integrity Certified",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:15:19.783395+00:00"
+    },
+    "merkle_node_hash": "a22b1bb3ba587f9465f2a2d6f7da0efcc0ba96a6fb2c83915c4b9c03dcd91ee5",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 5,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 5,
+    "prev_deed_hash": "a22b1bb3ba587f9465f2a2d6f7da0efcc0ba96a6fb2c83915c4b9c03dcd91ee5",
+    "action_category": "COMMERCIAL_BILLING_CERTIFIED",
+    "payload_json": {
+      "details": "Gross: ₹32,71,582.00 | Ret (5%): ₹1,63,579.10 | Cess (1%): ₹32,715.82 | Mob Recov: ₹1,17,368.86 | Net: ₹29,57,918.22. WBS-01.3 active. Deed: 6b8ff55b633e81a8cd4a8e686c157f3ca384a977e4ca825f34d5570823e7e003",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "6b8ff55b633e81a8cd4a8e686c157f3ca384a977e4ca825f34d5570823e7e003",
+      "action_title": "Progress Bill 02 Certified (RA-2026-PH2-002) with CPWD 10B Advance Recovery",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:15:19.783395+00:00"
+    },
+    "merkle_node_hash": "e769091318d5256419ccb0737b12c7fb318e1637480044c4763e2fd1cf2544f2",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 6,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 6,
+    "prev_deed_hash": "e769091318d5256419ccb0737b12c7fb318e1637480044c4763e2fd1cf2544f2",
+    "action_category": "RAFT_REBAR_POUR_AUTHORIZED",
+    "payload_json": {
+      "details": "Raft rebar (48.60 MT Fe 500D) verified. Blinding bed & pile COL verified. Pour card PC-PH2-RFT-001 authorized for 576 m³ M40 SCC. Thermal logging active. Deed: d6b1faf4ba316bb66b0bdecb796e21dfd64e64a44e6cd7a1ffc1e661571611de",
+      "module_ref": "Aegis Quality / Mass Concrete Control",
+      "legacy_hash": "d6b1faf4ba316bb66b0bdecb796e21dfd64e64a44e6cd7a1ffc1e661571611de",
+      "action_title": "Raft Rebar Detailed (IS 13920) & PC-PH2-RFT-001 Mass Pour Authorized",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:19:43.29243+00:00"
+    },
+    "merkle_node_hash": "714bc1d91b7b839096922907c26380cfa1e8ef493ffc3fe05d8d4486a8702b8d",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 7,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 7,
+    "prev_deed_hash": "714bc1d91b7b839096922907c26380cfa1e8ef493ffc3fe05d8d4486a8702b8d",
+    "action_category": "COMMERCIAL_BILLING_CERTIFIED",
+    "payload_json": {
+      "details": "Gross: ₹45,78,720.00 | Ret (5%): ₹2,28,936.00 | Cess (1%): ₹45,787.20 | Mob Recov: ₹6,54,102.86 | Net: ₹36,49,893.94. WBS-01.4 active. Deed: 60acbe573b52313506a8232a22e7a6c8983ef9c43d6ba88e37b58775c4e324c6",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "60acbe573b52313506a8232a22e7a6c8983ef9c43d6ba88e37b58775c4e324c6",
+      "action_title": "Progress Bill 03 Certified (RA-2026-PH2-003) with Advance Recovery",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:19:43.29243+00:00"
+    },
+    "merkle_node_hash": "1d8cf0d4cff9c7b13976a0806a6cedade51de350da348f6c6239c302299a9aa0",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 8,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 8,
+    "prev_deed_hash": "1d8cf0d4cff9c7b13976a0806a6cedade51de350da348f6c6239c302299a9aa0",
+    "action_category": "MASS_RAFT_POUR_AND_THERMAL_PEAK_CERTIFIED",
+    "payload_json": {
+      "details": "Pour card PC-PH2-RFT-001 completed. Peak Delta-T 15.3°C. 7-day strength 31.8 MPa. WBS-01 foundation package complete. Deed: a7d6cd633ea1f86d2d6a40377e913dfff62a73ecd298db4f41bc050f0198b402",
+      "module_ref": "Aegis Quality / Structural Foundation Gate",
+      "legacy_hash": "a7d6cd633ea1f86d2d6a40377e913dfff62a73ecd298db4f41bc050f0198b402",
+      "action_title": "Substructure Raft Pour Complete (576m³) & IS 516 Compressive Strength Verified",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:25:58.580166+00:00"
+    },
+    "merkle_node_hash": "5083adbd1c507166eb8d19b998a97849251c1a175124306272965950912a4b64",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 9,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 9,
+    "prev_deed_hash": "5083adbd1c507166eb8d19b998a97849251c1a175124306272965950912a4b64",
+    "action_category": "COMMERCIAL_BILLING_CERTIFIED",
+    "payload_json": {
+      "details": "Gross: ₹40,49,280.00 | Ret (5%): ₹2,02,464.00 | Cess (1%): ₹40,492.80 | Mob Recov: ₹5,78,468.57 | Net: ₹32,27,854.63. WBS-02.1 active. Deed: 80262cc982ae0a0601b51885581a0b4d66cd03c1d20815b3a1690d76b80397fe",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "80262cc982ae0a0601b51885581a0b4d66cd03c1d20815b3a1690d76b80397fe",
+      "action_title": "Progress Bill 04 Certified (RA-2026-PH2-004) - 55.1% Mob Advance Recovered",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:25:58.580166+00:00"
+    },
+    "merkle_node_hash": "786bd807d943bcf0c9861640b1ef5dbc07ae7df68a10f7227c9fab3593e597d4",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 10,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 10,
+    "prev_deed_hash": "786bd807d943bcf0c9861640b1ef5dbc07ae7df68a10f7227c9fab3593e597d4",
+    "action_category": "VERTICAL_CORE_QUALITY_CERTIFIED",
+    "payload_json": {
+      "details": "118.80 m³ M40 vertical concrete placed. 240 Type II couplers tested (slip 0.05mm). Formwork plumb verified (1.8mm dev). Pour card PC-PH2-SW-L7L8-001 closed. Deed: 20cce22cdf6511eeca0f9b1c25797e66fe8c63ab24afa4528c3191d293ad1ae3",
+      "module_ref": "Aegis Quality / Superstructure Core Gate",
+      "legacy_hash": "20cce22cdf6511eeca0f9b1c25797e66fe8c63ab24afa4528c3191d293ad1ae3",
+      "action_title": "Level 7-8 Vertical Core Shear Walls & Couplers Certified (IS 13920 / IS 16172)",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:29:15.645152+00:00"
+    },
+    "merkle_node_hash": "f646d2d0e3bebf2d4fe4aa7b10cc5a525d87860dd316c86cae998d9fa44af198",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 11,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 11,
+    "prev_deed_hash": "f646d2d0e3bebf2d4fe4aa7b10cc5a525d87860dd316c86cae998d9fa44af198",
+    "action_category": "COMMERCIAL_BILLING_CERTIFIED",
+    "payload_json": {
+      "details": "Gross: ₹28,02,460.00 | Ret (5%): ₹1,40,123.00 | Cess (1%): ₹28,024.60 | Mob Recov: ₹4,00,351.43 | Net: ₹22,33,960.97. WBS-02.3 active. Deed: 87d520a0a14839c46d99e0f0e42fb5b06daaf64aa054c19a02df7f31f4600ad0",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "87d520a0a14839c46d99e0f0e42fb5b06daaf64aa054c19a02df7f31f4600ad0",
+      "action_title": "Progress Bill 05 Certified (RA-2026-PH2-005) - 71.4% Mob Advance Recovered",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:29:15.645152+00:00"
+    },
+    "merkle_node_hash": "cbfa52850b29cdbc6d52b22319e111b675ebe2811f467b712c5419accb603f7a",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 12,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 12,
+    "prev_deed_hash": "cbfa52850b29cdbc6d52b22319e111b675ebe2811f467b712c5419accb603f7a",
+    "action_category": "PT_SLAB_STRESSING_GROUTING_CERTIFIED",
+    "payload_json": {
+      "details": "480 m² PT flat slab stressed at fc=30.4 MPa. Elongation deviations (+2.1% to +3.8%) compliant within +/-7%. Ducts pressure grouted (w/c=0.36). Pour card PC-PH2-SLAB-L7-001 closed. Deed: 37ee6de83cc893be2f1d6cb00cfa0528d34bdd1f79c1a15adc3655e08be32fc8",
+      "module_ref": "Aegis Quality / Post-Tensioning Gate",
+      "legacy_hash": "37ee6de83cc893be2f1d6cb00cfa0528d34bdd1f79c1a15adc3655e08be32fc8",
+      "action_title": "Level 7 Post-Tensioned Flat Slab Stressing & Grouting Certified (IS 1343 / PTI)",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:33:12.507047+00:00"
+    },
+    "merkle_node_hash": "5d727218f50306cdbe958125b2dbe73222d7f91d5c66b77282e80afe69d12331",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 13,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 13,
+    "prev_deed_hash": "5d727218f50306cdbe958125b2dbe73222d7f91d5c66b77282e80afe69d12331",
+    "action_category": "COMMERCIAL_BILLING_CERTIFIED",
+    "payload_json": {
+      "details": "Gross: ₹25,48,760.00 | Ret (5%): ₹1,27,438.00 | Cess (1%): ₹25,487.60 | Mob Recov: ₹3,64,108.57 | Net: ₹20,31,725.83. Cumulative Mob Recovered: ₹21,14,400.29 (86.3%). WBS-02.4 active. Deed: e2df3ac8546a1ba18084bea3c058802e8b140f21eadb12a175c512623199d6ae",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "e2df3ac8546a1ba18084bea3c058802e8b140f21eadb12a175c512623199d6ae",
+      "action_title": "Progress Bill 06 Certified (RA-2026-PH2-006) - 86.3% Mob Advance Recovered",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:33:12.507047+00:00"
+    },
+    "merkle_node_hash": "2ddb409881fe9982e471a29adae44433f77cb16e747df4e9dc0baf80f26d33c0",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 14,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 14,
+    "prev_deed_hash": "2ddb409881fe9982e471a29adae44433f77cb16e747df4e9dc0baf80f26d33c0",
+    "action_category": "VERTICAL_CORE_QUALITY_CERTIFIED",
+    "payload_json": {
+      "details": "118.80 m³ M40 vertical concrete placed. 240 Type II couplers tested. Formwork plumb verified (1.5mm dev). Pour card PC-PH2-SW-L8L9-001 closed. Deed: 7428dfcca0224bb5970fc159d25e78a1667ec13b9c15df2281d9e8abb7fcf220",
+      "module_ref": "Aegis Quality / Superstructure Core Gate",
+      "legacy_hash": "7428dfcca0224bb5970fc159d25e78a1667ec13b9c15df2281d9e8abb7fcf220",
+      "action_title": "Level 8-9 Vertical Core Shear Walls & Couplers Certified (IS 13920 / IS 16172)",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:36:34.947166+00:00"
+    },
+    "merkle_node_hash": "ad838a308bd174b0d4ec66621fc98b0803a6d615908d38f3ca45b17848d3fd21",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 15,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 15,
+    "prev_deed_hash": "ad838a308bd174b0d4ec66621fc98b0803a6d615908d38f3ca45b17848d3fd21",
+    "action_category": "COMMERCIAL_BILLING_CERTIFIED",
+    "payload_json": {
+      "details": "Gross: ₹28,02,460.00 | Ret (5%): ₹1,40,123.00 | Cess (1%): ₹28,024.60 | Terminal Mob Recov: ₹3,35,599.71 | Net: ₹22,98,712.69. Cumulative Mob Recovered: ₹24,50,000.00 (100.00%). Deed: 004379ad1aa768354fb970ea8fb2eaf3a7cb8c845eb23cad14729880721c482c",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "004379ad1aa768354fb970ea8fb2eaf3a7cb8c845eb23cad14729880721c482c",
+      "action_title": "Progress Bill 07 Certified (RA-2026-PH2-007) - 100% Mob Advance Amortized",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:36:34.947166+00:00"
+    },
+    "merkle_node_hash": "6034dee0a07d970602e98de49252adaaaa9a5e6c68e36a28fd8e50b0c9c677da",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 16,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 16,
+    "prev_deed_hash": "6034dee0a07d970602e98de49252adaaaa9a5e6c68e36a28fd8e50b0c9c677da",
+    "action_category": "BANK_GUARANTEE_DISCHARGED",
+    "payload_json": {
+      "details": "Mobilization Advance of ₹24,50,000.00 100% amortized against physical progress of ₹2,00,53,262.00 (81.85%). Bank Guarantee liquidated under CPWD GCC Clause 10B. Deed: ac8cdde730f723a4f376a52373ed5542ddf5e50cb3db0b05daa948ee070e4625",
+      "module_ref": "Hermes Financial Vault / Escrow Gate",
+      "legacy_hash": "ac8cdde730f723a4f376a52373ed5542ddf5e50cb3db0b05daa948ee070e4625",
+      "action_title": "Mobilization Advance Bank Guarantee BG-ICICI-2026-MOB-001 Discharged",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:36:34.947166+00:00"
+    },
+    "merkle_node_hash": "cc9af5a3450d2bca2031e975b87a0552bcd4d5204c1d5b7459bfb1d1e7adc6f2",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 17,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 17,
+    "prev_deed_hash": "cc9af5a3450d2bca2031e975b87a0552bcd4d5204c1d5b7459bfb1d1e7adc6f2",
+    "action_category": "PT_SLAB_STRESSING_GROUTING_CERTIFIED",
+    "payload_json": {
+      "details": "480 m² PT slab stressed at fc=30.8 MPa. Elongation deviations (+2.3% to +3.5%) compliant. Colloidal grouting complete. Pour card PC-PH2-SLAB-L8-001 closed. Deed: 969ac6949e3aa2fccc45e5647bd33b067c7580aba3f6fa1d31cac32633b549b2",
+      "module_ref": "Aegis Quality / Post-Tensioning Gate",
+      "legacy_hash": "969ac6949e3aa2fccc45e5647bd33b067c7580aba3f6fa1d31cac32633b549b2",
+      "action_title": "Level 8 Post-Tensioned Flat Slab Stressing & Grouting Certified (IS 1343 / PTI)",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:42:25.412976+00:00"
+    },
+    "merkle_node_hash": "a545830fbe2137e2c19fbe1eaa2662975634f6d1a772ee703237a2e52cec4abe",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 18,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 18,
+    "prev_deed_hash": "a545830fbe2137e2c19fbe1eaa2662975634f6d1a772ee703237a2e52cec4abe",
+    "action_category": "COMMERCIAL_BILLING_CERTIFIED",
+    "payload_json": {
+      "details": "Gross: ₹25,48,760.00 | Ret (5%): ₹1,27,438.00 | Cess (1%): ₹25,487.60 | Mob Recov: ₹0.00 (100% Amortized) | Net: ₹23,95,834.40. Cumulative Gross: ₹2,26,02,022.00 (92.25%). WBS-02.6 active. Deed: 836564efe2b1c356e51316b7a7a689b7f56a2576cab1ee12b66003c37171868f",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "836564efe2b1c356e51316b7a7a689b7f56a2576cab1ee12b66003c37171868f",
+      "action_title": "Progress Bill 08 Certified (RA-2026-PH2-008) - Zero Mob Advance Deduction",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:42:25.412976+00:00"
+    },
+    "merkle_node_hash": "51b863970c11f634a959d758b9e035f92a8e005f85576ecea0870dac644f218e",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 19,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 19,
+    "prev_deed_hash": "51b863970c11f634a959d758b9e035f92a8e005f85576ecea0870dac644f218e",
+    "action_category": "STRUCTURAL_TOPPING_OUT_CERTIFIED",
+    "payload_json": {
+      "details": "14 stories topped out. Total drift 14.2mm compliant. Fire riser hydrotested (15 bar, 0 drop). Façade pullout (38.5 kN) and substation grid (0.82 ohms) certified. Pour card PC-PH2-TOPPING-L14-001 closed. Deed: f42fcf856bdeeeac69933b71db5c9a134d6d26fbb984d1a22558dc6dc3ac6371",
+      "module_ref": "Aegis Quality / Tower Topping Out Gate",
+      "legacy_hash": "f42fcf856bdeeeac69933b71db5c9a134d6d26fbb984d1a22558dc6dc3ac6371",
+      "action_title": "Structural Topping Out (+53.70m) & MEP Rough-In Certified (IS 1893 / IS 3844 / IS 3043)",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:49:03.767305+00:00"
+    },
+    "merkle_node_hash": "4474fd0f8dda8f06437d2bb08f3d9955158220abc6e30f85aa37a103caa604f7",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 20,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 20,
+    "prev_deed_hash": "4474fd0f8dda8f06437d2bb08f3d9955158220abc6e30f85aa37a103caa604f7",
+    "action_category": "COMMERCIAL_BILLING_CERTIFIED",
+    "payload_json": {
+      "details": "Gross: ₹18,97,978.00 | Ret (5%): ₹94,898.90 | Cess (1%): ₹18,979.78 | Net: ₹17,84,099.32. Cumulative Gross: ₹2,45,00,000.00 (100.00%). Total Retention Escrow: ₹12,25,000.00. WBS-04.1 active. Deed: ef416516e8d0ab4e02da92ee77f7ee903501087dc4254c1d57b14c793ded24c7",
+      "module_ref": "Midas Commercial Gatekeeper",
+      "legacy_hash": "ef416516e8d0ab4e02da92ee77f7ee903501087dc4254c1d57b14c793ded24c7",
+      "action_title": "Progress Bill 09 Certified (RA-2026-PH2-009) - 100% Contract Progress Milestone",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:49:03.767305+00:00"
+    },
+    "merkle_node_hash": "59b86b542923011d5ca28483ab32d500cccb4aa3954ba18b5101369c5bbba7a3",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 21,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 21,
+    "prev_deed_hash": "59b86b542923011d5ca28483ab32d500cccb4aa3954ba18b5101369c5bbba7a3",
+    "action_category": "INTEGRATED_COMMISSIONING_CERTIFIED",
+    "payload_json": {
+      "details": "Façade spray tested (0ml ingress). Lifts governor tripped at 115%. Smoke stairwell pressurization (52.4 Pa) and DG sync (6.8s) verified. WBS-04.1 closed. Deed: 4d7c7959348e46d1a0685c87b5246e0cc82246e256ad0f235249e694111d8669",
+      "module_ref": "Aegis Quality / Integrated Systems Testing Gate",
+      "legacy_hash": "4d7c7959348e46d1a0685c87b5246e0cc82246e256ad0f235249e694111d8669",
+      "action_title": "Integrated Commissioning & Life Safety Matrix Passed (ASTM E1105 / IS 14665 / NBC Part 4)",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:55:47.115612+00:00"
+    },
+    "merkle_node_hash": "b0a3097ed0bf17da1a43624da8f43f296e37c19533f90ccbd73b226fbf9e4f1c",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 22,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 22,
+    "prev_deed_hash": "b0a3097ed0bf17da1a43624da8f43f296e37c19533f90ccbd73b226fbf9e4f1c",
+    "action_category": "PROVISIONAL_HANDOVER_AND_VCC_SEALED",
+    "payload_json": {
+      "details": "Substantial completion certified under CPWD GCC Clause 45. Handover to LCIDC completed. 100% contract value ₹2.45 Cr disbursed. Retention ₹12.25L locked in escrow. DLP active until 2027-10-21. As-Built BIM 7D sealed. Deed: c24ce89d9ab2905289924791ad9e1e803e2d38c37699f00ec4bed1b721ea7933",
+      "module_ref": "Hermes Legal Vault / Statutory Handover Gate",
+      "legacy_hash": "c24ce89d9ab2905289924791ad9e1e803e2d38c37699f00ec4bed1b721ea7933",
+      "action_title": "Virtual Completion Certificate (VCC-2026-GOMTI-PH2-001) Issued - 12M DLP Initialized",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-21T10:55:47.115612+00:00"
+    },
+    "merkle_node_hash": "ac8879f6110688906b75403c2bab1c3f327829c3f51000f4c7e0d2059df61b97",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 23,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 23,
+    "prev_deed_hash": "ac8879f6110688906b75403c2bab1c3f327829c3f51000f4c7e0d2059df61b97",
+    "action_category": "FINAL_BILL_RETENTION_RELEASED",
+    "payload_json": {
+      "details": "Net certified payout of ₹12,25,000.00 disbursed to contractor following 12-month DLP completion. Total contract financial balance zeroed out at ₹2,45,00,000.00. Deed: 2e747b52317ce586d8d7207a8f7a88836648dff445cfd46998b0f15a1bdedaf1",
+      "module_ref": "Midas Commercial Gatekeeper / Escrow Release",
+      "legacy_hash": "2e747b52317ce586d8d7207a8f7a88836648dff445cfd46998b0f15a1bdedaf1",
+      "action_title": "Final Bill RA-2027-PH2-FINAL Certified - 100% Retention Escrow (₹12.25L) Released",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-22T06:22:29.071827+00:00"
+    },
+    "merkle_node_hash": "eaead44e2e61bcb3fc34406a01236186bbb9ef3d9f051c3c1b90022e9d373972",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  },
+  {
+    "id": 24,
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "sequence_index": 24,
+    "prev_deed_hash": "eaead44e2e61bcb3fc34406a01236186bbb9ef3d9f051c3c1b90022e9d373972",
+    "action_category": "FINAL_DEFECT_CLEARANCE_AND_ARCHIVE_SEALED",
+    "payload_json": {
+      "details": "Statutory defect liability discharged under CPWD GCC Clause 17. Zero defects verified. Project status sealed as PERMANENT_ARCHIVE_LOCKED with database immutability triggers active. Deed: 6844cea62d92919644b39971bbdb9bc75f840ac8efe90f98536de3a22c31e4b7",
+      "module_ref": "Hermes Legal Vault / Statutory Closeout Gate",
+      "legacy_hash": "6844cea62d92919644b39971bbdb9bc75f840ac8efe90f98536de3a22c31e4b7",
+      "action_title": "Final Defect Clearance (FDCC-2027-GOMTI-PH2-001) Sealed & Project Archive Locked",
+      "signatory_name": "Akshat Singh Rathore",
+      "signatory_role": "Principal Architect & Quality Director",
+      "original_created_at": "2026-10-22T06:22:29.071827+00:00"
+    },
+    "merkle_node_hash": "108dc7661411d89cae4cb1309b4a1601572e27f3a6ab665615c516936a6e122c",
+    "created_at": "2026-10-22T06:38:14.225162+00:00"
+  }
+]

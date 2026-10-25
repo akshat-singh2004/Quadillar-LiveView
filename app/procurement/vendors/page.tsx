@@ -407,7 +407,7 @@ export default function ProcurementVendorsPage() {
                                                 <span className="text-[10px] text-cyan-400">{v.vendor_code}</span>
                                             </td>
                                             <td className="p-3 text-zinc-200">{v.trade_specialization}</td>
-                                            <td className="p-3 text-amber-400 font-bold">{v.enlistment_class.replace(/_/g, ' ')}</td>
+                                            <td className="p-3 text-amber-400 font-bold">{v?.enlistment_class?.replace(/_/g, ' ')}</td>
                                             <td className="p-3 font-mono text-[11px] text-zinc-400">
                                                 <div>GST: {v.gstin}</div>
                                                 <div>PAN: {v.pan}</div>
@@ -422,7 +422,7 @@ export default function ProcurementVendorsPage() {
                                                             : 'bg-emerald-950/80 text-emerald-400 border-emerald-800'
                                                         }`}
                                                 >
-                                                    {v.status.replace(/_/g, ' ')}
+                                                    {v?.status?.replace(/_/g, ' ')}
                                                 </span>
                                             </td>
                                         </tr>

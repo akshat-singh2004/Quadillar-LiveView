@@ -1,0 +1,77 @@
+[
+  {
+    "id": "6f968544-0abf-45e0-ac72-4536b46c930c",
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "subsystem": "Building Envelope",
+    "test_name": "DYNAMIC_FACADE_WATER_PENETRATION",
+    "standard_code": "ASTM E1105 / AAMA 501.2",
+    "parameters_tested": {
+      "duration_min": 15,
+      "levels_tested": "L9, L12, L14",
+      "test_pressure_pa": 500,
+      "water_rate_l_m2_min": 3.4
+    },
+    "result_value": "Zero Water Ingress or Condensation (0.00 ml)",
+    "compliance_status": "PASSED",
+    "witnessing_agency": "Winwall Technology India Pvt Ltd",
+    "deed_hash": "4d7c7959348e46d1a0685c87b5246e0cc82246e256ad0f235249e694111d8669",
+    "commissioned_at": "2026-10-21T10:55:47.115612+00:00",
+    "created_at": "2026-10-21T10:55:47.115612+00:00"
+  },
+  {
+    "id": "2ce90c03-c01e-4c56-aeb3-a7e2586efb45",
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "subsystem": "Vertical Transportation",
+    "test_name": "TRACTION_LIFTS_SAFETY_GOVERNOR_TRIP",
+    "standard_code": "IS 14665:2000 (Parts 1-5)",
+    "parameters_tested": {
+      "leveling_mm": 1.5,
+      "rated_speed_m_s": 2.5,
+      "overload_trip_kg": 1200,
+      "governor_trip_speed_m_s": 2.88
+    },
+    "result_value": "Tripped at 115% nominal velocity with instant rail clamp",
+    "compliance_status": "PASSED",
+    "witnessing_agency": "Schindler India Pvt Ltd / LCIDC Inspectorate",
+    "deed_hash": "4d7c7959348e46d1a0685c87b5246e0cc82246e256ad0f235249e694111d8669",
+    "commissioned_at": "2026-10-21T10:55:47.115612+00:00",
+    "created_at": "2026-10-21T10:55:47.115612+00:00"
+  },
+  {
+    "id": "f6e0b27d-58cc-4cda-8ca7-47c998b795bc",
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "subsystem": "Life Safety & HVAC",
+    "test_name": "STAIRWELL_PRESSURIZATION_SMOKE_MATRIX",
+    "standard_code": "NBC 2016 Part 4 / IS 2189",
+    "parameters_tested": {
+      "ahu_trip_delay_sec": 1.8,
+      "fire_recall_ground": "CONFIRMED",
+      "differential_pressure_pa": 52.4
+    },
+    "result_value": "Positive pressure 52.4 Pa maintained; AHUs tripped in 1.8s",
+    "compliance_status": "PASSED",
+    "witnessing_agency": "UP State Fire Service / Quadillar QA Gate",
+    "deed_hash": "4d7c7959348e46d1a0685c87b5246e0cc82246e256ad0f235249e694111d8669",
+    "commissioned_at": "2026-10-21T10:55:47.115612+00:00",
+    "created_at": "2026-10-21T10:55:47.115612+00:00"
+  },
+  {
+    "id": "d5a05ce2-4774-4411-8b08-08c58a8f7a13",
+    "project_id": "GOMTI-NAGAR-PH2-EXPANSION",
+    "subsystem": "Primary Electrical",
+    "test_name": "DG_AMF_SYNCHRONIZATION_LOAD_BANK",
+    "standard_code": "CPWD Electrical Specifications 2023",
+    "parameters_tested": {
+      "sets_kva": "2 x 750",
+      "duration_hours": 4,
+      "transfer_time_sec": 6.8,
+      "continuous_load_pct": 100
+    },
+    "result_value": "AMF cut-over in 6.8s; zero frequency flutter over 4 hours",
+    "compliance_status": "PASSED",
+    "witnessing_agency": "Cummins Power Generation India / LCIDC Electrical",
+    "deed_hash": "4d7c7959348e46d1a0685c87b5246e0cc82246e256ad0f235249e694111d8669",
+    "commissioned_at": "2026-10-21T10:55:47.115612+00:00",
+    "created_at": "2026-10-21T10:55:47.115612+00:00"
+  }
+]
