@@ -279,3 +279,235 @@ a:hover {
     break-after: avoid !important;
   }
 }
+
+/* === QUADILLAR CLAUDE MATTE LIGHT THEME START === */
+html[data-theme="claude-light"] {
+  --lv-canvas: #F6F4EF;
+  --lv-surface: #FDFCF9;
+  --lv-inset: #EFECE4;
+  --lv-border: #E2DDD2;
+  --lv-border-strong: #CFC8B8;
+  --lv-ink-primary: #1F1E1B;
+  --lv-ink-secondary: #4A4740;
+  --lv-ink-muted: #78736A;
+  --lv-terracotta: #C96442;
+  --lv-terracotta-pastel: #F9ECE6;
+  --lv-sage: #3B7A57;
+  --lv-sage-pastel: #E7F2EC;
+  --lv-ochre: #B27424;
+  --lv-ochre-pastel: #FBF2E1;
+  --lv-lavender: #74569B;
+  --lv-lavender-pastel: #F2ECF8;
+  --lv-brick: #C04848;
+  --lv-brick-pastel: #FBEAEA;
+}
+
+html[data-theme="claude-light"],
+html[data-theme="claude-light"] body,
+html[data-theme="claude-light"] main {
+  background-color: var(--lv-canvas) !important;
+  color: var(--lv-ink-primary) !important;
+}
+
+/* Deep Canvas Backgrounds (slate/zinc/gray/neutral/black/hex) */
+html[data-theme="claude-light"] [class*="bg-slate-950"],
+html[data-theme="claude-light"] [class*="bg-zinc-950"],
+html[data-theme="claude-light"] [class*="bg-gray-950"],
+html[data-theme="claude-light"] [class*="bg-neutral-950"],
+html[data-theme="claude-light"] [class*="bg-stone-950"],
+html[data-theme="claude-light"] [class*="bg-black"],
+html[data-theme="claude-light"] [class*="bg-[#0"] {
+  background-color: var(--lv-canvas) !important;
+}
+
+/* Elevated Card, Sidebar, Header & Modal Surfaces */
+html[data-theme="claude-light"] [class*="bg-slate-900"],
+html[data-theme="claude-light"] [class*="bg-zinc-900"],
+html[data-theme="claude-light"] [class*="bg-gray-900"],
+html[data-theme="claude-light"] [class*="bg-neutral-900"],
+html[data-theme="claude-light"] [class*="bg-stone-900"],
+html[data-theme="claude-light"] [class*="bg-[#1"],
+html[data-theme="claude-light"] aside,
+html[data-theme="claude-light"] nav,
+html[data-theme="claude-light"] header {
+  background-color: var(--lv-surface) !important;
+}
+
+/* Inset Wells, Table Headers & Secondary Buttons */
+html[data-theme="claude-light"] [class*="bg-slate-800"],
+html[data-theme="claude-light"] [class*="bg-zinc-800"],
+html[data-theme="claude-light"] [class*="bg-gray-800"],
+html[data-theme="claude-light"] [class*="bg-neutral-800"],
+html[data-theme="claude-light"] [class*="bg-stone-800"],
+html[data-theme="claude-light"] [class*="bg-[#2"] {
+  background-color: var(--lv-inset) !important;
+}
+
+/* Catch inline dark hex backgrounds on layout wrappers */
+html[data-theme="claude-light"] div[style*="background-color: #0"],
+html[data-theme="claude-light"] div[style*="background-color:#0"],
+html[data-theme="claude-light"] div[style*="background: #0"],
+html[data-theme="claude-light"] div[style*="background:#0"],
+html[data-theme="claude-light"] section[style*="background-color: #0"],
+html[data-theme="claude-light"] aside[style*="background-color: #0"] {
+  background-color: var(--lv-surface) !important;
+}
+
+/* Warm Taupe Stone Borders */
+html[data-theme="claude-light"] [class*="border-slate-9"],
+html[data-theme="claude-light"] [class*="border-slate-8"],
+html[data-theme="claude-light"] [class*="border-zinc-9"],
+html[data-theme="claude-light"] [class*="border-zinc-8"],
+html[data-theme="claude-light"] [class*="border-gray-9"],
+html[data-theme="claude-light"] [class*="border-gray-8"],
+html[data-theme="claude-light"] [class*="border-neutral-9"],
+html[data-theme="claude-light"] [class*="border-neutral-8"],
+html[data-theme="claude-light"] [class*="divide-slate-8"] > :not([hidden]) ~ :not([hidden]),
+html[data-theme="claude-light"] [class*="divide-zinc-8"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--lv-border) !important;
+}
+
+html[data-theme="claude-light"] [class*="border-slate-7"],
+html[data-theme="claude-light"] [class*="border-zinc-7"],
+html[data-theme="claude-light"] [class*="border-gray-7"],
+html[data-theme="claude-light"] [class*="border-neutral-7"] {
+  border-color: var(--lv-border-strong) !important;
+}
+
+/* Editorial Charcoal & Warm Umber Typography */
+html[data-theme="claude-light"] .text-white,
+html[data-theme="claude-light"] [class*="text-slate-100"],
+html[data-theme="claude-light"] [class*="text-slate-200"],
+html[data-theme="claude-light"] [class*="text-zinc-100"],
+html[data-theme="claude-light"] [class*="text-zinc-200"],
+html[data-theme="claude-light"] [class*="text-gray-100"],
+html[data-theme="claude-light"] [class*="text-gray-200"],
+html[data-theme="claude-light"] [class*="text-neutral-100"],
+html[data-theme="claude-light"] [class*="text-neutral-200"] {
+  color: var(--lv-ink-primary) !important;
+}
+
+html[data-theme="claude-light"] [class*="text-slate-300"],
+html[data-theme="claude-light"] [class*="text-zinc-300"],
+html[data-theme="claude-light"] [class*="text-gray-300"],
+html[data-theme="claude-light"] [class*="text-neutral-300"] {
+  color: var(--lv-ink-secondary) !important;
+}
+
+html[data-theme="claude-light"] [class*="text-slate-400"],
+html[data-theme="claude-light"] [class*="text-slate-500"],
+html[data-theme="claude-light"] [class*="text-zinc-400"],
+html[data-theme="claude-light"] [class*="text-zinc-500"],
+html[data-theme="claude-light"] [class*="text-gray-400"],
+html[data-theme="claude-light"] [class*="text-gray-500"],
+html[data-theme="claude-light"] [class*="text-neutral-400"],
+html[data-theme="claude-light"] [class*="text-neutral-500"] {
+  color: var(--lv-ink-muted) !important;
+}
+
+/* Claude Terracotta Clay Accent */
+html[data-theme="claude-light"] [class*="text-cyan-400"],
+html[data-theme="claude-light"] [class*="text-cyan-300"],
+html[data-theme="claude-light"] [class*="text-sky-400"] {
+  color: var(--lv-terracotta) !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-cyan-500/"],
+html[data-theme="claude-light"] [class*="bg-cyan-950"],
+html[data-theme="claude-light"] [class*="bg-cyan-900"] {
+  background-color: var(--lv-terracotta-pastel) !important;
+}
+
+html[data-theme="claude-light"] .bg-cyan-500,
+html[data-theme="claude-light"] .bg-cyan-600 {
+  background-color: var(--lv-terracotta) !important;
+  color: #FDFCF9 !important;
+}
+
+html[data-theme="claude-light"] [class*="border-cyan-"] {
+  border-color: rgba(201, 100, 66, 0.45) !important;
+}
+
+/* Matte Sage Olive Accent */
+html[data-theme="claude-light"] [class*="text-emerald-400"],
+html[data-theme="claude-light"] [class*="text-emerald-300"],
+html[data-theme="claude-light"] [class*="text-green-400"] {
+  color: var(--lv-sage) !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-emerald-500/"],
+html[data-theme="claude-light"] [class*="bg-emerald-950"],
+html[data-theme="claude-light"] [class*="bg-emerald-900"],
+html[data-theme="claude-light"] [class*="bg-green-950"] {
+  background-color: var(--lv-sage-pastel) !important;
+}
+
+html[data-theme="claude-light"] [class*="border-emerald-"] {
+  border-color: rgba(59, 122, 87, 0.42) !important;
+}
+
+/* Warm Ochre Honey Accent */
+html[data-theme="claude-light"] [class*="text-amber-400"],
+html[data-theme="claude-light"] [class*="text-amber-300"],
+html[data-theme="claude-light"] [class*="text-yellow-400"] {
+  color: var(--lv-ochre) !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-amber-500/"],
+html[data-theme="claude-light"] [class*="bg-amber-950"] {
+  background-color: var(--lv-ochre-pastel) !important;
+}
+
+html[data-theme="claude-light"] [class*="border-amber-"] {
+  border-color: rgba(178, 116, 36, 0.45) !important;
+}
+
+/* Dusty Lavender-Plum Accent */
+html[data-theme="claude-light"] [class*="text-purple-400"],
+html[data-theme="claude-light"] [class*="text-purple-300"],
+html[data-theme="claude-light"] [class*="text-indigo-400"] {
+  color: var(--lv-lavender) !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-purple-500/"],
+html[data-theme="claude-light"] [class*="bg-purple-950"],
+html[data-theme="claude-light"] [class*="bg-indigo-950"] {
+  background-color: var(--lv-lavender-pastel) !important;
+}
+
+html[data-theme="claude-light"] .bg-purple-600 {
+  background-color: var(--lv-lavender) !important;
+  color: #FDFCF9 !important;
+}
+
+html[data-theme="claude-light"] [class*="border-purple-"] {
+  border-color: rgba(116, 86, 155, 0.42) !important;
+}
+
+/* Matte Brick Rose Accent */
+html[data-theme="claude-light"] [class*="text-rose-400"],
+html[data-theme="claude-light"] [class*="text-rose-300"],
+html[data-theme="claude-light"] [class*="text-rose-200"],
+html[data-theme="claude-light"] [class*="text-red-400"] {
+  color: var(--lv-brick) !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-rose-950"],
+html[data-theme="claude-light"] [class*="bg-rose-500/"],
+html[data-theme="claude-light"] [class*="bg-red-950"] {
+  background-color: var(--lv-brick-pastel) !important;
+}
+
+html[data-theme="claude-light"] [class*="border-rose-"] {
+  border-color: rgba(192, 72, 72, 0.45) !important;
+}
+
+/* Keep ivory text on solid Terracotta/Ochre primary CTAs */
+html[data-theme="claude-light"] [class*="from-cyan-500"],
+html[data-theme="claude-light"] button.bg-cyan-500,
+html[data-theme="claude-light"] a.bg-cyan-500,
+html[data-theme="claude-light"] button.bg-purple-600 {
+  background-image: linear-gradient(135deg, #C96442 0%, #B27424 100%) !important;
+  color: #FDFCF9 !important;
+}
+/* === QUADILLAR CLAUDE MATTE LIGHT THEME END === */

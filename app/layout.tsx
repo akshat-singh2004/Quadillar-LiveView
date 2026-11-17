@@ -1,3 +1,6 @@
+import QuadmaxKernelFloatingWidget from "@/components/QuadmaxKernelFloatingWidget";
+import LiveviewThemeQuickToggle from "@/components/LiveviewThemeQuickToggle";
+import { LiveviewThemeProvider } from "@/lib/theme/liveviewTheme";
 import { QuadMaxOverlay } from "@/components/copilot/QuadMaxOverlay";
 
 import type { Metadata } from "next";
@@ -19,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark bg-zinc-950 text-zinc-100 antialiased">
-      <body className={`${inter.className} min-h-screen bg-zinc-950 text-zinc-100`}>
+    <html lang="en" className="dark bg-zinc-950 text-zinc-100 antialiased" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-zinc-950 text-zinc-100`}><LiveviewThemeProvider><LiveviewThemeQuickToggle />
         <RoleProvider>
           <AppShell>
             {children}
@@ -28,7 +31,7 @@ export default function RootLayout({
         </RoleProvider>
         
         <QuadMaxOverlay />
-      </body>
+      <QuadmaxKernelFloatingWidget /></LiveviewThemeProvider></body>
     </html>
   );
 }
