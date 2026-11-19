@@ -280,9 +280,6 @@ export default function MasterCommandCenter() {
             >
               <span>🏛️ OPEN VANGUARD 6D BIM TWIN</span>
             </a>
-            <span className="px-2.5 py-1 text-xs font-mono bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 rounded">
-              POSTGRES RLS ENFORCED
-            </span>
           </div>
         </div>
       </div>
@@ -331,46 +328,32 @@ export default function MasterCommandCenter() {
           <div className="relative bg-slate-950 flex-1 min-h-[220px] flex flex-col overflow-hidden">
             <LiveSiteVideoCanvas ptz={ptzState} showCV={cvBBoxesActive} />
 
-            {/* PTZ Steering Overlays */}
-            <div className="absolute top-2 right-2 flex flex-col gap-1 z-20 bg-slate-900/85 backdrop-blur-sm border border-slate-800 p-2 rounded-lg text-[10px] font-mono">
-              <div className="text-slate-400 font-bold mb-1 flex items-center justify-between">
-                <span>CRANE SLEW PTZ</span>
-                <CameraIcon className="w-3 h-3 text-cyan-400" />
+            {/* BIM Zone PTZ Presets & Live Telemetry */}
+            <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-20 bg-slate-900/85 backdrop-blur-sm border border-slate-800 p-2.5 rounded-lg text-[10px] font-mono">
+              <div className="text-slate-400 font-bold flex items-center justify-between gap-3">
+                <span>BIM ZONE PTZ</span>
+                <span className="text-cyan-400">{ptzState.azimuth.toFixed(0)}° / {ptzState.elev.toFixed(0)}°</span>
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-slate-500">AZIMUTH:</span>
-                <span className="text-cyan-400 font-bold">{ptzState.azimuth.toFixed(1)}°</span>
+              <div className="flex gap-1">
+                {[
+                  { label: "BIT-1", azimuth: 38.5, elev: -24.0 },
+                  { label: "BIT-2 DOME", azimuth: -15.0, elev: -16.5 },
+                  { label: "WEIGHBRIDGE", azimuth: 82.0, elev: -35.0 },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setPtzState((prev) => ({ ...prev, azimuth: preset.azimuth, elev: preset.elev }))}
+                    className={`px-1.5 py-1 rounded border text-[9px] font-bold transition ${
+                      Math.abs(ptzState.azimuth - preset.azimuth) < 1
+                        ? "bg-cyan-950 border-cyan-400 text-cyan-300"
+                        : "bg-slate-950/80 border-slate-700 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
               </div>
-              <input
-                type="range"
-                min="-180"
-                max="180"
-                step="0.5"
-                value={ptzState.azimuth}
-                onChange={e => setPtzState(prev => ({ ...prev, azimuth: parseFloat(e.target.value) }))}
-                className="w-28 h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-cyan-400"
-              />
-
-              <div className="flex items-center justify-between gap-3 mt-1">
-                <span className="text-slate-500">TILT:</span>
-                <span className="text-cyan-400 font-bold">{ptzState.elev.toFixed(1)}°</span>
-              </div>
-              <input
-                type="range"
-                min="-60"
-                max="30"
-                step="0.5"
-                value={ptzState.elev}
-                onChange={e => setPtzState(prev => ({ ...prev, elev: parseFloat(e.target.value) }))}
-                className="w-28 h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-cyan-400"
-              />
-
-              <button
-                onClick={triggerCraneIntrusionEvent}
-                className="mt-2 px-2 py-1 bg-red-950/80 hover:bg-red-900/90 text-red-300 border border-red-500/50 rounded font-bold transition text-[9px] uppercase tracking-wider text-center"
-              >
-                Simulate Dome Airspace Breach
-              </button>
             </div>
 
             <div className="mt-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800/80 grid grid-cols-4 gap-2 text-[10px] font-mono text-slate-400 z-10">

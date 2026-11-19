@@ -245,7 +245,6 @@ export default function SystemSettingsConsole() {
           { id: "agent_daemons", label: "3. Agent Governors", icon: Cpu },
           { id: "evidentiary_65b", label: "4. Section 65B Vault", icon: FileCheck },
           { id: "rera_profile", label: "5. RERA & Municipal", icon: Building2 },
-          { id: "ground_truth", label: "6. Core & Ground Truth", icon: Radio },
         ].map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;

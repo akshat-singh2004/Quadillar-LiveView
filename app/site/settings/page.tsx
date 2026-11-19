@@ -36,7 +36,7 @@ export default function SystemSettingsAndGenomeLimitsPage() {
             SYSTEM SETTINGS, THEME STUDIO & GENOME LIMITS
           </h1>
           <p className="text-xs text-slate-400">
-            Configure Global Interface Appearance (Claude Matte Light vs. Obsidian Dark) & Inspect Canonical Engineering Baselines
+            Configure Global Interface Appearance & Inspect Canonical Engineering Baselines
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs">
@@ -61,7 +61,7 @@ export default function SystemSettingsAndGenomeLimitsPage() {
             </div>
           </div>
           <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
-            ACTIVE: {theme === "claude-light" ? "CLAUDE MATTE LIGHT" : "OBSIDIAN DARK"}
+            ACTIVE: {theme === "claude-light" ? "LIGHT MODE" : "DARK MODE"}
           </span>
         </div>
 
@@ -81,10 +81,7 @@ export default function SystemSettingsAndGenomeLimitsPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-white">
-                    Claude Matte Light (Editorial Pastel)
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold">
-                    CLAUDE'S PICK
+                    Light Mode
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
@@ -125,7 +122,7 @@ export default function SystemSettingsAndGenomeLimitsPage() {
             </div>
           </button>
 
-          {/* Option B: Obsidian Dark */}
+          {/* Option B: Dark Mode */}
           <button
             type="button"
             onClick={() => setThemeMode("obsidian-dark")}
@@ -139,7 +136,7 @@ export default function SystemSettingsAndGenomeLimitsPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-white">
-                    Obsidian Command Dark (Control Room)
+                    Dark Mode
                   </span>
                   <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 text-[9px] font-bold">
                     DEFAULT
@@ -187,7 +184,7 @@ export default function SystemSettingsAndGenomeLimitsPage() {
         {/* Claude Matte & Pastel Swatch Matrix */}
         <div className="pt-2 border-t border-slate-800">
           <div className="text-[10px] text-slate-400 font-bold uppercase mb-2">
-            CLAUDE LIGHT PALETTE TOKEN SPECIFICATION
+            LIGHT PALETTE TOKEN SPECIFICATION
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 text-xs">
             {claudePaletteSwatches.map((sw) => (

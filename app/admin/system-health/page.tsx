@@ -379,7 +379,6 @@ export default function SystemHealthPage() {
                     <span className="font-semibold text-white">{module.schemaVersion}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2">
-                    <span className="text-slate-400">RLS active</span>
                     <span className="font-semibold text-white">{module.rlsActive}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2">

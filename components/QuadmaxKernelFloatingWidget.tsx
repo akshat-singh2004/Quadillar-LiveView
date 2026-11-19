@@ -1,36 +1,116 @@
 // @refresh reset
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  GOVERNOR_PROFILES,
-  GovernorId,
-  CONSTRUCTION_PROFILES,
-  ConstructionProfileId,
-  QUADMAX_FUNCTION_REGISTRY,
-  executeQuadmaxFunction,
-  dispatchVanguardGovernorQuery,
-  AgentSynthesisResponse,
-} from "@/lib/agents/quadillarAgentMesh";
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Plus,
+  ShieldAlert,
+  Layers,
+  Sparkles,
+} from "lucide-react";
 import { useLiveviewTheme } from "@/lib/theme/liveviewTheme";
+import {
+  getAllPortfolioAlerts,
+  HIERARCHICAL_AGENT_MESH,
+  PORTFOLIO_10_PROJECTS,
+  SCOPE_DOMAINS,
+  ScopeDomainId,
+} from "@/lib/agents/portfolioSentinelMesh";
+import type {
+  CustomAgentSpec,
+  QuadmaxChatPayload,
+  QuadmaxCitation,
+  QuadmaxMetricPill,
+} from "@/app/api/quadmax/route";
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  activeAgentChain?: string[];
+  scopeLabel?: string;
+  siteLabel?: string;
+  standardRef?: string;
+  metrics?: QuadmaxMetricPill[];
+  citations?: QuadmaxCitation[];
+  followUps?: string[];
+}
 
 const POS_STORAGE_KEY = "quadmax-draggable-pill-pos-v2";
-const PROFILE_STORAGE_KEY = "quadmax-active-profile-v2";
-const AGENT_STORAGE_KEY = "quadmax-active-agent-v1";
-const PILL_WIDTH = 172;
-const PILL_HEIGHT = 34;
+const THREAD_STORAGE_KEY = "quadmax-quadmax-thread-v4";
+const CUSTOM_AGENTS_KEY = "quadmax-custom-agents-v1";
+const PILL_WIDTH = 184;
+const PILL_HEIGHT = 36;
 
 export default function QuadmaxKernelFloatingWidget() {
   const { isLight } = useLiveviewTheme();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<GovernorId | "ALL">("ALL");
-  const [activeProfileId, setActiveProfileId] =
-    useState<ConstructionProfileId | "ALL">("ALL");
-  const [query, setQuery] = useState("");
-  const [result, setResult] = useState<AgentSynthesisResponse>(() =>
-    executeQuadmaxFunction("pd_executive_pulse")
-  );
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  // Site × Scope × Hierarchical Agent Filters
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL_10");
+  const [selectedScope, setSelectedScope] = useState<ScopeDomainId>("ALL_SCOPES");
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("AUTO");
+
+  // Custom Micro-Agent Builder State
+  const [customAgents, setCustomAgents] = useState<CustomAgentSpec[]>([]);
+  const [showCustomBuilder, setShowCustomBuilder] = useState(false);
+  const [newAgentName, setNewAgentName] = useState("");
+  const [newAgentToleranceMm, setNewAgentToleranceMm] = useState("2.0");
+  const [newAgentInstruction, setNewAgentInstruction] = useState("");
+
+  // Hands-Free "Hey Quadmax" Voice Recognition & Spoken TTS
+  const [isListening, setIsListening] = useState(false);
+  const [wakeWordArmed, setWakeWordArmed] = useState(false);
+  const [voiceSpeakEnabled, setVoiceSpeakEnabled] = useState(false);
+  const [voiceStatusNote, setVoiceStatusNote] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const initialAlerts = getAllPortfolioAlerts("ALL_10", "ALL_SCOPES");
+    const summitAlert = initialAlerts.find((a) => a.projectId === "LKO-SUMMIT-TOWER");
+    const vanguardAlert = initialAlerts.find((a) => a.alertId === "NCR-2026-STR-042");
+
+    return [
+      {
+        id: "quadmax-boot-brief",
+        role: "assistant",
+        timestamp: "LIVE",
+        activeAgentChain: ["PRIME-COMMAND", "MINERVA-ARCH", "ARGUS-SPATIAL", "μ-GRIDLINE-DELTA"],
+        scopeLabel: "All Domains (360°)",
+        siteLabel: "All 10 Portfolio Sites",
+        standardRef: "ISO 19650-2 • IS 456:2000 • 1.0 mm Sentinel",
+        content: `Portfolio Sentinel active across all 10 Lucknow sites (₹4,576.50 Cr total EPC value, 1.3–2.0 mm LiDAR RMS). ${initialAlerts.length} active wrongdoings detected:\n\n• [Summit Corporate Building — 12th Floor, Grid B4–B7]: ${summitAlert?.headline} (${summitAlert?.deviationMetric}).\n• [Project Vanguard — Tower A / BIT-4 TG-03]: ${vanguardAlert?.headline} (${vanguardAlert?.deviationMetric}).\n• [Aurelia Sky-Villas & Sushant Med-Tech]: 14.0 mm Column C-11 tilt & εr 1.6 hollow partition spoof caught.`,
+        metrics: [
+          { label: "Portfolio Scope", value: "10 Active Sites", tone: "nominal" },
+          { label: "Summit 12F Wall", value: "+1,000 mm Offset", tone: "critical" },
+          { label: "Vanguard TG-03", value: "₹4.50L Hold", tone: "critical" },
+          { label: "Spatial Floor", value: "±1.3–2.0 mm", tone: "nominal" },
+        ],
+        citations: [
+          { label: "Focus Vanguard TG-03 in 3D BIM", href: "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042", tag: "3D BIM" },
+          { label: "Section 65B Evidence Vault", href: "/site/audit-ledger", tag: "65B VAULT" },
+        ],
+        followUps: [
+          "Give me full details on the Summit Building 12th floor 1m wall error",
+          "Report strictly on Project Vanguard Commercial Hub",
+          "Check millimeter spatial deviations across all 10 sites",
+        ],
+      },
+    ];
+  });
+
+  const [input, setInput] = useState("");
+  const [historyCursor, setHistoryCursor] = useState<number>(-1);
+  const [isSending, setIsSending] = useState(false);
+
+  const threadEndRef = useRef<HTMLDivElement | null>(null);
+  const sendRef = useRef<(overridePrompt?: string) => Promise<void>>(async () => {});
 
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -43,22 +123,34 @@ export default function QuadmaxKernelFloatingWidget() {
     moved: boolean;
   } | null>(null);
 
+  const speakResponse = useCallback(
+    (text: string) => {
+      if (!voiceSpeakEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) {
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        const clean = text.replace(/[•[]]/g, "").slice(0, 420);
+        const utter = new SpeechSynthesisUtterance(clean);
+        utter.rate = 1.04;
+        utter.pitch = 0.96;
+        window.speechSynthesis.speak(utter);
+      } catch {}
+    },
+    [voiceSpeakEnabled]
+  );
+
   useEffect(() => {
     try {
-      const savedAgent = localStorage.getItem(AGENT_STORAGE_KEY) as GovernorId | "ALL" | null;
-      if (savedAgent && (savedAgent === "ALL" || GOVERNOR_PROFILES.some((g) => g.id === savedAgent))) {
-        setSelectedAgent(savedAgent);
+      const savedThread = localStorage.getItem(THREAD_STORAGE_KEY);
+      if (savedThread) {
+        const parsed = JSON.parse(savedThread);
+        if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
       }
-      const savedProfile = localStorage.getItem(PROFILE_STORAGE_KEY) as
-        | ConstructionProfileId
-        | "ALL"
-        | null;
-      if (
-        savedProfile &&
-        (savedProfile === "ALL" ||
-          CONSTRUCTION_PROFILES.some((p) => p.id === savedProfile))
-      ) {
-        setActiveProfileId(savedProfile);
+      const savedCustom = localStorage.getItem(CUSTOM_AGENTS_KEY);
+      if (savedCustom) {
+        const parsedAgents = JSON.parse(savedCustom);
+        if (Array.isArray(parsedAgents)) setCustomAgents(parsedAgents);
       }
     } catch {}
 
@@ -72,9 +164,9 @@ export default function QuadmaxKernelFloatingWidget() {
     };
 
     try {
-      const saved = localStorage.getItem(POS_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const savedPos = localStorage.getItem(POS_STORAGE_KEY);
+      if (savedPos) {
+        const parsed = JSON.parse(savedPos);
         if (typeof parsed?.x === "number" && typeof parsed?.y === "number") {
           setPos(clampPos(parsed.x, parsed.y));
           return;
@@ -84,78 +176,244 @@ export default function QuadmaxKernelFloatingWidget() {
 
     setPos(clampPos(window.innerWidth - PILL_WIDTH - 16, window.innerHeight - PILL_HEIGHT - 16));
 
-    const handleResize = () => {
-      setPos((prev) => (prev ? clampPos(prev.x, prev.y) : prev));
-    };
+    const handleResize = () => setPos((prev) => (prev ? clampPos(prev.x, prev.y) : prev));
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const filteredFunctions = QUADMAX_FUNCTION_REGISTRY.filter((fn) => {
-    const matchesAgent = selectedAgent === "ALL" || fn.governor === selectedAgent;
-    const matchesProfile = activeProfileId === "ALL" || fn.profileId === activeProfileId;
-    return matchesAgent && matchesProfile;
-  });
+  useEffect(() => {
+    if (messages.length > 1) {
+      try {
+        localStorage.setItem(THREAD_STORAGE_KEY, JSON.stringify(messages.slice(-24)));
+      } catch {}
+    }
+    if (isOpen) {
+      threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isOpen]);
 
-  const handleAgentDropdownChange = (nextAgent: GovernorId | "ALL") => {
-    setSelectedAgent(nextAgent);
-    try {
-      localStorage.setItem(AGENT_STORAGE_KEY, nextAgent);
-    } catch {}
+  const handleSend = useCallback(
+    async (overridePrompt?: string) => {
+      const prompt = (overridePrompt ?? input).trim();
+      if (!prompt || isSending) return;
 
-    const nextPool = QUADMAX_FUNCTION_REGISTRY.filter(
-      (fn) =>
-        (nextAgent === "ALL" || fn.governor === nextAgent) &&
-        (activeProfileId === "ALL" || fn.profileId === activeProfileId)
-    );
-    if (nextPool.length > 0) {
-      setResult(executeQuadmaxFunction(nextPool[0].id));
-    } else if (nextAgent !== "ALL") {
-      const fallbackPool = QUADMAX_FUNCTION_REGISTRY.filter((fn) => fn.governor === nextAgent);
-      if (fallbackPool.length > 0) {
-        setActiveProfileId("ALL");
-        setResult(executeQuadmaxFunction(fallbackPool[0].id));
+      const nowTime = new Date().toTimeString().slice(0, 5);
+      const userMsg: ChatMessage = {
+        id: `u-${Date.now()}`,
+        role: "user",
+        content: prompt,
+        timestamp: nowTime,
+      };
+
+      const nextThread = [...messages, userMsg];
+      setMessages(nextThread);
+      if (!overridePrompt) setInput("");
+      setHistoryCursor(-1);
+      setIsSending(true);
+
+      const activeCustom = customAgents.find((a) => a.id === selectedAgentId) || null;
+
+      try {
+        const res = await fetch("/api/quadmax", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: prompt,
+            projectId: selectedProjectId,
+            scope: activeCustom ? activeCustom.scope : selectedScope,
+            agentId: selectedAgentId,
+            customAgent: activeCustom,
+            history: nextThread.map((m) => ({ role: m.role, content: m.content })),
+          }),
+        });
+
+        const data = await res.json();
+        const payload = data?.payload as QuadmaxChatPayload | undefined;
+
+        if (payload) {
+          const assistantMsg: ChatMessage = {
+            id: `a-${Date.now()}`,
+            role: "assistant",
+            content: payload.answer,
+            timestamp: new Date().toTimeString().slice(0, 5),
+            activeAgentChain: payload.activeAgentChain,
+            scopeLabel: payload.scopeLabel,
+            siteLabel: payload.siteLabel,
+            standardRef: payload.standardRef,
+            metrics: payload.metrics,
+            citations: payload.citations,
+            followUps: payload.followUps,
+          };
+          setMessages((prev) => [...prev, assistantMsg]);
+          speakResponse(payload.answer);
+        }
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `a-${Date.now()}`,
+            role: "assistant",
+            content: "Unable to reach /api/quadmax. Verify your Next.js server is running.",
+            timestamp: new Date().toTimeString().slice(0, 5),
+          },
+        ]);
+      } finally {
+        setIsSending(false);
       }
+    },
+    [
+      customAgents,
+      input,
+      isSending,
+      messages,
+      selectedAgentId,
+      selectedProjectId,
+      selectedScope,
+      speakResponse,
+    ]
+  );
+
+  useEffect(() => {
+    sendRef.current = handleSend;
+  }, [handleSend]);
+
+  // Embedded "Hey Quadmax" / Push-to-Talk Voice Engine
+  const startVoiceCapture = useCallback(
+    (continuousWake: boolean) => {
+      if (typeof window === "undefined") return;
+      const SpeechRec =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRec) {
+        setVoiceStatusNote("Browser voice recognition unavailable — type commands below.");
+        return;
+      }
+
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+
+      const rec = new SpeechRec();
+      rec.lang = "en-IN";
+      rec.continuous = continuousWake;
+      rec.interimResults = false;
+
+      rec.onstart = () => {
+        setIsListening(true);
+        setVoiceStatusNote(
+          continuousWake
+            ? 'Wake-word armed: say "Hey Quadmax, give me an overview..."'
+            : "Listening for voice command..."
+        );
+      };
+
+      rec.onresult = (event: any) => {
+        const last = event.results[event.results.length - 1];
+        if (!last || !last.isFinal) return;
+        const transcript = String(last[0].transcript || "").trim();
+        if (!transcript) return;
+
+        if (continuousWake) {
+          const lower = transcript.toLowerCase();
+          if (
+            lower.includes("hey quadmax") ||
+            lower.includes("quadmax") ||
+            lower.includes("quadmax") ||
+            lower.includes("hey google")
+          ) {
+            const cleaned = transcript
+              .replace(/^(heys+quadmax|quadmax|quadmax|heys+google)[,s]*/i, "")
+              .trim();
+            setIsOpen(true);
+            setVoiceSpeakEnabled(true);
+            sendRef.current(cleaned || "Give me a complete executive briefing across all 10 projects");
+          }
+        } else {
+          setIsOpen(true);
+          sendRef.current(transcript);
+        }
+      };
+
+      rec.onerror = () => {
+        setIsListening(false);
+        setWakeWordArmed(false);
+      };
+
+      rec.onend = () => {
+        if (continuousWake) {
+          try {
+            rec.start();
+          } catch {
+            setIsListening(false);
+          }
+        } else {
+          setIsListening(false);
+          setVoiceStatusNote(null);
+        }
+      };
+
+      recognitionRef.current = rec;
+      rec.start();
+    },
+    []
+  );
+
+  const toggleWakeWord = () => {
+    if (wakeWordArmed) {
+      setWakeWordArmed(false);
+      setIsListening(false);
+      setVoiceStatusNote(null);
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+    } else {
+      setWakeWordArmed(true);
+      setVoiceSpeakEnabled(true);
+      startVoiceCapture(true);
     }
   };
 
-  const handleSelectProfile = (profileId: ConstructionProfileId | "ALL") => {
-    setActiveProfileId(profileId);
+  const handleCreateCustomAgent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAgentName.trim()) return;
+    const created: CustomAgentSpec = {
+      id: `CUSTOM-${Date.now()}`,
+      name: newAgentName.trim(),
+      scope: selectedScope === "ALL_SCOPES" ? "SPATIAL_MILLIMETER_QA" : selectedScope,
+      projectId: selectedProjectId,
+      toleranceMm: parseFloat(newAgentToleranceMm) || 2.0,
+      instruction:
+        newAgentInstruction.trim() ||
+        `Audit ${selectedProjectId} within ±${newAgentToleranceMm} mm tolerance and report any sequence or dimensional anomaly.`,
+    };
+    const updated = [...customAgents, created];
+    setCustomAgents(updated);
+    setSelectedAgentId(created.id);
+    setShowCustomBuilder(false);
+    setNewAgentName("");
+    setNewAgentInstruction("");
     try {
-      localStorage.setItem(PROFILE_STORAGE_KEY, profileId);
+      localStorage.setItem(CUSTOM_AGENTS_KEY, JSON.stringify(updated));
     } catch {}
+  };
 
-    const nextPool = QUADMAX_FUNCTION_REGISTRY.filter(
-      (fn) =>
-        (selectedAgent === "ALL" || fn.governor === selectedAgent) &&
-        (profileId === "ALL" || fn.profileId === profileId)
-    );
-    if (nextPool.length > 0) {
-      setResult(executeQuadmaxFunction(nextPool[0].id));
-    } else if (profileId !== "ALL") {
-      const profilePool = QUADMAX_FUNCTION_REGISTRY.filter((fn) => fn.profileId === profileId);
-      if (profilePool.length > 0) {
-        setSelectedAgent("ALL");
-        setResult(executeQuadmaxFunction(profilePool[0].id));
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const userPrompts = messages.filter((m) => m.role === "user").map((m) => m.content);
+    if (e.key === "ArrowUp" && userPrompts.length > 0) {
+      e.preventDefault();
+      const nextIdx = historyCursor === -1 ? userPrompts.length - 1 : Math.max(0, historyCursor - 1);
+      setHistoryCursor(nextIdx);
+      setInput(userPrompts[nextIdx]);
+    } else if (e.key === "ArrowDown" && historyCursor !== -1) {
+      e.preventDefault();
+      if (historyCursor >= userPrompts.length - 1) {
+        setHistoryCursor(-1);
+        setInput("");
+      } else {
+        const nextIdx = historyCursor + 1;
+        setHistoryCursor(nextIdx);
+        setInput(userPrompts[nextIdx]);
       }
     }
-  };
-
-  const handleRunFunction = (fnId: string) => {
-    const res = executeQuadmaxFunction(fnId);
-    setResult(res);
-  };
-
-  const handleAsk = (qText?: string) => {
-    const prompt = (qText ?? query).trim();
-    if (!prompt) return;
-    const res = dispatchVanguardGovernorQuery(
-      prompt,
-      selectedAgent === "ALL" ? undefined : selectedAgent,
-      activeProfileId === "ALL" ? undefined : activeProfileId
-    );
-    setResult(res);
-    if (!qText) setQuery("");
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -177,9 +435,7 @@ export default function QuadmaxKernelFloatingWidget() {
     if (!ds || ds.pointerId !== e.pointerId) return;
     const dx = e.clientX - ds.startX;
     const dy = e.clientY - ds.startY;
-    if (Math.hypot(dx, dy) > 4) {
-      ds.moved = true;
-    }
+    if (Math.hypot(dx, dy) > 4) ds.moved = true;
     const maxX = Math.max(12, window.innerWidth - PILL_WIDTH - 12);
     const maxY = Math.max(12, window.innerHeight - PILL_HEIGHT - 12);
     setPos({
@@ -195,7 +451,6 @@ export default function QuadmaxKernelFloatingWidget() {
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {}
     setIsDragging(false);
-
     if (ds.moved && pos) {
       try {
         localStorage.setItem(POS_STORAGE_KEY, JSON.stringify(pos));
@@ -208,277 +463,481 @@ export default function QuadmaxKernelFloatingWidget() {
 
   if (!pos) return null;
 
-  const activeProfile =
-    activeProfileId === "ALL"
-      ? null
-      : CONSTRUCTION_PROFILES.find((p) => p.id === activeProfileId) || null;
-
   const viewportW = typeof window !== "undefined" ? window.innerWidth : 1280;
   const viewportH = typeof window !== "undefined" ? window.innerHeight : 800;
   const openUpward = pos.y > viewportH * 0.52;
   const alignRight = pos.x + PILL_WIDTH / 2 > viewportW * 0.5;
 
+  const latestAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const activeFollowUps = latestAssistant?.followUps || [];
+  const totalPortfolioAlerts = getAllPortfolioAlerts("ALL_10", "ALL_SCOPES").length;
+
+  const panelStyle: React.CSSProperties = isLight
+    ? { backgroundColor: "rgba(253, 252, 249, 0.98)", borderColor: "#D6CFC2", color: "#1F1E1B" }
+    : { backgroundColor: "rgba(9, 9, 11, 0.97)", borderColor: "#27272A", color: "#FAFAFA" };
+
+  const surfaceBg = isLight ? "#F3EFE6" : "#141417";
+  const borderSubtle = isLight ? "#DED8CA" : "#27272A";
+  const mutedText = isLight ? "#6E695F" : "#A1A1AA";
+  const accentColor = isLight ? "#C96442" : "#10B981";
+
   return (
     <div
-      style={{
-        position: "fixed",
-        left: `${pos.x}px`,
-        top: `${pos.y}px`,
-        zIndex: 60,
-        touchAction: "none",
-      }}
-      className="font-mono select-none"
+      style={{ position: "fixed", left: `${pos.x}px`, top: `${pos.y}px`, zIndex: 60 }}
+      className="font-mono"
     >
-      {/* Multi-Agent & Multi-Profile Kernel Drawer */}
       {isOpen && (
         <div
+          onPointerDown={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
-            ...(openUpward ? { bottom: `${PILL_HEIGHT + 8}px` } : { top: `${PILL_HEIGHT + 8}px` }),
+            ...(openUpward ? { bottom: `${PILL_HEIGHT + 10}px` } : { top: `${PILL_HEIGHT + 10}px` }),
             ...(alignRight ? { right: 0 } : { left: 0 }),
+            ...panelStyle,
           }}
-          className="w-[400px] max-w-[94vw] bg-slate-950/95 backdrop-blur-xl border border-cyan-500/50 rounded-2xl shadow-2xl p-3.5 flex flex-col gap-2.5 text-xs text-slate-100 select-text"
+          className={`${
+            isExpanded ? "w-[580px] h-[640px]" : "w-[450px] h-[520px]"
+          } max-w-[95vw] max-h-[calc(100vh-80px)] rounded-2xl border shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden select-text transition-all duration-150`}
         >
-          {/* Top Header */}
-          <div className="flex justify-between items-start border-b border-slate-800 pb-2">
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-cyan-400 text-[11px]">QUADMAX.AI</span>
-                <span className="px-1.5 py-0.2 bg-emerald-500/20 border border-emerald-500/40 rounded text-[9px] text-emerald-400 font-bold">
-                  5 AGENTS • 7 PROFILES
+          {/* 1. J.A.R.V.I.S. Top Command Header + Voice Wake Controls */}
+          <div
+            style={{ borderColor: borderSubtle }}
+            className="px-3.5 py-2.5 border-b flex items-center justify-between gap-2 shrink-0"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles style={{ color: accentColor }} className="w-3.5 h-3.5" />
+              <span className="font-bold text-xs tracking-tight">QUADMAX.AI</span>
+              <span
+                style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: accentColor }}
+                className="px-1.5 py-0.5 rounded border text-[9px] font-bold"
+              >
+                QUADMAX • 10 SITES
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1 text-[10px]">
+              <button
+                type="button"
+                onClick={toggleWakeWord}
+                style={{
+                  backgroundColor: wakeWordArmed ? accentColor : surfaceBg,
+                  borderColor: borderSubtle,
+                  color: wakeWordArmed ? "#09090B" : mutedText,
+                }}
+                className="px-2 py-0.5 rounded border font-bold flex items-center gap-1"
+                title='Enable hands-free "Hey Quadmax" voice wake listener'
+              >
+                {wakeWordArmed ? <Mic className="w-2.5 h-2.5" /> : <MicOff className="w-2.5 h-2.5" />}
+                {wakeWordArmed ? "Hey Quadmax: ON" : "Hey Quadmax"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setVoiceSpeakEnabled((v) => !v)}
+                style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
+                className="p-1 rounded border"
+                title={voiceSpeakEnabled ? "Mute spoken voice readout" : "Enable spoken voice readout"}
+              >
+                {voiceSpeakEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMessages((prev) => [prev[0]]);
+                  try {
+                    localStorage.removeItem(THREAD_STORAGE_KEY);
+                  } catch {}
+                }}
+                style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
+                className="px-2 py-0.5 rounded border font-bold"
+              >
+                Reset
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsExpanded((v) => !v)}
+                style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
+                className="px-2 py-0.5 rounded border font-bold"
+              >
+                {isExpanded ? "Compact" : "Expand"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
+                className="px-2 py-0.5 rounded border font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* 2. Site × Domain Scope × 3-Tier Hierarchical Agent Selector */}
+          <div
+            style={{ borderColor: borderSubtle, backgroundColor: surfaceBg }}
+            className="px-3 py-2 border-b grid grid-cols-1 sm:grid-cols-3 gap-1.5 shrink-0 text-[10px]"
+          >
+            {/* Site / Building Filter */}
+            <div className="flex flex-col gap-0.5">
+              <span style={{ color: mutedText }} className="text-[8px] font-bold uppercase">
+                BUILDING / SITE
+              </span>
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                style={{
+                  backgroundColor: isLight ? "#FDFCF9" : "#09090B",
+                  borderColor: borderSubtle,
+                  color: isLight ? "#1F1E1B" : "#FAFAFA",
+                }}
+                className="rounded-lg border px-2 py-1 font-bold outline-none"
+              >
+                <option value="ALL_10">All 10 Sites (Portfolio)</option>
+                {PORTFOLIO_10_PROJECTS.map((p) => (
+                  <option key={p.projectId} value={p.projectId}>
+                    {p.code}: {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Domain / Role Scope Filter */}
+            <div className="flex flex-col gap-0.5">
+              <span style={{ color: mutedText }} className="text-[8px] font-bold uppercase">
+                YOUR SCOPE / DOMAIN
+              </span>
+              <select
+                value={selectedScope}
+                onChange={(e) => setSelectedScope(e.target.value as ScopeDomainId)}
+                style={{
+                  backgroundColor: isLight ? "#FDFCF9" : "#09090B",
+                  borderColor: borderSubtle,
+                  color: isLight ? "#1F1E1B" : "#FAFAFA",
+                }}
+                className="rounded-lg border px-2 py-1 font-bold outline-none"
+              >
+                {SCOPE_DOMAINS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Management / Sub / Micro / Custom Agent Mesh */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center justify-between">
+                <span style={{ color: mutedText }} className="text-[8px] font-bold uppercase">
+                  AGENT TIER
                 </span>
-              </div>
-              <div className="text-[9px] text-slate-400 mt-0.5">
-                {VANGUARD_GENOME.projectId} • ₹{VANGUARD_GENOME.financials.epcBaselineCr.toFixed(2)} Cr
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="text-slate-400 hover:text-white font-bold px-2 py-0.5 rounded bg-slate-900 text-[10px]"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Dual Dropdown Bar: ALL AGENTS Dropdown + PROFILE Dropdown */}
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[8.5px] text-slate-400 font-bold uppercase">
-                AGENT GOVERNOR
-              </label>
-              <select
-                aria-label="All Agents Dropdown"
-                value={selectedAgent}
-                onChange={(e) =>
-                  handleAgentDropdownChange(e.target.value as GovernorId | "ALL")
-                }
-                style={{
-                  backgroundColor: isLight ? "#EFECE4" : "#0F172A",
-                  color: isLight ? "#1F1E1B" : "#F8FAFC",
-                  borderColor: isLight ? "#CFC8B8" : "#334155",
-                }}
-                className="w-full rounded-lg border px-2 py-1 text-[10px] font-bold outline-none cursor-pointer"
-              >
-                <option value="ALL">ALL AGENTS (5)</option>
-                {GOVERNOR_PROFILES.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name} • {g.badge}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[8.5px] text-slate-400 font-bold uppercase">
-                STAKEHOLDER PROFILE
-              </label>
-              <select
-                aria-label="Project Profile Dropdown"
-                value={activeProfileId}
-                onChange={(e) =>
-                  handleSelectProfile(e.target.value as ConstructionProfileId | "ALL")
-                }
-                style={{
-                  backgroundColor: isLight ? "#EFECE4" : "#0F172A",
-                  color: isLight ? "#1F1E1B" : "#F8FAFC",
-                  borderColor: isLight ? "#CFC8B8" : "#334155",
-                }}
-                className="w-full rounded-lg border px-2 py-1 text-[10px] font-bold outline-none cursor-pointer"
-              >
-                <option value="ALL">ALL PROFILES (7)</option>
-                {CONSTRUCTION_PROFILES.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.shortCode} • {p.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Quick Role Chips */}
-          <div className="grid grid-cols-4 gap-1">
-            <button
-              type="button"
-              onClick={() => handleSelectProfile("ALL")}
-              className={`px-1.5 py-1 rounded-lg border text-[9px] font-bold truncate transition ${
-                activeProfileId === "ALL"
-                  ? "bg-cyan-500 text-slate-950 border-cyan-400"
-                  : "bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300"
-              }`}
-            >
-              ALL ROLES
-            </button>
-            {CONSTRUCTION_PROFILES.map((prof) => {
-              const selected = prof.id === activeProfileId;
-              return (
                 <button
-                  key={prof.id}
                   type="button"
-                  onClick={() => handleSelectProfile(prof.id)}
-                  title={`${prof.title} — ${prof.authorityScope}`}
-                  className={`px-1.5 py-1 rounded-lg border text-[9px] font-bold truncate transition ${
-                    selected
-                      ? "bg-cyan-500 text-slate-950 border-cyan-400"
-                      : "bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300"
-                  }`}
+                  onClick={() => setShowCustomBuilder((v) => !v)}
+                  style={{ color: accentColor }}
+                  className="text-[8px] font-bold flex items-center gap-0.5 hover:underline"
                 >
-                  {prof.shortCode}
+                  <Plus className="w-2.5 h-2.5" /> Custom
                 </button>
-              );
-            })}
+              </div>
+              <select
+                value={selectedAgentId}
+                onChange={(e) => setSelectedAgentId(e.target.value)}
+                style={{
+                  backgroundColor: isLight ? "#FDFCF9" : "#09090B",
+                  borderColor: borderSubtle,
+                  color: isLight ? "#1F1E1B" : "#FAFAFA",
+                }}
+                className="rounded-lg border px-2 py-1 font-bold outline-none"
+              >
+                <option value="AUTO">Auto-Orchestrate (3-Tier)</option>
+                <optgroup label="Tier 1: Management Agents">
+                  {HIERARCHICAL_AGENT_MESH.filter((a) => a.tier === "MANAGEMENT").map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Tier 2: Domain Sub-Agents">
+                  {HIERARCHICAL_AGENT_MESH.filter((a) => a.tier === "SUB_AGENT").map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Tier 3: Millimeter Micro-Agents">
+                  {HIERARCHICAL_AGENT_MESH.filter((a) => a.tier === "MICRO_AGENT").map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </optgroup>
+                {customAgents.length > 0 && (
+                  <optgroup label="Custom User Agents">
+                    {customAgents.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        ★ {c.name} (±{c.toleranceMm}mm)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
           </div>
 
-          {/* Filtered Deterministic Function Triggers */}
-          <div className="flex flex-col gap-1">
-            <div className="flex justify-between items-center text-[9px] text-slate-400 uppercase">
-              <span>
-                {selectedAgent === "ALL" ? "ALL AGENTS" : selectedAgent} •{" "}
-                {activeProfile ? activeProfile.shortCode : "ALL PROFILES"}
-              </span>
-              <span>{filteredFunctions.length} TOOLS</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1 max-h-24 overflow-y-auto pr-0.5">
-              {filteredFunctions.map((fn) => {
-                const isCurrent = result.functionId === fn.id;
-                return (
-                  <button
-                    key={fn.id}
-                    type="button"
-                    onClick={() => handleRunFunction(fn.id)}
-                    className={`p-1.5 rounded-lg border text-left transition flex flex-col gap-0.5 ${
-                      isCurrent
-                        ? "bg-cyan-500/20 border-cyan-400 text-white"
-                        : "bg-slate-900/90 hover:bg-slate-800 border-slate-800 text-slate-300"
-                    }`}
-                  >
-                    <span className="text-[9px] font-bold text-cyan-400 truncate">
-                      {fn.shortLabel}
-                    </span>
-                    <span className="text-[8px] text-slate-400 truncate">{fn.governor}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Deterministic Synthesis & Telemetry Matrix */}
-          <div className="bg-slate-900/95 border border-slate-800 rounded-xl p-2.5 flex flex-col gap-2">
-            <div className="flex justify-between items-center text-[9px]">
-              <span className="font-bold text-emerald-400">
-                GOV: {result.primaryGovernor} • {result.complianceStatus.replace("_", " ")}
-              </span>
-              <span className="text-slate-400 truncate max-w-[165px]">{result.standardRef}</span>
-            </div>
-
-            <div className="font-bold text-white text-[11px] leading-snug">{result.headline}</div>
-            <div className="text-[10px] text-slate-300 leading-relaxed">{result.summary}</div>
-
-            <div className="grid grid-cols-2 gap-1.5 pt-0.5">
-              {result.telemetryMetrics.map((m) => (
-                <div
-                  key={m.label}
-                  className="bg-slate-950/90 border border-slate-800 rounded-lg px-2 py-1 flex flex-col"
+          {/* Optional Custom Micro-Agent Builder Drawer */}
+          {showCustomBuilder && (
+            <form
+              onSubmit={handleCreateCustomAgent}
+              style={{ borderColor: borderSubtle, backgroundColor: surfaceBg }}
+              className="p-3 border-b flex flex-col gap-2 text-[10px] shrink-0"
+            >
+              <div className="font-bold flex items-center justify-between">
+                <span>CREATE CUSTOM SCOPE / MILLIMETER AGENT</span>
+                <button type="button" onClick={() => setShowCustomBuilder(false)}>
+                  ✕
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Agent Name (e.g. 12F Wall Guard)"
+                  value={newAgentName}
+                  onChange={(e) => setNewAgentName(e.target.value)}
+                  style={{ backgroundColor: isLight ? "#FDFCF9" : "#09090B", borderColor: borderSubtle }}
+                  className="col-span-2 rounded-lg border px-2 py-1 outline-none"
+                  required
+                />
+                <input
+                  type="number"
+                  step="0.1"
+                  placeholder="Tol (mm)"
+                  value={newAgentToleranceMm}
+                  onChange={(e) => setNewAgentToleranceMm(e.target.value)}
+                  style={{ backgroundColor: isLight ? "#FDFCF9" : "#09090B", borderColor: borderSubtle }}
+                  className="rounded-lg border px-2 py-1 outline-none"
+                />
+              </div>
+              <div className="flex gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Mandate (e.g. Flag any wall cast >5mm off gridline or out of WBS order)"
+                  value={newAgentInstruction}
+                  onChange={(e) => setNewAgentInstruction(e.target.value)}
+                  style={{ backgroundColor: isLight ? "#FDFCF9" : "#09090B", borderColor: borderSubtle }}
+                  className="flex-1 rounded-lg border px-2 py-1 outline-none"
+                />
+                <button
+                  type="submit"
+                  style={{
+                    backgroundColor: isLight ? "#1F1E1B" : "#FAFAFA",
+                    color: isLight ? "#FDFCF9" : "#09090B",
+                  }}
+                  className="px-3 py-1 rounded-lg font-bold"
                 >
-                  <span className="text-[8px] text-slate-400 uppercase">{m.label}</span>
-                  <span
-                    className={`text-[10px] font-bold ${
-                      m.status === "ACTION"
-                        ? "text-rose-400"
-                        : m.status === "WATCH"
-                        ? "text-amber-400"
-                        : "text-emerald-400"
-                    }`}
+                  Deploy
+                </button>
+              </div>
+            </form>
+          )}
+
+          {voiceStatusNote && (
+            <div
+              style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: accentColor }}
+              className="px-3 py-1 border-b text-[9.5px] font-bold shrink-0"
+            >
+              🎙️ {voiceStatusNote}
+            </div>
+          )}
+
+          {/* 3. Persistent Scrollable Multi-Turn Conversation Thread */}
+          <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-3">
+            {messages.map((msg) => {
+              if (msg.role === "user") {
+                return (
+                  <div key={msg.id} className="flex flex-col items-end gap-0.5">
+                    <div
+                      style={{
+                        backgroundColor: isLight ? "#1F1E1B" : "#27272A",
+                        color: "#FAFAFA",
+                      }}
+                      className="max-w-[85%] rounded-2xl rounded-br-sm px-3 py-2 text-[11px] leading-relaxed shadow-sm"
+                    >
+                      {msg.content}
+                    </div>
+                    <span style={{ color: mutedText }} className="text-[8.5px] pr-1">
+                      You • {msg.timestamp}
+                    </span>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={msg.id} className="flex flex-col items-start gap-1">
+                  <div
+                    style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}
+                    className="w-full rounded-2xl rounded-bl-sm border p-3 flex flex-col gap-2 text-[11px]"
                   >
-                    {m.value}
+                    {/* 3-Tier Agent Chain & Scope Trace */}
+                    <div className="flex flex-wrap items-center justify-between gap-1 text-[9px]">
+                      <span style={{ color: accentColor }} className="font-bold flex items-center gap-1">
+                        <Layers className="w-3 h-3" />
+                        {(msg.activeAgentChain || ["PRIME-COMMAND"]).join(" → ")}
+                      </span>
+                      <span style={{ color: mutedText }}>
+                        {msg.siteLabel} • {msg.scopeLabel}
+                      </span>
+                    </div>
+
+                    {/* Natural Engineering Prose */}
+                    <div className="whitespace-pre-line leading-relaxed text-[11px]">
+                      {msg.content}
+                    </div>
+
+                    {/* Inline Telemetry & Deviation Pills */}
+                    {msg.metrics && msg.metrics.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-0.5">
+                        {msg.metrics.map((m) => {
+                          const toneColor =
+                            m.tone === "critical"
+                              ? "#EF4444"
+                              : m.tone === "watch"
+                              ? "#D97706"
+                              : accentColor;
+                          return (
+                            <div
+                              key={m.label}
+                              style={{
+                                backgroundColor: isLight ? "#FDFCF9" : "#09090B",
+                                borderColor: borderSubtle,
+                              }}
+                              className="px-2 py-1 rounded-lg border flex flex-col"
+                            >
+                              <span style={{ color: mutedText }} className="text-[8px] uppercase truncate">
+                                {m.label}
+                              </span>
+                              <span style={{ color: toneColor }} className="text-[10px] font-bold truncate">
+                                {m.value}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Executable Dashboard & 3D BIM Citations */}
+                    {msg.citations && msg.citations.length > 0 && (
+                      <div
+                        style={{ borderColor: borderSubtle }}
+                        className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t"
+                      >
+                        {msg.citations.map((cit) => (
+                          <a
+                            key={cit.label}
+                            href={cit.href}
+                            style={{
+                              backgroundColor: isLight ? "#FDFCF9" : "#09090B",
+                              borderColor: borderSubtle,
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[9.5px] font-bold hover:opacity-80 transition"
+                          >
+                            <span style={{ color: accentColor }}>[{cit.tag}]</span>
+                            <span>{cit.label} →</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <span style={{ color: mutedText }} className="text-[8.5px] pl-1">
+                    QUADMAX J.A.R.V.I.S. • {msg.timestamp}
                   </span>
                 </div>
-              ))}
-            </div>
+              );
+            })}
 
-            {result.followUpIds.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1 pt-0.5">
-                <span className="text-[8px] text-slate-400">NEXT:</span>
-                {result.followUpIds.map((fid) => {
-                  const targetFn = QUADMAX_FUNCTION_REGISTRY.find((f) => f.id === fid);
-                  if (!targetFn) return null;
-                  return (
-                    <button
-                      key={fid}
-                      type="button"
-                      onClick={() => handleRunFunction(fid)}
-                      className="px-1.5 py-0.5 rounded bg-slate-950 hover:bg-slate-800 border border-slate-700 text-[8.5px] text-cyan-300"
-                    >
-                      {targetFn.shortLabel}
-                    </button>
-                  );
-                })}
+            {isSending && (
+              <div
+                style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
+                className="self-start px-3 py-2 rounded-2xl border text-[10px] animate-pulse"
+              >
+                Orchestrating Management → Sub → Micro agents across telemetry...
               </div>
             )}
 
-            <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-800">
-              <span className="text-[8px] text-slate-400 truncate">
-                65B: {result.sha256Seal.slice(0, 14)}…
-              </span>
-              <div className="flex gap-1 shrink-0">
-                <a
-                  href={result.deepLink.href}
-                  className="py-1 px-2 bg-cyan-500 text-slate-950 font-bold text-[9.5px] rounded-lg"
-                >
-                  {result.deepLink.label} →
-                </a>
-                <a
-                  href="/site/agent-console"
-                  className="py-1 px-2 bg-slate-950 border border-slate-700 text-cyan-300 font-bold text-[9.5px] rounded-lg"
-                >
-                  CONSOLE
-                </a>
-              </div>
-            </div>
+            <div ref={threadEndRef} />
           </div>
 
-          {/* Prompt Bar */}
-          <div className="flex gap-1">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAsk()}
-              placeholder={`Ask ${selectedAgent === "ALL" ? "All Agents" : selectedAgent}...`}
-              className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-white outline-none focus:border-cyan-400"
-            />
+          {/* 4. Contextual Follow-Up Chips */}
+          {activeFollowUps.length > 0 && !isSending && (
+            <div
+              style={{ borderColor: borderSubtle }}
+              className="px-3 py-1.5 border-t flex items-center gap-1.5 overflow-x-auto shrink-0"
+            >
+              {activeFollowUps.map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => handleSend(q)}
+                  style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}
+                  className="px-2 py-1 rounded-lg border text-[9px] font-bold shrink-0 hover:opacity-80 transition"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 5. Composer Bar with Push-to-Talk Mic + ↑/↓ History Recall */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            style={{ borderColor: borderSubtle }}
+            className="p-2.5 border-t flex items-center gap-1.5 shrink-0"
+          >
             <button
               type="button"
-              onClick={() => handleAsk()}
-              className="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[10px] rounded-lg"
+              onClick={() => startVoiceCapture(false)}
+              style={{
+                backgroundColor: isListening ? "#EF4444" : surfaceBg,
+                borderColor: borderSubtle,
+                color: isListening ? "#FFFFFF" : accentColor,
+              }}
+              className="p-2 rounded-xl border shrink-0"
+              title="Speak command to QUADMAX.AI"
             >
-              RUN
+              <Mic className="w-3.5 h-3.5" />
             </button>
-          </div>
+
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              placeholder="Ask J.A.R.V.I.S. across 10 sites or 1mm detail (↑ history)..."
+              style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}
+              className="flex-1 rounded-xl border px-3 py-2 text-[10.5px] outline-none"
+            />
+
+            <button
+              type="submit"
+              disabled={isSending || !input.trim()}
+              style={{
+                backgroundColor: isLight ? "#1F1E1B" : "#FAFAFA",
+                color: isLight ? "#FDFCF9" : "#09090B",
+              }}
+              className="px-3.5 py-2 rounded-xl font-bold text-[10px] disabled:opacity-40 transition shrink-0"
+            >
+              Send
+            </button>
+          </form>
         </div>
       )}
 
-      {/* Compact Movable Pill Launcher */}
+      {/* Compact Movable Pill Launcher with Live Portfolio Alert Count */}
       <div
         role="button"
         tabIndex={0}
@@ -488,37 +947,30 @@ export default function QuadmaxKernelFloatingWidget() {
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") setIsOpen((v) => !v);
         }}
-        title="Drag to move anywhere • Click to open All Agents & Profiles"
+        title="Drag anywhere • Click to open QUADMAX J.A.R.V.I.S."
         style={{
           width: `${PILL_WIDTH}px`,
           height: `${PILL_HEIGHT}px`,
-          backgroundColor: isLight ? "#FDFCF9" : "#0F172A",
-          borderColor: isLight ? "rgba(201, 100, 66, 0.55)" : "rgba(34, 211, 238, 0.45)",
-          color: isLight ? "#1F1E1B" : "#F8FAFC",
+          touchAction: "none",
+          backgroundColor: isLight ? "#FDFCF9" : "#09090B",
+          borderColor: isLight ? "rgba(201, 100, 66, 0.55)" : "rgba(161, 161, 170, 0.45)",
+          color: isLight ? "#1F1E1B" : "#FAFAFA",
         }}
-        className={`flex items-center justify-between px-2.5 rounded-full border shadow-lg backdrop-blur-md transition-shadow ${
+        className={`flex items-center justify-between px-2.5 rounded-full border shadow-lg backdrop-blur-md transition-shadow select-none ${
           isDragging ? "cursor-grabbing scale-105 shadow-xl" : "cursor-grab hover:shadow-md"
         }`}
       >
-        <span
-          style={{ color: isLight ? "#78736A" : "#64748B" }}
-          className="text-[10px] leading-none tracking-tighter"
-        >
+        <span style={{ color: mutedText }} className="text-[10px] leading-none tracking-tighter">
           ⋮⋮
         </span>
         <span
-          style={{ backgroundColor: isLight ? "#C96442" : "#22D3EE" }}
+          style={{ backgroundColor: accentColor }}
           className="w-2 h-2 rounded-full animate-pulse shrink-0"
         />
         <span className="text-[10px] font-bold tracking-tight">QUADMAX.AI</span>
-        <span
-          style={{
-            backgroundColor: isLight ? "#EFECE4" : "#1E293B",
-            color: isLight ? "#C96442" : "#22D3EE",
-          }}
-          className="px-1.5 py-0.5 rounded text-[8px] font-bold"
-        >
-          {selectedAgent === "ALL" ? "ALL 5" : selectedAgent}
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[8px] font-bold">
+          <ShieldAlert className="w-2.5 h-2.5" />
+          {totalPortfolioAlerts}
         </span>
       </div>
     </div>

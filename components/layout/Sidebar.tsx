@@ -203,27 +203,7 @@ export function Sidebar() {
           );
         })}
       </div>
-
-      {/* FOOTER AUDIT INDICATOR */}
-      <div
-        className={`p-3 border-t border-zinc-800 bg-zinc-950 text-[10px] text-zinc-500 flex items-center shrink-0 ${
-          isExpanded ? "justify-between" : "justify-center"
-        }`}
-      >
-        {isExpanded ? (
-          <>
-            <span>RLS ACTIVE</span>
-            <span className="text-emerald-400 font-bold">GROUND TRUTH STRICT</span>
-          </>
-        ) : (
-          <span
-            className="h-2 w-2 rounded-full bg-emerald-400"
-            title="Postgres RLS Active • Strict Ground Truth"
-          />
-        )}
-      </div>
-    
-      {/* SYSTEM GOVERNANCE & SETTINGS LINK */}
+{/* SYSTEM GOVERNANCE & SETTINGS LINK */}
       <div className="p-3 border-t border-zinc-800 bg-zinc-950/80">
         <a
           href="/settings"

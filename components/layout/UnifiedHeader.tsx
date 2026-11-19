@@ -8,7 +8,6 @@ import {
   FolderKanban,
   ChevronDown,
   LogOut,
-  ShieldCheck,
   Search,
 } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
@@ -101,10 +100,6 @@ export function UnifiedHeader() {
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-emerald-400 text-[10px] font-bold uppercase tracking-wider hidden sm:inline-flex items-center gap-1.5">
-          <ShieldCheck className="w-3 h-3" />
-          <span>RLS Enforced</span>
-        </span>
       </div>
     </header>
   );
