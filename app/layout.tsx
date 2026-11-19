@@ -1,7 +1,6 @@
 import QuadmaxKernelFloatingWidget from "@/components/QuadmaxKernelFloatingWidget";
 import LiveviewThemeQuickToggle from "@/components/LiveviewThemeQuickToggle";
 import { LiveviewThemeProvider } from "@/lib/theme/liveviewTheme";
-import { QuadMaxOverlay } from "@/components/copilot/QuadMaxOverlay";
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -30,7 +29,6 @@ export default function RootLayout({
           </AppShell>
         </RoleProvider>
         
-        <QuadMaxOverlay />
       <QuadmaxKernelFloatingWidget /></LiveviewThemeProvider></body>
     </html>
   );

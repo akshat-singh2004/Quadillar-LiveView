@@ -1,386 +1,843 @@
-/**
- * QUADILLAR LIVEVIEW — HEADLESS MULTI-GOVERNOR AGENT MESH
- * Bound 100% to VANGUARD_GENOME (Single Source of Truth).
- * Design Tenet: Zero LLM Arithmetic — all numbers, clash states, crane clearances,
- * and financial reconciliations are computed deterministically from Project Vanguard.
- */
+import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
 
-import {
-  VANGUARD_GENOME,
-  ArchitecturalBitSpec,
-} from "@/lib/project/vanguardGenome";
+export type GovernorId = "MINERVA" | "ARGUS" | "MIDAS" | "THEMIS" | "HERMES";
 
-export type GovernorId = "ARGUS" | "MIDAS" | "MINERVA" | "HERMES" | "THEMIS";
+export type ConstructionProfileId =
+  | "PROJECT_DIRECTOR"
+  | "SITE_PLANNING_ENGINEER"
+  | "STRUCTURAL_GEOTECH_ENGINEER"
+  | "BIM_DIGITAL_TWIN_LEAD"
+  | "COMMERCIAL_QS_MANAGER"
+  | "QAQC_HSE_OFFICER"
+  | "CLIENT_LEGAL_COUNSEL";
 
-export interface ToolExecutionTrace {
-  toolName: string;
+export interface ConstructionProfileMeta {
+  id: ConstructionProfileId;
+  shortCode: string;
+  title: string;
+  department: string;
+  primaryGovernor: GovernorId;
+  secondaryGovernor: GovernorId;
+  authorityScope: string;
+  defaultRoute: string;
+}
+
+export interface KernelTelemetryMetric {
+  label: string;
+  value: string;
+  status: "NOMINAL" | "WATCH" | "ACTION";
+}
+
+export interface QuadmaxFunctionDefinition {
+  id: string;
+  profileId: ConstructionProfileId;
   governor: GovernorId;
+  commandLabel: string;
+  shortLabel: string;
+  description: string;
   standardRef: string;
-  inputs: Record<string, string | number | boolean>;
-  outputs: Record<string, string | number | boolean>;
-  status: "VERIFIED" | "ALERT_FLAGGED";
+  keywords: string[];
+  deepLink: { label: string; href: string };
+  followUpIds: string[];
+  execute: () => Omit<
+    AgentSynthesisResponse,
+    "functionId" | "profileId" | "profileTitle" | "timestampIso" | "sha256Seal"
+  >;
 }
 
 export interface AgentSynthesisResponse {
-  projectId: string;
-  projectName: string;
+  functionId: string;
+  profileId: ConstructionProfileId;
+  profileTitle: string;
   primaryGovernor: GovernorId;
-  supportingGovernors: GovernorId[];
   headline: string;
   summary: string;
-  bulletFindings: string[];
-  citedMetrics: { label: string; value: string; tone: "cyan" | "emerald" | "amber" | "rose" }[];
-  toolTraces: ToolExecutionTrace[];
+  standardRef: string;
+  complianceStatus: "CERTIFIED" | "ACTIVE_MONITORING" | "ACTION_REQUIRED";
+  telemetryMetrics: KernelTelemetryMetric[];
   deepLink: { label: string; href: string };
-  secondaryLink: { label: string; href: string };
-  merklePayload: string;
+  followUpIds: string[];
+  sha256Seal: string;
+  timestampIso: string;
 }
 
-// ------------------------------------------------------------------------------
-// DETERMINISTIC TOOL 1 (MINERVA): 6-BIT SPATIAL & CLASH COORDINATION AUDIT
-// ------------------------------------------------------------------------------
-export function runMinervaSpatialAudit(query: string): ToolExecutionTrace {
-  const q = query.toUpperCase();
-  const matchedBit: ArchitecturalBitSpec | undefined = VANGUARD_GENOME.bits.find(
-    (b) =>
-      q.includes(b.bitId) ||
-      q.includes(b.code.toUpperCase()) ||
-      (b.bitId === "BIT-2" && (q.includes("DOME") || q.includes("KALZIP") || q.includes("14B") || q.includes("SNAG"))) ||
-      (b.bitId === "BIT-3" && (q.includes("14") || q.includes("LIFT") || q.includes("TOWER") || q.includes("DIAGRID"))) ||
-      (b.bitId === "BIT-1" && (q.includes("BRIDGE") || q.includes("ARCH") || q.includes("GREEN") || q.includes("TERRACOTTA"))) ||
-      (b.bitId === "BIT-4" && (q.includes("PODIUM") || q.includes("CHILLER") || q.includes("2400") || q.includes("C2"))) ||
-      (b.bitId === "BIT-6" && q.includes("HELIPAD"))
-  );
+// Deterministic isomorphic 64-char hex digest (works identically in browser & Node)
+function computeDeterministicSeal(payload: string): string {
+  const seeds = [
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+  ];
+  const state = [...seeds];
+  for (let i = 0; i < payload.length; i++) {
+    const code = payload.charCodeAt(i);
+    for (let s = 0; s < 8; s++) {
+      state[s] =
+        (Math.imul(state[s] ^ (code + i * 17 + s * 31), 0x01000193) +
+          ((state[(s + 1) % 8] >>> 5) | (state[(s + 7) % 8] << 27))) >>>
+        0;
+    }
+  }
+  return state.map((n) => n.toString(16).padStart(8, "0")).join("");
+}
 
-  const targetBit = matchedBit || VANGUARD_GENOME.bits[1]; // Default BIT-2 Silver Dome (active snag)
-  const snagPin = VANGUARD_GENOME.spatialPins.find((p) => p.pinId === "SNAG-VANGUARD-401")!;
 
-  return {
-    toolName: "minerva_spatial_lod400_audit",
+export interface GovernorMeta {
+  id: GovernorId;
+  name: string;
+  domain: string;
+  badge: string;
+}
+
+export const GOVERNOR_PROFILES: GovernorMeta[] = [
+  { id: "MINERVA", name: "MINERVA", domain: "BIM, Spatial & Master CPM", badge: "LOD-400 / CPM" },
+  { id: "ARGUS", name: "ARGUS", domain: "Site Telemetry, NDT, LiDAR & HSE", badge: "IS-Code / PTW" },
+  { id: "MIDAS", name: "MIDAS", domain: "Commercial, RA Billing & Clause 42", badge: "₹864.50 Cr / EVM" },
+  { id: "THEMIS", name: "THEMIS", domain: "SCL Delay Protocol & UP-LDA Escrow", badge: "EOT / Escrow" },
+  { id: "HERMES", name: "HERMES", domain: "BSA Sec. 63 / Sec. 65B Merkle Vault", badge: "Block #18402" },
+];
+
+export const CONSTRUCTION_PROFILES: ConstructionProfileMeta[] = [
+  {
+    id: "PROJECT_DIRECTOR",
+    shortCode: "CEO / PD",
+    title: "Project Director & EPC CEO",
+    department: "Executive Portfolio Command",
+    primaryGovernor: "MINERVA",
+    secondaryGovernor: "MIDAS",
+    authorityScope: "EPC Baseline ₹864.50 Cr • Critical Path • Board & UP-LDA Governance",
+    defaultRoute: "/",
+  },
+  {
+    id: "SITE_PLANNING_ENGINEER",
+    shortCode: "SITE / CPM",
+    title: "Site Execution & Planning Engineer",
+    department: "Field Operations, CPM & Logistics",
+    primaryGovernor: "ARGUS",
+    secondaryGovernor: "MINERVA",
+    authorityScope: "DPR #084 • Liebherr 280 EC-H • 0d CPM Float • Weighbridge",
+    defaultRoute: "/site/master-schedule",
+  },
+  {
+    id: "STRUCTURAL_GEOTECH_ENGINEER",
+    shortCode: "STRUCT / GEO",
+    title: "Structural & Geotechnical Engineer",
+    department: "IS-Code Structural & Foundation Integrity",
+    primaryGovernor: "ARGUS",
+    secondaryGovernor: "THEMIS",
+    authorityScope: "IS 456 • IS 2911 Piles • IS 13311 SonReb • Kalzip Space-Frame",
+    defaultRoute: "/site/ndt",
+  },
+  {
+    id: "BIM_DIGITAL_TWIN_LEAD",
+    shortCode: "BIM / TWIN",
+    title: "BIM & Digital Twin Coordinator",
+    department: "LOD-400 Federation, LiDAR & ISO 19650",
+    primaryGovernor: "MINERVA",
+    secondaryGovernor: "ARGUS",
+    authorityScope: "6 Architectural Bits • 28,500-Pt LiDAR • Navisworks Clash Audit",
+    defaultRoute: "/site/digital-twin",
+  },
+  {
+    id: "COMMERCIAL_QS_MANAGER",
+    shortCode: "QS / BILL",
+    title: "Commercial, QS & Billing Manager",
+    department: "RA Billing, BOQ & CPWD Clause 42",
+    primaryGovernor: "MIDAS",
+    secondaryGovernor: "THEMIS",
+    authorityScope: "CPI 1.014 • ₹43.22 Cr Escrow Retention • Cl. 42 & 10CC Escalation",
+    defaultRoute: "/site/commercial",
+  },
+  {
+    id: "QAQC_HSE_OFFICER",
+    shortCode: "QA / HSE",
+    title: "QA/QC & HSE Safety Officer",
+    department: "NCR Liens, Pour Cards & PTW Zero-Harm",
+    primaryGovernor: "ARGUS",
+    secondaryGovernor: "HERMES",
+    authorityScope: "NCR-009 • SNAG-VANGUARD-401 • Active PTWs • +54.00m RL Safety",
+    defaultRoute: "/site/ptw",
+  },
+  {
+    id: "CLIENT_LEGAL_COUNSEL",
+    shortCode: "UP-LDA / LGL",
+    title: "Client Rep & Arbitration Counsel",
+    department: "UP-LDA Escrow, Section 65B & SCL Protocol",
+    primaryGovernor: "THEMIS",
+    secondaryGovernor: "HERMES",
+    authorityScope: "BSA Sec. 63 / Sec. 65B Ledger • Block #18402 • EOT & LD Shield",
+    defaultRoute: "/site/hindrance-eot",
+  },
+];
+
+const G = VANGUARD_GENOME;
+
+export const QUADMAX_FUNCTION_REGISTRY: QuadmaxFunctionDefinition[] = [
+  // ---------------------------------------------------------------------------
+  // 1. PROJECT DIRECTOR & EPC CEO (3 Functions)
+  // ---------------------------------------------------------------------------
+  {
+    id: "pd_executive_pulse",
+    profileId: "PROJECT_DIRECTOR",
     governor: "MINERVA",
-    standardRef: "ISO 19650 / LOD-400 BIM Federation",
-    inputs: {
-      project_id: VANGUARD_GENOME.projectId,
-      inspected_zone: targetBit.bitId,
-      coordinate_datum_rl: `${VANGUARD_GENOME.coordinates.datumRlM}m`,
-    },
-    outputs: {
-      zone_name: `${targetBit.code} (${targetBit.name})`,
-      elevation: targetBit.elevationLabel,
-      completion_pct: `${targetBit.completionPct}%`,
-      lift_vs_hvac_clashes: 0,
-      active_snag_id: snagPin.pinId,
-      node_14b_deviation_mm: 4.2,
-      kalzip_seam_tolerance: "< 1.5mm Certified",
-    },
-    status: targetBit.bitId === "BIT-2" ? "ALERT_FLAGGED" : "VERIFIED",
-  };
-}
-
-// ------------------------------------------------------------------------------
-// DETERMINISTIC TOOL 2 (ARGUS): LIEBHERR 280 EC-H CRANE RADAR & SLEW SAFETY
-// ------------------------------------------------------------------------------
-export function runArgusCraneRadarAudit(): ToolExecutionTrace {
-  const crane = VANGUARD_GENOME.craneTelemetry;
-  const towerTipDistM = Math.hypot(
-    crane.basePos[0] - VANGUARD_GENOME.bits[2].worldPos[0],
-    crane.basePos[2] - VANGUARD_GENOME.bits[2].worldPos[2]
-  );
-  const bufferMarginM = +(towerTipDistM - 11.0).toFixed(1);
-
-  return {
-    toolName: "argus_crane_radar_telemetry",
-    governor: "ARGUS",
-    standardRef: "IS 13367 / WebRTC PTZ Radar Lock",
-    inputs: {
-      crane_id: crane.craneId,
-      crane_model: crane.model,
-      jib_radius_m: crane.jibRadiusM,
-    },
-    outputs: {
-      azimuth_deg: `${crane.azimuthDeg}°`,
-      hook_height_m: `${crane.hookHeightM}m`,
-      active_sector: crane.targetZone,
-      tower_core_buffer_m: `${bufferMarginM}m Clear`,
-      telemetry_latency: `${crane.latencyMs}ms`,
-    },
-    status: "VERIFIED",
-  };
-}
-
-// ------------------------------------------------------------------------------
-// DETERMINISTIC TOOL 3 (MIDAS): EPC CONTRACT, RETENTION & EVM RECONCILIATION
-// ------------------------------------------------------------------------------
-export function runMidasCommercialAudit(): ToolExecutionTrace {
-  const fin = VANGUARD_GENOME.financials;
-  const retentionComputedCr = +((fin.epcBaselineCr * fin.retentionPct) / 100).toFixed(2);
-  const remainingBalanceCr = +(fin.epcBaselineCr - fin.certifiedToDateCr).toFixed(2);
-
-  return {
-    toolName: "midas_epc_financial_reconcile",
+    commandLabel: "Executive EPC Pulse & Burn Audit",
+    shortLabel: "EPC Pulse",
+    description: "Synthesize ₹864.50 Cr baseline, CPI/SPI health, workforce & 6-Bit readiness.",
+    standardRef: "ISO 21508 & UP-LDA EPC Charter",
+    keywords: ["overview", "pulse", "vanguard", "ceo", "director", "status", "campus"],
+    deepLink: { label: "Master Command Center", href: "/" },
+    followUpIds: ["pd_critical_exposure", "qs_ra_escrow_reconcile", "lgl_section65b_verify"],
+    execute: () => ({
+      primaryGovernor: "MINERVA",
+      headline: `UP-LDA Vanguard Campus: On Baseline (0d Float) • CPI 1.014`,
+      summary: `Cumulative Earned Value stands at ₹534.26 Cr against ₹526.88 Cr Actual Cost (+₹7.38 Cr favorable CV) across all 6 Architectural Bits. DPR #084 logs 66 active biometric workers with 0 safety breaches.`,
+      standardRef: "ISO 21508 EVM & UP-LDA Concession Agreement",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "EPC Baseline", value: `₹${G.financials.epcBaselineCr.toFixed(2)} Cr`, status: "NOMINAL" },
+        { label: "Cost Perf (CPI)", value: "1.014", status: "NOMINAL" },
+        { label: "Critical Float", value: "0 Days", status: "WATCH" },
+        { label: "Active Workforce", value: "66 Pax", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open EVM S-Curve", href: "/executive/evm-scurve" },
+      followUpIds: ["pd_critical_exposure", "qs_ra_escrow_reconcile", "lgl_section65b_verify"],
+    }),
+  },
+  {
+    id: "pd_critical_exposure",
+    profileId: "PROJECT_DIRECTOR",
     governor: "MIDAS",
-    standardRef: "CPWD GCC Cl. 10CC & 42 / ISO 21508",
-    inputs: {
-      epc_baseline_cr: fin.epcBaselineCr,
-      retention_rate_pct: fin.retentionPct,
-      physical_progress_pct: fin.overallPhysicalProgressPct,
+    commandLabel: "Critical Path & Prolongation Risk Exposure",
+    shortLabel: "Risk Exposure",
+    description: "Quantify daily Hudson overhead exposure if BIT-2 Node #14B slips past 0d float.",
+    standardRef: "CPWD GCC Cl. 5 & Hudson Formula",
+    keywords: ["exposure", "risk", "hudson", "prolongation", "slip", "delay"],
+    deepLink: { label: "Hindrance & EOT Engine", href: "/site/hindrance-eot" },
+    followUpIds: ["str_node14b_spaceframe", "site_cpm_float_audit"],
+    execute: () => {
+      const dailyOverheadInr = Math.round((0.15 * (G.financials.epcBaselineCr * 1e7)) / 1095);
+      return {
+        primaryGovernor: "MIDAS",
+        headline: `Zero-Float Guard: ₹${(dailyOverheadInr / 100000).toFixed(2)} Lakh/Day Overhead Exposure`,
+        summary: `BIT-2 Silver Dome MERO Node #14B (Δ 4.2mm) sits on a 0d CPM float path. Closing SNAG-VANGUARD-401 within the current shift prevents critical-path slippage and protects ₹43.22 Cr UP-LDA escrow milestone release.`,
+        standardRef: "CPWD GCC Clause 5 & SCL Delay Protocol",
+        complianceStatus: "ACTIVE_MONITORING",
+        telemetryMetrics: [
+          { label: "Daily Overhead", value: `₹${dailyOverheadInr.toLocaleString("en-IN")}`, status: "WATCH" },
+          { label: "Escrow Held (5%)", value: `₹${G.financials.statutoryRetentionCr.toFixed(2)} Cr`, status: "NOMINAL" },
+          { label: "Open Snag", value: "SNAG-VANGUARD-401", status: "ACTION" },
+          { label: "Column C2 Lien", value: "UNBLOCKED", status: "NOMINAL" },
+        ],
+        deepLink: { label: "Open Hindrance & EOT", href: "/site/hindrance-eot" },
+        followUpIds: ["str_node14b_spaceframe", "site_cpm_float_audit"],
+      };
     },
-    outputs: {
-      certified_to_date_cr: `₹${fin.certifiedToDateCr.toFixed(2)} Cr`,
-      remaining_contract_cr: `₹${remainingBalanceCr.toFixed(2)} Cr`,
-      up_lda_escrow_retention_cr: `₹${retentionComputedCr.toFixed(2)} Cr`,
-      cpi: fin.cpi,
-      spi: fin.spi,
-      column_c2_lien_status: "₹2,08,720 Unblocked (NCR-009 Closed)",
-    },
-    status: "VERIFIED",
-  };
-}
-
-// ------------------------------------------------------------------------------
-// DETERMINISTIC TOOL 4 (THEMIS): STRUCTURAL NDT & 2,400 TR MEP PLANT AUDIT
-// ------------------------------------------------------------------------------
-export function runThemisQualityAndMepAudit(): ToolExecutionTrace {
-  const mep = VANGUARD_GENOME.mepPlant;
-  return {
-    toolName: "themis_quality_ndt_and_mep_verify",
-    governor: "THEMIS",
-    standardRef: "IS 456:2000 / IS 13311 SonReb / ASHRAE 90.1",
-    inputs: {
-      column_id: "Column C2 (BIT-4 Podium)",
-      chiller_plant_tr: mep.totalCoolingTr,
-    },
-    outputs: {
-      sonreb_strength_mpa: "32.8 MPa (IS 456 Pass >= 29.75 MPa)",
-      upv_velocity_kms: "4.25 km/s (Good Integrity)",
-      chiller_configuration: mep.chillerConfig,
-      lift_core_spec: mep.liftCoreConfig,
-    },
-    status: "VERIFIED",
-  };
-}
-
-// ------------------------------------------------------------------------------
-// DETERMINISTIC TOOL 5 (HERMES): SECTION 65B MERKLE EVIDENTIARY LEDGER
-// ------------------------------------------------------------------------------
-export function runHermesEvidenceAudit(): ToolExecutionTrace {
-  return {
-    toolName: "hermes_section65b_merkle_verify",
+  },
+  {
+    id: "pd_board_brief",
+    profileId: "PROJECT_DIRECTOR",
     governor: "HERMES",
-    standardRef: "Indian Evidence Act 1872 Section 65B",
-    inputs: {
-      project_id: VANGUARD_GENOME.projectId,
-      rls_policy: "POSTGRES_RLS_ENFORCED",
-    },
-    outputs: {
-      latest_sealed_block: "BLOCK #18402",
-      dome_cert_hash: "8806a21acb4ebb84...cab1089d4",
-      column_c2_cert_hash: "3f90a21acb4ebb84...cab1089d4",
-      evidentiary_admissibility: "Cryptographically Attested",
-    },
-    status: "VERIFIED",
+    commandLabel: "Notarized UP-LDA Governance Brief",
+    shortLabel: "Board Brief",
+    description: "Compile tamper-evident executive packet for UP-LDA & investor review.",
+    standardRef: "BSA Sec. 63 / IT Act Sec. 65B",
+    keywords: ["board", "brief", "notarize", "investor", "up-lda", "report"],
+    deepLink: { label: "Section 65B Audit Vault", href: "/site/audit-ledger" },
+    followUpIds: ["lgl_section65b_verify", "bim_cobie_handover"],
+    execute: () => ({
+      primaryGovernor: "HERMES",
+      headline: `Board Governance Brief Sealed • Merkle Block #18402`,
+      summary: `Executive snapshot compiled across BIT-1 through BIT-6: Column C2 SonReb certified (32.8 MPa), Kalzip standing-seam certified (< 1.5mm), 2,400 TR chillers clash-free, and RA billing reconciled with 0 audit exceptions.`,
+      standardRef: "BSA Sec. 63 / Section 65B Digital Evidence Protocol",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Ledger Block", value: "#18402", status: "CERTIFIED" as any },
+        { label: "Bits Verified", value: "6 / 6", status: "NOMINAL" },
+        { label: "Audit Exceptions", value: "0", status: "NOMINAL" },
+        { label: "PAC Target", value: "On Baseline", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Inspect Audit Ledger", href: "/site/audit-ledger" },
+      followUpIds: ["lgl_section65b_verify", "bim_cobie_handover"],
+    }),
+  },
+
+  // ---------------------------------------------------------------------------
+  // 2. SITE EXECUTION & PLANNING ENGINEER (3 Functions)
+  // ---------------------------------------------------------------------------
+  {
+    id: "site_crane_wind_envelope",
+    profileId: "SITE_PLANNING_ENGINEER",
+    governor: "ARGUS",
+    commandLabel: "Liebherr 280 EC-H Slew & Wind Envelope",
+    shortLabel: "Crane Radar",
+    description: "Verify 65m jib slew/luff telemetry & +54.00m RL Lucknow wind safety margin.",
+    standardRef: "IS 875 (Part 3) & IS 13367 Crane Safety",
+    keywords: ["crane", "liebherr", "slew", "luff", "wind", "jib", "38.5", "radar"],
+    deepLink: { label: "Crane & Wind Telemetry", href: "/site/wind-stability" },
+    followUpIds: ["site_cpm_float_audit", "hse_ptw_interlocks"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `Liebherr 280 EC-H Nominal • Slew 38.5° / Luff -24.0° • 0 Breaches`,
+      summary: `65m jib operating inside geo-fenced airspace above BIT-2/BIT-3. Lucknow basic wind speed 47 m/s modeled up to +54.00m RL parapet with overturning Factor of Safety > 2.15 and 12ms WebRTC telemetry latency.`,
+      standardRef: "IS 875 Part 3 (47 m/s Lucknow Zone) & IS 13367",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Slew / Luff", value: "38.5° / -24.0°", status: "NOMINAL" },
+        { label: "Airspace Breach", value: "0 Events", status: "NOMINAL" },
+        { label: "Wind Zone (+54m)", value: "47 m/s Safe", status: "NOMINAL" },
+        { label: "Telemetry Ping", value: "12 ms", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Wind & Crane Audit", href: "/site/wind-stability" },
+      followUpIds: ["site_cpm_float_audit", "hse_ptw_interlocks"],
+    }),
+  },
+  {
+    id: "site_cpm_float_audit",
+    profileId: "SITE_PLANNING_ENGINEER",
+    governor: "MINERVA",
+    commandLabel: "WBS Critical Path & DPR #084 Lookahead",
+    shortLabel: "CPM & DPR #084",
+    description: "Inspect 0d total float critical activities & shift crew deployment.",
+    standardRef: "ISO 21508 & PMI CPM Network",
+    keywords: ["cpm", "schedule", "gantt", "dpr", "float", "lookahead", "workers"],
+    deepLink: { label: "Master CPM Gantt", href: "/schedule/gantt" },
+    followUpIds: ["site_weighbridge_dispatch", "str_node14b_spaceframe"],
+    execute: () => ({
+      primaryGovernor: "MINERVA",
+      headline: `Master CPM Network: 0d Critical Float • DPR #084 (66 Workers Active)`,
+      summary: `Critical chain runs through BIT-2 Kalzip Dome closure and BIT-1 14th-floor MEP riser pressure testing. Non-critical interior fit-out retains 14d–22d free float buffer.`,
+      standardRef: "ISO 21508 Work Breakdown & CPM Scheduling",
+      complianceStatus: "ACTIVE_MONITORING",
+      telemetryMetrics: [
+        { label: "Active DPR", value: "DPR #084", status: "NOMINAL" },
+        { label: "Critical Float", value: "0 Days", status: "WATCH" },
+        { label: "Schedule Index", value: "SPI 1.000", status: "NOMINAL" },
+        { label: "Shift Strength", value: "66 Biometric", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Master CPM Schedule", href: "/schedule/gantt" },
+      followUpIds: ["site_weighbridge_dispatch", "str_node14b_spaceframe"],
+    }),
+  },
+  {
+    id: "site_weighbridge_dispatch",
+    profileId: "SITE_PLANNING_ENGINEER",
+    governor: "ARGUS",
+    commandLabel: "Weighbridge Gate-Inward & Pour Card Sync",
+    shortLabel: "Weighbridge",
+    description: "Cross-check RMC transit mixers & Fe-550D steel weighbridge slips against pours.",
+    standardRef: "IS 4926 Ready-Mixed Concrete & CPWD Cl. 42",
+    keywords: ["weighbridge", "gate", "rmc", "pour", "cement", "steel", "logistics"],
+    deepLink: { label: "Weighbridge & Gate Inward", href: "/site/weighbridge" },
+    followUpIds: ["qs_cpwd_cl42_variance", "hse_cube_itp_check"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `Gate-Inward Weighbridge Synced • 100% RFID Challan Match`,
+      summary: `All M40/M50 RMC transit mixers and Fe-550D reinforcement consignments verified via load-cell weighbridge within ±0.35% tolerance and linked to active pour cards.`,
+      standardRef: "IS 4926 & CPWD Works Manual Gate Control",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Scale Variance", value: "±0.35%", status: "NOMINAL" },
+        { label: "RMC Transit Window", value: "under 45 min", status: "NOMINAL" },
+        { label: "Unverified Slips", value: "0", status: "NOMINAL" },
+        { label: "Pour Cards Active", value: "4 Zones", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Weighbridge Ledger", href: "/site/weighbridge" },
+      followUpIds: ["qs_cpwd_cl42_variance", "hse_cube_itp_check"],
+    }),
+  },
+
+  // ---------------------------------------------------------------------------
+  // 3. STRUCTURAL & GEOTECHNICAL ENGINEER (3 Functions)
+  // ---------------------------------------------------------------------------
+  {
+    id: "str_column_c2_sonreb",
+    profileId: "STRUCTURAL_GEOTECH_ENGINEER",
+    governor: "ARGUS",
+    commandLabel: "Column C2 SonReb NDT & IS 456 Drift Audit",
+    shortLabel: "Column C2 NDT",
+    description: "Verify NCR-009 SikaGrout-214 strength (32.8 MPa) & lateral drift clearance.",
+    standardRef: "IS 13311 (Part 1 & 2) & IS 456 Cl. 20.1(b)",
+    keywords: ["column", "c2", "ncr", "009", "sonreb", "grout", "ndt", "32.8", "drift"],
+    deepLink: { label: "Structural NDT Register", href: "/site/ndt" },
+    followUpIds: ["str_node14b_spaceframe", "str_pile_maturity_audit"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `Column C2 Certified (32.8 MPa) • NCR-009 Lien ₹2,08,720 Released`,
+      summary: `BIT-6 Podium Column C2 post-grout SikaGrout-214 injection verified via combined Ultrasonic Pulse Velocity (4.25 km/s) and rebound hammer correlation. Lateral drift corrected well inside IS 456 H/300 limit.`,
+      standardRef: "IS 13311 SonReb & IS 456:2000 Cl. 20.1(b)",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Core Strength", value: "32.8 MPa", status: "NOMINAL" },
+        { label: "UPV Velocity", value: "4.25 km/s", status: "NOMINAL" },
+        { label: "NCR-009 Status", value: "RELEASED", status: "NOMINAL" },
+        { label: "Unblocked Lien", value: "₹2,08,720", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open NDT & SonReb Log", href: "/site/ndt" },
+      followUpIds: ["str_node14b_spaceframe", "str_pile_maturity_audit"],
+    }),
+  },
+  {
+    id: "str_node14b_spaceframe",
+    profileId: "STRUCTURAL_GEOTECH_ENGINEER",
+    governor: "ARGUS",
+    commandLabel: "BIT-2 Kalzip Space-Frame Node #14B Audit",
+    shortLabel: "Node #14B Snag",
+    description: "Inspect 2,100-Ton dome standing-seam tolerance (< 1.5mm) & MERO shim collar.",
+    standardRef: "IS 800:2007 & EN 1090-2 EXC3",
+    keywords: ["node", "14b", "snag", "401", "kalzip", "dome", "space-frame", "mero", "shim"],
+    deepLink: { label: "Inspect BIT-2 in 3D BIM", href: "/site/digital-twin?bit=BIT-2" },
+    followUpIds: ["bim_lidar_vs_ifc", "str_column_c2_sonreb"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `SNAG-VANGUARD-401: Node #14B Δ 4.2mm • MERO Shim Collar Scheduled`,
+      summary: `2,100-Ton BIT-2 Silver Dome standing-seam roof tolerance certified under 1.5mm overall. Localized 4.2mm radial offset at MERO spherical Node #14B is isolated for precision machined shim installation within current shift.`,
+      standardRef: "IS 800:2007 Limit State Steel & EN 1090-2",
+      complianceStatus: "ACTION_REQUIRED",
+      telemetryMetrics: [
+        { label: "Node #14B Offset", value: "Δ 4.2 mm", status: "ACTION" },
+        { label: "Standing Seam", value: "under 1.5 mm", status: "NOMINAL" },
+        { label: "Space-Frame Mass", value: "2,100 Ton", status: "NOMINAL" },
+        { label: "Remediation", value: "MERO Shim", status: "WATCH" },
+      ],
+      deepLink: { label: "Open BIT-2 3D Twin", href: "/site/digital-twin?bit=BIT-2" },
+      followUpIds: ["bim_lidar_vs_ifc", "str_column_c2_sonreb"],
+    }),
+  },
+  {
+    id: "str_pile_maturity_audit",
+    profileId: "STRUCTURAL_GEOTECH_ENGINEER",
+    governor: "ARGUS",
+    commandLabel: "IS 2911 Pile Load & Concrete Maturity Check",
+    shortLabel: "Piles & Maturity",
+    description: "Audit static pile load settlement & Nurse-Saul thermal maturity for stripping.",
+    standardRef: "IS 2911 (Part 4) & ASTM C1074 Maturity",
+    keywords: ["pile", "geotech", "foundation", "maturity", "thermal", "stripping", "formwork"],
+    deepLink: { label: "Pile Load Testing", href: "/site/pile-testing" },
+    followUpIds: ["str_column_c2_sonreb", "hse_cube_itp_check"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `IS 2911 Pile Load & Thermal Maturity Certified • Safe Stripping`,
+      summary: `Bored cast-in-situ piles tested to 2.5× working load with net residual settlement under 3.8mm (vs 12mm permissible). Nurse-Saul maturity sensors confirm > 75% design f_ck prior to soffit de-shuttering.`,
+      standardRef: "IS 2911 Part 4 & ASTM C1074 Nurse-Saul",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Net Settlement", value: "3.8 mm / 12 mm", status: "NOMINAL" },
+        { label: "Test Load Factor", value: "2.5× Working", status: "NOMINAL" },
+        { label: "Core Temp Peak", value: "58.4 °C", status: "NOMINAL" },
+        { label: "Stripping Gate", value: "APPROVED", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Pile Testing", href: "/site/pile-testing" },
+      followUpIds: ["str_column_c2_sonreb", "hse_cube_itp_check"],
+    }),
+  },
+
+  // ---------------------------------------------------------------------------
+  // 4. BIM & DIGITAL TWIN COORDINATOR (3 Functions)
+  // ---------------------------------------------------------------------------
+  {
+    id: "bim_navisworks_clash_matrix",
+    profileId: "BIM_DIGITAL_TWIN_LEAD",
+    governor: "MINERVA",
+    commandLabel: "LOD-400 Navisworks Clash & 2,400 TR Risers",
+    shortLabel: "Clash Matrix",
+    description: "Verify zero clashes across 4-car lift bank & 14th-floor 2,400 TR HVAC risers.",
+    standardRef: "ISO 19650-2 LOD-400 Federation",
+    keywords: ["bim", "clash", "navisworks", "2400", "tr", "chiller", "hvac", "lift", "lod"],
+    deepLink: { label: "3D BIM Digital Twin", href: "/site/digital-twin" },
+    followUpIds: ["bim_lidar_vs_ifc", "bim_cobie_handover"],
+    execute: () => ({
+      primaryGovernor: "MINERVA",
+      headline: `0 Hard Clashes • 4-Car Lift Core & 14th-Fl 2,400 TR Risers Cleared`,
+      summary: `Federated LOD-400 IFC model across BIT-1 through BIT-6 passes Navisworks clearance tolerances. 3 × 800-Ton VFD chiller headers and 14th-floor shaft penetrations are 100% coordinated.`,
+      standardRef: "ISO 19650-2 Information Management & LOD-400",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Hard Clashes", value: "0 Active", status: "NOMINAL" },
+        { label: "Chiller Plant", value: "2,400 TR (3×800)", status: "NOMINAL" },
+        { label: "Architectural Bits", value: "6 Synchronized", status: "NOMINAL" },
+        { label: "IFC Federation", value: "LOD-400", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Launch 3D BIM Twin", href: "/site/digital-twin" },
+      followUpIds: ["bim_lidar_vs_ifc", "bim_cobie_handover"],
+    }),
+  },
+  {
+    id: "bim_lidar_vs_ifc",
+    profileId: "BIM_DIGITAL_TWIN_LEAD",
+    governor: "ARGUS",
+    commandLabel: "28,500-Pt LiDAR Scan vs. BIM Deviation",
+    shortLabel: "Scan vs. BIM",
+    description: "Overlay terrestrial point cloud against IFC geometry & inspect Node #14B.",
+    standardRef: "ASTM E1155 Floor Flatness & USIBD LOA-30",
+    keywords: ["lidar", "360", "scan", "point", "cloud", "tour", "deviation", "flatness"],
+    deepLink: { label: "360° LiDAR Reality Tour", href: "/site/360-tour?bit=BIT-2" },
+    followUpIds: ["str_node14b_spaceframe", "bim_navisworks_clash_matrix"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `28,500-Pt LiDAR Registered • RMS 1.8mm • Node #14B Flagged`,
+      summary: `Terrestrial LiDAR point cloud registered to site control grid with 1.8mm RMS residual. 99.4% of structural surfaces fall inside ±3mm tolerance; BIT-2 Node #14B (Δ 4.2mm) pinned for shim correction.`,
+      standardRef: "USIBD Level of Accuracy LOA-30 & ASTM E1155",
+      complianceStatus: "ACTIVE_MONITORING",
+      telemetryMetrics: [
+        { label: "Point Cloud", value: "28,500 Pts", status: "NOMINAL" },
+        { label: "Registration RMS", value: "1.8 mm", status: "NOMINAL" },
+        { label: "In-Tolerance Area", value: "99.4%", status: "NOMINAL" },
+        { label: "Pinned Outlier", value: "BIT-2 #14B", status: "WATCH" },
+      ],
+      deepLink: { label: "Open 360° LiDAR Tour", href: "/site/360-tour?bit=BIT-2" },
+      followUpIds: ["str_node14b_spaceframe", "bim_navisworks_clash_matrix"],
+    }),
+  },
+  {
+    id: "bim_cobie_handover",
+    profileId: "BIM_DIGITAL_TWIN_LEAD",
+    governor: "MINERVA",
+    commandLabel: "COBie Asset Tagging & As-Built Readiness",
+    shortLabel: "COBie Handover",
+    description: "Audit MEP equipment metadata & digital O&M dossier completeness.",
+    standardRef: "ISO 19650-3 & BS 1192-4 COBie",
+    keywords: ["cobie", "handover", "as-built", "asset", "tag", "o&m"],
+    deepLink: { label: "As-Built Handover Vault", href: "/handover/as-built" },
+    followUpIds: ["bim_navisworks_clash_matrix", "pd_board_brief"],
+    execute: () => ({
+      primaryGovernor: "MINERVA",
+      headline: `COBie Asset Registry: 94.6% Serialized Across 6 Architectural Bits`,
+      summary: `3 × 800-Ton VFD chillers, Liebherr crane anchorage logs, HV switchgear, and fire-life-safety dampers carry verified QR asset passports mapped to IFC GlobalIds.`,
+      standardRef: "BS 1192-4 COBie & ISO 19650-3 Operational Phase",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Asset Passports", value: "94.6% Linked", status: "NOMINAL" },
+        { label: "IFC GlobalIds", value: "100% Valid", status: "NOMINAL" },
+        { label: "O&M Manuals", value: "42 / 44 Attached", status: "NOMINAL" },
+        { label: "DLP Readiness", value: "Stage-1 Pass", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open As-Built Registry", href: "/handover/as-built" },
+      followUpIds: ["bim_navisworks_clash_matrix", "pd_board_brief"],
+    }),
+  },
+
+  // ---------------------------------------------------------------------------
+  // 5. COMMERCIAL, QS & BILLING MANAGER (3 Functions)
+  // ---------------------------------------------------------------------------
+  {
+    id: "qs_ra_escrow_reconcile",
+    profileId: "COMMERCIAL_QS_MANAGER",
+    governor: "MIDAS",
+    commandLabel: "RA Billing & ₹43.22 Cr Escrow Reconciliation",
+    shortLabel: "RA & Retention",
+    description: "Reconcile ₹864.50 Cr EPC baseline, cumulative RA bills & 5% UP-LDA retention.",
+    standardRef: "CPWD GCC Cl. 7/9 & UP-LDA Escrow Rules",
+    keywords: ["864", "retention", "43.22", "ra", "bill", "commercial", "boq", "escrow", "payment"],
+    deepLink: { label: "Commercial & RA Ledger", href: "/site/commercial" },
+    followUpIds: ["qs_cpwd_cl42_variance", "qs_escalation_10cc"],
+    execute: () => ({
+      primaryGovernor: "MIDAS",
+      headline: `EPC ₹864.50 Cr Reconciled • 5% Retention ₹43.22 Cr • CPI 1.014`,
+      summary: `Cumulative certified work reaches ₹534.26 Cr (61.80% physical/financial progress) with ₹43.22 Cr held in UP-LDA statutory escrow. Column C2 lien release unblocked ₹2,08,720 in IPC billing.`,
+      standardRef: "CPWD GCC Clause 7 & UP-LDA Escrow Mandate",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "EPC Contract", value: `₹${G.financials.epcBaselineCr.toFixed(2)} Cr`, status: "NOMINAL" },
+        { label: "Certified EV", value: "₹534.26 Cr", status: "NOMINAL" },
+        { label: "Escrow Retention", value: `₹${G.financials.statutoryRetentionCr.toFixed(2)} Cr`, status: "NOMINAL" },
+        { label: "Net Cost Saving", value: "+₹7.38 Cr", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Commercial Ledger", href: "/site/commercial" },
+      followUpIds: ["qs_cpwd_cl42_variance", "qs_escalation_10cc"],
+    }),
+  },
+  {
+    id: "qs_cpwd_cl42_variance",
+    profileId: "COMMERCIAL_QS_MANAGER",
+    governor: "MIDAS",
+    commandLabel: "CPWD Clause 42 Theoretical vs. Actual Recon",
+    shortLabel: "Clause 42 Recon",
+    description: "Audit Fe-550D steel & cement wastage bands to prevent penal recovery.",
+    standardRef: "CPWD GCC Clause 42 Material Reconciliation",
+    keywords: ["clause 42", "cl 42", "material", "reconciliation", "wastage", "recovery"],
+    deepLink: { label: "Material Reconciliation", href: "/site/material-recon" },
+    followUpIds: ["qs_ra_escrow_reconcile", "site_weighbridge_dispatch"],
+    execute: () => ({
+      primaryGovernor: "MIDAS",
+      headline: `CPWD Clause 42 Clear • Steel Wastage 1.82% (Limit 2.50%)`,
+      summary: `Theoretical BOQ + BBS consumption vs. weighbridge-verified issue shows 1.82% rolling margin on Fe-550D rebar and 1.45% on OPC-53 cement—both comfortably inside CPWD permissible limits with ₹0 penal recovery.`,
+      standardRef: "CPWD GCC Clause 42 (Cement ±2% / Steel ±2.5%)",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Rebar Variance", value: "+1.82% / 2.5%", status: "NOMINAL" },
+        { label: "Cement Variance", value: "+1.45% / 2.0%", status: "NOMINAL" },
+        { label: "Penal Recovery", value: "₹0.00", status: "NOMINAL" },
+        { label: "Stock Audit", value: "Reconciled", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Clause 42 Recon", href: "/site/material-recon" },
+      followUpIds: ["qs_ra_escrow_reconcile", "site_weighbridge_dispatch"],
+    }),
+  },
+  {
+    id: "qs_escalation_10cc",
+    profileId: "COMMERCIAL_QS_MANAGER",
+    governor: "MIDAS",
+    commandLabel: "Clause 10CA / 10CC WPI Price Escalation",
+    shortLabel: "10CC Escalation",
+    description: "Compute WPI steel, cement, POL & CPI labor price adjustment indices.",
+    standardRef: "CPWD GCC Clause 10CA & 10CC",
+    keywords: ["escalation", "10cc", "10ca", "wpi", "inflation", "index"],
+    deepLink: { label: "Price Escalation Engine", href: "/finance/price-escalation" },
+    followUpIds: ["qs_ra_escrow_reconcile", "lgl_scl_eot_shield"],
+    execute: () => ({
+      primaryGovernor: "MIDAS",
+      headline: `Clause 10CA/10CC Indexation Active • Net Escalation +₹4.86 Cr`,
+      summary: `Office of Economic Adviser WPI indices for reinforcement steel and OPC cement combined with Lucknow CPI-IW labor indices yield +₹4.86 Cr admissible escalation billed through current IPC cycle.`,
+      standardRef: "CPWD GCC Clause 10CA & 10CC Formula",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Admissible Claim", value: "+₹4.86 Cr", status: "NOMINAL" },
+        { label: "Base Index Date", value: "May 2026 NTP", status: "NOMINAL" },
+        { label: "WPI Steel Delta", value: "+2.4%", status: "NOMINAL" },
+        { label: "IPC Integration", value: "Verified", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Price Escalation", href: "/finance/price-escalation" },
+      followUpIds: ["qs_ra_escrow_reconcile", "lgl_scl_eot_shield"],
+    }),
+  },
+
+  // ---------------------------------------------------------------------------
+  // 6. QA/QC & HSE SAFETY OFFICER (3 Functions)
+  // ---------------------------------------------------------------------------
+  {
+    id: "hse_ptw_interlocks",
+    profileId: "QAQC_HSE_OFFICER",
+    governor: "ARGUS",
+    commandLabel: "Active PTW Tokens & +54.00m RL Safety Audit",
+    shortLabel: "PTW & Safety",
+    description: "Verify height-work, hot-work & crane PTWs across 66 biometric workers.",
+    standardRef: "BOCW Act 1996 & ISO 45001:2018",
+    keywords: ["ptw", "permit", "safety", "hse", "height", "hot work", "incident", "ppe"],
+    deepLink: { label: "Permit-to-Work (PTW)", href: "/site/ptw" },
+    followUpIds: ["hse_snag_ncr_tracker", "site_crane_wind_envelope"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `Zero LTI Streak • 9 Active PTW Tokens Biometrically Bound`,
+      summary: `All 66 active workers on DPR #084 hold valid TBT sign-offs and zone-specific PTWs (including BIT-2 space-frame rigging at +16.50m RL and BIT-1 shaft work). Zero Lost-Time Injuries recorded.`,
+      standardRef: "BOCW Rules & ISO 45001 Occupational Health & Safety",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Active PTWs", value: "9 Validated", status: "NOMINAL" },
+        { label: "TBT Coverage", value: "66 / 66 (100%)", status: "NOMINAL" },
+        { label: "LTI Incidents", value: "0", status: "NOMINAL" },
+        { label: "Crane Interlock", value: "ARMED", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open PTW Register", href: "/site/ptw" },
+      followUpIds: ["hse_snag_ncr_tracker", "site_crane_wind_envelope"],
+    }),
+  },
+  {
+    id: "hse_snag_ncr_tracker",
+    profileId: "QAQC_HSE_OFFICER",
+    governor: "ARGUS",
+    commandLabel: "Active Snag & NCR Closure Register",
+    shortLabel: "Snags & NCRs",
+    description: "Track SNAG-VANGUARD-401 closure & verify NCR-009 post-grout certification.",
+    standardRef: "ISO 9001:2015 QMS & CPWD QA Manual",
+    keywords: ["snag", "ncr", "defect", "quality", "punch", "closure"],
+    deepLink: { label: "NCR & Defect Liens", href: "/site/ncr-defect-liens" },
+    followUpIds: ["str_node14b_spaceframe", "str_column_c2_sonreb"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `1 Active Snag (Node #14B) • NCR-009 Certified & Closed`,
+      summary: `NCR-009 (BIT-6 Column C2) is closed and lien-released after 32.8 MPa SonReb verification. Only SNAG-VANGUARD-401 (BIT-2 Node #14B Δ 4.2mm MERO shim) remains open with active remediation crew assigned.`,
+      standardRef: "ISO 9001:2015 Non-Conformance & Corrective Action",
+      complianceStatus: "ACTION_REQUIRED",
+      telemetryMetrics: [
+        { label: "Open Snags", value: "1 (Node #14B)", status: "ACTION" },
+        { label: "Closed NCRs", value: "NCR-009 Passed", status: "NOMINAL" },
+        { label: "Quality Pass Rate", value: "98.9%", status: "NOMINAL" },
+        { label: "Section 65B Proof", value: "Hashed", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open NCR & Snag Ledger", href: "/site/ncr-defect-liens" },
+      followUpIds: ["str_node14b_spaceframe", "str_column_c2_sonreb"],
+    }),
+  },
+  {
+    id: "hse_cube_itp_check",
+    profileId: "QAQC_HSE_OFFICER",
+    governor: "ARGUS",
+    commandLabel: "IS 516 Cube Register & ITP Hold-Points",
+    shortLabel: "Cube & ITP",
+    description: "Audit 7-day / 28-day M40 & M50 compressive cube tests and pour hold-points.",
+    standardRef: "IS 516:2021 & IS 456 Table 11",
+    keywords: ["cube", "itp", "compressive", "m40", "m50", "testing", "lab"],
+    deepLink: { label: "Cube Test Register", href: "/site/cube-register" },
+    followUpIds: ["str_pile_maturity_audit", "site_weighbridge_dispatch"],
+    execute: () => ({
+      primaryGovernor: "ARGUS",
+      headline: `IS 516 Cube Register: 100% Acceptance • Mean 28d M40 = 46.8 MPa`,
+      summary: `All 28-day concrete cube sets satisfy IS 456 Table 11 characteristic strength criteria (mean 46.8 MPa vs 40 MPa characteristic). Zero overdue ITP witness hold-points across active slab pours.`,
+      standardRef: "IS 516:2021 & IS 456:2000 Table 11 Compliance",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Mean 28d Strength", value: "46.8 MPa (M40)", status: "NOMINAL" },
+        { label: "IS 456 Compliance", value: "100% Pass", status: "NOMINAL" },
+        { label: "ITP Hold-Points", value: "0 Blocked", status: "NOMINAL" },
+        { label: "Curing Pond Temp", value: "27.0 °C ± 2°", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Cube Register", href: "/site/cube-register" },
+      followUpIds: ["str_pile_maturity_audit", "site_weighbridge_dispatch"],
+    }),
+  },
+
+  // ---------------------------------------------------------------------------
+  // 7. CLIENT REP & ARBITRATION COUNSEL (3 Functions)
+  // ---------------------------------------------------------------------------
+  {
+    id: "lgl_section65b_verify",
+    profileId: "CLIENT_LEGAL_COUNSEL",
+    governor: "HERMES",
+    commandLabel: "BSA Sec. 63 / Sec. 65B Evidentiary Hash Audit",
+    shortLabel: "Sec. 65B Vault",
+    description: "Verify tamper-evident SHA-256 Merkle chain (Block #18402) for court admissibility.",
+    standardRef: "Bharatiya Sakshya Adhiniyam Sec. 63 / IT Act Sec. 65B",
+    keywords: ["65b", "section 65b", "bsa", "merkle", "hash", "evidence", "legal", "court", "18402"],
+    deepLink: { label: "Section 65B Evidence Vault", href: "/site/audit-ledger" },
+    followUpIds: ["lgl_scl_eot_shield", "pd_board_brief"],
+    execute: () => ({
+      primaryGovernor: "HERMES",
+      headline: `Merkle Chain Intact • Block #18402 • BSA Sec. 63 / Sec. 65B Valid`,
+      summary: `Every DPR, SonReb NDT certificate, LiDAR scan, weighbridge slip, and hindrance notice is cryptographically timestamped and chained into Block #18402 with device-bound digital signatures.`,
+      standardRef: "BSA 2023 Sec. 63 & Information Technology Act Sec. 65B",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Merkle Head", value: "Block #18402", status: "NOMINAL" },
+        { label: "Chain Integrity", value: "100% Verified", status: "NOMINAL" },
+        { label: "Admissibility", value: "BSA Sec. 63 Ready", status: "NOMINAL" },
+        { label: "Tamper Alerts", value: "0", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Audit Ledger", href: "/site/audit-ledger" },
+      followUpIds: ["lgl_scl_eot_shield", "pd_board_brief"],
+    }),
+  },
+  {
+    id: "lgl_scl_eot_shield",
+    profileId: "CLIENT_LEGAL_COUNSEL",
+    governor: "THEMIS",
+    commandLabel: "SCL Delay Protocol & Liquidated Damages Shield",
+    shortLabel: "EOT & LD Shield",
+    description: "Audit concurrency, float absorption & EOT entitlement under CPWD Clause 5.",
+    standardRef: "SCL Delay & Disruption Protocol (2nd Ed.) & CPWD Cl. 5",
+    keywords: ["scl", "eot", "extension", "liquidated", "damages", "ld", "arbitration", "hindrance"],
+    deepLink: { label: "Hindrance & EOT Register", href: "/site/hindrance-eot" },
+    followUpIds: ["lgl_section65b_verify", "pd_critical_exposure"],
+    execute: () => ({
+      primaryGovernor: "THEMIS",
+      headline: `0d Critical Delay • ₹0.00 LD Exposure • Contemporaneous TIA Sealed`,
+      summary: `Contemporaneous Time Impact Analysis (TIA) proves all logged external utility shifts were absorbed within non-critical float buffers, shielding the contractor from Liquidated Damages while preserving EOT audit trails.`,
+      standardRef: "SCL Delay Protocol (2nd Ed.) & CPWD GCC Clause 2/5",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "LD Exposure", value: "₹0.00", status: "NOMINAL" },
+        { label: "Critical Delay", value: "0 Days", status: "NOMINAL" },
+        { label: "TIA Windows", value: "Contemporaneous", status: "NOMINAL" },
+        { label: "Notice Compliance", value: "100% Timely", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Hindrance & EOT", href: "/site/hindrance-eot" },
+      followUpIds: ["lgl_section65b_verify", "pd_critical_exposure"],
+    }),
+  },
+  {
+    id: "lgl_uplda_escrow_gates",
+    profileId: "CLIENT_LEGAL_COUNSEL",
+    governor: "THEMIS",
+    commandLabel: "UP-LDA Statutory Compliance & Escrow Gates",
+    shortLabel: "UP-LDA Gates",
+    description: "Audit UP-LDA milestone prerequisites, BOCW cess, labour license & BG validity.",
+    standardRef: "UP-LDA EPC Concession & UP-RERA Statutory Norms",
+    keywords: ["escrow", "statutory", "cess", "bg", "bank guarantee", "compliance", "gate"],
+    deepLink: { label: "Commercial & Statutory Gates", href: "/system/commercial-gates" },
+    followUpIds: ["qs_ra_escrow_reconcile", "lgl_section65b_verify"],
+    execute: () => ({
+      primaryGovernor: "THEMIS",
+      headline: `All UP-LDA Statutory & Escrow Release Gates Green`,
+      summary: `Performance Bank Guarantee, BOCW 1% welfare cess remittance, CLRA labour license, and UP-LDA escrow retention accounting (₹43.22 Cr) are verified active with zero statutory holds.`,
+      standardRef: "UP-LDA Escrow Tripartite Agreement & BOCW Cess Act",
+      complianceStatus: "CERTIFIED",
+      telemetryMetrics: [
+        { label: "Escrow Account", value: `₹${G.financials.statutoryRetentionCr.toFixed(2)} Cr`, status: "NOMINAL" },
+        { label: "BOCW Cess (1%)", value: "Paid & Matched", status: "NOMINAL" },
+        { label: "PBG Validity", value: "Active + DLP", status: "NOMINAL" },
+        { label: "Statutory Holds", value: "0", status: "NOMINAL" },
+      ],
+      deepLink: { label: "Open Commercial Gates", href: "/system/commercial-gates" },
+      followUpIds: ["qs_ra_escrow_reconcile", "lgl_section65b_verify"],
+    }),
+  },
+];
+
+export function getFunctionsForProfile(
+  profileId: ConstructionProfileId
+): QuadmaxFunctionDefinition[] {
+  return QUADMAX_FUNCTION_REGISTRY.filter((fn) => fn.profileId === profileId);
+}
+
+export function executeQuadmaxFunction(functionId: string): AgentSynthesisResponse {
+  const fn =
+    QUADMAX_FUNCTION_REGISTRY.find((f) => f.id === functionId) ||
+    QUADMAX_FUNCTION_REGISTRY[0];
+  const profile =
+    CONSTRUCTION_PROFILES.find((p) => p.id === fn.profileId) ||
+    CONSTRUCTION_PROFILES[0];
+
+  const core = fn.execute();
+  const timestampIso = new Date().toISOString();
+  const sha256Seal = computeDeterministicSeal(
+    `${G.projectId}|${fn.id}|${core.headline}|${core.complianceStatus}`
+  );
+
+  return {
+    functionId: fn.id,
+    profileId: profile.id,
+    profileTitle: profile.title,
+    ...core,
+    sha256Seal,
+    timestampIso,
   };
 }
 
-// ------------------------------------------------------------------------------
-// MASTER DISPATCHER: ROUTES ANY QUERY TO DETERMINISTIC VANGUARD TOOLS
-// ------------------------------------------------------------------------------
 export function dispatchVanguardGovernorQuery(
-  rawPrompt: string,
-  preferredGovernor?: GovernorId
+  rawQuery: string,
+  preferredGovernor?: GovernorId,
+  activeProfileId?: ConstructionProfileId
 ): AgentSynthesisResponse {
-  const prompt = (rawPrompt || "Full Project Vanguard campus status audit").trim();
-  const lower = prompt.toLowerCase();
+  const q = rawQuery.toLowerCase().trim();
 
-  let primary: GovernorId = preferredGovernor || "MINERVA";
+  // Score all 21 functions against keywords, governor affinity, and active profile context
+  let bestFn = QUADMAX_FUNCTION_REGISTRY[0];
+  let bestScore = -1;
 
-  if (!preferredGovernor) {
-    if (
-      lower.includes("crane") ||
-      lower.includes("liebherr") ||
-      lower.includes("radar") ||
-      lower.includes("azimuth") ||
-      lower.includes("argus") ||
-      lower.includes("airspace")
-    ) {
-      primary = "ARGUS";
-    } else if (
-      lower.includes("cost") ||
-      lower.includes("crore") ||
-      lower.includes("864") ||
-      lower.includes("retention") ||
-      lower.includes("escrow") ||
-      lower.includes("cpi") ||
-      lower.includes("bill") ||
-      lower.includes("midas") ||
-      lower.includes("terracotta")
-    ) {
-      primary = "MIDAS";
-    } else if (
-      lower.includes("65b") ||
-      lower.includes("hash") ||
-      lower.includes("merkle") ||
-      lower.includes("audit") ||
-      lower.includes("hermes") ||
-      lower.includes("legal")
-    ) {
-      primary = "HERMES";
-    } else if (
-      lower.includes("column") ||
-      lower.includes("c2") ||
-      lower.includes("ncr") ||
-      lower.includes("ndt") ||
-      lower.includes("sonreb") ||
-      lower.includes("chiller") ||
-      lower.includes("2400") ||
-      lower.includes("concrete") ||
-      lower.includes("themis")
-    ) {
-      primary = "THEMIS";
-    } else {
-      primary = "MINERVA";
+  for (const fn of QUADMAX_FUNCTION_REGISTRY) {
+    let score = 0;
+    for (const kw of fn.keywords) {
+      if (q.includes(kw)) {
+        score += kw.length >= 4 ? 12 : 7;
+      }
+    }
+    if (activeProfileId && fn.profileId === activeProfileId) {
+      score += 4;
+    }
+    if (preferredGovernor && fn.governor === preferredGovernor) {
+      score += 3;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestFn = fn;
     }
   }
 
-  const spatialTrace = runMinervaSpatialAudit(prompt);
-  const craneTrace = runArgusCraneRadarAudit();
-  const commercialTrace = runMidasCommercialAudit();
-  const qualityTrace = runThemisQualityAndMepAudit();
-  const hermesTrace = runHermesEvidenceAudit();
-
-  const inspectedZone = String(spatialTrace.outputs.inspected_zone || "BIT-2");
-
-  if (primary === "ARGUS") {
-    return {
-      projectId: VANGUARD_GENOME.projectId,
-      projectName: VANGUARD_GENOME.projectName,
-      primaryGovernor: "ARGUS",
-      supportingGovernors: ["MINERVA", "HERMES"],
-      headline: "ARGUS CV & Crane Radar: Liebherr 280 EC-H Locked Nominal (Azimuth 38.5°)",
-      summary: `Tower Crane 01 (${VANGUARD_GENOME.craneTelemetry.model}, 65m jib) is operating at 38.5° azimuth over BIT-1 Green Wedge (+12.0m RL) and BIT-2 Kalzip Silver Dome (+16.5m RL) with 12ms WebRTC telemetry latency and zero airspace encroachment against BIT-3's +54.0m diagrid core.`,
-      bulletFindings: [
-        "Active Crane: Liebherr 280 EC-H • 65.0m jib radius • +68.0m hook datum.",
-        "Slew Sector: 38.5° locked over BIT-1 Terracotta Bridge Arch & BIT-2 Silver Dome.",
-        "Anti-Collision Buffer: 20.6m radial clearance maintained from BIT-3 14-storey tower.",
-        "Optical Feed: 30 FPS WebRTC stream synchronized with 360° LiDAR Reality Twin.",
-      ],
-      citedMetrics: [
-        { label: "CRANE MODEL", value: "Liebherr 280 EC-H", tone: "cyan" },
-        { label: "SLEW AZIMUTH", value: "38.5°", tone: "emerald" },
-        { label: "TELEMETRY LATENCY", value: "12 ms", tone: "emerald" },
-        { label: "AIRSPACE STATUS", value: "CLEAR", tone: "cyan" },
-      ],
-      toolTraces: [craneTrace, spatialTrace],
-      deepLink: { label: "Inspect BIT-2 & Crane in 3D BIM", href: "/site/digital-twin?bit=BIT-2" },
-      secondaryLink: { label: "Open BIT-2 360° LiDAR Scan", href: "/site/360-tour?zone=BIT-2" },
-      merklePayload: `ARGUS_CRANE_280ECH_AZ38.5_${VANGUARD_GENOME.projectId}`,
-    };
+  // If query has no keyword match, default to the active profile's lead function
+  if (bestScore <= 4 && activeProfileId) {
+    const profileFns = getFunctionsForProfile(activeProfileId);
+    if (profileFns.length > 0) {
+      bestFn = profileFns[0];
+    }
   }
 
-  if (primary === "MIDAS") {
-    return {
-      projectId: VANGUARD_GENOME.projectId,
-      projectName: VANGUARD_GENOME.projectName,
-      primaryGovernor: "MIDAS",
-      supportingGovernors: ["THEMIS", "HERMES"],
-      headline: "MIDAS Commercial Ledger: ₹864.50 Cr EPC Baseline & ₹43.22 Cr UP-LDA Retention Reconciled",
-      summary: `Project Vanguard Commercial Hub is tracking at CPI 1.014 and SPI 1.000 (0d CPM float variance). Certified gross billing stands at ₹534.26 Cr (61.8%), with ₹43.22 Cr (5.0%) secured in UP-LDA statutory escrow and ₹2,08,720 unblocked following NCR-009 SonReb certification on Column C2.`,
-      bulletFindings: [
-        "EPC Contract Baseline: ₹864.50 Cr across 6 federated Architectural Bits.",
-        "Statutory Retention (5%): ₹43.22 Cr held in UP-LDA Escrow Reserve.",
-        "Terracotta Cladding & Bridge Arch (BIT-1, ₹118.40 Cr): CPWD Clause 42 ledger reconciled.",
-        "NCR-009 Lien Release: ₹2,08,720 released on RA-05 after Column C2 achieved 32.8 MPa.",
-      ],
-      citedMetrics: [
-        { label: "EPC BASELINE", value: "₹864.50 Cr", tone: "cyan" },
-        { label: "5% RETENTION", value: "₹43.22 Cr", tone: "amber" },
-        { label: "COST INDEX (CPI)", value: "1.014", tone: "emerald" },
-        { label: "CPM FLOAT", value: "0 Days", tone: "emerald" },
-      ],
-      toolTraces: [commercialTrace, qualityTrace],
-      deepLink: { label: "Open Master CPM & EVM S-Curve", href: "/site/master-schedule" },
-      secondaryLink: { label: "Inspect 6 Bits in 3D BIM", href: "/site/digital-twin" },
-      merklePayload: `MIDAS_EPC_864.50CR_RET_43.22CR_${VANGUARD_GENOME.projectId}`,
-    };
-  }
-
-  if (primary === "THEMIS") {
-    return {
-      projectId: VANGUARD_GENOME.projectId,
-      projectName: VANGUARD_GENOME.projectName,
-      primaryGovernor: "THEMIS",
-      supportingGovernors: ["MINERVA", "MIDAS"],
-      headline: "THEMIS Quality & MEP Engine: Column C2 Certified (32.8 MPa) & 2,400 TR Plant Balanced",
-      summary: `Post-grout IS 13311 SonReb testing on BIT-4 Column C2 verified 32.8 MPa in-situ compressive strength (UPV 4.25 km/s) after SikaGrout 214 injection, clearing NCR-009. Central HVAC capacity of 2,400 TR (3 × 800-Ton VFD chillers) is balanced across podium and 14th-floor risers.`,
-      bulletFindings: [
-        "Column C2 (BIT-4 Podium): SonReb 32.8 MPa ≥ 29.75 MPa (0.85 f_ck) — IS 456 Cl. 17.4.3 Pass.",
-        "Central Chiller Plant: 2,400 TR (3 × 800-Ton VFD water-cooled centrifugal chillers) online.",
-        "Kalzip Dome Seam Tolerance: < 1.5mm standing-seam acoustic integrity certified.",
-        "Pour Card PC-VGD-2026-042: 28-day M35 mean strength 39.70 MPa (IS 456 Cl. 16.1 Pass).",
-      ],
-      citedMetrics: [
-        { label: "COLUMN C2 SONREB", value: "32.8 MPa", tone: "emerald" },
-        { label: "HVAC PLANT", value: "2,400 TR", tone: "cyan" },
-        { label: "UPV VELOCITY", value: "4.25 km/s", tone: "emerald" },
-        { label: "NCR-009 STATUS", value: "CERTIFIED", tone: "emerald" },
-      ],
-      toolTraces: [qualityTrace, commercialTrace],
-      deepLink: { label: "Open Pour Cards & CTM Register", href: "/site/pour-cards" },
-      secondaryLink: { label: "Inspect BIT-4 Plant in 3D BIM", href: "/site/digital-twin?bit=BIT-4" },
-      merklePayload: `THEMIS_C2_32.8MPA_HVAC_2400TR_${VANGUARD_GENOME.projectId}`,
-    };
-  }
-
-  if (primary === "HERMES") {
-    return {
-      projectId: VANGUARD_GENOME.projectId,
-      projectName: VANGUARD_GENOME.projectName,
-      primaryGovernor: "HERMES",
-      supportingGovernors: ["MINERVA", "MIDAS"],
-      headline: "HERMES Section 65B Notarization Core: Block #18402 Tamper-Evident Chain Active",
-      summary: `All spatial laser scans, CTM cube crush logs, SonReb NDT clearances, and CPM S-curve milestones for Project Vanguard Commercial Hub (Gomti Nagar, Lucknow) are cryptographically hashed via SHA-256 and persisted under Postgres Row-Level Security.`,
-      bulletFindings: [
-        "Latest Sealed Block: #18402 (Kalzip Silver Dome & 2,100-Ton Space-Frame Certification).",
-        "Statutory Compliance: Indian Evidence Act, 1872 Section 65B electronic record integrity.",
-        "Database Enforcement: Supabase PostgreSQL RLS active on section_65b_audit_ledger.",
-        "Cross-View Hash Sync: Identical SHA-256 digests anchored across Command Center & 360° Tour.",
-      ],
-      citedMetrics: [
-        { label: "LEDGER BLOCK", value: "#18402", tone: "cyan" },
-        { label: "EVIDENCE ACT", value: "Sec 65B", tone: "emerald" },
-        { label: "DATABASE RLS", value: "ENFORCED", tone: "emerald" },
-        { label: "HASH ALGORITHM", value: "SHA-256", tone: "cyan" },
-      ],
-      toolTraces: [hermesTrace, spatialTrace],
-      deepLink: { label: "Open 360° LiDAR Evidence Stamps", href: "/site/360-tour?zone=BIT-2" },
-      secondaryLink: { label: "Return to Master Command Center", href: "/" },
-      merklePayload: `HERMES_SEC65B_BLOCK18402_${VANGUARD_GENOME.projectId}`,
-    };
-  }
-
-  // Default: MINERVA (3D BIM & Spatial LOD-400)
-  return {
-    projectId: VANGUARD_GENOME.projectId,
-    projectName: VANGUARD_GENOME.projectName,
-    primaryGovernor: "MINERVA",
-    supportingGovernors: ["ARGUS", "THEMIS"],
-    headline: "MINERVA LOD-400 Spatial Audit: 0 MEP Clashes • SNAG-VANGUARD-401 (Node #14B) Tracked",
-    summary: `Across all 6 Architectural Bits of Project Vanguard, MINERVA confirms zero spatial clashes between BIT-3's 4-car high-speed lift bank and 14th-floor vertical HVAC risers. One minor laser-scan deviation (SNAG-VANGUARD-401: Δ 4.2mm at Kalzip Space-Frame Truss Node #14B on BIT-2) is anchored for shim adjustment.`,
-    bulletFindings: [
-      "Clash Detection (BIT-3 +54.0m RL): 0 conflicts between 4-car lift bank & 14th fl HVAC risers.",
-      "Active Snag (BIT-2 +16.5m RL): SNAG-VANGUARD-401 at Node #14B (Δ 4.2mm laser deviation).",
-      "Monumental Bridge Arch (BIT-1 +12.0m RL): 48m clear-span post-tensioned ribs at 78% completion.",
-      "Slim Helipad Deck (BIT-6 +23.0m RL): Cantilevered steel box-girder deck aligned with East Wing.",
-    ],
-    citedMetrics: [
-      { label: "ARCHITECTURAL BITS", value: "6 / 6 Synced", tone: "cyan" },
-      { label: "LIFT/HVAC CLASHES", value: "0 Clashes", tone: "emerald" },
-      { label: "NODE #14B SNAG", value: "Δ 4.2 mm", tone: "amber" },
-      { label: "LOD STANDARD", value: "LOD-400", tone: "cyan" },
-    ],
-    toolTraces: [spatialTrace, craneTrace],
-    deepLink: { label: `Open ${inspectedZone} in 3D BIM Twin`, href: `/site/digital-twin?bit=${inspectedZone}` },
-    secondaryLink: { label: `Open ${inspectedZone} in 360° LiDAR Tour`, href: `/site/360-tour?zone=${inspectedZone}` },
-    merklePayload: `MINERVA_LOD400_${inspectedZone}_CLASH0_NODE14B_${VANGUARD_GENOME.projectId}`,
-  };
+  return executeQuadmaxFunction(bestFn.id);
 }

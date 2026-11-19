@@ -1,48 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import {
-  dispatchVanguardGovernorQuery,
+  CONSTRUCTION_PROFILES,
+  QUADMAX_FUNCTION_REGISTRY,
+  ConstructionProfileId,
   GovernorId,
+  executeQuadmaxFunction,
+  dispatchVanguardGovernorQuery,
 } from "@/lib/agents/quadillarAgentMesh";
-import { supabase } from "@/lib/supabaseClient";
+
+export async function GET() {
+  return NextResponse.json({
+    kernel: "QUADMAX.AI",
+    profiles: CONSTRUCTION_PROFILES,
+    functions: QUADMAX_FUNCTION_REGISTRY.map(({ execute: _exec, ...meta }) => meta),
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const prompt = typeof body?.prompt === "string" ? body.prompt : "";
-    const governor = body?.governor as GovernorId | undefined;
-    const notarize = Boolean(body?.notarize);
+    const { functionId, query, prompt, governor, profileId } = body || {};
 
-    const synthesis = dispatchVanguardGovernorQuery(prompt, governor);
-    const timestampIso = new Date().toISOString();
-    const merkleHash = crypto
-      .createHash("sha256")
-      .update(`${synthesis.merklePayload}_${timestampIso}`)
-      .digest("hex");
-
-    if (notarize) {
-      try {
-        await supabase.from("section_65b_audit_ledger").insert({
-          project_id: synthesis.projectId,
-          primary_governor: `${synthesis.primaryGovernor}-KERNEL`,
-          synthesis_report: `${synthesis.headline} • ${synthesis.summary}`,
-          merkle_root_hash: merkleHash,
-        });
-      } catch (dbErr) {
-        // Non-blocking if offline
-      }
+    if (typeof functionId === "string" && functionId.trim().length > 0) {
+      const result = executeQuadmaxFunction(functionId.trim());
+      return NextResponse.json({ ok: true, result });
     }
 
-    return NextResponse.json({
-      ok: true,
-      timestamp: timestampIso,
-      merkleHash,
-      notarized: notarize,
-      synthesis,
-    });
+    const inputText = String(query ?? prompt ?? "Project Vanguard executive pulse");
+    const result = dispatchVanguardGovernorQuery(
+      inputText,
+      governor as GovernorId | undefined,
+      profileId as ConstructionProfileId | undefined
+    );
+    return NextResponse.json({ ok: true, result });
   } catch (err: any) {
     return NextResponse.json(
-      { ok: false, error: err?.message || "Agent kernel dispatch failed" },
+      { ok: false, error: err?.message || "Invalid QUADMAX kernel payload" },
       { status: 400 }
     );
   }

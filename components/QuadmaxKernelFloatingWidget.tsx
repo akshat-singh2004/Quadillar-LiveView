@@ -4,24 +4,34 @@
 import React, { useState, useEffect, useRef } from "react";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
 import {
+  GOVERNOR_PROFILES,
+  GovernorId,
+  CONSTRUCTION_PROFILES,
+  ConstructionProfileId,
+  QUADMAX_FUNCTION_REGISTRY,
+  executeQuadmaxFunction,
   dispatchVanguardGovernorQuery,
   AgentSynthesisResponse,
 } from "@/lib/agents/quadillarAgentMesh";
 import { useLiveviewTheme } from "@/lib/theme/liveviewTheme";
 
-const POS_STORAGE_KEY = "quadmax-draggable-pill-pos-v1";
-const PILL_WIDTH = 138;
+const POS_STORAGE_KEY = "quadmax-draggable-pill-pos-v2";
+const PROFILE_STORAGE_KEY = "quadmax-active-profile-v2";
+const AGENT_STORAGE_KEY = "quadmax-active-agent-v1";
+const PILL_WIDTH = 172;
 const PILL_HEIGHT = 34;
 
 export default function QuadmaxKernelFloatingWidget() {
   const { isLight } = useLiveviewTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<GovernorId | "ALL">("ALL");
+  const [activeProfileId, setActiveProfileId] =
+    useState<ConstructionProfileId | "ALL">("ALL");
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<AgentSynthesisResponse>(() =>
-    dispatchVanguardGovernorQuery("Project Vanguard campus overview", "MINERVA")
+    executeQuadmaxFunction("pd_executive_pulse")
   );
 
-  // Viewport coordinates (top-left of the compact pill)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragState = useRef<{
@@ -33,8 +43,25 @@ export default function QuadmaxKernelFloatingWidget() {
     moved: boolean;
   } | null>(null);
 
-  // Initialize clamped position from localStorage or default bottom-right
   useEffect(() => {
+    try {
+      const savedAgent = localStorage.getItem(AGENT_STORAGE_KEY) as GovernorId | "ALL" | null;
+      if (savedAgent && (savedAgent === "ALL" || GOVERNOR_PROFILES.some((g) => g.id === savedAgent))) {
+        setSelectedAgent(savedAgent);
+      }
+      const savedProfile = localStorage.getItem(PROFILE_STORAGE_KEY) as
+        | ConstructionProfileId
+        | "ALL"
+        | null;
+      if (
+        savedProfile &&
+        (savedProfile === "ALL" ||
+          CONSTRUCTION_PROFILES.some((p) => p.id === savedProfile))
+      ) {
+        setActiveProfileId(savedProfile);
+      }
+    } catch {}
+
     const clampPos = (rawX: number, rawY: number) => {
       const maxX = Math.max(12, window.innerWidth - PILL_WIDTH - 12);
       const maxY = Math.max(12, window.innerHeight - PILL_HEIGHT - 12);
@@ -63,6 +90,73 @@ export default function QuadmaxKernelFloatingWidget() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const filteredFunctions = QUADMAX_FUNCTION_REGISTRY.filter((fn) => {
+    const matchesAgent = selectedAgent === "ALL" || fn.governor === selectedAgent;
+    const matchesProfile = activeProfileId === "ALL" || fn.profileId === activeProfileId;
+    return matchesAgent && matchesProfile;
+  });
+
+  const handleAgentDropdownChange = (nextAgent: GovernorId | "ALL") => {
+    setSelectedAgent(nextAgent);
+    try {
+      localStorage.setItem(AGENT_STORAGE_KEY, nextAgent);
+    } catch {}
+
+    const nextPool = QUADMAX_FUNCTION_REGISTRY.filter(
+      (fn) =>
+        (nextAgent === "ALL" || fn.governor === nextAgent) &&
+        (activeProfileId === "ALL" || fn.profileId === activeProfileId)
+    );
+    if (nextPool.length > 0) {
+      setResult(executeQuadmaxFunction(nextPool[0].id));
+    } else if (nextAgent !== "ALL") {
+      const fallbackPool = QUADMAX_FUNCTION_REGISTRY.filter((fn) => fn.governor === nextAgent);
+      if (fallbackPool.length > 0) {
+        setActiveProfileId("ALL");
+        setResult(executeQuadmaxFunction(fallbackPool[0].id));
+      }
+    }
+  };
+
+  const handleSelectProfile = (profileId: ConstructionProfileId | "ALL") => {
+    setActiveProfileId(profileId);
+    try {
+      localStorage.setItem(PROFILE_STORAGE_KEY, profileId);
+    } catch {}
+
+    const nextPool = QUADMAX_FUNCTION_REGISTRY.filter(
+      (fn) =>
+        (selectedAgent === "ALL" || fn.governor === selectedAgent) &&
+        (profileId === "ALL" || fn.profileId === profileId)
+    );
+    if (nextPool.length > 0) {
+      setResult(executeQuadmaxFunction(nextPool[0].id));
+    } else if (profileId !== "ALL") {
+      const profilePool = QUADMAX_FUNCTION_REGISTRY.filter((fn) => fn.profileId === profileId);
+      if (profilePool.length > 0) {
+        setSelectedAgent("ALL");
+        setResult(executeQuadmaxFunction(profilePool[0].id));
+      }
+    }
+  };
+
+  const handleRunFunction = (fnId: string) => {
+    const res = executeQuadmaxFunction(fnId);
+    setResult(res);
+  };
+
+  const handleAsk = (qText?: string) => {
+    const prompt = (qText ?? query).trim();
+    if (!prompt) return;
+    const res = dispatchVanguardGovernorQuery(
+      prompt,
+      selectedAgent === "ALL" ? undefined : selectedAgent,
+      activeProfileId === "ALL" ? undefined : activeProfileId
+    );
+    setResult(res);
+    if (!qText) setQuery("");
+  };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!pos) return;
@@ -112,14 +206,12 @@ export default function QuadmaxKernelFloatingWidget() {
     dragState.current = null;
   };
 
-  const handleAsk = (qText?: string) => {
-    const prompt = (qText ?? query).trim();
-    if (!prompt) return;
-    setResult(dispatchVanguardGovernorQuery(prompt));
-    if (!qText) setQuery("");
-  };
-
   if (!pos) return null;
+
+  const activeProfile =
+    activeProfileId === "ALL"
+      ? null
+      : CONSTRUCTION_PROFILES.find((p) => p.id === activeProfileId) || null;
 
   const viewportW = typeof window !== "undefined" ? window.innerWidth : 1280;
   const viewportH = typeof window !== "undefined" ? window.innerHeight : 800;
@@ -137,7 +229,7 @@ export default function QuadmaxKernelFloatingWidget() {
       }}
       className="font-mono select-none"
     >
-      {/* Smart-Anchored Expandable Kernel Drawer */}
+      {/* Multi-Agent & Multi-Profile Kernel Drawer */}
       {isOpen && (
         <div
           style={{
@@ -145,72 +237,234 @@ export default function QuadmaxKernelFloatingWidget() {
             ...(openUpward ? { bottom: `${PILL_HEIGHT + 8}px` } : { top: `${PILL_HEIGHT + 8}px` }),
             ...(alignRight ? { right: 0 } : { left: 0 }),
           }}
-          className="w-80 bg-slate-950/95 backdrop-blur-xl border border-cyan-500/50 rounded-2xl shadow-2xl p-3.5 flex flex-col gap-2.5 text-xs text-slate-100 select-text"
+          className="w-[400px] max-w-[94vw] bg-slate-950/95 backdrop-blur-xl border border-cyan-500/50 rounded-2xl shadow-2xl p-3.5 flex flex-col gap-2.5 text-xs text-slate-100 select-text"
         >
-          <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+          {/* Top Header */}
+          <div className="flex justify-between items-start border-b border-slate-800 pb-2">
             <div>
-              <div className="font-bold text-cyan-400 text-[11px]">QUADMAX.AI • LIVEVIEW OS</div>
-              <div className="text-[9px] text-slate-400">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-cyan-400 text-[11px]">QUADMAX.AI</span>
+                <span className="px-1.5 py-0.2 bg-emerald-500/20 border border-emerald-500/40 rounded text-[9px] text-emerald-400 font-bold">
+                  5 AGENTS • 7 PROFILES
+                </span>
+              </div>
+              <div className="text-[9px] text-slate-400 mt-0.5">
                 {VANGUARD_GENOME.projectId} • ₹{VANGUARD_GENOME.financials.epcBaselineCr.toFixed(2)} Cr
               </div>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="text-slate-400 hover:text-white font-bold px-1.5 py-0.5 rounded bg-slate-900 text-[10px]"
+              className="text-slate-400 hover:text-white font-bold px-2 py-0.5 rounded bg-slate-900 text-[10px]"
             >
               ✕
             </button>
           </div>
 
-          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 flex flex-col gap-1.5">
-            <div className="flex justify-between items-center text-[9px]">
-              <span className="font-bold text-emerald-400">GOV: {result.primaryGovernor}</span>
-              <span className="text-slate-400">6 BITS SYNCED</span>
+          {/* Dual Dropdown Bar: ALL AGENTS Dropdown + PROFILE Dropdown */}
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[8.5px] text-slate-400 font-bold uppercase">
+                AGENT GOVERNOR
+              </label>
+              <select
+                aria-label="All Agents Dropdown"
+                value={selectedAgent}
+                onChange={(e) =>
+                  handleAgentDropdownChange(e.target.value as GovernorId | "ALL")
+                }
+                style={{
+                  backgroundColor: isLight ? "#EFECE4" : "#0F172A",
+                  color: isLight ? "#1F1E1B" : "#F8FAFC",
+                  borderColor: isLight ? "#CFC8B8" : "#334155",
+                }}
+                className="w-full rounded-lg border px-2 py-1 text-[10px] font-bold outline-none cursor-pointer"
+              >
+                <option value="ALL">ALL AGENTS (5)</option>
+                {GOVERNOR_PROFILES.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} • {g.badge}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[8.5px] text-slate-400 font-bold uppercase">
+                STAKEHOLDER PROFILE
+              </label>
+              <select
+                aria-label="Project Profile Dropdown"
+                value={activeProfileId}
+                onChange={(e) =>
+                  handleSelectProfile(e.target.value as ConstructionProfileId | "ALL")
+                }
+                style={{
+                  backgroundColor: isLight ? "#EFECE4" : "#0F172A",
+                  color: isLight ? "#1F1E1B" : "#F8FAFC",
+                  borderColor: isLight ? "#CFC8B8" : "#334155",
+                }}
+                className="w-full rounded-lg border px-2 py-1 text-[10px] font-bold outline-none cursor-pointer"
+              >
+                <option value="ALL">ALL PROFILES (7)</option>
+                {CONSTRUCTION_PROFILES.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.shortCode} • {p.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Quick Role Chips */}
+          <div className="grid grid-cols-4 gap-1">
+            <button
+              type="button"
+              onClick={() => handleSelectProfile("ALL")}
+              className={`px-1.5 py-1 rounded-lg border text-[9px] font-bold truncate transition ${
+                activeProfileId === "ALL"
+                  ? "bg-cyan-500 text-slate-950 border-cyan-400"
+                  : "bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300"
+              }`}
+            >
+              ALL ROLES
+            </button>
+            {CONSTRUCTION_PROFILES.map((prof) => {
+              const selected = prof.id === activeProfileId;
+              return (
+                <button
+                  key={prof.id}
+                  type="button"
+                  onClick={() => handleSelectProfile(prof.id)}
+                  title={`${prof.title} — ${prof.authorityScope}`}
+                  className={`px-1.5 py-1 rounded-lg border text-[9px] font-bold truncate transition ${
+                    selected
+                      ? "bg-cyan-500 text-slate-950 border-cyan-400"
+                      : "bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300"
+                  }`}
+                >
+                  {prof.shortCode}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Filtered Deterministic Function Triggers */}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-center text-[9px] text-slate-400 uppercase">
+              <span>
+                {selectedAgent === "ALL" ? "ALL AGENTS" : selectedAgent} •{" "}
+                {activeProfile ? activeProfile.shortCode : "ALL PROFILES"}
+              </span>
+              <span>{filteredFunctions.length} TOOLS</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1 max-h-24 overflow-y-auto pr-0.5">
+              {filteredFunctions.map((fn) => {
+                const isCurrent = result.functionId === fn.id;
+                return (
+                  <button
+                    key={fn.id}
+                    type="button"
+                    onClick={() => handleRunFunction(fn.id)}
+                    className={`p-1.5 rounded-lg border text-left transition flex flex-col gap-0.5 ${
+                      isCurrent
+                        ? "bg-cyan-500/20 border-cyan-400 text-white"
+                        : "bg-slate-900/90 hover:bg-slate-800 border-slate-800 text-slate-300"
+                    }`}
+                  >
+                    <span className="text-[9px] font-bold text-cyan-400 truncate">
+                      {fn.shortLabel}
+                    </span>
+                    <span className="text-[8px] text-slate-400 truncate">{fn.governor}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Deterministic Synthesis & Telemetry Matrix */}
+          <div className="bg-slate-900/95 border border-slate-800 rounded-xl p-2.5 flex flex-col gap-2">
+            <div className="flex justify-between items-center text-[9px]">
+              <span className="font-bold text-emerald-400">
+                GOV: {result.primaryGovernor} • {result.complianceStatus.replace("_", " ")}
+              </span>
+              <span className="text-slate-400 truncate max-w-[165px]">{result.standardRef}</span>
+            </div>
+
             <div className="font-bold text-white text-[11px] leading-snug">{result.headline}</div>
             <div className="text-[10px] text-slate-300 leading-relaxed">{result.summary}</div>
-            <div className="flex gap-1.5 pt-1">
-              <a
-                href={result.deepLink.href}
-                className="flex-1 py-1 px-2 bg-cyan-500 text-slate-950 font-bold text-[10px] rounded-lg text-center"
-              >
-                {result.deepLink.label} →
-              </a>
-              <a
-                href="/site/agent-console"
-                className="py-1 px-2 bg-slate-950 border border-slate-700 text-cyan-300 font-bold text-[10px] rounded-lg"
-              >
-                CONSOLE
-              </a>
+
+            <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+              {result.telemetryMetrics.map((m) => (
+                <div
+                  key={m.label}
+                  className="bg-slate-950/90 border border-slate-800 rounded-lg px-2 py-1 flex flex-col"
+                >
+                  <span className="text-[8px] text-slate-400 uppercase">{m.label}</span>
+                  <span
+                    className={`text-[10px] font-bold ${
+                      m.status === "ACTION"
+                        ? "text-rose-400"
+                        : m.status === "WATCH"
+                        ? "text-amber-400"
+                        : "text-emerald-400"
+                    }`}
+                  >
+                    {m.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {result.followUpIds.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                <span className="text-[8px] text-slate-400">NEXT:</span>
+                {result.followUpIds.map((fid) => {
+                  const targetFn = QUADMAX_FUNCTION_REGISTRY.find((f) => f.id === fid);
+                  if (!targetFn) return null;
+                  return (
+                    <button
+                      key={fid}
+                      type="button"
+                      onClick={() => handleRunFunction(fid)}
+                      className="px-1.5 py-0.5 rounded bg-slate-950 hover:bg-slate-800 border border-slate-700 text-[8.5px] text-cyan-300"
+                    >
+                      {targetFn.shortLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-800">
+              <span className="text-[8px] text-slate-400 truncate">
+                65B: {result.sha256Seal.slice(0, 14)}…
+              </span>
+              <div className="flex gap-1 shrink-0">
+                <a
+                  href={result.deepLink.href}
+                  className="py-1 px-2 bg-cyan-500 text-slate-950 font-bold text-[9.5px] rounded-lg"
+                >
+                  {result.deepLink.label} →
+                </a>
+                <a
+                  href="/site/agent-console"
+                  className="py-1 px-2 bg-slate-950 border border-slate-700 text-cyan-300 font-bold text-[9.5px] rounded-lg"
+                >
+                  CONSOLE
+                </a>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1">
-            {[
-              { label: "Node #14B", q: "Audit BIT-2 Node #14B snag" },
-              { label: "Crane 38.5°", q: "Check Liebherr 280 EC-H crane radar" },
-              { label: "₹864.5 Cr", q: "Reconcile ₹864.50 Cr baseline and retention" },
-              { label: "2,400 TR", q: "Verify Column C2 and 2,400 TR chillers" },
-            ].map((chip) => (
-              <button
-                key={chip.label}
-                type="button"
-                onClick={() => handleAsk(chip.q)}
-                className="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[9px] text-cyan-300"
-              >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-
+          {/* Prompt Bar */}
           <div className="flex gap-1">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAsk()}
-              placeholder="Ask ARGUS, MIDAS, MINERVA..."
+              placeholder={`Ask ${selectedAgent === "ALL" ? "All Agents" : selectedAgent}...`}
               className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-white outline-none focus:border-cyan-400"
             />
             <button
@@ -218,13 +472,13 @@ export default function QuadmaxKernelFloatingWidget() {
               onClick={() => handleAsk()}
               className="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[10px] rounded-lg"
             >
-              ASK
+              RUN
             </button>
           </div>
         </div>
       )}
 
-      {/* Compact Movable Pill Button */}
+      {/* Compact Movable Pill Launcher */}
       <div
         role="button"
         tabIndex={0}
@@ -234,7 +488,7 @@ export default function QuadmaxKernelFloatingWidget() {
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") setIsOpen((v) => !v);
         }}
-        title="Drag to move anywhere • Click to toggle QUADMAX.AI"
+        title="Drag to move anywhere • Click to open All Agents & Profiles"
         style={{
           width: `${PILL_WIDTH}px`,
           height: `${PILL_HEIGHT}px`,
@@ -248,7 +502,7 @@ export default function QuadmaxKernelFloatingWidget() {
       >
         <span
           style={{ color: isLight ? "#78736A" : "#64748B" }}
-          className="text-[10px] leading-none tracking-tighter pr-1"
+          className="text-[10px] leading-none tracking-tighter"
         >
           ⋮⋮
         </span>
@@ -256,7 +510,16 @@ export default function QuadmaxKernelFloatingWidget() {
           style={{ backgroundColor: isLight ? "#C96442" : "#22D3EE" }}
           className="w-2 h-2 rounded-full animate-pulse shrink-0"
         />
-        <span className="text-[10px] font-bold tracking-tight ml-1.5">QUADMAX.AI</span>
+        <span className="text-[10px] font-bold tracking-tight">QUADMAX.AI</span>
+        <span
+          style={{
+            backgroundColor: isLight ? "#EFECE4" : "#1E293B",
+            color: isLight ? "#C96442" : "#22D3EE",
+          }}
+          className="px-1.5 py-0.5 rounded text-[8px] font-bold"
+        >
+          {selectedAgent === "ALL" ? "ALL 5" : selectedAgent}
+        </span>
       </div>
     </div>
   );
