@@ -170,6 +170,25 @@ export async function POST(req: Request) {
         break;
       }
 
+      // 7. MULTI-RAY SPATIAL & DIELECTRIC EDGE SENSOR (LiDAR + LWIR + 24GHz GPR/mmWave)
+      case "MULTI_RAY_SPATIAL_SENSOR": {
+        routingTarget = "Argus / Minerva";
+        const deltaMm = Number(payload.gridlineDeltaMm ?? payload.deltaMm ?? 1.8);
+        const dielectricEr = Number(payload.gprDielectricEr ?? 7.1);
+        const isSpoofOrDrift = deltaMm > 10.0 || dielectricEr < 2.5;
+        if (isSpoofOrDrift) {
+          interlockTripped = true;
+        }
+        governorResult = {
+          bimZoneId: payload.bimZoneId || "BIT-4-TG03",
+          gridlineDeltaMm: deltaMm,
+          thermalC: Number(payload.thermalC ?? 31.4),
+          gprDielectricEr: dielectricEr,
+          spoofOrDriftFlagged: isSpoofOrDrift,
+        };
+        break;
+      }
+
       default:
         return NextResponse.json(
           { success: false, error: `Unrecognized telemetry category: ${category}` },

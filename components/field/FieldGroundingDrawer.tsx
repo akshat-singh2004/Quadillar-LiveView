@@ -31,7 +31,7 @@ export default function FieldGroundingDrawer({
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioName, setAudioName] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [submitterId, setSubmitterId] = useState<string>("SUP-RAMESH-LKO");
+  const [submitterId, setSubmitterId] = useState<string>("PRIN-AKSHAT-LKO");
   const [manualZoneOverride, setManualZoneOverride] = useState<string>("");
 
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -247,7 +247,7 @@ export default function FieldGroundingDrawer({
         <div className="flex items-start justify-between border-b border-zinc-800 pb-3.5">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-              GEMINI 2.5 FLASH MULTIMODAL INGRESS • ZERO-THINKING LATENCY
+              GEMINI 3.8 FLASH MULTIMODAL INGRESS • ZERO-THINKING LATENCY
             </div>
             <h2 className="text-base font-bold text-white mt-0.5">
               Field Telemetry & Vernacular Voice Grounding
@@ -415,7 +415,7 @@ export default function FieldGroundingDrawer({
                 onChange={(e) => setManualZoneOverride(e.target.value)}
                 className="bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-2 text-zinc-100 text-xs focus:outline-none focus:border-zinc-600"
               >
-                <option value="">Auto-Match via Gemini 2.5 Flash</option>
+                <option value="">Auto-Match via Gemini 3.8 Flash</option>
                 {BIM_ZONE_REGISTRY.map((z) => (
                   <option key={z.zoneId} value={z.zoneId}>
                     {z.zoneId} — {z.bitId}
@@ -438,7 +438,7 @@ export default function FieldGroundingDrawer({
             className="w-full py-3 px-4 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-xs tracking-wide transition disabled:opacity-50"
           >
             {isSubmitting
-              ? "GROUNDING MULTIMODAL TELEMETRY VIA GEMINI 2.5 FLASH..."
+              ? "GROUNDING MULTIMODAL TELEMETRY VIA GEMINI 3.8 FLASH..."
               : effectiveOnline
               ? "INGEST & GROUND TO 3D BIM + ESCROW LEDGER"
               : "SAVE TO OFFLINE BASEMENT QUEUE (INDEXEDDB)"}

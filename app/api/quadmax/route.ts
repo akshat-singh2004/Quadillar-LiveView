@@ -73,7 +73,7 @@ const PORTFOLIO_RESPONSE_SCHEMA: Schema = {
     answer: {
       type: Type.STRING,
       description:
-        "J.A.R.V.I.S.-grade executive & millimeter-precise engineering briefing. Use crisp paragraphs and • bullets. Clearly call out any site wrongdoing, floor/gridline offset in mm/m, out-of-sequence build, or escrow lien.",
+        "QUADMAX.AI-grade executive & millimeter-precise engineering briefing. Use crisp paragraphs and • bullets. Clearly call out any site wrongdoing, floor/gridline offset in mm/m, out-of-sequence build, or escrow lien.",
     },
     standardRef: { type: Type.STRING },
     metrics: {
@@ -175,7 +175,7 @@ function buildPortfolioDeterministicSynthesis(params: {
         : "• Zero critical geometric, sequence, or IS 456 non-conformances detected across all 10 sites.";
 
     return {
-      answer: `Good evening, Principal Architect. Across all 10 active sites (₹${totalPortfolioCr.toFixed(2)} Cr portfolio value, 1.3–2.0 mm LiDAR RMS registration), ${alerts.length} exception(s) require your attention under [${scopeMeta.label}]:\n\n${wrongdoingBullets}`,
+      answer: `Portfolio Briefing • Principal Architect: Across all 10 active sites (₹${totalPortfolioCr.toFixed(2)} Cr portfolio value, 1.3–2.0 mm LiDAR RMS registration), ${alerts.length} exception(s) require your attention under [${scopeMeta.label}]:\n\n${wrongdoingBullets}`,
       activeAgentChain: agentChain,
       scopeLabel: scopeMeta.label,
       siteLabel: "All 10 Portfolio Sites (Lucknow)",
@@ -351,7 +351,7 @@ export async function POST(req: NextRequest) {
       ],
     };
 
-    const systemInstruction = `You are QUADMAX.AI (J.A.R.V.I.S. Construction Operating Kernel) assisting the Principal Architect & EPC Executive across 10 active construction sites in Lucknow, India.
+    const systemInstruction = `You are QUADMAX.AI (QUADMAX.AI Construction Operating Kernel) assisting the Principal Architect & EPC Executive across 10 active construction sites in Lucknow, India.
 Be razor-sharp, proactive, and millimeter-accurate:
 1. Explicitly flag any wrongdoing, geometric offset (such as Summit Corporate Building's 12th-floor wall cast 1,000 mm / 1.00 m off-grid 9 days ahead of sequence), concrete cube/core failure (Project Vanguard NCR-2026-STR-042), or dielectric spoof.
 2. Strictly honor selectedSiteFilter and selectedScopeFilter: if a single site or single scope is selected, focus exclusively on that site and domain without diluting with unrelated sites.
@@ -384,6 +384,7 @@ ${JSON.stringify(livePortfolioContext)}`,
             systemInstruction,
             responseMimeType: "application/json",
             responseSchema: PORTFOLIO_RESPONSE_SCHEMA,
+            thinkingConfig: { thinkingBudget: 0 },
           },
         });
         if (res.text) {

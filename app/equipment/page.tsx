@@ -104,7 +104,7 @@ const FLEET_REGISTRY: EquipmentItem[] = [
     category: "TRANSIT",
     makeModel: "Ashok Leyland 2820 RMC 8m³ Drum",
     bitTarget: "CHINHAT RMC TO GOMTI NAGAR GATE 02",
-    operatorName: "Rameshwar Singh (Lic: TM-UP-7721)",
+    operatorName: "Akshatwar Singh (Lic: TM-UP-7721)",
     telematicsProtocol: "OBD-II CAN / GPS Geofence Fleet Sync",
     utilizationPct: 68.0,
     fuelBurnLiters: 110.0,

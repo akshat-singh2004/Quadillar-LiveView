@@ -385,7 +385,7 @@ function buildDemoDefects(projectId: string, guarantees: BankGuarantee[], tier: 
         discovered_date: "2026-08-05", notification_date: "2026-08-08",
         notice_reference: "DN-DLP-2026-002", rectification_deadline_days: 21,
         rectification_due_date: "2026-08-29",
-        status: "IN_RECTIFICATION", assigned_to_person: "Site Supervisor Ramesh Kumar",
+        status: "IN_RECTIFICATION", assigned_to_person: "Site Supervisor Akshat Kumar",
       }));
       results.push(make(bg1, {
         description: "Missing sealant at expansion joints on Roof Level — potential water ingress risk.",

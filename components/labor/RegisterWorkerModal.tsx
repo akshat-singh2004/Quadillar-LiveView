@@ -22,7 +22,7 @@ export function RegisterWorkerModal({ projectId }: Props) {
   const [loading, setLoading] = useState(false);
 
   const [workerPin, setWorkerPin] = useState("PIN-7001");
-  const [fullName, setFullName] = useState("Ramesh Kumar");
+  const [fullName, setFullName] = useState("Akshat Kumar");
   const [contractorAgency, setContractorAgency] = useState("Apex Structural Glazing Ltd");
   const [tradePackage, setTradePackage] = useState(TRADE_PACKAGES[0]);
   const [skillTier, setSkillTier] = useState<"SKILLED" | "SEMI_SKILLED" | "UNSKILLED">("SKILLED");

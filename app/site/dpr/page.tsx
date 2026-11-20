@@ -29,7 +29,7 @@ export default function DailyProgressReportPage() {
   const plantTelemetry = [
     {
       asset: `${VANGUARD_GENOME.craneTelemetry.model} High-Top Tower Crane (65m Jib)`,
-      meta: `Operator: Rameshwar Dayal • Azimuth: ${VANGUARD_GENOME.craneTelemetry.azimuthDeg}° (${VANGUARD_GENOME.craneTelemetry.targetZone})`,
+      meta: `Operator: Akshatwar Dayal • Azimuth: ${VANGUARD_GENOME.craneTelemetry.azimuthDeg}° (${VANGUARD_GENOME.craneTelemetry.targetZone})`,
       runHrs: "6.8h Run",
       bit: "BIT-2",
     },

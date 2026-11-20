@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Mic,
   MicOff,
@@ -11,8 +12,10 @@ import {
   ShieldAlert,
   Layers,
   Sparkles,
+  ArrowUpRight,
 } from "lucide-react";
 import { useLiveviewTheme } from "@/lib/theme/liveviewTheme";
+import { useActiveProject } from "@/context/ProjectContext";
 import {
   getAllPortfolioAlerts,
   HIERARCHICAL_AGENT_MESH,
@@ -42,29 +45,36 @@ interface ChatMessage {
 }
 
 const POS_STORAGE_KEY = "quadmax-draggable-pill-pos-v2";
-const THREAD_STORAGE_KEY = "quadmax-quadmax-thread-v4";
+const THREAD_STORAGE_KEY = "quadmax-portfolio-thread-v6";
 const CUSTOM_AGENTS_KEY = "quadmax-custom-agents-v1";
-const PILL_WIDTH = 184;
+const PILL_WIDTH = 176;
 const PILL_HEIGHT = 36;
 
+function getIstGreeting(): string {
+  const hr = new Date().getHours();
+  if (hr < 12) return "Good morning";
+  if (hr < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function QuadmaxKernelFloatingWidget() {
+  const router = useRouter();
   const { isLight } = useLiveviewTheme();
+  const { activeProjectId, selectProject } = useActiveProject();
+
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // Site × Scope × Hierarchical Agent Filters
   const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL_10");
   const [selectedScope, setSelectedScope] = useState<ScopeDomainId>("ALL_SCOPES");
   const [selectedAgentId, setSelectedAgentId] = useState<string>("AUTO");
 
-  // Custom Micro-Agent Builder State
   const [customAgents, setCustomAgents] = useState<CustomAgentSpec[]>([]);
   const [showCustomBuilder, setShowCustomBuilder] = useState(false);
   const [newAgentName, setNewAgentName] = useState("");
   const [newAgentToleranceMm, setNewAgentToleranceMm] = useState("2.0");
   const [newAgentInstruction, setNewAgentInstruction] = useState("");
 
-  // Hands-Free "Hey Quadmax" Voice Recognition & Spoken TTS
   const [isListening, setIsListening] = useState(false);
   const [wakeWordArmed, setWakeWordArmed] = useState(false);
   const [voiceSpeakEnabled, setVoiceSpeakEnabled] = useState(false);
@@ -73,32 +83,38 @@ export default function QuadmaxKernelFloatingWidget() {
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const initialAlerts = getAllPortfolioAlerts("ALL_10", "ALL_SCOPES");
-    const summitAlert = initialAlerts.find((a) => a.projectId === "LKO-SUMMIT-TOWER");
-    const vanguardAlert = initialAlerts.find((a) => a.alertId === "NCR-2026-STR-042");
+    const greeting = getIstGreeting();
 
     return [
       {
-        id: "quadmax-boot-brief",
+        id: "quadmax-boot-brief-v6",
         role: "assistant",
         timestamp: "LIVE",
         activeAgentChain: ["PRIME-COMMAND", "MINERVA-ARCH", "ARGUS-SPATIAL", "μ-GRIDLINE-DELTA"],
         scopeLabel: "All Domains (360°)",
-        siteLabel: "All 10 Portfolio Sites",
-        standardRef: "ISO 19650-2 • IS 456:2000 • 1.0 mm Sentinel",
-        content: `Portfolio Sentinel active across all 10 Lucknow sites (₹4,576.50 Cr total EPC value, 1.3–2.0 mm LiDAR RMS). ${initialAlerts.length} active wrongdoings detected:\n\n• [Summit Corporate Building — 12th Floor, Grid B4–B7]: ${summitAlert?.headline} (${summitAlert?.deviationMetric}).\n• [Project Vanguard — Tower A / BIT-4 TG-03]: ${vanguardAlert?.headline} (${vanguardAlert?.deviationMetric}).\n• [Aurelia Sky-Villas & Sushant Med-Tech]: 14.0 mm Column C-11 tilt & εr 1.6 hollow partition spoof caught.`,
+        siteLabel: "All 10 Sites",
+        standardRef: "ISO 19650-2 • IS 456:2000",
+        content:
+          `${greeting}, Principal Architect. Portfolio Sentinel is monitoring all 10 active Lucknow sites (₹4,576.50 Cr EPC value, ±1.3–2.0 mm LiDAR RMS). ${initialAlerts.length} critical/watch exceptions flagged:\n\n` +
+          initialAlerts
+            .map(
+              (a) =>
+                `• [${a.projectName} — ${a.floorOrZone}]: ${a.headline} (${a.deviationMetric}).`
+            )
+            .join("\n"),
         metrics: [
-          { label: "Portfolio Scope", value: "10 Active Sites", tone: "nominal" },
-          { label: "Summit 12F Wall", value: "+1,000 mm Offset", tone: "critical" },
+          { label: "Active Sites", value: "10 Projects", tone: "nominal" },
+          { label: "Summit 12F", value: "+1,000 mm Offset", tone: "critical" },
           { label: "Vanguard TG-03", value: "₹4.50L Hold", tone: "critical" },
-          { label: "Spatial Floor", value: "±1.3–2.0 mm", tone: "nominal" },
+          { label: "LiDAR RMS", value: "±1.3–2.0 mm", tone: "nominal" },
         ],
         citations: [
-          { label: "Focus Vanguard TG-03 in 3D BIM", href: "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042", tag: "3D BIM" },
-          { label: "Section 65B Evidence Vault", href: "/site/audit-ledger", tag: "65B VAULT" },
+          { label: "Focus TG-03 in 3D BIM", href: "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042", tag: "3D BIM" },
+          { label: "Section 65B Vault", href: "/site/audit-ledger", tag: "65B VAULT" },
         ],
         followUps: [
-          "Give me full details on the Summit Building 12th floor 1m wall error",
-          "Report strictly on Project Vanguard Commercial Hub",
+          "Inspect Summit Building 12th floor 1.00 m wall offset",
+          "Focus strictly on Project Vanguard Commercial Hub",
           "Check millimeter spatial deviations across all 10 sites",
         ],
       },
@@ -123,6 +139,20 @@ export default function QuadmaxKernelFloatingWidget() {
     moved: boolean;
   } | null>(null);
 
+  useEffect(() => {
+    try {
+      localStorage.removeItem("quadmax-portfolio-thread-v5");
+      localStorage.removeItem("quadmax-jarvis-thread-v4");
+    } catch {}
+
+    const onProjectChange = (e: Event) => {
+      const nextId = (e as CustomEvent<string>).detail;
+      if (nextId) setSelectedProjectId(nextId);
+    };
+    window.addEventListener("quadillar-project-change", onProjectChange);
+    return () => window.removeEventListener("quadillar-project-change", onProjectChange);
+  }, []);
+
   const speakResponse = useCallback(
     (text: string) => {
       if (!voiceSpeakEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -130,7 +160,7 @@ export default function QuadmaxKernelFloatingWidget() {
       }
       try {
         window.speechSynthesis.cancel();
-        const clean = text.replace(/[•[]]/g, "").slice(0, 420);
+        const clean = text.replace(/[•\[\]]/g, "").slice(0, 420);
         const utter = new SpeechSynthesisUtterance(clean);
         utter.rate = 1.04;
         utter.pitch = 0.96;
@@ -155,8 +185,8 @@ export default function QuadmaxKernelFloatingWidget() {
     } catch {}
 
     const clampPos = (rawX: number, rawY: number) => {
-      const maxX = Math.max(12, window.innerWidth - PILL_WIDTH - 12);
-      const maxY = Math.max(12, window.innerHeight - PILL_HEIGHT - 12);
+      const maxX = Math.max(12, window.innerWidth - PILL_WIDTH - 16);
+      const maxY = Math.max(12, window.innerHeight - PILL_HEIGHT - 16);
       return {
         x: Math.min(Math.max(12, rawX), maxX),
         y: Math.min(Math.max(12, rawY), maxY),
@@ -174,7 +204,7 @@ export default function QuadmaxKernelFloatingWidget() {
       }
     } catch {}
 
-    setPos(clampPos(window.innerWidth - PILL_WIDTH - 16, window.innerHeight - PILL_HEIGHT - 16));
+    setPos(clampPos(window.innerWidth - PILL_WIDTH - 20, window.innerHeight - PILL_HEIGHT - 20));
 
     const handleResize = () => setPos((prev) => (prev ? clampPos(prev.x, prev.y) : prev));
     window.addEventListener("resize", handleResize);
@@ -246,6 +276,32 @@ export default function QuadmaxKernelFloatingWidget() {
           };
           setMessages((prev) => [...prev, assistantMsg]);
           speakResponse(payload.answer);
+
+          // Live UI Actuation on explicit voice/text navigation commands
+          const lowerCmd = prompt.toLowerCase();
+          if (lowerCmd.includes("summit")) {
+            selectProject("LKO-SUMMIT-TOWER");
+            setSelectedProjectId("LKO-SUMMIT-TOWER");
+          } else if (lowerCmd.includes("vanguard")) {
+            selectProject("UP-LDA-VANGUARD-CAMPUS");
+            setSelectedProjectId("UP-LDA-VANGUARD-CAMPUS");
+          }
+          if (
+            (lowerCmd.includes("open") ||
+              lowerCmd.includes("zoom") ||
+              lowerCmd.includes("focus") ||
+              lowerCmd.includes("locate")) &&
+            (lowerCmd.includes("bim") ||
+              lowerCmd.includes("girder") ||
+              lowerCmd.includes("tg-03") ||
+              lowerCmd.includes("3d"))
+          ) {
+            const wantsHeatmap = lowerCmd.includes("heatmap") || lowerCmd.includes("millimeter") || lowerCmd.includes("tolerance") || lowerCmd.includes("offset");
+            router.push(wantsHeatmap ? "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042&heatmap=1" : "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042");
+            if (wantsHeatmap) {
+              window.dispatchEvent(new CustomEvent("quadillar-heatmap-toggle", { detail: true }));
+            }
+          }
         }
       } catch {
         setMessages((prev) => [
@@ -266,6 +322,8 @@ export default function QuadmaxKernelFloatingWidget() {
       input,
       isSending,
       messages,
+      router,
+      selectProject,
       selectedAgentId,
       selectedProjectId,
       selectedScope,
@@ -277,85 +335,80 @@ export default function QuadmaxKernelFloatingWidget() {
     sendRef.current = handleSend;
   }, [handleSend]);
 
-  // Embedded "Hey Quadmax" / Push-to-Talk Voice Engine
-  const startVoiceCapture = useCallback(
-    (continuousWake: boolean) => {
-      if (typeof window === "undefined") return;
-      const SpeechRec =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRec) {
-        setVoiceStatusNote("Browser voice recognition unavailable — type commands below.");
-        return;
-      }
+  const startVoiceCapture = useCallback((continuousWake: boolean) => {
+    if (typeof window === "undefined") return;
+    const SpeechRec =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      setVoiceStatusNote("Browser voice recognition unavailable — type commands below.");
+      return;
+    }
 
-      try {
-        recognitionRef.current?.stop();
-      } catch {}
+    try {
+      recognitionRef.current?.stop();
+    } catch {}
 
-      const rec = new SpeechRec();
-      rec.lang = "en-IN";
-      rec.continuous = continuousWake;
-      rec.interimResults = false;
+    const rec = new SpeechRec();
+    rec.lang = "en-IN";
+    rec.continuous = continuousWake;
+    rec.interimResults = false;
 
-      rec.onstart = () => {
-        setIsListening(true);
-        setVoiceStatusNote(
-          continuousWake
-            ? 'Wake-word armed: say "Hey Quadmax, give me an overview..."'
-            : "Listening for voice command..."
-        );
-      };
+    rec.onstart = () => {
+      setIsListening(true);
+      setVoiceStatusNote(
+        continuousWake
+          ? 'Wake-word armed: say "Hey Quadmax, give me an overview..."'
+          : "Listening for voice command..."
+      );
+    };
 
-      rec.onresult = (event: any) => {
-        const last = event.results[event.results.length - 1];
-        if (!last || !last.isFinal) return;
-        const transcript = String(last[0].transcript || "").trim();
-        if (!transcript) return;
+    rec.onresult = (event: any) => {
+      const last = event.results[event.results.length - 1];
+      if (!last || !last.isFinal) return;
+      const transcript = String(last[0].transcript || "").trim();
+      if (!transcript) return;
 
-        if (continuousWake) {
-          const lower = transcript.toLowerCase();
-          if (
-            lower.includes("hey quadmax") ||
-            lower.includes("quadmax") ||
-            lower.includes("quadmax") ||
-            lower.includes("hey google")
-          ) {
-            const cleaned = transcript
-              .replace(/^(heys+quadmax|quadmax|quadmax|heys+google)[,s]*/i, "")
-              .trim();
-            setIsOpen(true);
-            setVoiceSpeakEnabled(true);
-            sendRef.current(cleaned || "Give me a complete executive briefing across all 10 projects");
-          }
-        } else {
+      if (continuousWake) {
+        const lower = transcript.toLowerCase();
+        if (
+          lower.includes("hey quadmax") ||
+          lower.includes("quadmax") ||
+          lower.includes("hey google")
+        ) {
+          const cleaned = transcript
+            .replace(/^(hey\s+quadmax|quadmax|hey\s+google)[,\s]*/i, "")
+            .trim();
           setIsOpen(true);
-          sendRef.current(transcript);
+          setVoiceSpeakEnabled(true);
+          sendRef.current(cleaned || "Give me a complete executive briefing across all 10 projects");
         }
-      };
+      } else {
+        setIsOpen(true);
+        sendRef.current(transcript);
+      }
+    };
 
-      rec.onerror = () => {
-        setIsListening(false);
-        setWakeWordArmed(false);
-      };
+    rec.onerror = () => {
+      setIsListening(false);
+      setWakeWordArmed(false);
+    };
 
-      rec.onend = () => {
-        if (continuousWake) {
-          try {
-            rec.start();
-          } catch {
-            setIsListening(false);
-          }
-        } else {
+    rec.onend = () => {
+      if (continuousWake) {
+        try {
+          rec.start();
+        } catch {
           setIsListening(false);
-          setVoiceStatusNote(null);
         }
-      };
+      } else {
+        setIsListening(false);
+        setVoiceStatusNote(null);
+      }
+    };
 
-      recognitionRef.current = rec;
-      rec.start();
-    },
-    []
-  );
+    recognitionRef.current = rec;
+    rec.start();
+  }, []);
 
   const toggleWakeWord = () => {
     if (wakeWordArmed) {
@@ -436,8 +489,8 @@ export default function QuadmaxKernelFloatingWidget() {
     const dx = e.clientX - ds.startX;
     const dy = e.clientY - ds.startY;
     if (Math.hypot(dx, dy) > 4) ds.moved = true;
-    const maxX = Math.max(12, window.innerWidth - PILL_WIDTH - 12);
-    const maxY = Math.max(12, window.innerHeight - PILL_HEIGHT - 12);
+    const maxX = Math.max(12, window.innerWidth - PILL_WIDTH - 16);
+    const maxY = Math.max(12, window.innerHeight - PILL_HEIGHT - 16);
     setPos({
       x: Math.min(Math.max(12, ds.originX + dx), maxX),
       y: Math.min(Math.max(12, ds.originY + dy), maxY),
@@ -481,6 +534,68 @@ export default function QuadmaxKernelFloatingWidget() {
   const mutedText = isLight ? "#6E695F" : "#A1A1AA";
   const accentColor = isLight ? "#C96442" : "#10B981";
 
+  const renderStructuredContent = (raw: string) => {
+    const lines = raw.split("\n").filter((l) => l.trim().length > 0);
+    const leadLines = lines.filter((l) => !l.trim().startsWith("•"));
+    const bulletLines = lines.filter((l) => l.trim().startsWith("•"));
+
+    return (
+      <div className="flex flex-col gap-2">
+        {leadLines.map((line, i) => (
+          <p key={i} className="leading-relaxed text-[11px]">
+            {line}
+          </p>
+        ))}
+
+        {bulletLines.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            {bulletLines.map((b, i) => {
+              const clean = b.replace(/^•\s*/, "");
+              const bracketMatch = clean.match(/^\[([^\]]+)\]:\s*(.*)$/);
+              const isCritical =
+                clean.toLowerCase().includes("hold") ||
+                clean.toLowerCase().includes("1,000 mm") ||
+                clean.toLowerCase().includes("spoof");
+
+              return (
+                <div
+                  key={i}
+                  style={{
+                    backgroundColor: isLight ? "#FDFCF9" : "#09090B",
+                    borderColor: isCritical ? "rgba(239, 68, 68, 0.45)" : borderSubtle,
+                  }}
+                  className="p-2.5 rounded-xl border flex flex-col gap-1"
+                >
+                  {bracketMatch ? (
+                    <>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-[10px] font-bold">{bracketMatch[1]}</span>
+                        <span
+                          className={`px-1.5 py-0.2 rounded text-[8.5px] font-bold shrink-0 ${
+                            isCritical
+                              ? "bg-rose-500/15 text-rose-500"
+                              : "bg-amber-500/15 text-amber-500"
+                          }`}
+                        >
+                          {isCritical ? "CRITICAL" : "WATCH"}
+                        </span>
+                      </div>
+                      <p style={{ color: mutedText }} className="text-[10.5px] leading-snug">
+                        {bracketMatch[2]}
+                      </p>
+                    </>
+                  ) : (
+                    <span className="text-[10.5px] leading-snug">{clean}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       style={{ position: "fixed", left: `${pos.x}px`, top: `${pos.y}px`, zIndex: 60 }}
@@ -496,10 +611,10 @@ export default function QuadmaxKernelFloatingWidget() {
             ...panelStyle,
           }}
           className={`${
-            isExpanded ? "w-[580px] h-[640px]" : "w-[450px] h-[520px]"
+            isExpanded ? "w-[560px] h-[620px]" : "w-[440px] h-[500px]"
           } max-w-[95vw] max-h-[calc(100vh-80px)] rounded-2xl border shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden select-text transition-all duration-150`}
         >
-          {/* 1. J.A.R.V.I.S. Top Command Header + Voice Wake Controls */}
+          {/* 1. Clean Top Command Header */}
           <div
             style={{ borderColor: borderSubtle }}
             className="px-3.5 py-2.5 border-b flex items-center justify-between gap-2 shrink-0"
@@ -511,7 +626,7 @@ export default function QuadmaxKernelFloatingWidget() {
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: accentColor }}
                 className="px-1.5 py-0.5 rounded border text-[9px] font-bold"
               >
-                QUADMAX • 10 SITES
+                PORTFOLIO OS • 10 SITES
               </span>
             </div>
 
@@ -524,19 +639,18 @@ export default function QuadmaxKernelFloatingWidget() {
                   borderColor: borderSubtle,
                   color: wakeWordArmed ? "#09090B" : mutedText,
                 }}
-                className="px-2 py-0.5 rounded border font-bold flex items-center gap-1"
-                title='Enable hands-free "Hey Quadmax" voice wake listener'
+                className="px-2 py-0.5 rounded-lg border font-bold flex items-center gap-1"
               >
                 {wakeWordArmed ? <Mic className="w-2.5 h-2.5" /> : <MicOff className="w-2.5 h-2.5" />}
-                {wakeWordArmed ? "Hey Quadmax: ON" : "Hey Quadmax"}
+                {wakeWordArmed ? "Voice: ON" : "Hey Quadmax"}
               </button>
 
               <button
                 type="button"
                 onClick={() => setVoiceSpeakEnabled((v) => !v)}
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
-                className="p-1 rounded border"
-                title={voiceSpeakEnabled ? "Mute spoken voice readout" : "Enable spoken voice readout"}
+                className="p-1 rounded-lg border"
+                title={voiceSpeakEnabled ? "Mute readout" : "Enable voice readout"}
               >
                 {voiceSpeakEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
               </button>
@@ -550,7 +664,7 @@ export default function QuadmaxKernelFloatingWidget() {
                   } catch {}
                 }}
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
-                className="px-2 py-0.5 rounded border font-bold"
+                className="px-2 py-0.5 rounded-lg border font-bold"
               >
                 Reset
               </button>
@@ -559,7 +673,7 @@ export default function QuadmaxKernelFloatingWidget() {
                 type="button"
                 onClick={() => setIsExpanded((v) => !v)}
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
-                className="px-2 py-0.5 rounded border font-bold"
+                className="px-2 py-0.5 rounded-lg border font-bold"
               >
                 {isExpanded ? "Compact" : "Expand"}
               </button>
@@ -568,7 +682,7 @@ export default function QuadmaxKernelFloatingWidget() {
                 type="button"
                 onClick={() => setIsOpen(false)}
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
-                className="px-2 py-0.5 rounded border font-bold"
+                className="px-2 py-0.5 rounded-lg border font-bold"
               >
                 ✕
               </button>
@@ -580,14 +694,19 @@ export default function QuadmaxKernelFloatingWidget() {
             style={{ borderColor: borderSubtle, backgroundColor: surfaceBg }}
             className="px-3 py-2 border-b grid grid-cols-1 sm:grid-cols-3 gap-1.5 shrink-0 text-[10px]"
           >
-            {/* Site / Building Filter */}
             <div className="flex flex-col gap-0.5">
               <span style={{ color: mutedText }} className="text-[8px] font-bold uppercase">
                 BUILDING / SITE
               </span>
               <select
                 value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedProjectId(val);
+                  if (val !== "ALL_10" && val !== activeProjectId) {
+                    selectProject(val);
+                  }
+                }}
                 style={{
                   backgroundColor: isLight ? "#FDFCF9" : "#09090B",
                   borderColor: borderSubtle,
@@ -604,7 +723,6 @@ export default function QuadmaxKernelFloatingWidget() {
               </select>
             </div>
 
-            {/* Domain / Role Scope Filter */}
             <div className="flex flex-col gap-0.5">
               <span style={{ color: mutedText }} className="text-[8px] font-bold uppercase">
                 YOUR SCOPE / DOMAIN
@@ -627,7 +745,6 @@ export default function QuadmaxKernelFloatingWidget() {
               </select>
             </div>
 
-            {/* Management / Sub / Micro / Custom Agent Mesh */}
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center justify-between">
                 <span style={{ color: mutedText }} className="text-[8px] font-bold uppercase">
@@ -687,7 +804,6 @@ export default function QuadmaxKernelFloatingWidget() {
             </div>
           </div>
 
-          {/* Optional Custom Micro-Agent Builder Drawer */}
           {showCustomBuilder && (
             <form
               onSubmit={handleCreateCustomAgent}
@@ -723,7 +839,7 @@ export default function QuadmaxKernelFloatingWidget() {
               <div className="flex gap-1.5">
                 <input
                   type="text"
-                  placeholder="Mandate (e.g. Flag any wall cast >5mm off gridline or out of WBS order)"
+                  placeholder="Mandate (e.g. Flag any wall cast >5mm off gridline)"
                   value={newAgentInstruction}
                   onChange={(e) => setNewAgentInstruction(e.target.value)}
                   style={{ backgroundColor: isLight ? "#FDFCF9" : "#09090B", borderColor: borderSubtle }}
@@ -752,7 +868,7 @@ export default function QuadmaxKernelFloatingWidget() {
             </div>
           )}
 
-          {/* 3. Persistent Scrollable Multi-Turn Conversation Thread */}
+          {/* 3. Persistent Scrollable Conversation Thread */}
           <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-3">
             {messages.map((msg) => {
               if (msg.role === "user") {
@@ -778,9 +894,8 @@ export default function QuadmaxKernelFloatingWidget() {
                 <div key={msg.id} className="flex flex-col items-start gap-1">
                   <div
                     style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}
-                    className="w-full rounded-2xl rounded-bl-sm border p-3 flex flex-col gap-2 text-[11px]"
+                    className="w-full rounded-2xl rounded-bl-sm border p-3 flex flex-col gap-2.5 text-[11px]"
                   >
-                    {/* 3-Tier Agent Chain & Scope Trace */}
                     <div className="flex flex-wrap items-center justify-between gap-1 text-[9px]">
                       <span style={{ color: accentColor }} className="font-bold flex items-center gap-1">
                         <Layers className="w-3 h-3" />
@@ -791,12 +906,8 @@ export default function QuadmaxKernelFloatingWidget() {
                       </span>
                     </div>
 
-                    {/* Natural Engineering Prose */}
-                    <div className="whitespace-pre-line leading-relaxed text-[11px]">
-                      {msg.content}
-                    </div>
+                    {renderStructuredContent(msg.content)}
 
-                    {/* Inline Telemetry & Deviation Pills */}
                     {msg.metrics && msg.metrics.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-0.5">
                         {msg.metrics.map((m) => {
@@ -813,7 +924,7 @@ export default function QuadmaxKernelFloatingWidget() {
                                 backgroundColor: isLight ? "#FDFCF9" : "#09090B",
                                 borderColor: borderSubtle,
                               }}
-                              className="px-2 py-1 rounded-lg border flex flex-col"
+                              className="px-2 py-1.5 rounded-lg border flex flex-col"
                             >
                               <span style={{ color: mutedText }} className="text-[8px] uppercase truncate">
                                 {m.label}
@@ -827,7 +938,6 @@ export default function QuadmaxKernelFloatingWidget() {
                       </div>
                     )}
 
-                    {/* Executable Dashboard & 3D BIM Citations */}
                     {msg.citations && msg.citations.length > 0 && (
                       <div
                         style={{ borderColor: borderSubtle }}
@@ -841,17 +951,18 @@ export default function QuadmaxKernelFloatingWidget() {
                               backgroundColor: isLight ? "#FDFCF9" : "#09090B",
                               borderColor: borderSubtle,
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[9.5px] font-bold hover:opacity-80 transition"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[9.5px] font-bold hover:opacity-80 transition"
                           >
                             <span style={{ color: accentColor }}>[{cit.tag}]</span>
-                            <span>{cit.label} →</span>
+                            <span>{cit.label}</span>
+                            <ArrowUpRight className="w-3 h-3" />
                           </a>
                         ))}
                       </div>
                     )}
                   </div>
                   <span style={{ color: mutedText }} className="text-[8.5px] pl-1">
-                    QUADMAX J.A.R.V.I.S. • {msg.timestamp}
+                    QUADMAX.AI • {msg.timestamp}
                   </span>
                 </div>
               );
@@ -869,7 +980,6 @@ export default function QuadmaxKernelFloatingWidget() {
             <div ref={threadEndRef} />
           </div>
 
-          {/* 4. Contextual Follow-Up Chips */}
           {activeFollowUps.length > 0 && !isSending && (
             <div
               style={{ borderColor: borderSubtle }}
@@ -881,7 +991,7 @@ export default function QuadmaxKernelFloatingWidget() {
                   type="button"
                   onClick={() => handleSend(q)}
                   style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}
-                  className="px-2 py-1 rounded-lg border text-[9px] font-bold shrink-0 hover:opacity-80 transition"
+                  className="px-2.5 py-1 rounded-lg border text-[9px] font-bold shrink-0 hover:opacity-80 transition"
                 >
                   {q}
                 </button>
@@ -889,7 +999,6 @@ export default function QuadmaxKernelFloatingWidget() {
             </div>
           )}
 
-          {/* 5. Composer Bar with Push-to-Talk Mic + ↑/↓ History Recall */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -917,7 +1026,7 @@ export default function QuadmaxKernelFloatingWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleInputKeyDown}
-              placeholder="Ask J.A.R.V.I.S. across 10 sites or 1mm detail (↑ history)..."
+              placeholder="Ask QUADMAX across 10 sites or 1mm detail (↑ history)..."
               style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}
               className="flex-1 rounded-xl border px-3 py-2 text-[10.5px] outline-none"
             />
@@ -937,7 +1046,7 @@ export default function QuadmaxKernelFloatingWidget() {
         </div>
       )}
 
-      {/* Compact Movable Pill Launcher with Live Portfolio Alert Count */}
+      {/* Compact Movable Pill Launcher */}
       <div
         role="button"
         tabIndex={0}
@@ -947,7 +1056,7 @@ export default function QuadmaxKernelFloatingWidget() {
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") setIsOpen((v) => !v);
         }}
-        title="Drag anywhere • Click to open QUADMAX J.A.R.V.I.S."
+        title="Drag anywhere • Click to open QUADMAX.AI"
         style={{
           width: `${PILL_WIDTH}px`,
           height: `${PILL_HEIGHT}px`,
@@ -968,7 +1077,7 @@ export default function QuadmaxKernelFloatingWidget() {
           className="w-2 h-2 rounded-full animate-pulse shrink-0"
         />
         <span className="text-[10px] font-bold tracking-tight">QUADMAX.AI</span>
-        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[8px] font-bold">
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-500 text-[8px] font-bold">
           <ShieldAlert className="w-2.5 h-2.5" />
           {totalPortfolioAlerts}
         </span>

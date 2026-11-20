@@ -72,7 +72,7 @@ export default function DailyProgressReportPage() {
 
   // 2. Heavy Plant & Equipment Fleet Telemetry
   const [equipmentFleet] = useState<PlantMachineryLog[]>([
-    { equipmentId: "CRN-01", equipmentName: "Potain IGO 50 Self-Erecting Tower Crane", fuelType: "ELECTRIC_3PH", operatingHours: 6.8, idleHours: 1.2, breakdownHours: 0.0, fuelConsumedLiters: 0, operatorName: "Rameshwar Dayal" },
+    { equipmentId: "CRN-01", equipmentName: "Potain IGO 50 Self-Erecting Tower Crane", fuelType: "ELECTRIC_3PH", operatingHours: 6.8, idleHours: 1.2, breakdownHours: 0.0, fuelConsumedLiters: 0, operatorName: "Akshatwar Dayal" },
     { equipmentId: "PMP-02", equipmentName: "Schwing Stetter Concrete Boom Pump (36m)", fuelType: "DIESEL", operatingHours: 5.5, idleHours: 2.0, breakdownHours: 0.0, fuelConsumedLiters: 68.0, operatorName: "Vikram Yadav" },
     { equipmentId: "GEN-03", equipmentName: "Cummins 250 kVA Silent Site DG Generator", fuelType: "DIESEL", operatingHours: 8.0, idleHours: 0.0, breakdownHours: 0.0, fuelConsumedLiters: 96.0, operatorName: "Site Electrician" },
     { equipmentId: "VIB-04", equipmentName: "High-Frequency Concrete Poker Vibrators (x4)", fuelType: "DIESEL", operatingHours: 5.0, idleHours: 3.0, breakdownHours: 0.0, fuelConsumedLiters: 14.5, operatorName: "Concreting Crew" }

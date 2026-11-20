@@ -20,6 +20,8 @@ import {
   RevitAsBuiltDeltaPacket,
 } from "@/lib/bim/revitDeltaSync";
 import { supabase } from "@/lib/supabaseClient";
+import { useActiveProject } from "@/context/ProjectContext";
+import MillimeterHeatmapHud from "@/components/bim/MillimeterHeatmapHud";
 
 interface DisciplineLayerUI {
   id: DisciplineId;
@@ -46,6 +48,7 @@ interface SelectedElementMeta {
 }
 
 export default function DigitalTwinBimPage() {
+  const { activeProject } = useActiveProject();
   const mountRef = useRef<HTMLDivElement>(null);
   const bimRootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -1162,19 +1165,20 @@ export default function DigitalTwinBimPage() {
 
   return (
     <div className="min-h-screen h-screen bg-zinc-950 text-zinc-100 flex flex-col font-mono select-none overflow-hidden">
+      <MillimeterHeatmapHud />
       {/* Top Header */}
       <div className="border-b border-zinc-800 bg-zinc-950/95 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="px-2 py-0.5 text-[10px] font-bold bg-zinc-900 text-zinc-200 border border-zinc-700 rounded">
-              {VANGUARD_GENOME.projectId}
+              {activeProject.code} • {activeProject.projectId}
             </span>
             <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded">
               LOD-400 • {totalMeshes} ELEMENTS • {STRUCTURE_DATUM_SPEC.datumLabel}
             </span>
           </div>
           <h1 className="text-sm font-bold text-white mt-1">
-            {VANGUARD_GENOME.projectName.toUpperCase()} — SPATIAL 3D BIM & MULTI-RAY DIGITAL TWIN
+            {activeProject.name.toUpperCase()} — SPATIAL 3D BIM & MULTI-RAY DIGITAL TWIN
           </h1>
         </div>
 
