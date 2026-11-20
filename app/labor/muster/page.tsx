@@ -68,7 +68,7 @@ export default async function LaborMusterPage() {
             {totalGhostWorkers} Flagged
           </div>
           <span className="text-[10px] text-zinc-500 block mt-0.5">
-            {totalGhostWorkers > 0 ? "Bypassed turnstile ingress[cite: 1]" : "100% headcount match"}
+            {totalGhostWorkers > 0 ? "Bypassed turnstile ingress" : "100% headcount match"}
           </span>
         </div>
 

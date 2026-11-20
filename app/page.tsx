@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ArrowUpRight, ShieldCheck, Activity, Mic, Box, Camera, FileCheck, SlidersHorizontal, Play } from "lucide-react";
+import { ChevronDown, ArrowUpRight, ShieldCheck, Activity, Mic, Box, Camera, FileCheck, SlidersHorizontal, Play, Compass } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
 import { FieldGroundingRecord } from "@/lib/grounding/fieldGroundingSchema";
@@ -11,6 +11,7 @@ import WhatsAppFieldCommsDrawer from "@/components/field/WhatsAppFieldCommsDrawe
 import LiveWebcamSpoofScanner from "@/components/field/LiveWebcamSpoofScanner";
 import ComplianceCertificateModal from "@/components/commercial/ComplianceCertificateModal";
 import QualityEscrowKillSwitch from "@/components/commercial/QualityEscrowKillSwitch";
+import EvaluatorWalkthrough from "@/components/guide/EvaluatorWalkthrough";
 import ProvenancePill from "@/components/ui/ProvenancePill";
 import { useActiveProject } from "@/context/ProjectContext";
 import { useLiveviewTheme } from "@/lib/theme/liveviewTheme";
@@ -250,6 +251,17 @@ export default function MasterCommandCenterPage() {
         <div className="flex items-center gap-2 text-xs shrink-0 relative">
           <button
             type="button"
+            data-guide-target="open-evaluator-guide-btn"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("quadillar-open-evaluator-guide"))
+            }
+            className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-emerald-500/45 text-emerald-300 font-bold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>Judge Guide</span>
+          </button>
+          <button
+            type="button"
             data-quadmax-target="open-whatsapp-field"
             onClick={() =>setIsWhatsAppOpen(true)}
             className="px-3.5 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/45 text-emerald-300 font-bold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer"
@@ -259,6 +271,7 @@ export default function MasterCommandCenterPage() {
           </button>
 
           <a
+            data-guide-target="open-3d-twin"
             href={`/site/digital-twin?project_id=${encodeURIComponent(activeProject.projectId)}`}
             className="px-3.5 py-2 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition inline-flex items-center gap-1.5 shadow-sm"
           >
@@ -317,15 +330,11 @@ export default function MasterCommandCenterPage() {
                   data-quadmax-target="run-guided-tour"
                   onClick={() => {
                     setIsHeaderToolsOpen(false);
-                    window.dispatchEvent(
-                      new CustomEvent("quadmax-run-command", {
-                        detail: { command: "run guided tour" },
-                      })
-                    );
+                    window.dispatchEvent(new CustomEvent("quadillar-open-evaluator-guide"));
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-emerald-400 font-bold flex items-center justify-between"
                 >
-                  <span className="inline-flex items-center gap-2"><Play className="w-3.5 h-3.5" />Run Guided Tour</span>
+                  <span className="inline-flex items-center gap-2"><Compass className="w-3.5 h-3.5" />Interactive Judge Guide</span>
                 </button>
                 <button
                   type="button"
@@ -819,6 +828,8 @@ export default function MasterCommandCenterPage() {
           router.push(`/site/digital-twin?zone=${encodeURIComponent(zoneId)}`)
         }
       />
+    
+      <EvaluatorWalkthrough />
     </div>
   );
 }

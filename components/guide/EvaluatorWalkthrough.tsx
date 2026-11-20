@@ -1,0 +1,457 @@
+"use client";
+
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  Compass,
+  ShieldCheck,
+  ArrowRight,
+  ArrowLeft,
+  X,
+  CheckCircle2,
+  ExternalLink,
+  Layers,
+  Database,
+  Cpu,
+  Lock,
+  Box,
+} from "lucide-react";
+
+interface GuideStep {
+  id: string;
+  stepNumber: number;
+  rubricTag: string;
+  deckSync: string;
+  title: string;
+  actionInstruction: string;
+  underTheHood: string;
+  selectors: string[];
+}
+
+const GUIDE_STEPS: GuideStep[] = [
+  {
+    id: "iot-seal",
+    stepNumber: 1,
+    rubricTag: "Technical Architecture",
+    deckSync: "Deck Slide 4 | Video 0:30",
+    title: "Seal Live Telemetry in Immutable Ledger",
+    actionInstruction:
+      "Click the highlighted IoT Telemetry Burst button in the top bar to send a real multi-ray sensor packet.",
+    underTheHood:
+      "Hits /api/telemetry/ingress, computes a canonical SHA-256 digest, and writes to PostgreSQL section_65b_audit_ledger protected by BEFORE UPDATE/DELETE immutability triggers.",
+    selectors: ['[data-guide-target="iot-burst"]', '[data-quadmax-target="iot-burst-btn"]'],
+  },
+  {
+    id: "gemini-field",
+    stepNumber: 2,
+    rubricTag: "Depth of Google AI",
+    deckSync: "Deck Slide 5 | Video 1:00",
+    title: "Run Gemini 2.5 Flash Field Grounding",
+    actionInstruction:
+      "Click Site Report, type or speak a site defect (English or Hinglish), and send. You can test text-only or attach a photo.",
+    underTheHood:
+      "Gemini 2.5 Flash extracts defect severity, maps it to the active project's BIM zone, cites IS 456 clauses, and persists an isolated multi-tenant record to Supabase.",
+    selectors: ['[data-quadmax-target="open-whatsapp-field"]'],
+  },
+  {
+    id: "is456-gate",
+    stepNumber: 3,
+    rubricTag: "Product Potential & Fit",
+    deckSync: "Deck Slide 6 | Video 1:40",
+    title: "Test Deterministic IS 456:2000 Payment Hold",
+    actionInstruction:
+      "Click Submit Lab Core Test, then click 'Load failing sample (39.47 MPa)' and submit to watch the backend reject payment release.",
+    underTheHood:
+      "Server-side IS 456:2000 Cl. 17.4.3 validator requires M50 core mean at least 42.50 MPa. Failing readings return HTTP 422 and keep INR 4,50,000 locked in escrow.",
+    selectors: ['[data-quadmax-target="core-1-input"]', '[data-guide-target="open-core-form"]'],
+  },
+  {
+    id: "qr-and-mcp",
+    stepNumber: 4,
+    rubricTag: "Market Viability & GTM",
+    deckSync: "Deck Slide 7 | Video 2:15",
+    title: "Scan Live Sec. 65B QR & Inspect Open MCP",
+    actionInstruction:
+      "Click Tools, then select Legal Proof Cert (Sec. 65B). Scan the live ISO QR code with your phone camera to verify the Postgres block.",
+    underTheHood:
+      "Generates an ISO QR pointing to /verify/[hash] backed by live Supabase queries. External ERPs and agents can query the exact same kernel over JSON-RPC 2.0 at /api/mcp.",
+    selectors: ['[data-quadmax-target="open-65b-cert"]', '[data-quadmax-target="open-tools-menu"]'],
+  },
+  {
+    id: "bim-twin",
+    stepNumber: 5,
+    rubricTag: "Spatial & AI Moat",
+    deckSync: "Deck Slides 8-9 | Video 2:40",
+    title: "Inspect LOD-400 3D Building Twin",
+    actionInstruction:
+      "Click 3D Building to launch the interactive Three.js 6-Bit spatial model, toggle Interior Cutaway, and run AI zone escalation.",
+    underTheHood:
+      "Links financial escrow holds and site defects directly to 3D structural elements (e.g., Transfer Girder BIT-4-TG03) with Gemini-powered zone triage.",
+    selectors: ['[data-guide-target="open-3d-twin"]'],
+  },
+];
+
+const SESSION_KEY = "quadillar-evaluator-disclaimer-seen-v2";
+
+interface RectBox {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
+export default function EvaluatorWalkthrough() {
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [activeStepIdx, setActiveStepIdx] = useState<number | null>(null);
+  const [showComplete, setShowComplete] = useState(false);
+  const [spotlightRect, setSpotlightRect] = useState<RectBox | null>(null);
+  const [stepClicked, setStepClicked] = useState(false);
+
+  // Auto-pop disclaimer once per session so evaluators immediately understand the live flow
+  useEffect(() => {
+    try {
+      const seen = sessionStorage.getItem(SESSION_KEY);
+      if (!seen) {
+        const timer = setTimeout(() => setShowDisclaimer(true), 600);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, []);
+
+  // Listen for manual reopen from header "Judge Guide" button or Tools menu
+  useEffect(() => {
+    const onOpen = () => {
+      setShowComplete(false);
+      setActiveStepIdx(null);
+      setShowDisclaimer(true);
+    };
+    window.addEventListener("quadillar-open-evaluator-guide", onOpen);
+    return () => window.removeEventListener("quadillar-open-evaluator-guide", onOpen);
+  }, []);
+
+  const currentStep = activeStepIdx !== null ? GUIDE_STEPS[activeStepIdx] : null;
+
+  const findActiveElement = useCallback((step: GuideStep): HTMLElement | null => {
+    for (const sel of step.selectors) {
+      const el = document.querySelector(sel) as HTMLElement | null;
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) return el;
+      }
+    }
+    return null;
+  }, []);
+
+  // Track highlighted element position and attach click listener to confirm interaction
+  useEffect(() => {
+    if (!currentStep) {
+      setSpotlightRect(null);
+      return;
+    }
+
+    setStepClicked(false);
+    let scrolledOnce = false;
+    let boundEl: HTMLElement | null = null;
+
+    const onTargetClick = () => {
+      setStepClicked(true);
+    };
+
+    const syncRect = () => {
+      const el = findActiveElement(currentStep);
+      if (!el) {
+        setSpotlightRect(null);
+        return;
+      }
+      if (!scrolledOnce) {
+        scrolledOnce = true;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      if (boundEl !== el) {
+        if (boundEl) boundEl.removeEventListener("click", onTargetClick);
+        boundEl = el;
+        boundEl.addEventListener("click", onTargetClick);
+      }
+      const r = el.getBoundingClientRect();
+      setSpotlightRect({
+        top: r.top - 6,
+        left: r.left - 6,
+        width: r.width + 12,
+        height: r.height + 12,
+      });
+    };
+
+    syncRect();
+    const interval = setInterval(syncRect, 250);
+    window.addEventListener("resize", syncRect);
+    window.addEventListener("scroll", syncRect, true);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("resize", syncRect);
+      window.removeEventListener("scroll", syncRect, true);
+      if (boundEl) boundEl.removeEventListener("click", onTargetClick);
+    };
+  }, [currentStep, findActiveElement]);
+
+  const dismissDisclaimer = () => {
+    try {
+      sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {}
+    setShowDisclaimer(false);
+  };
+
+  const startWalkthrough = () => {
+    try {
+      sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {}
+    setShowDisclaimer(false);
+    setShowComplete(false);
+    setActiveStepIdx(0);
+  };
+
+  const handleNext = () => {
+    if (activeStepIdx === null) return;
+    if (activeStepIdx + 1 < GUIDE_STEPS.length) {
+      setActiveStepIdx(activeStepIdx + 1);
+    } else {
+      setActiveStepIdx(null);
+      setShowComplete(true);
+    }
+  };
+
+  const handleBack = () => {
+    if (activeStepIdx === null || activeStepIdx === 0) return;
+    setActiveStepIdx(activeStepIdx - 1);
+  };
+
+  const handleExit = () => {
+    setActiveStepIdx(null);
+    setShowComplete(false);
+  };
+
+  return (
+    <>
+      {/* 1. Upfront Evaluator Disclaimer & Walkthrough Intro Modal */}
+      {showDisclaimer && (
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 font-sans">
+          <div className="w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                <Compass className="w-4 h-4" />
+                <span>Interactive Evaluator Guide (90 Seconds)</span>
+              </div>
+              <button
+                type="button"
+                onClick={dismissDisclaimer}
+                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
+                aria-label="Close disclaimer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs text-zinc-300">
+              <div className="space-y-1.5">
+                <h2 className="text-lg font-bold text-white">
+                  Quadillar LiveView — Construction Operating Kernel
+                </h2>
+                <p className="text-zinc-400 leading-relaxed">
+                  Please follow the 5 guided clicks below to understand what the software is doing
+                  in real time. Every step corresponds directly to our Pitch Deck slides and hits
+                  live production backends—nothing is pre-recorded or mocked.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2">
+                <div className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400">
+                  Live Production Systems Active In This Session
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11.5px]">
+                  <div className="flex items-center gap-2 text-zinc-200">
+                    <Cpu className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Gemini 2.5 Flash Field & Vision AI</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-zinc-200">
+                    <Database className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Trigger-Locked Postgres (Sec. 65B)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-zinc-200">
+                    <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>IS 456:2000 Escrow Payment Gate</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-zinc-200">
+                    <Box className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>LOD-400 3D BIM + Open /api/mcp</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400">
+                  5 Guided Evaluation Steps
+                </div>
+                <ol className="space-y-1 text-[11.5px] text-zinc-300">
+                  {GUIDE_STEPS.map((s) => (
+                    <li key={s.id} className="flex items-center justify-between gap-2 py-0.5">
+                      <span>
+                        <strong className="text-white font-mono mr-1.5">0{s.stepNumber}.</strong>
+                        {s.title}
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-500 shrink-0">
+                        {s.rubricTag}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={dismissDisclaimer}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold cursor-pointer transition"
+                >
+                  Explore Freely
+                </button>
+                <button
+                  type="button"
+                  onClick={startWalkthrough}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold inline-flex items-center justify-center gap-2 cursor-pointer transition"
+                >
+                  <span>Start 5-Step Guided Evaluation</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Non-Blocking Pulsing Spotlight Ring Around Real UI Target */}
+      {currentStep && spotlightRect && (
+        <div
+          className="fixed z-[55] pointer-events-none rounded-2xl border-2 border-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.22),0_0_24px_rgba(16,185,129,0.45)] transition-all duration-200 animate-pulse"
+          style={{
+            top: `${spotlightRect.top}px`,
+            left: `${spotlightRect.left}px`,
+            width: `${spotlightRect.width}px`,
+            height: `${spotlightRect.height}px`,
+          }}
+        />
+      )}
+
+      {/* 3. Compact Floating Interactive Guide Card (Bottom-Left, Never Blocks Main Controls) */}
+      {currentStep && (
+        <div className="fixed bottom-5 left-5 z-[65] w-[370px] max-w-[calc(100vw-2.5rem)] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-4 font-sans text-xs space-y-3">
+          <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px]">
+                STEP {currentStep.stepNumber} / {GUIDE_STEPS.length}
+              </span>
+              <span className="text-[10.5px] font-semibold text-zinc-400">
+                {currentStep.rubricTag}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleExit}
+              className="p-1 rounded-md text-zinc-500 hover:text-white cursor-pointer"
+              aria-label="Exit guide"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold text-white">{currentStep.title}</h3>
+            </div>
+            <p className="text-emerald-300 font-medium leading-relaxed">
+              {currentStep.actionInstruction}
+            </p>
+            <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-300 leading-relaxed">
+              <span className="text-[10px] uppercase font-bold text-zinc-500 block mb-0.5">
+                Under the hood ({currentStep.deckSync})
+              </span>
+              {currentStep.underTheHood}
+            </div>
+          </div>
+
+          {stepClicked && (
+            <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>Interaction detected — inspect the live result, then continue.</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleBack}
+              disabled={activeStepIdx === 0}
+              className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-semibold inline-flex items-center gap-1 disabled:opacity-40 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>
+                {activeStepIdx === GUIDE_STEPS.length - 1 ? "Finish Guide" : "Next Step"}
+              </span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Evaluation Complete Summary Card */}
+      {showComplete && (
+        <div className="fixed bottom-5 left-5 z-[65] w-[370px] max-w-[calc(100vw-2.5rem)] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-4 font-sans text-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Evaluation Walkthrough Complete</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleExit}
+              className="p-1 rounded-md text-zinc-500 hover:text-white cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <p className="text-zinc-300 leading-relaxed">
+            You have tested live telemetry hashing, Gemini 2.5 Flash field grounding, IS 456:2000
+            payment locks, scannable Section 65B proof, and the 3D BIM twin.
+          </p>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            <a
+              href="/api/mcp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-semibold inline-flex items-center gap-1.5"
+            >
+              <Layers className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Inspect /api/mcp</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <button
+              type="button"
+              onClick={startWalkthrough}
+              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold cursor-pointer"
+            >
+              Restart Guide
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

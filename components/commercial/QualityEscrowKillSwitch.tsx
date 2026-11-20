@@ -296,6 +296,7 @@ export default function QualityEscrowKillSwitch({
             {isLocked ? (
               <button
                 type="button"
+                data-guide-target="open-core-form"
                 onClick={() => setShowRemediationForm((v) => !v)}
                 className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
               >
