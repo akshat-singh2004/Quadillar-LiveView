@@ -1,143 +1,245 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { ShieldCheck, CheckCircle2, AlertTriangle, ArrowLeft, Radio } from "lucide-react";
+import { useParams, useSearchParams } from "next/navigation";
+import {
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowLeft,
+  Lock,
+  Database,
+  Clock,
+} from "lucide-react";
 
-interface LiveGateSnapshot {
-  ncr_id: string;
-  project_id: string;
-  bim_zone_id: string;
-  structural_element: string;
-  is_code_clause: string;
-  gate_status: "LOCKED" | "CLEARED";
-  withholding_lien_inr: number;
-  blocking_reason: string;
-  verified_mean_mpa: number | null;
-  lab_certificate_ref: string | null;
-  remediation_65b_hash: string | null;
-  updated_at: string;
+interface VerificationResponse {
+  ok: boolean;
+  verified: boolean;
+  queriedArtifactId: string;
+  projectId: string;
+  immutabilityEnforced: boolean;
+  statutoryBasis: string;
+  verifiedAtIso: string;
+  gate: {
+    ncr_id: string;
+    project_id: string;
+    bim_zone_id: string;
+    structural_element: string;
+    concrete_grade: string;
+    is_code_clause: string;
+    gate_status: "LOCKED" | "CLEARED";
+    withholding_lien_inr: number;
+    blocking_reason: string;
+    verified_mean_mpa: number | null;
+    lab_certificate_ref: string | null;
+    remediation_65b_hash: string | null;
+    updated_at: string;
+  } | null;
+  ledgerBlock: {
+    id: string;
+    project_id: string;
+    primary_governor: string;
+    synthesis_report: string;
+    merkle_root_hash: string;
+    timestamp: string;
+    notarized_by: string;
+  } | null;
+  fieldRecord: {
+    id: string;
+    bim_zone_id: string;
+    structural_element: string;
+    engineering_summary: string;
+    canonical_65b_sha256: string;
+    created_at: string;
+  } | null;
 }
 
 export default function PublicQrVerificationPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const rawId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const artifactId = decodeURIComponent(rawId || "NCR-2026-STR-042");
+  const projectIdParam = searchParams?.get("project_id") || "";
 
-  const [gate, setGate] = useState<LiveGateSnapshot | null>(null);
+  const [payload, setPayload] = useState<VerificationResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadLiveAttestation() {
+    async function loadVerification() {
       try {
-        const res = await fetch("/api/escrow-gate", { cache: "no-store" });
+        const qs = new URLSearchParams({ id: artifactId });
+        if (projectIdParam) qs.set("project_id", projectIdParam);
+        const res = await fetch(`/api/verify-artifact?${qs.toString()}`, {
+          cache: "no-store",
+        });
         const data = await res.json();
-        if (data?.gate) setGate(data.gate);
-      } catch {}
-      setLoading(false);
+        if (!res.ok || !data?.ok) {
+          setErrorMsg(data?.error || "Could not verify record against ledger.");
+        } else {
+          setPayload(data);
+        }
+      } catch {
+        setErrorMsg("Network error contacting Quadillar verification node.");
+      } finally {
+        setLoading(false);
+      }
     }
-    void loadLiveAttestation();
-  }, []);
+    void loadVerification();
+  }, [artifactId, projectIdParam]);
 
+  const gate = payload?.gate || null;
+  const ledger = payload?.ledgerBlock || null;
   const isCleared = gate?.gate_status === "CLEARED";
-  const merkleHash =
+  const activeHash =
+    ledger?.merkle_root_hash ||
     gate?.remediation_65b_hash ||
-    "8806a21acb4ebb84334f603aebfe99933a40bbb0d235d818bcc0504cab1089d4";
+    payload?.fieldRecord?.canonical_65b_sha256 ||
+    "UNAVAILABLE";
+  const lastUpdated =
+    gate?.updated_at || ledger?.timestamp || payload?.verifiedAtIso || "";
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 md:p-8 flex items-center justify-center font-mono">
-      <div className="w-full max-w-2xl bg-zinc-900/80 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl space-y-5 text-xs">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 md:p-8 flex items-center justify-center font-sans">
+      <div className="w-full max-w-2xl bg-zinc-900/85 border border-zinc-800 rounded-3xl p-5 md:p-8 shadow-2xl space-y-5 text-xs">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-4">
-          <div className="flex items-center gap-2 text-emerald-400 font-bold text-[10px] uppercase tracking-widest">
-            <ShieldCheck className="w-4 h-4" />
-            BSA 2023 SEC. 63 / SEC. 65B PUBLIC VERIFICATION NODE
+          <div className="flex items-center gap-2 text-emerald-400 font-semibold text-[11px] uppercase tracking-wider">
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            <span>Section 65B / BSA Sec. 63 Public Proof Node</span>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-400">
-            ARTIFACT: {artifactId}
+          <span className="px-2.5 py-1 rounded-full bg-zinc-950 border border-zinc-800 text-[10.5px] font-mono text-zinc-300">
+            {artifactId.length > 22 ? `${artifactId.slice(0, 18)}...` : artifactId}
           </span>
         </div>
 
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-white">
-            {gate?.structural_element || "Tower A / BIT-4 – Level 3 Transfer Girder (M50)"}
-          </h1>
-          <p className="text-zinc-400 mt-1">
-            Project: {gate?.project_id || "UP-LDA-VANGUARD-CAMPUS"} • BIM Zone:{" "}
-            {gate?.bim_zone_id || "BIT-4-TG03"}
-          </p>
-        </div>
-
         {loading ? (
-          <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800 text-center text-zinc-400 animate-pulse">
-            Querying live Section 65B Merkle Ledger & Escrow Gate...
+          <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800 text-center text-zinc-400">
+            Verifying record against live Postgres append-only ledger...
+          </div>
+        ) : errorMsg ? (
+          <div className="p-5 rounded-2xl bg-rose-950/30 border border-rose-500/40 text-rose-200 flex items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+            <span>{errorMsg}</span>
           </div>
         ) : (
           <>
-            <div
-              className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                isCleared
-                  ? "bg-emerald-500/10 border-emerald-500/40"
-                  : "bg-rose-500/10 border-rose-500/40"
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                {isCleared ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                ) : (
-                  <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
-                )}
-                <div>
-                  <div className="font-bold text-sm text-white">
-                    ESCROW GATE: {gate?.gate_status || "LOCKED"}
-                  </div>
-                  <div className="text-[11px] text-zinc-300">
-                    {gate?.blocking_reason ||
-                      "IS 456:2000 Cl. 17.4.3 structural hold active pending NABL core verification."}
-                  </div>
-                </div>
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[10.5px] font-semibold">
+                <Database className="w-3 h-3" />
+                <span>
+                  {payload?.verified
+                    ? "VERIFIED LIVE IN APPEND-ONLY POSTGRES LEDGER"
+                    : "NO MATCHING RECORD FOUND"}
+                </span>
               </div>
-
-              <div className="text-right shrink-0">
-                <div className="text-[9px] text-zinc-400 uppercase font-bold">WITHHOLDING LIEN</div>
-                <div
-                  className={`text-lg font-bold ${
-                    isCleared ? "text-emerald-400" : "text-rose-400"
-                  }`}
-                >
-                  ₹{Number(gate?.withholding_lien_inr ?? 450000).toLocaleString("en-IN")}
-                </div>
-              </div>
+              <h1 className="text-lg md:text-2xl font-bold text-white pt-1">
+                {gate?.structural_element ||
+                  payload?.fieldRecord?.structural_element ||
+                  "Verified Statutory Construction Record"}
+              </h1>
+              <p className="text-zinc-400 font-mono text-[11px]">
+                Project: {payload?.projectId} | Zone: {gate?.bim_zone_id || payload?.fieldRecord?.bim_zone_id || "SITE-WIDE"}
+              </p>
             </div>
+
+            {gate && (
+              <div
+                className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  isCleared
+                    ? "bg-emerald-500/10 border-emerald-500/40"
+                    : "bg-rose-500/10 border-rose-500/40"
+                }`}
+              >
+                <div className="flex items-start gap-2.5">
+                  {isCleared ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <Lock className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                  )}
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-sm text-white">
+                      {isCleared ? "PAYMENT CLEARED" : "PAYMENT PAUSED (HOLD ACTIVE)"}
+                    </div>
+                    <div className="text-xs text-zinc-300 leading-relaxed">
+                      {gate.blocking_reason}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="sm:text-right shrink-0">
+                  <div className="text-[10px] text-zinc-400 uppercase font-semibold">
+                    Escrow Hold
+                  </div>
+                  <div
+                    className={`text-lg font-bold font-mono ${
+                      isCleared ? "text-emerald-400" : "text-rose-400"
+                    }`}
+                  >
+                    INR {Number(gate.withholding_lien_inr ?? 0).toLocaleString("en-IN")}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800">
-                <div className="text-[9px] text-zinc-400 uppercase font-bold">IS CODE STANDARD</div>
-                <div className="font-bold text-white mt-0.5">
+                <div className="text-[10px] text-zinc-400 uppercase font-semibold">
+                  IS Standard
+                </div>
+                <div className="font-semibold text-white mt-0.5 font-mono">
                   {gate?.is_code_clause || "IS 456:2000 Cl. 17.4.3"}
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800">
-                <div className="text-[9px] text-zinc-400 uppercase font-bold">3-CORE MEAN (M50)</div>
-                <div className="font-bold text-emerald-400 mt-0.5">
-                  {gate?.verified_mean_mpa ? `${gate.verified_mean_mpa} MPa (PASS)` : "Pending Core Test"}
+                <div className="text-[10px] text-zinc-400 uppercase font-semibold">
+                  Verified Core Mean ({gate?.concrete_grade || "M50"})
+                </div>
+                <div className="font-semibold text-emerald-400 mt-0.5 font-mono">
+                  {gate?.verified_mean_mpa
+                    ? `${gate.verified_mean_mpa} MPa (PASS)`
+                    : "Pending Core Lab Test"}
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800">
-                <div className="text-[9px] text-zinc-400 uppercase font-bold">NABL LAB CERT</div>
-                <div className="font-bold text-white mt-0.5">
-                  {gate?.lab_certificate_ref || "Awaiting Upload"}
+                <div className="text-[10px] text-zinc-400 uppercase font-semibold">
+                  NABL Certificate
+                </div>
+                <div className="font-semibold text-white mt-0.5 font-mono truncate">
+                  {gate?.lab_certificate_ref || "Pending Submission"}
                 </div>
               </div>
             </div>
 
+            {ledger && (
+              <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400 uppercase font-semibold">
+                  <span>Latest Trigger-Locked Ledger Entry</span>
+                  <span className="text-emerald-400 font-mono">
+                    {ledger.primary_governor} | {ledger.notarized_by}
+                  </span>
+                </div>
+                <p className="text-zinc-200 text-xs leading-relaxed">
+                  {ledger.synthesis_report}
+                </p>
+              </div>
+            )}
+
             <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="flex items-center justify-between text-[9px] text-zinc-400 uppercase font-bold">
-                <span>CANONICAL SHA-256 MERKLE ROOT DIGEST</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400 uppercase font-semibold">
+                <span>Canonical SHA-256 Digest</span>
                 <span className="text-emerald-400 inline-flex items-center gap-1">
-                  <Radio className="w-3 h-3" /> TAMPER-SEALED
+                  <Lock className="w-3 h-3" /> UPDATE/DELETE BLOCKED BY DB TRIGGER
                 </span>
               </div>
-              <div className="text-[11px] text-emerald-400 break-all font-bold">{merkleHash}</div>
+              <div className="text-[11px] font-mono text-emerald-400 break-all font-semibold">
+                {activeHash}
+              </div>
+              {lastUpdated && (
+                <div className="text-[10.5px] text-zinc-500 flex items-center gap-1.5 pt-1 font-mono">
+                  <Clock className="w-3 h-3" />
+                  <span>Sealed UTC: {new Date(lastUpdated).toISOString()}</span>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -145,12 +247,12 @@ export default function PublicQrVerificationPage() {
         <div className="pt-2 border-t border-zinc-800 flex items-center justify-between">
           <a
             href="/"
-            className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-white font-bold"
+            className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-white font-semibold"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Return to Command Center
+            <span>Back to Command Center</span>
           </a>
-          <span className="text-[10px] text-zinc-500">Quadillar ConTech Pvt. Ltd.</span>
+          <span className="text-[10.5px] text-zinc-500">Quadillar ConTech Pvt. Ltd.</span>
         </div>
       </div>
     </div>

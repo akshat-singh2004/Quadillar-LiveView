@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ArrowUpRight, ShieldCheck, Activity, Mic, Box, Camera, FileCheck, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, ArrowUpRight, ShieldCheck, Activity, Mic, Box, Camera, FileCheck, SlidersHorizontal, Play } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
 import { FieldGroundingRecord } from "@/lib/grounding/fieldGroundingSchema";
@@ -237,7 +237,7 @@ export default function MasterCommandCenterPage() {
             <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
               STATUTORY GOVERNANCE • {activeProject.code} • {activeProject.projectId}
             </span>
-            <ProvenancePill source="Live IoT Feed"lastUpdatedIso={effectiveTelemetryIso} />
+            <ProvenancePill source="Live IoT Feed" lastUpdatedIso={effectiveTelemetryIso} />
           </div>
           <h1 className="text-2xl md:text-[26px] font-bold tracking-tight text-white leading-tight">
             {activeProject.name}
@@ -314,6 +314,21 @@ export default function MasterCommandCenterPage() {
                 </button>
                 <button
                   type="button"
+                  data-quadmax-target="run-guided-tour"
+                  onClick={() => {
+                    setIsHeaderToolsOpen(false);
+                    window.dispatchEvent(
+                      new CustomEvent("quadmax-run-command", {
+                        detail: { command: "run guided tour" },
+                      })
+                    );
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-emerald-400 font-bold flex items-center justify-between"
+                >
+                  <span className="inline-flex items-center gap-2"><Play className="w-3.5 h-3.5" />Run Guided Tour</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setIsHeaderToolsOpen(false);
                     setSimulateStaleFeed((s) => !s);
@@ -332,8 +347,8 @@ export default function MasterCommandCenterPage() {
       {/* 2. Uniform, Pixel-Aligned 5-Card KPI Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3.5 text-xs">
         <div className="bg-zinc-900/65 border border-zinc-800 p-4 rounded-2xl flex flex-col justify-between gap-2.5 min-h-[124px]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
+          <div className="flex flex-col items-start gap-1.5">
+            <span className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
               EPC BASELINE
             </span>
             <ProvenancePill source="UP-LDA Escrow Ledger" />
@@ -348,8 +363,8 @@ export default function MasterCommandCenterPage() {
           href="/site/digital-twin"
           className="bg-zinc-900/65 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-600 p-4 rounded-2xl transition flex flex-col justify-between gap-2.5 min-h-[124px]"
         >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
+          <div className="flex flex-col items-start gap-1.5">
+            <span className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
               SPATIAL BIM
             </span>
             <ProvenancePill source="LOD-400 BIM Sync" />
@@ -364,8 +379,8 @@ export default function MasterCommandCenterPage() {
         </a>
 
         <div className="bg-zinc-900/65 border border-zinc-800 p-4 rounded-2xl flex flex-col justify-between gap-2.5 min-h-[124px]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
+          <div className="flex flex-col items-start gap-1.5">
+            <span className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
               RETENTION (5%)
             </span>
             <ProvenancePill source="UP-LDA Escrow Ledger" />
@@ -377,8 +392,8 @@ export default function MasterCommandCenterPage() {
         </div>
 
         <div className="bg-zinc-900/65 border border-zinc-800 p-4 rounded-2xl flex flex-col justify-between gap-2.5 min-h-[124px]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
+          <div className="flex flex-col items-start gap-1.5">
+            <span className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
               CERTIFIED RA
             </span>
             <ProvenancePill source="Lab Core Certificate" />
@@ -392,8 +407,8 @@ export default function MasterCommandCenterPage() {
         </div>
 
         <div className="bg-zinc-900/65 border border-zinc-800 p-4 rounded-2xl flex flex-col justify-between gap-2.5 min-h-[124px]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
+          <div className="flex flex-col items-start gap-1.5">
+            <span className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
               CURING & CPI
             </span>
             <ProvenancePill source="Live IoT Feed"lastUpdatedIso={effectiveTelemetryIso} />

@@ -57,6 +57,39 @@ export function saveAutopilotSettings(next: AutopilotSettings): void {
 function planUiActionsInternal(command: string): UiActionPlan | null {
   const q = command.toLowerCase().trim();
 
+  // 0. Guided Showcase Tour (Booth / Backup Auto-Showcase)
+  if (q.includes("guided tour") || q.includes("showcase") || q.includes("auto demo")) {
+    return {
+      planId: `TOUR-${Date.now()}`,
+      commandText: command,
+      summaryOutcome:
+        "Run a 3-step guided showcase: fire live IoT telemetry, open Legal Proof QR Certificate, and inspect the Site Photo Verifier.",
+      steps: [
+        {
+          id: "tour-1",
+          kind: "CLICK",
+          label: "Fire live IoT telemetry packet to trigger Hermes Sec. 65B seal",
+          selector: '[data-quadmax-target="iot-burst-btn"]',
+          delayMs: 900,
+        },
+        {
+          id: "tour-2",
+          kind: "CLICK",
+          label: "Open Command Center Tools menu",
+          selector: '[data-quadmax-target="open-tools-menu"]',
+          delayMs: 800,
+        },
+        {
+          id: "tour-3",
+          kind: "CLICK",
+          label: "Open Legal Proof Certificate with live scannable QR code",
+          selector: '[data-quadmax-target="open-65b-cert"]',
+          delayMs: 1200,
+        },
+      ],
+    };
+  }
+
   // 1. Site Report Voice / Photo Ingress
   if (q.includes("whatsapp") || q.includes("voice note") || q.includes("field ingress") || q.includes("record audio")) {
     return {
