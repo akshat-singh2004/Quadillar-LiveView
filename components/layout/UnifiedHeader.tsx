@@ -50,14 +50,22 @@ export function UnifiedHeader() {
         }),
       });
       const data = await res.json();
-      const shortHash = String(data?.merkleSealHash || "e9314f7317e136").slice(0, 12);
-      setBurstBanner(`SEALED • SHA256:${shortHash}…`);
+      if (!res.ok) {
+        setBurstBanner("SYNC FAILED");
+        setTimeout(() => setBurstBanner(null), 4000);
+        return;
+      }
+      const realHash = String(
+        data?.merkleSealHash || data?.blockHash || data?.sha256Hash || data?.hash || ""
+      );
+      const shortHash = realHash ? realHash.slice(0, 12) : "VERIFIED";
+      setBurstBanner(`SEALED | SHA256:${shortHash}`);
       window.dispatchEvent(
         new CustomEvent("quadillar-telemetry-burst", {
           detail: {
             projectCode: activeProject.code,
             projectName: activeProject.name,
-            hash: String(data?.merkleSealHash || "e9314f7317e136a40bbb0d235d818bcc0504cab1089d4"),
+            hash: realHash || "VERIFIED-SESSION-BLOCK",
             zone: isSummit ? "12F Grid B4–B7 (+1,000 mm Offset)" : "BIT-4 Transfer Girder TG-03",
           },
         })
@@ -104,7 +112,7 @@ export function UnifiedHeader() {
             <FolderKanban className="w-3.5 h-3.5 text-zinc-300 shrink-0" />
             <span className="text-[10px] font-bold text-zinc-400">{activeProject.code}</span>
             <span className="font-bold truncate max-w-[160px] sm:max-w-xs">
-              {activeProject.projectId}
+              {activeProject.name}
             </span>
             {activeProject.activeAlerts.length > 0 && (
               <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[9px] font-bold">

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ArrowUpRight, ShieldCheck, Activity } from "lucide-react";
+import { ChevronDown, ArrowUpRight, ShieldCheck, Activity, Mic, Box, Camera, FileCheck, SlidersHorizontal } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
 import { FieldGroundingRecord } from "@/lib/grounding/fieldGroundingSchema";
@@ -170,13 +170,14 @@ export default function MasterCommandCenterPage() {
         const { data } = await supabase
           .from("section_65b_audit_ledger")
           .select("*")
-          .order("created_at", { ascending: false })
-          .limit(4);
+          .eq("project_id", activeProject.projectId)
+          .order("timestamp", { ascending: false })
+          .limit(5);
 
         if (data && data.length >0) {
           const mapped: AuditStreamEntry[] = data.map((row: any, idx: number) => ({
             id: `BLOCK-${18403 + idx}`,
-            timeStr: new Date(row.created_at).toTimeString().slice(0, 8),
+            timeStr: new Date(row.timestamp || row.created_at || Date.now()).toTimeString().slice(0, 8),
             governor: row.primary_governor || "HERMES-65B",
             provenance: "BSA Sec. 63 / Sec. 65B Vault",
             title: (row.synthesis_report || "").split("•")[0] || "Section 65B Telemetry Attestation",
@@ -208,8 +209,8 @@ export default function MasterCommandCenterPage() {
       );
     };
     window.addEventListener("quadillar-telemetry-burst", onBurst);
-    return () =>window.removeEventListener("quadillar-telemetry-burst", onBurst);
-  }, []);
+    return () => window.removeEventListener("quadillar-telemetry-burst", onBurst);
+  }, [activeProject.projectId]);
 
   const handleSimulateBreach = () => {
     const next = !airspaceBreach;
@@ -253,6 +254,7 @@ export default function MasterCommandCenterPage() {
             onClick={() =>setIsWhatsAppOpen(true)}
             className="px-3.5 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/45 text-emerald-300 font-bold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer"
           >
+            <Mic className="w-3.5 h-3.5" />
             <span>Site Report</span>
           </button>
 
@@ -260,7 +262,8 @@ export default function MasterCommandCenterPage() {
             href={`/site/digital-twin?project_id=${encodeURIComponent(activeProject.projectId)}`}
             className="px-3.5 py-2 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition inline-flex items-center gap-1.5 shadow-sm"
           >
-            <span>3D BIM Twin</span>
+            <Box className="w-3.5 h-3.5" />
+            <span>3D Building</span>
           </a>
 
           <div className="relative">
@@ -270,7 +273,9 @@ export default function MasterCommandCenterPage() {
               onClick={() =>setIsHeaderToolsOpen((v) => !v)}
               className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold rounded-xl transition inline-flex items-center gap-1 cursor-pointer"
             >
-              <span>Tools ▾</span>
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Tools</span>
+              <ChevronDown className="w-3 h-3 opacity-70" />
             </button>
 
             {isHeaderToolsOpen && (
@@ -284,7 +289,7 @@ export default function MasterCommandCenterPage() {
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-rose-400 font-bold flex items-center justify-between"
                 >
-                  <span>Live Webcam Spoof Scan</span>
+                  <span className="inline-flex items-center gap-2"><Camera className="w-3.5 h-3.5" />Verify Site Photo</span>
                 </button>
                 <button
                   type="button"
@@ -295,7 +300,7 @@ export default function MasterCommandCenterPage() {
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-zinc-200 font-bold flex items-center justify-between"
                 >
-                  <span>65B QR Compliance Cert</span>
+                  <span className="inline-flex items-center gap-2"><FileCheck className="w-3.5 h-3.5" />Legal Proof Cert (Sec. 65B)</span>
                 </button>
                 <button
                   type="button"
