@@ -125,7 +125,7 @@ export default function MasterCommandCenterPage() {
   const [isCertModalOpen, setIsCertModalOpen] = useState<boolean>(false);
   const [latestFieldRecord, setLatestFieldRecord] = useState<FieldGroundingRecord | null>(null);
 
-  const [iotTimestampIso, setIotTimestampIso] = useState<string>(() => new Date().toISOString());
+  const [iotTimestampIso, setIotTimestampIso] = useState<string>(() =>new Date().toISOString());
   const [simulateStaleFeed, setSimulateStaleFeed] = useState<boolean>(false);
 
   // Per-Governor Selected Terminal State + Header Governor Filter
@@ -173,7 +173,7 @@ export default function MasterCommandCenterPage() {
           .order("created_at", { ascending: false })
           .limit(4);
 
-        if (data && data.length > 0) {
+        if (data && data.length >0) {
           const mapped: AuditStreamEntry[] = data.map((row: any, idx: number) => ({
             id: `BLOCK-${18403 + idx}`,
             timeStr: new Date(row.created_at).toTimeString().slice(0, 8),
@@ -208,7 +208,7 @@ export default function MasterCommandCenterPage() {
       );
     };
     window.addEventListener("quadillar-telemetry-burst", onBurst);
-    return () => window.removeEventListener("quadillar-telemetry-burst", onBurst);
+    return () =>window.removeEventListener("quadillar-telemetry-burst", onBurst);
   }, []);
 
   const handleSimulateBreach = () => {
@@ -225,7 +225,7 @@ export default function MasterCommandCenterPage() {
   const visibleGovernors =
     governorFilter === "ALL"
       ? GOVERNOR_DIRECTORY
-      : GOVERNOR_DIRECTORY.filter((g) => g.id === governorFilter);
+      : GOVERNOR_DIRECTORY.filter((g) =>g.id === governorFilter);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 md:p-6 flex flex-col gap-5 font-mono max-w-[1600px] mx-auto">
@@ -236,7 +236,7 @@ export default function MasterCommandCenterPage() {
             <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
               STATUTORY GOVERNANCE • {activeProject.code} • {activeProject.projectId}
             </span>
-            <ProvenancePill source="Live IoT Feed" lastUpdatedIso={effectiveTelemetryIso} />
+            <ProvenancePill source="Live IoT Feed"lastUpdatedIso={effectiveTelemetryIso} />
           </div>
           <h1 className="text-2xl md:text-[26px] font-bold tracking-tight text-white leading-tight">
             {activeProject.name}
@@ -250,24 +250,24 @@ export default function MasterCommandCenterPage() {
           <button
             type="button"
             data-quadmax-target="open-whatsapp-field"
-            onClick={() => setIsWhatsAppOpen(true)}
+            onClick={() =>setIsWhatsAppOpen(true)}
             className="px-3.5 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/45 text-emerald-300 font-bold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer"
           >
-            <span>💬 WhatsApp Field</span>
+            <span>Site Report</span>
           </button>
 
           <a
             href={`/site/digital-twin?project_id=${encodeURIComponent(activeProject.projectId)}`}
             className="px-3.5 py-2 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition inline-flex items-center gap-1.5 shadow-sm"
           >
-            <span>🏛️ 3D BIM Twin</span>
+            <span>3D BIM Twin</span>
           </a>
 
           <div className="relative">
             <button
               type="button"
               data-quadmax-target="open-tools-menu"
-              onClick={() => setIsHeaderToolsOpen((v) => !v)}
+              onClick={() =>setIsHeaderToolsOpen((v) => !v)}
               className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold rounded-xl transition inline-flex items-center gap-1 cursor-pointer"
             >
               <span>Tools ▾</span>
@@ -284,7 +284,7 @@ export default function MasterCommandCenterPage() {
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-rose-400 font-bold flex items-center justify-between"
                 >
-                  <span>📷 Live Webcam Spoof Scan</span>
+                  <span>Live Webcam Spoof Scan</span>
                 </button>
                 <button
                   type="button"
@@ -295,7 +295,7 @@ export default function MasterCommandCenterPage() {
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-zinc-200 font-bold flex items-center justify-between"
                 >
-                  <span>📄 65B QR Compliance Cert</span>
+                  <span>65B QR Compliance Cert</span>
                 </button>
                 <button
                   type="button"
@@ -305,7 +305,7 @@ export default function MasterCommandCenterPage() {
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-zinc-200 font-bold flex items-center justify-between"
                 >
-                  <span>🎙️ Structured Field Ingress</span>
+                  <span>Structured Field Ingress</span>
                 </button>
                 <button
                   type="button"
@@ -316,7 +316,7 @@ export default function MasterCommandCenterPage() {
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-zinc-400 font-bold flex items-center justify-between"
                 >
-                  <span>{simulateStaleFeed ? "✓ Restore IoT Heartbeat" : "⏱️ Test >15m Stale Feed"}</span>
+                  <span>{simulateStaleFeed ? "✓ Restore IoT Heartbeat" : "Test >15m Stale Feed"}</span>
                 </button>
               </div>
             )}
@@ -391,7 +391,7 @@ export default function MasterCommandCenterPage() {
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
               CURING & CPI
             </span>
-            <ProvenancePill source="Live IoT Feed" lastUpdatedIso={effectiveTelemetryIso} />
+            <ProvenancePill source="Live IoT Feed"lastUpdatedIso={effectiveTelemetryIso} />
           </div>
           <div className="text-2xl font-bold text-white tracking-tight tabular-nums">
             31.4°C • {activeProject.cpi.toFixed(3)}
@@ -403,11 +403,11 @@ export default function MasterCommandCenterPage() {
       </div>
 
       {/* 3. Site-Specific Geometric / Sequence Deviation Alert (for Sites PRJ-02..PRJ-10) */}
-      {!isVanguard && activeProject.activeAlerts.length > 0 && (
+      {!isVanguard && activeProject.activeAlerts.length >0 && (
         <div className="bg-zinc-900/75 border border-rose-500/45 rounded-2xl p-4 flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-2">
             <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">
-              ⚠ ACTIVE SITE WRONGDOING & GEOMETRIC DEVIATION ({activeProject.code})
+               ACTIVE SITE WRONGDOING & GEOMETRIC DEVIATION ({activeProject.code})
             </span>
             <span className="px-2.5 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/40 text-rose-400 text-[10px] font-bold">
               {activeProject.activeAlerts[0].deviationMetric}
@@ -473,14 +473,14 @@ export default function MasterCommandCenterPage() {
                 {activeProject.code} REALITY GATEWAY (CRANE 01)
               </span>
             </div>
-            <ProvenancePill source="Live IoT Feed" lastUpdatedIso={effectiveTelemetryIso} />
+            <ProvenancePill source="Live IoT Feed"lastUpdatedIso={effectiveTelemetryIso} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
             <div className="md:col-span-7 bg-zinc-950 border border-zinc-800 rounded-xl p-2 flex items-center justify-center">
-              <svg viewBox="0 0 260 185" className="w-full h-44">
-                <circle cx="85" cy="95" r="64" fill="none" stroke="#3f3f46" strokeDasharray="3 3" />
-                <text x="36" y="24" fill="#71717a" fontSize="7" fontFamily="monospace">
+              <svg viewBox="0 0 260 185"className="w-full h-44">
+                <circle cx="85"cy="95"r="64"fill="none"stroke="#3f3f46"strokeDasharray="3 3" />
+                <text x="36"y="24"fill="#71717a"fontSize="7"fontFamily="monospace">
                   CRANE-01 (65M JIB RADIUS)
                 </text>
                 <line
@@ -491,7 +491,7 @@ export default function MasterCommandCenterPage() {
                   stroke={airspaceBreach ? "#ef4444" : "#10b981"}
                   strokeWidth="3"
                 />
-                <circle cx="85" cy="95" r="4" fill="#10b981" />
+                <circle cx="85"cy="95"r="4"fill="#10b981" />
                 <ellipse
                   cx="195"
                   cy="65"
@@ -514,7 +514,7 @@ export default function MasterCommandCenterPage() {
                   fill="rgba(16,185,129,0.08)"
                   stroke="#52525b"
                 />
-                <text x="163" y="135" fill="#a1a1aa" fontSize="7" fontFamily="monospace">
+                <text x="163"y="135"fill="#a1a1aa"fontSize="7"fontFamily="monospace">
                   BIT-1 GREEN WEDGE
                 </text>
               </svg>
@@ -580,7 +580,7 @@ export default function MasterCommandCenterPage() {
                     : "bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border-rose-500/40"
                 }`}
               >
-                {airspaceBreach ? "⚠ RESET BREACH" : "SIMULATE BREACH"}
+                {airspaceBreach ? "RESET BREACH" : "SIMULATE BREACH"}
               </button>
             </div>
           </div>
@@ -647,7 +647,7 @@ export default function MasterCommandCenterPage() {
             <select
               aria-label="Filter Primary View Governors"
               value={governorFilter}
-              onChange={(e) => setGovernorFilter(e.target.value)}
+              onChange={(e) =>setGovernorFilter(e.target.value)}
               style={{
                 backgroundColor: isLight ? "#FDFCF9" : "#09090B",
                 borderColor: isLight ? "#D6CFC2" : "#27272A",
@@ -669,7 +669,7 @@ export default function MasterCommandCenterPage() {
           {visibleGovernors.map((gov) => {
             const selectedHref = selectedTerminals[gov.id] || gov.defaultHref;
             const activeTerm =
-              gov.terminals.find((t) => t.href === selectedHref) || gov.terminals[0];
+              gov.terminals.find((t) =>t.href === selectedHref) || gov.terminals[0];
 
             return (
               <div
@@ -720,7 +720,7 @@ export default function MasterCommandCenterPage() {
 
                   <button
                     type="button"
-                    onClick={() => router.push(selectedHref)}
+                    onClick={() =>router.push(selectedHref)}
                     className="w-full py-2 px-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 font-bold text-[10.5px] flex items-center justify-between transition"
                   >
                     <span className="truncate pr-2">Launch {activeTerm.label.split("(")[0].trim()}</span>
@@ -738,7 +738,7 @@ export default function MasterCommandCenterPage() {
 
       <LiveWebcamSpoofScanner
         isOpen={isSpoofScannerOpen}
-        onClose={() => setIsSpoofScannerOpen(false)}
+        onClose={() =>setIsSpoofScannerOpen(false)}
         projectId={activeProject.projectId}
         projectName={activeProject.name}
         onAuditCommit={(v) =>
@@ -761,7 +761,7 @@ export default function MasterCommandCenterPage() {
 
       <ComplianceCertificateModal
         isOpen={isCertModalOpen}
-        onClose={() => setIsCertModalOpen(false)}
+        onClose={() =>setIsCertModalOpen(false)}
         projectCode={activeProject.code}
         projectId={activeProject.projectId}
         projectName={activeProject.name}
@@ -771,13 +771,13 @@ export default function MasterCommandCenterPage() {
 
       <WhatsAppFieldCommsDrawer
         isOpen={isWhatsAppOpen}
-        onClose={() => setIsWhatsAppOpen(false)}
-        onRecordCommitted={(rec) => setLatestFieldRecord(rec)}
+        onClose={() =>setIsWhatsAppOpen(false)}
+        onRecordCommitted={(rec) =>setLatestFieldRecord(rec)}
       />
 
       <FieldGroundingDrawer
         isOpen={isFieldDrawerOpen}
-        onClose={() => setIsFieldDrawerOpen(false)}
+        onClose={() =>setIsFieldDrawerOpen(false)}
         onRecordCommitted={(rec) => {
           setLatestFieldRecord(rec);
           setAuditEntries((prev) =>

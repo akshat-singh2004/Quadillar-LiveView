@@ -92,17 +92,17 @@ export default function DigitalTwinBimPage() {
   >({});
 
   const multiRayStates = useMemo(
-    () => evaluateCampusMultiRayFusion(deployedSensorsByZone),
+    () =>evaluateCampusMultiRayFusion(deployedSensorsByZone),
     [deployedSensorsByZone]
   );
 
   const activeZoneFusion = useMemo(
-    () => multiRayStates.find((s) => s.zoneId === activeZoneId) || multiRayStates[0],
+    () =>multiRayStates.find((s) =>s.zoneId === activeZoneId) || multiRayStates[0],
     [multiRayStates, activeZoneId]
   );
 
   const activeAdvisories = useMemo(
-    () => multiRayStates.filter((s) => s.advisory !== null),
+    () =>multiRayStates.filter((s) =>s.advisory !== null),
     [multiRayStates]
   );
 
@@ -280,7 +280,7 @@ export default function DigitalTwinBimPage() {
       scene.add(grid);
     };
     applyThreeTheme(document.documentElement.getAttribute("data-theme") || "obsidian-dark");
-    const onThemeEvt = (e: any) => applyThreeTheme(e.detail);
+    const onThemeEvt = (e: any) =>applyThreeTheme(e.detail);
     window.addEventListener("liveview-theme-change", onThemeEvt);
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.2, 1000);
@@ -316,7 +316,7 @@ export default function DigitalTwinBimPage() {
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width: rw, height: rh } = entry.contentRect;
-        if (rw > 0 && rh > 0) {
+        if (rw >0 && rh >0) {
           camera.aspect = rw / rh;
           camera.updateProjectionMatrix();
           renderer.setSize(rw, rh);
@@ -348,7 +348,7 @@ export default function DigitalTwinBimPage() {
         setActiveBitFocus(zone.bitId);
       } else if (requestedBit) {
         const matchedBit = VANGUARD_GENOME.bits.find(
-          (b) => b.bitId === requestedBit.toUpperCase()
+          (b) =>b.bitId === requestedBit.toUpperCase()
         );
         if (matchedBit) {
           const [tx, ty, tz] = matchedBit.worldPos;
@@ -380,7 +380,7 @@ export default function DigitalTwinBimPage() {
     };
 
     const onPointerUp = (e: PointerEvent) => {
-      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) >6) return;
 
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -397,7 +397,7 @@ export default function DigitalTwinBimPage() {
       });
 
       const hits = raycaster.intersectObjects(visibleMeshes, false);
-      if (hits.length > 0) {
+      if (hits.length >0) {
         // When X-Ray is ON, pierce outer semi-transparent glazing/dome shell to select interior partitions, ceilings, pelmets & MEP
         const interiorHit = hits.find(
           (h) => !(h.object as THREE.Mesh).userData?.bimElement?.isOuterShell
@@ -457,7 +457,7 @@ export default function DigitalTwinBimPage() {
     if (qZone) {
       setActiveZoneId(qZone);
       const zMeta = findBimZone(qZone);
-      if (zMeta) setTimeout(() => focusCameraOn(zMeta.worldPos, 26), 350);
+      if (zMeta) setTimeout(() =>focusCameraOn(zMeta.worldPos, 26), 350);
     }
     if (qAuto === "1") {
       setShowEscalationDrawer(true);
@@ -486,7 +486,7 @@ export default function DigitalTwinBimPage() {
 
   const focusBit = (bit: ArchitecturalBitSpec) => {
     setActiveBitFocus(bit.bitId);
-    const matchingZone = BIM_ZONE_REGISTRY.find((z) => z.bitId === bit.bitId);
+    const matchingZone = BIM_ZONE_REGISTRY.find((z) =>z.bitId === bit.bitId);
     if (matchingZone) setActiveZoneId(matchingZone.zoneId);
     focusCameraOn(bit.worldPos, Math.max(bit.dimensionsM[0], bit.dimensionsM[1]) * 0.95);
     setSelectedMeta({
@@ -574,7 +574,7 @@ export default function DigitalTwinBimPage() {
         const loader = new GLTFLoader();
         loader.parse(buffer, "", (gltf) => {
           const added = handle.registerExternalObject(gltf.scene, file.name);
-          setTotalMeshes((prev) => prev + added);
+          setTotalMeshes((prev) =>prev + added);
           setUploadStatus(`Mounted ${file.name} (${added} selectable Revit/GLB nodes)`);
         });
       } else if (ext === "ifc") {
@@ -619,7 +619,7 @@ export default function DigitalTwinBimPage() {
         });
         ifcApi.CloseModel(modelID);
         const added = handle.registerExternalObject(customGroup, file.name);
-        setTotalMeshes((prev) => prev + added);
+        setTotalMeshes((prev) =>prev + added);
         setUploadStatus(`Mounted IFC: ${file.name} (${added} molecular IFC entities)`);
       }
     } catch (err: any) {
@@ -654,48 +654,48 @@ export default function DigitalTwinBimPage() {
             }}
             className="px-2.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/45 text-cyan-300 font-bold transition cursor-pointer"
           >
-            🏢 Interior Cutaway
+             Interior Cutaway
           </button>
 
           <button
             type="button"
-            onClick={() => setShowEscalationDrawer((v) => !v)}
+            onClick={() =>setShowEscalationDrawer((v) => !v)}
             className={`px-2.5 py-1.5 rounded-xl border font-bold transition cursor-pointer ${
               showEscalationDrawer
                 ? "bg-emerald-500 text-zinc-950 border-emerald-400"
                 : "bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/40 text-emerald-400"
             }`}
           >
-            🤖 Agent Escalate
+             Agent Escalate
           </button>
 
           <button
             type="button"
-            onClick={() => setShowHeatmapDrawer((v) => !v)}
+            onClick={() =>setShowHeatmapDrawer((v) => !v)}
             className={`px-2.5 py-1.5 rounded-xl border font-bold transition cursor-pointer ${
               showHeatmapDrawer
                 ? "bg-zinc-100 text-zinc-950 border-white"
                 : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-200"
             }`}
           >
-            📏 mm Heatmap
+             mm Heatmap
           </button>
 
           <button
             type="button"
-            onClick={() => setShowSchematicDrawer((v) => !v)}
+            onClick={() =>setShowSchematicDrawer((v) => !v)}
             className={`px-2.5 py-1.5 rounded-xl border font-bold transition cursor-pointer ${
               showSchematicDrawer
                 ? "bg-zinc-100 text-zinc-950 border-white"
                 : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-200"
             }`}
           >
-            📐 VR & Zones
+             VR & Zones
           </button>
 
           <label className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-xl font-bold cursor-pointer transition">
             + .IFC/.GLB
-            <input type="file" accept=".ifc,.glb,.gltf" onChange={handleExternalModelUpload} className="hidden" />
+            <input type="file"accept=".ifc,.glb,.gltf"onChange={handleExternalModelUpload} className="hidden" />
           </label>
 
           <a
@@ -713,7 +713,7 @@ export default function DigitalTwinBimPage() {
             isOpen={showEscalationDrawer}
             autoTriggerOnMount={autoEscalateRequested}
             initialTranscript={deepLinkTranscript}
-            onClose={() => setShowEscalationDrawer(false)}
+            onClose={() =>setShowEscalationDrawer(false)}
             activeZoneId={activeZoneId}
             onHardwareTriggered={({ zoneId, worldPos, modalities, result }) => {
               setActiveZoneId(zoneId);
@@ -760,7 +760,7 @@ export default function DigitalTwinBimPage() {
               <button
                 key={bit.bitId}
                 type="button"
-                onClick={() => focusBit(bit)}
+                onClick={() =>focusBit(bit)}
                 className={`px-2 py-1 rounded-lg border text-[10px] font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
                   activeBitFocus === bit.bitId
                     ? "bg-zinc-100 border-white text-zinc-950"
@@ -788,7 +788,7 @@ export default function DigitalTwinBimPage() {
                 : "bg-zinc-950 border-zinc-800 text-amber-300 hover:border-amber-500/50"
             }`}
           >
-            🏗️ CRANE-01
+             CRANE-01
           </button>
         </div>
 
@@ -800,9 +800,9 @@ export default function DigitalTwinBimPage() {
           >
             {xrayArch ? "X-RAY: ON" : "SOLID FACADE"}
           </button>
-          {activeAdvisories.length > 0 && (
+          {activeAdvisories.length >0 && (
             <span className="px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold">
-              ⚠ {activeAdvisories.length} BLIND-SPOTS
+               {activeAdvisories.length} BLIND-SPOTS
             </span>
           )}
         </div>
@@ -838,11 +838,11 @@ export default function DigitalTwinBimPage() {
                   href="/site/vr-walkthrough"
                   className="px-2.5 py-1 rounded-lg bg-emerald-500 text-zinc-950 font-bold"
                 >
-                  🥽 Launch Quest 3S VR
+                   Launch Quest 3S VR
                 </a>
                 <button
                   type="button"
-                  onClick={() => setShowSchematicDrawer(false)}
+                  onClick={() =>setShowSchematicDrawer(false)}
                   className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 font-bold cursor-pointer"
                 >
                   Close ✕
@@ -886,7 +886,7 @@ export default function DigitalTwinBimPage() {
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 max-h-[calc(100%-24px)]">
           <button
             type="button"
-            onClick={() => setLeftHudOpen((v) => !v)}
+            onClick={() =>setLeftHudOpen((v) => !v)}
             className="self-start px-3 py-1.5 rounded-xl bg-zinc-950/90 hover:bg-zinc-900 border border-zinc-700 text-zinc-100 text-[10.5px] font-bold shadow-lg backdrop-blur-md cursor-pointer"
           >
             {leftHudOpen ? "✕ Hide Layers & NCRs" : `☰ Layers & NCRs (${totalMeshes})`}
@@ -902,7 +902,7 @@ export default function DigitalTwinBimPage() {
                   <button
                     key={layer.id}
                     type="button"
-                    onClick={() => toggleLayer(layer.id)}
+                    onClick={() =>toggleLayer(layer.id)}
                     className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition cursor-pointer ${
                       layer.active
                         ? "bg-zinc-900 border-zinc-700 text-white"
@@ -928,7 +928,7 @@ export default function DigitalTwinBimPage() {
 
                 <button
                   type="button"
-                  onClick={() => focusBimZone("BIT-4-TG03", activeNcrCode)}
+                  onClick={() =>focusBimZone("BIT-4-TG03", activeNcrCode)}
                   className={`text-left px-2.5 py-2 rounded-xl border text-[10px] flex flex-col gap-0.5 transition cursor-pointer ${
                     escrowLocked && !reconciledAsBuiltZones["BIT-4-TG03"]
                       ? "bg-rose-500/15 border-rose-500/40 text-rose-200"
@@ -957,7 +957,7 @@ export default function DigitalTwinBimPage() {
                     <button
                       key={pin.pinId}
                       type="button"
-                      onClick={() => focusBimZone(targetZone, pin.pinId)}
+                      onClick={() =>focusBimZone(targetZone, pin.pinId)}
                       className="text-left px-2.5 py-1.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-900 border border-zinc-800 text-[10px] flex justify-between items-center cursor-pointer"
                     >
                       <span className="text-zinc-200 font-bold truncate pr-2">{pin.pinId}</span>
@@ -984,10 +984,10 @@ export default function DigitalTwinBimPage() {
         <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-2 max-h-[calc(100%-24px)]">
           <button
             type="button"
-            onClick={() => setRightHudOpen((v) => !v)}
+            onClick={() =>setRightHudOpen((v) => !v)}
             className="px-3 py-1.5 rounded-xl bg-zinc-950/90 hover:bg-zinc-900 border border-zinc-700 text-zinc-100 text-[10.5px] font-bold shadow-lg backdrop-blur-md cursor-pointer"
           >
-            {rightHudOpen ? "✕ Hide Multi-Ray HUD" : "📡 Multi-Ray & As-Built HUD"}
+            {rightHudOpen ? "✕ Hide Multi-Ray HUD" : "Multi-Ray & As-Built HUD"}
           </button>
 
           {rightHudOpen && (
@@ -1000,7 +1000,7 @@ export default function DigitalTwinBimPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => setSelectedMeta(null)}
+                      onClick={() =>setSelectedMeta(null)}
                       className="text-zinc-400 hover:text-white text-xs font-bold cursor-pointer"
                     >
                       ✕
@@ -1022,7 +1022,7 @@ export default function DigitalTwinBimPage() {
                       {!activeReconciledPacket ? (
                         <button
                           type="button"
-                          onClick={() => handleApproveAsBuiltRevitSync(activeZoneId)}
+                          onClick={() =>handleApproveAsBuiltRevitSync(activeZoneId)}
                           className="w-full py-1.5 px-2.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-[10px] transition cursor-pointer"
                         >
                           Approve Field Variation & Emit Revit Patch
@@ -1030,7 +1030,7 @@ export default function DigitalTwinBimPage() {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => downloadRevitDeltaJson(activeReconciledPacket)}
+                          onClick={() =>downloadRevitDeltaJson(activeReconciledPacket)}
                           className="w-full py-1.5 px-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-[10px] hover:bg-emerald-500/30 transition cursor-pointer"
                         >
                           Download Revit Dynamo / IFC Patch (.json)
@@ -1085,7 +1085,7 @@ export default function DigitalTwinBimPage() {
                   {activeZoneFusion.advisory && (
                     <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/40 flex flex-col gap-2 text-[10px]">
                       <div className="font-bold text-amber-300">
-                        ⚠ NEEDS MORE DATA: {activeZoneFusion.advisory.blindSpotType.replace(/_/g, " ")}
+                         NEEDS MORE DATA: {activeZoneFusion.advisory.blindSpotType.replace(/_/g, " ")}
                       </div>
                       <p className="text-zinc-300 leading-relaxed">
                         {activeZoneFusion.advisory.diagnosticReason}
@@ -1119,7 +1119,7 @@ export default function DigitalTwinBimPage() {
                 twinHandleRef.current?.highlightElement(null);
                 setSelectedMolecularElement(null);
               }}
-              onFocusElement={(pos) => focusCameraOn(pos, 14)}
+              onFocusElement={(pos) =>focusCameraOn(pos, 14)}
               onEscalateHardware={(el) => {
                 setDeepLinkTranscript(
                   `Inspect ${el.mark} (${el.name} • ${el.revitFamily}) at ${el.level} ${el.gridline}`

@@ -139,7 +139,7 @@ export default function QuadmaxKernelFloatingWidget() {
   const [isSending, setIsSending] = useState(false);
 
   const threadEndRef = useRef<HTMLDivElement | null>(null);
-  const sendRef = useRef<(overridePrompt?: string) => Promise<void>>(async () => {});
+  const sendRef = useRef<(overridePrompt?: string) =>Promise<void>>(async () => {});
 
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -163,12 +163,12 @@ export default function QuadmaxKernelFloatingWidget() {
       if (nextId) setSelectedProjectId(nextId);
     };
     window.addEventListener("quadillar-project-change", onProjectChange);
-    return () => window.removeEventListener("quadillar-project-change", onProjectChange);
+    return () =>window.removeEventListener("quadillar-project-change", onProjectChange);
   }, []);
 
   const speakResponse = useCallback(
     (text: string) => {
-      if (!voiceSpeakEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) {
+      if (!voiceSpeakEnabled || typeof window === "undefined" || !("speechSynthesis"in window)) {
         return;
       }
       try {
@@ -188,7 +188,7 @@ export default function QuadmaxKernelFloatingWidget() {
       const savedThread = localStorage.getItem(THREAD_STORAGE_KEY);
       if (savedThread) {
         const parsed = JSON.parse(savedThread);
-        if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
+        if (Array.isArray(parsed) && parsed.length >0) setMessages(parsed);
       }
       const savedCustom = localStorage.getItem(CUSTOM_AGENTS_KEY);
       if (savedCustom) {
@@ -219,13 +219,13 @@ export default function QuadmaxKernelFloatingWidget() {
 
     setPos(clampPos(window.innerWidth - PILL_WIDTH - 20, window.innerHeight - PILL_HEIGHT - 20));
 
-    const handleResize = () => setPos((prev) => (prev ? clampPos(prev.x, prev.y) : prev));
+    const handleResize = () =>setPos((prev) => (prev ? clampPos(prev.x, prev.y) : prev));
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () =>window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
-    if (messages.length > 1) {
+    if (messages.length >1) {
       try {
         localStorage.setItem(THREAD_STORAGE_KEY, JSON.stringify(messages.slice(-24)));
       } catch {}
@@ -277,7 +277,7 @@ export default function QuadmaxKernelFloatingWidget() {
       setHistoryCursor(-1);
       setIsSending(true);
 
-      const activeCustom = customAgents.find((a) => a.id === selectedAgentId) || null;
+      const activeCustom = customAgents.find((a) =>a.id === selectedAgentId) || null;
 
       try {
         const res = await fetch("/api/quadmax", {
@@ -486,8 +486,8 @@ export default function QuadmaxKernelFloatingWidget() {
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const userPrompts = messages.filter((m) => m.role === "user").map((m) => m.content);
-    if (e.key === "ArrowUp" && userPrompts.length > 0) {
+    const userPrompts = messages.filter((m) =>m.role === "user").map((m) =>m.content);
+    if (e.key === "ArrowUp" && userPrompts.length >0) {
       e.preventDefault();
       const nextIdx = historyCursor === -1 ? userPrompts.length - 1 : Math.max(0, historyCursor - 1);
       setHistoryCursor(nextIdx);
@@ -524,7 +524,7 @@ export default function QuadmaxKernelFloatingWidget() {
     if (!ds || ds.pointerId !== e.pointerId) return;
     const dx = e.clientX - ds.startX;
     const dy = e.clientY - ds.startY;
-    if (Math.hypot(dx, dy) > 4) ds.moved = true;
+    if (Math.hypot(dx, dy) >4) ds.moved = true;
     const maxX = Math.max(12, window.innerWidth - PILL_WIDTH - 16);
     const maxY = Math.max(12, window.innerHeight - PILL_HEIGHT - 16);
     setPos({
@@ -554,10 +554,10 @@ export default function QuadmaxKernelFloatingWidget() {
 
   const viewportW = typeof window !== "undefined" ? window.innerWidth : 1280;
   const viewportH = typeof window !== "undefined" ? window.innerHeight : 800;
-  const openUpward = pos.y > viewportH * 0.52;
-  const alignRight = pos.x + PILL_WIDTH / 2 > viewportW * 0.5;
+  const openUpward = pos.y >viewportH * 0.52;
+  const alignRight = pos.x + PILL_WIDTH / 2 >viewportW * 0.5;
 
-  const latestAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const latestAssistant = [...messages].reverse().find((m) =>m.role === "assistant");
   const activeFollowUps = latestAssistant?.followUps || [];
   const totalPortfolioAlerts = getAllPortfolioAlerts("ALL_10", "ALL_SCOPES").length;
 
@@ -571,9 +571,9 @@ export default function QuadmaxKernelFloatingWidget() {
   const accentColor = isLight ? "#C96442" : "#10B981";
 
   const renderStructuredContent = (raw: string) => {
-    const lines = raw.split("\n").filter((l) => l.trim().length > 0);
+    const lines = raw.split("\n").filter((l) =>l.trim().length >0);
     const leadLines = lines.filter((l) => !l.trim().startsWith("•"));
-    const bulletLines = lines.filter((l) => l.trim().startsWith("•"));
+    const bulletLines = lines.filter((l) =>l.trim().startsWith("•"));
 
     return (
       <div className="flex flex-col gap-2">
@@ -583,7 +583,7 @@ export default function QuadmaxKernelFloatingWidget() {
           </p>
         ))}
 
-        {bulletLines.length > 0 && (
+        {bulletLines.length >0 && (
           <div className="flex flex-col gap-1.5">
             {bulletLines.map((b, i) => {
               const clean = b.replace(/^•\s*/, "");
@@ -639,7 +639,7 @@ export default function QuadmaxKernelFloatingWidget() {
     >
       {isOpen && (
         <div
-          onPointerDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) =>e.stopPropagation()}
           style={{
             position: "absolute",
             ...(openUpward ? { bottom: `${PILL_HEIGHT + 10}px` } : { top: `${PILL_HEIGHT + 10}px` }),
@@ -669,7 +669,7 @@ export default function QuadmaxKernelFloatingWidget() {
             <div className="flex items-center gap-1 text-[10px]">
               <button
                 type="button"
-                onClick={() => setShowAutopilotSettings((v) => !v)}
+                onClick={() =>setShowAutopilotSettings((v) => !v)}
                 style={{
                   backgroundColor: showAutopilotSettings ? accentColor : surfaceBg,
                   borderColor: borderSubtle,
@@ -678,7 +678,7 @@ export default function QuadmaxKernelFloatingWidget() {
                 className="px-2 py-0.5 rounded-lg border font-bold"
                 title="Configure Autonomous UI Co-Pilot & Confirmation Settings"
               >
-                ⚙️ Autopilot
+                 Autopilot
               </button>
 
               <button
@@ -697,7 +697,7 @@ export default function QuadmaxKernelFloatingWidget() {
 
               <button
                 type="button"
-                onClick={() => setVoiceSpeakEnabled((v) => !v)}
+                onClick={() =>setVoiceSpeakEnabled((v) => !v)}
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
                 className="p-1 rounded-lg border"
                 title={voiceSpeakEnabled ? "Mute readout" : "Enable voice readout"}
@@ -721,7 +721,7 @@ export default function QuadmaxKernelFloatingWidget() {
 
               <button
                 type="button"
-                onClick={() => setIsExpanded((v) => !v)}
+                onClick={() =>setIsExpanded((v) => !v)}
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
                 className="px-2 py-0.5 rounded-lg border font-bold"
               >
@@ -730,7 +730,7 @@ export default function QuadmaxKernelFloatingWidget() {
 
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={() =>setIsOpen(false)}
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
                 className="px-2 py-0.5 rounded-lg border font-bold"
               >
@@ -779,7 +779,7 @@ export default function QuadmaxKernelFloatingWidget() {
               </span>
               <select
                 value={selectedScope}
-                onChange={(e) => setSelectedScope(e.target.value as ScopeDomainId)}
+                onChange={(e) =>setSelectedScope(e.target.value as ScopeDomainId)}
                 style={{
                   backgroundColor: isLight ? "#FDFCF9" : "#09090B",
                   borderColor: borderSubtle,
@@ -802,16 +802,16 @@ export default function QuadmaxKernelFloatingWidget() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => setShowCustomBuilder((v) => !v)}
+                  onClick={() =>setShowCustomBuilder((v) => !v)}
                   style={{ color: accentColor }}
                   className="text-[8px] font-bold flex items-center gap-0.5 hover:underline"
                 >
-                  <Plus className="w-2.5 h-2.5" /> Custom
+                  <Plus className="w-2.5 h-2.5" />Custom
                 </button>
               </div>
               <select
                 value={selectedAgentId}
-                onChange={(e) => setSelectedAgentId(e.target.value)}
+                onChange={(e) =>setSelectedAgentId(e.target.value)}
                 style={{
                   backgroundColor: isLight ? "#FDFCF9" : "#09090B",
                   borderColor: borderSubtle,
@@ -821,27 +821,27 @@ export default function QuadmaxKernelFloatingWidget() {
               >
                 <option value="AUTO">Auto-Orchestrate (3-Tier)</option>
                 <optgroup label="Tier 1: Management Agents">
-                  {HIERARCHICAL_AGENT_MESH.filter((a) => a.tier === "MANAGEMENT").map((a) => (
+                  {HIERARCHICAL_AGENT_MESH.filter((a) =>a.tier === "MANAGEMENT").map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}
                     </option>
                   ))}
                 </optgroup>
                 <optgroup label="Tier 2: Domain Sub-Agents">
-                  {HIERARCHICAL_AGENT_MESH.filter((a) => a.tier === "SUB_AGENT").map((a) => (
+                  {HIERARCHICAL_AGENT_MESH.filter((a) =>a.tier === "SUB_AGENT").map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}
                     </option>
                   ))}
                 </optgroup>
                 <optgroup label="Tier 3: Millimeter Micro-Agents">
-                  {HIERARCHICAL_AGENT_MESH.filter((a) => a.tier === "MICRO_AGENT").map((a) => (
+                  {HIERARCHICAL_AGENT_MESH.filter((a) =>a.tier === "MICRO_AGENT").map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}
                     </option>
                   ))}
                 </optgroup>
-                {customAgents.length > 0 && (
+                {customAgents.length >0 && (
                   <optgroup label="Custom User Agents">
                     {customAgents.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -862,7 +862,7 @@ export default function QuadmaxKernelFloatingWidget() {
             >
               <div className="font-bold flex items-center justify-between">
                 <span>CREATE CUSTOM SCOPE / MILLIMETER AGENT</span>
-                <button type="button" onClick={() => setShowCustomBuilder(false)}>
+                <button type="button"onClick={() =>setShowCustomBuilder(false)}>
                   ✕
                 </button>
               </div>
@@ -871,7 +871,7 @@ export default function QuadmaxKernelFloatingWidget() {
                   type="text"
                   placeholder="Agent Name (e.g. 12F Wall Guard)"
                   value={newAgentName}
-                  onChange={(e) => setNewAgentName(e.target.value)}
+                  onChange={(e) =>setNewAgentName(e.target.value)}
                   style={{ backgroundColor: isLight ? "#FDFCF9" : "#09090B", borderColor: borderSubtle }}
                   className="col-span-2 rounded-lg border px-2 py-1 outline-none"
                   required
@@ -881,7 +881,7 @@ export default function QuadmaxKernelFloatingWidget() {
                   step="0.1"
                   placeholder="Tol (mm)"
                   value={newAgentToleranceMm}
-                  onChange={(e) => setNewAgentToleranceMm(e.target.value)}
+                  onChange={(e) =>setNewAgentToleranceMm(e.target.value)}
                   style={{ backgroundColor: isLight ? "#FDFCF9" : "#09090B", borderColor: borderSubtle }}
                   className="rounded-lg border px-2 py-1 outline-none"
                 />
@@ -891,7 +891,7 @@ export default function QuadmaxKernelFloatingWidget() {
                   type="text"
                   placeholder="Mandate (e.g. Flag any wall cast >5mm off gridline)"
                   value={newAgentInstruction}
-                  onChange={(e) => setNewAgentInstruction(e.target.value)}
+                  onChange={(e) =>setNewAgentInstruction(e.target.value)}
                   style={{ backgroundColor: isLight ? "#FDFCF9" : "#09090B", borderColor: borderSubtle }}
                   className="flex-1 rounded-lg border px-2 py-1 outline-none"
                 />
@@ -914,7 +914,7 @@ export default function QuadmaxKernelFloatingWidget() {
               style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: accentColor }}
               className="px-3 py-1 border-b text-[9.5px] font-bold shrink-0"
             >
-              🎙️ {voiceStatusNote}
+               {voiceStatusNote}
             </div>
           )}
 
@@ -958,7 +958,7 @@ export default function QuadmaxKernelFloatingWidget() {
 
                     {renderStructuredContent(msg.content)}
 
-                    {msg.metrics && msg.metrics.length > 0 && (
+                    {msg.metrics && msg.metrics.length >0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-0.5">
                         {msg.metrics.map((m) => {
                           const toneColor =
@@ -988,7 +988,7 @@ export default function QuadmaxKernelFloatingWidget() {
                       </div>
                     )}
 
-                    {msg.citations && msg.citations.length > 0 && (
+                    {msg.citations && msg.citations.length >0 && (
                       <div
                         style={{ borderColor: borderSubtle }}
                         className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t"
@@ -1033,7 +1033,7 @@ export default function QuadmaxKernelFloatingWidget() {
               className="p-3 rounded-2xl border flex flex-col gap-2 text-[10.5px] shadow-lg"
             >
               <div style={{ color: accentColor }} className="font-bold uppercase">
-                ⚡ ACTION PREVIEW — SHOULD I PROCEED?
+                 ACTION PREVIEW — SHOULD I PROCEED?
               </div>
               <p className="leading-relaxed">{pendingActionPlan.summaryOutcome}</p>
               <div className="space-y-1 pl-2 border-l-2 border-emerald-500/50">
@@ -1055,11 +1055,11 @@ export default function QuadmaxKernelFloatingWidget() {
                   }}
                   className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold cursor-pointer"
                 >
-                  ✅ Proceed & Take Control
+                   Proceed & Take Control
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPendingActionPlan(null)}
+                  onClick={() =>setPendingActionPlan(null)}
                   style={{ borderColor: borderSubtle }}
                   className="py-1.5 px-3 rounded-xl border font-bold cursor-pointer"
                 >
@@ -1071,7 +1071,7 @@ export default function QuadmaxKernelFloatingWidget() {
           <div ref={threadEndRef} />
           </div>
 
-          {activeFollowUps.length > 0 && !isSending && (
+          {activeFollowUps.length >0 && !isSending && (
             <div
               style={{ borderColor: borderSubtle }}
               className="px-3 py-1.5 border-t flex items-center gap-1.5 overflow-x-auto shrink-0"
@@ -1080,7 +1080,7 @@ export default function QuadmaxKernelFloatingWidget() {
                 <button
                   key={q}
                   type="button"
-                  onClick={() => handleSend(q)}
+                  onClick={() =>handleSend(q)}
                   style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}
                   className="px-2.5 py-1 rounded-lg border text-[9px] font-bold shrink-0 hover:opacity-80 transition"
                 >
@@ -1100,7 +1100,7 @@ export default function QuadmaxKernelFloatingWidget() {
           >
             <button
               type="button"
-              onClick={() => startVoiceCapture(false)}
+              onClick={() =>startVoiceCapture(false)}
               style={{
                 backgroundColor: isListening ? "#EF4444" : surfaceBg,
                 borderColor: borderSubtle,
@@ -1115,7 +1115,7 @@ export default function QuadmaxKernelFloatingWidget() {
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) =>setInput(e.target.value)}
               onKeyDown={handleInputKeyDown}
               placeholder="Ask QUADMAX across 10 sites or 1mm detail (↑ history)..."
               style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}

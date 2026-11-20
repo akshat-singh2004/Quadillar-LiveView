@@ -57,7 +57,7 @@ export function saveAutopilotSettings(next: AutopilotSettings): void {
 function planUiActionsInternal(command: string): UiActionPlan | null {
   const q = command.toLowerCase().trim();
 
-  // 1. WhatsApp Field Voice / Photo Ingress
+  // 1. Site Report Voice / Photo Ingress
   if (q.includes("whatsapp") || q.includes("voice note") || q.includes("field ingress") || q.includes("record audio")) {
     return {
       planId: `PLAN-${Date.now()}`,
@@ -68,7 +68,7 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
         {
           id: "s1",
           kind: "CLICK",
-          label: "Click '💬 WHATSAPP FIELD' in the Command Center header",
+          label: "Click 'SITE REPORT'in the Command Center header",
           selector: '[data-quadmax-target="open-whatsapp-field"]',
           delayMs: 550,
         },
@@ -83,14 +83,14 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
       {
         id: "s0",
         kind: "CLICK",
-        label: "Open Command Center 'Tools ▾' menu",
+        label: "Open Command Center 'Tools ▾'menu",
         selector: '[data-quadmax-target="open-tools-menu"]',
         delayMs: 400,
       },
       {
         id: "s1",
         kind: "CLICK",
-        label: "Click '📷 Live Webcam Spoof Scan'",
+        label: "Click 'Live Webcam Spoof Scan'",
         selector: '[data-quadmax-target="open-spoof-scanner"]',
         delayMs: 550,
       },
@@ -99,7 +99,7 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
       steps.push({
         id: "s2",
         kind: "CLICK",
-        label: "Click 'Test Cardboard Spoof' inside the Gemini 3.8 Vision scanner",
+        label: "Click 'Test Cardboard Spoof'inside the Gemini 2.5 Vision scanner",
         selector: '[data-quadmax-target="run-cardboard-spoof"]',
         delayMs: 750,
       });
@@ -109,7 +109,7 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
       commandText: command,
       summaryOutcome: autoRunCardboard
         ? "Open the Live Webcam Anti-Spoof Scanner and run a forensic cardboard spoof detection test (εr = 1.6 hold)."
-        : "Open the Gemini 3.8 Flash Live Webcam Anti-Spoof & Multi-Ray Scanner.",
+        : "Open the Gemini 2.5 Flash Live Webcam Anti-Spoof & Multi-Ray Scanner.",
       steps,
     };
   }
@@ -125,7 +125,7 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
         {
           id: "s1",
           kind: "CLICK",
-          label: "Click '⚡ IOT BURST' in the top navigation bar",
+          label: "Click 'IOT BURST'in the top navigation bar",
           selector: '[data-quadmax-target="trigger-iot-burst"]',
           delayMs: 550,
         },
@@ -234,14 +234,14 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
         {
           id: "s0",
           kind: "CLICK",
-          label: "Open Command Center 'Tools ▾' menu",
+          label: "Open Command Center 'Tools ▾'menu",
           selector: '[data-quadmax-target="open-tools-menu"]',
           delayMs: 400,
         },
         {
           id: "s1",
           kind: "CLICK",
-          label: "Click '📄 65B QR Compliance Cert'",
+          label: "Click '65B QR Compliance Cert'",
           selector: '[data-quadmax-target="open-65b-cert"]',
           delayMs: 550,
         },
@@ -265,7 +265,7 @@ export function planUiActionsFromCommand(command: string): UiActionPlan | null {
   const plan = planUiActionsInternal(command);
   if (!plan) return null;
   const needsHome = plan.steps.some(
-    (s) => s.selector && HOME_ONLY_SELECTORS.some((t) => s.selector!.includes(t))
+    (s) =>s.selector && HOME_ONLY_SELECTORS.some((t) =>s.selector!.includes(t))
   );
   if (needsHome && typeof window !== "undefined" && window.location.pathname !== "/") {
     return {

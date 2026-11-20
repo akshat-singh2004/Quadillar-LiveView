@@ -6,10 +6,10 @@ import type { VisionSpoofVerdict } from "@/app/api/vision-spoof-check/route";
 
 interface LiveWebcamSpoofScannerProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: () =>void;
   projectId: string;
   projectName: string;
-  onAuditCommit?: (verdict: VisionSpoofVerdict) => void;
+  onAuditCommit?: (verdict: VisionSpoofVerdict) =>void;
 }
 
 export default function LiveWebcamSpoofScanner({
@@ -33,7 +33,7 @@ export default function LiveWebcamSpoofScanner({
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current.getTracks().forEach((t) =>t.stop());
       streamRef.current = null;
     }
     setCameraReady(false);
@@ -58,7 +58,7 @@ export default function LiveWebcamSpoofScanner({
           audio: false,
         });
         if (!active) {
-          stream.getTracks().forEach((t) => t.stop());
+          stream.getTracks().forEach((t) =>t.stop());
           return;
         }
         streamRef.current = stream;
@@ -156,7 +156,7 @@ export default function LiveWebcamSpoofScanner({
           <div className="flex items-center gap-2">
             <Camera className="w-4 h-4 text-emerald-400" />
             <span className="font-bold text-xs text-white uppercase tracking-wider">
-              GEMINI 3.8 FLASH • LIVE ANTI-SPOOF & MULTI-RAY FORENSICS
+              SITE PHOTO VERIFICATION (GEMINI 2.5 VISION)
             </span>
           </div>
           <button
@@ -176,7 +176,7 @@ export default function LiveWebcamSpoofScanner({
             <input
               type="text"
               value={claimedElement}
-              onChange={(e) => setClaimedElement(e.target.value)}
+              onChange={(e) =>setClaimedElement(e.target.value)}
               className="mt-1 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-100 font-bold"
             />
           </div>
@@ -214,7 +214,7 @@ export default function LiveWebcamSpoofScanner({
                   <button
                     type="button"
                     disabled={isScanning}
-                    data-quadmax-target="run-cardboard-spoof" onClick={handleSyntheticCardboardTest}
+                    data-quadmax-target="run-cardboard-spoof"onClick={handleSyntheticCardboardTest}
                     className="py-2 px-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-[10px]"
                   >
                     Test Cardboard Spoof
@@ -222,7 +222,7 @@ export default function LiveWebcamSpoofScanner({
                   <label className="py-2 px-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold text-[10px] flex items-center justify-center gap-1 cursor-pointer">
                     <Upload className="w-3 h-3" />
                     Upload Photo
-                    <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                    <input type="file"accept="image/*"className="hidden"onChange={handleFileUpload} />
                   </label>
                 </div>
               </div>
@@ -237,7 +237,7 @@ export default function LiveWebcamSpoofScanner({
                     Hold any object or cardboard folder to the camera
                   </div>
                   <p className="text-[11px] leading-relaxed">
-                    Gemini 3.8 Flash cross-examines surface cementitious texture against claimed M50 concrete and triggers 24 GHz mmWave / LWIR Thermal IR verification if spoofing is suspected.
+                    Gemini 2.5 Flash cross-examines surface cementitious texture against claimed M50 concrete and triggers 24 GHz mmWave / LWIR Thermal IR verification if spoofing is suspected.
                   </p>
                 </div>
               ) : (

@@ -4,7 +4,6 @@ BASE="${1:-http://localhost:3000}"
 TMP_PNG=".tmp_quadillar_smoke_$(date +%s).png"
 trap 'rm -f "$TMP_PNG"' EXIT
 
-# Generate a spec-valid 16x16 PNG with unique pixel nonce so SHA-256 dedup passes each run
 node -e '
 const fs = require("fs"), zlib = require("zlib");
 function crc32(buf) {
@@ -32,7 +31,7 @@ for (let y = 0; y < h; y++) {
   for (let x = 0; x < w; x++) {
     const p = row + 1 + x * 3;
     raw[p] = (140 + ((now + x) & 0x3f)) & 0xff;
-    raw[p + 1] = (135 + ((now >> 4) + y) & 0x3f) & 0xff;
+    raw[p + 1] = (135 + (((now >> 4) + y) & 0x3f)) & 0xff;
     raw[p + 2] = (130 + ((now >> 8) & 0x3f)) & 0xff;
   }
 }
@@ -48,7 +47,7 @@ fs.writeFileSync(process.argv[1], png);
 IMG_B64=$(node -e 'process.stdout.write(require("fs").readFileSync(process.argv[1]).toString("base64"))' "$TMP_PNG")
 
 echo "=== 1. Route HTTP 200 Check ==="
-for route in "/" "/site/digital-twin" "/site/audit-ledger" "/site/ndt" "/schedule/gantt" "/api/health/gcp" "/api/escrow-gate" "/api/memory"; do
+for route in "/" "/site/digital-twin" "/site/audit-ledger" "/site/ndt" "/schedule/gantt" "/api/health/gcp" "/api/escrow-gate?project_id=UP-LDA-VANGUARD-CAMPUS" "/api/memory"; do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BASE}${route}")
   echo "  ${route} -> HTTP ${CODE}"
   [ "$CODE" -eq 200 ] || { echo "FAIL on ${route}"; exit 1; }
@@ -64,47 +63,66 @@ for pid in "UP-LDA-VANGUARD-CAMPUS" "LKO-SUMMIT-TOWER"; do
   [ "$CODE" -eq 200 ] || { echo "$RESP"; exit 1; }
 done
 
-echo "=== 3. Act 2: Field Grounding (multipart/form-data) + Vision Spoof Check ==="
-FIELD_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE}/api/field-grounding" \
+echo "=== 3. Act 2: Photo + Text-Only Site Reports & Multi-Tenant Isolation ==="
+PHOTO_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE}/api/field-grounding" \
+  -F "project_id=UP-LDA-VANGUARD-CAMPUS" \
   -F "image=@${TMP_PNG};type=image/png" \
   -F "manual_pin_zone_id=BIT-4-TG03" \
+  -F "transcript_override=Transfer Girder TG-03 cube failed at 41.2 MPa with honeycombing" \
   -F "submitter_id=SITE-SUP-LKO-01")
-FIELD_CODE=$(echo "$FIELD_RESP" | tail -n1)
-FIELD_BODY=$(echo "$FIELD_RESP" | sed '$d')
-echo "  /api/field-grounding -> HTTP ${FIELD_CODE}"
-echo "  Body: $(echo "$FIELD_BODY" | head -c 260)"
-[ "$FIELD_CODE" -eq 200 ] || { echo "$FIELD_BODY"; exit 1; }
-echo "$FIELD_BODY" | grep -q '"persisted_to_supabase":true' \
-  && echo "  [OK] persisted_to_supabase=true (Supabase field_grounding_logs + 65B ledger written)" \
-  || { echo "  [FAIL] persisted_to_supabase was not true"; exit 1; }
+PHOTO_CODE=$(echo "$PHOTO_RESP" | tail -n1)
+PHOTO_BODY=$(echo "$PHOTO_RESP" | sed '$d')
+echo "  Photo report (Vanguard) -> HTTP ${PHOTO_CODE}"
+[ "$PHOTO_CODE" -eq 200 ] || { echo "$PHOTO_BODY"; exit 1; }
+echo "$PHOTO_BODY" | grep -q '"persisted_to_supabase":true' || { echo "FAIL: photo report not persisted"; exit 1; }
+
+TEXT_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE}/api/field-grounding" \
+  -F "project_id=LKO-SUMMIT-TOWER" \
+  -F "transcript_override=12th floor perimeter wall inspection logged cleanly, curing active" \
+  -F "submitter_id=SITE-SUP-LKO-02")
+TEXT_CODE=$(echo "$TEXT_RESP" | tail -n1)
+TEXT_BODY=$(echo "$TEXT_RESP" | sed '$d')
+echo "  Text-only report (Summit) -> HTTP ${TEXT_CODE}"
+[ "$TEXT_CODE" -eq 200 ] || { echo "$TEXT_BODY"; exit 1; }
+echo "$TEXT_BODY" | grep -q '"project_id":"LKO-SUMMIT-TOWER"' || { echo "FAIL: tenant leak on Summit report"; exit 1; }
+echo "$TEXT_BODY" | grep -q '"persisted_to_supabase":true' || { echo "FAIL: text-only report not persisted"; exit 1; }
+echo "  [OK] Multi-tenant isolation + text-only persistence verified"
 
 SPOOF_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE}/api/vision-spoof-check" \
   -H "Content-Type: application/json" \
-  -d "{\"imageBase64\":\"data:image/png;base64,${IMG_B64}\",\"claimedElement\":\"Transfer Girder TG-03 (M50 RCC)\",\"bimZoneId\":\"BIT-4-TG03\",\"syntheticSpoofTest\":true}")
+  -d "{\"imageBase64\":\"data:image/png;base64,${IMG_B64}\",\"claimedElement\":\"Transfer Girder TG-03 (M50 RCC)\",\"bimZoneId\":\"BIT-4-TG03\",\"projectId\":\"UP-LDA-VANGUARD-CAMPUS\"}")
 SPOOF_CODE=$(echo "$SPOOF_RESP" | tail -n1)
 SPOOF_BODY=$(echo "$SPOOF_RESP" | sed '$d')
 echo "  /api/vision-spoof-check -> HTTP ${SPOOF_CODE}"
-echo "  Body: $(echo "$SPOOF_BODY" | head -c 260)"
 [ "$SPOOF_CODE" -eq 200 ] || { echo "$SPOOF_BODY"; exit 1; }
+echo "$SPOOF_BODY" | grep -q '"dielectricMeasurementStatus":"OPTICAL_REFERENCE_ONLY_RADAR_REQUIRED"' \
+  && echo "  [OK] Optical-vs-Radar physics separation verified"
 
 echo "=== 4. Act 3: 3D Agent Escalate + QUADMAX Live Kernel ==="
-ESC_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE}/api/agents/escalate-zone" \
+ESC_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE}/api/agents/escalate-zone" \
   -H "Content-Type: application/json" \
-  -d '{"bimZoneId":"BIT-4-TG03","transcript":"Bhaiya Tower A Level 3 transfer girder TG-03 mein honeycombing aur internal void lag raha hai","hasPhoto":true,"photoQualityHint":"LOW_LUX_SURFACE_ONLY"}')
-ESC_CODE=$(echo "$ESC_RESP" | tail -n1)
+  -d '{"bimZoneId":"BIT-4-TG03","transcript":"Transfer Girder TG-03 honeycombing and internal void check","hasPhoto":true,"photoQualityHint":"LOW_LUX_SURFACE_ONLY"}')
 echo "  /api/agents/escalate-zone -> HTTP ${ESC_CODE}"
-[ "$ESC_CODE" -eq 200 ] || { echo "$ESC_RESP"; exit 1; }
+[ "$ESC_CODE" -eq 200 ] || exit 1;
 
-QMAX_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE}/api/quadmax" \
+QMAX_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE}/api/quadmax" \
   -H "Content-Type: application/json" \
   -d '{"query":"Summarize critical exceptions across Project Vanguard and Summit Building","projectId":"ALL_10","scope":"ALL_SCOPES"}')
-QMAX_CODE=$(echo "$QMAX_RESP" | tail -n1)
 echo "  /api/quadmax -> HTTP ${QMAX_CODE}"
-[ "$QMAX_CODE" -eq 200 ] || { echo "$QMAX_RESP"; exit 1; }
+[ "$QMAX_CODE" -eq 200 ] || exit 1;
 
-echo "=== 5. Act 4: Escrow Gate & GCP Health Verification ==="
-curl -sf "${BASE}/api/escrow-gate" | head -c 260 && echo ""
-curl -sf "${BASE}/api/health/gcp" | head -c 260 && echo ""
+echo "=== 5. Act 4: IS 456:2000 Core Validation Gate (Reject Low Core -> Re-Lock) ==="
+REJECT_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE}/api/escrow-gate" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"REMEDIATE_CORE_TEST","project_id":"UP-LDA-VANGUARD-CAMPUS","ncr_id":"NCR-2026-STR-042","concrete_grade":"M50","core_readings_mpa":[38.0,39.0,38.5],"lab_certificate_ref":"NABL-FAIL-TEST"}')
+echo "  IS 456 Low Core Reject (M50 < 42.5 MPa) -> HTTP ${REJECT_CODE} (expected 422)"
+[ "$REJECT_CODE" -eq 422 ] || { echo "FAIL: invalid core readings were not rejected"; exit 1; }
+
+LOCK_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE}/api/escrow-gate" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"TRIGGER_NCR_HOLD","project_id":"UP-LDA-VANGUARD-CAMPUS","ncr_id":"NCR-2026-STR-042","bim_zone_id":"BIT-4-TG03","withholding_lien_inr":450000}')
+echo "  Re-lock NCR-2026-STR-042 (INR 4,50,000) -> HTTP ${LOCK_CODE}"
+[ "$LOCK_CODE" -eq 200 ] || exit 1;
 
 echo ""
-echo "=== ALL 4-ACT BUILDATHON CHECKS PASSED (ZERO ERRORS) ==="
+echo "=== ALL MOLECULAR & 4-ACT BUILDATHON CHECKS PASSED ==="
