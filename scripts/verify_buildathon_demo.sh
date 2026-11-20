@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 BASE="${1:-http://localhost:3000}"
-TMP_PNG="/tmp/quadillar_smoke_$(date +%s).png"
+TMP_PNG=".tmp_quadillar_smoke_$(date +%s).png"
 trap 'rm -f "$TMP_PNG"' EXIT
 
 # Generate a spec-valid 16x16 PNG with unique pixel nonce so SHA-256 dedup passes each run
