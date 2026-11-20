@@ -18,7 +18,7 @@ export const runtime = "nodejs";
 
 const INGESTED_MEDIA_HASH_CACHE = new Map<string, { id: string; bim_zone_id: string; created_at: string }>();
 const MAX_HASH_CACHE_SIZE = 500;
-const GEMINI_TIMEOUT_MS = 8000;
+const GEMINI_TIMEOUT_MS = 20000;
 
 const ALLOWED_AUDIO_TYPES = new Set([
   "audio/ogg", "audio/webm", "audio/mp3", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/mp4",
@@ -43,7 +43,7 @@ function getServerSupabase() {
 
 function detectDefectSignal(text: string): boolean {
   const q = text.toLowerCase();
-  return /(fail|honeycomb|void|crack|spall|segregat|reject|defect|broken|leak|offset|deviation|hold|bulge|41\.2|<\s*46|low strength|poor)/i.test(q);
+  return /(fail|honeycomb|void|crack|spall|segregat|reject|defect|broken|leak|seepage|offset|deviation|hold|bulge|41\.2|<\s*46|low strength|poor|exposed rebar|darar|toot)/i.test(q);
 }
 
 export async function POST(req: NextRequest) {
@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
     const transcriptOverride = String(
       formData.get("transcript_override") || formData.get("transcriptOverride") || formData.get("transcript") || ""
     ).trim();
+    const browserSttHint = String(formData.get("browser_stt_hint") || "").trim();
     const forceLowConfidence = String(
       formData.get("force_low_confidence") || formData.get("forceLowConfidence") || ""
     ) === "true";
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     const hasImage = Boolean(imageFile && imageFile.size > 0);
     const hasBinaryMedia = hasAudio || hasImage;
 
-    if (!hasBinaryMedia && !transcriptOverride) {
+    if (!hasBinaryMedia && !transcriptOverride && !browserSttHint) {
       return NextResponse.json(
         { error: "Provide a site note, voice recording, or site photograph.", code: "EMPTY_PAYLOAD" },
         { status: 400 }
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
       mediaParts.push({
         inlineData: { data: audioBuf.toString("base64"), mimeType: baseMime === "audio/mp3" ? "audio/mpeg" : baseMime },
       });
-      provenanceSources.push("Verified Field Audio");
+      provenanceSources.push("Gemini Verified Audio");
     }
 
     if (hasImage && imageFile) {
@@ -120,7 +121,7 @@ export async function POST(req: NextRequest) {
       ? computeMediaBundleSha256(buffers)
       : crypto
           .createHash("sha256")
-          .update(`TEXT:${requestedProjectId}:${submitterId}:${capturedAt}:${transcriptOverride}`)
+          .update(`TEXT:${requestedProjectId}:${submitterId}:${capturedAt}:${transcriptOverride || browserSttHint}`)
           .digest("hex");
 
     const primaryBuf = buffers[0] || null;
@@ -128,6 +129,21 @@ export async function POST(req: NextRequest) {
     const primaryExt = imageFile ? "jpg" : audioFile ? "webm" : "txt";
 
     const supabase = getServerSupabase();
+
+    // Fetch live project escrow state to ground Gemini directly on real software context (MCP-style state grounding)
+    let liveProjectContext = "";
+    if (supabase) {
+      try {
+        const { data: liveGates } = await supabase
+          .from("ncr_escrow_gates")
+          .select("ncr_id, bim_zone_id, structural_element, concrete_grade, gate_status, withholding_lien_inr")
+          .eq("project_id", projectMeta.projectId)
+          .limit(5);
+        if (liveGates && liveGates.length > 0) {
+          liveProjectContext = `LIVE PROJECT ESCROW CONTEXT (from Supabase /api/mcp): ${JSON.stringify(liveGates)}`;
+        }
+      } catch {}
+    }
 
     // Enforce anti-replay deduplication strictly on binary media (photos/audio)
     if (hasBinaryMedia) {
@@ -172,6 +188,25 @@ export async function POST(req: NextRequest) {
     const ai = new GoogleGenAI({ apiKey });
     const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
 
+    const groundingDirectives = [
+      `Analyze this field report captured at ${capturedAt} by ${submitterId} on ${projectMeta.name} (${projectMeta.projectId}).`,
+      liveProjectContext,
+      hasAudio
+        ? `AUDIO TRANSCRIPTION RULE: Listen directly to the attached audio clip and transcribe what the site engineer actually said in English/Hindi/Hinglish using construction domain vocabulary (wall, right wall, left wall, partition, column, beam, slab, transfer girder, rebar, honeycombing, shuttering, plaster, seepage, crack, curing, concrete cube, M50). Ignore any noisy phonetic mistakes.`
+        : "",
+      transcriptOverride
+        ? `Explicit typed engineer note: "${transcriptOverride}".`
+        : browserSttHint && !hasAudio
+        ? `Noisy browser speech hint (correct obvious construction homophones like "right ball" -> "right wall"): "${browserSttHint}".`
+        : "",
+      manualPinZoneId
+        ? `The site engineer explicitly pinned BIM zone ${manualPinZoneId}.`
+        : `ZONE & ELEMENT HONESTY RULE: Only assign Transfer Girder TG-03 (BIT-4-TG03) if the report actually discusses a girder, beam, transfer floor, or M50 structural cube failure. If the engineer mentions a wall (e.g., right wall, partition wall, plaster, seepage) or another element, clearly name that exact element in structural_element and engineering_summary, pick the closest zone ID from the registry, and set confidence_score below 0.72 if the exact floor/grid was not stated so an engineer can pin it. Never blindly force unrelated reports onto Transfer Girder TG-03.`,
+      `Only set escrow_action to FREEZE_MILESTONE if a genuine structural defect, strength failure, or critical non-conformance is clearly described.`,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
     for (const modelName of candidateModels) {
       try {
         const response = await withTimeout(
@@ -180,16 +215,7 @@ export async function POST(req: NextRequest) {
             contents: [
               {
                 role: "user",
-                parts: [
-                  ...mediaParts,
-                  {
-                    text: `Analyze this field report captured at ${capturedAt} by ${submitterId} on ${projectMeta.name} (${projectMeta.projectId}). ${
-                      manualPinZoneId
-                        ? `The site engineer explicitly pinned BIM zone ${manualPinZoneId}.`
-                        : "Identify the exact BIM zone, transcribe any Hindi/Hinglish speech verbatim, evaluate IS 456 compliance, and emit the 3-agent Governance Council trace."
-                    }${transcriptOverride ? ` Site engineer report text: "${transcriptOverride}".` : ""} Only set escrow_action to FREEZE_MILESTONE if a genuine structural defect, strength failure, or critical non-conformance is reported.`,
-                  },
-                ],
+                parts: [...mediaParts, { text: groundingDirectives }],
               },
             ],
             config: {
@@ -211,37 +237,47 @@ export async function POST(req: NextRequest) {
     }
 
     if (!parsed) {
-      const hint = (transcriptOverride + " " + manualPinZoneId).toLowerCase();
+      const rawText = (transcriptOverride || browserSttHint || "").trim();
+      const cleanedFallbackText = rawText.replace(/\bright ball\b/gi, "right wall");
+      const hint = (cleanedFallbackText + " " + manualPinZoneId).toLowerCase();
+
+      const mentionsWall = /\b(wall|plaster|brick|masonry|partition|seepage|paint)\b/i.test(hint);
       const inferredZone = hint.includes("dome") || hint.includes("bit-2")
         ? "BIT-2-DOME"
-        : hint.includes("podium") || hint.includes("c2")
+        : hint.includes("podium") || hint.includes("c2") || mentionsWall
         ? "BIT-4-PODIUM"
         : "BIT-4-TG03";
       const zMeta = findBimZone(inferredZone);
-      const hasDefect = transcriptOverride
-        ? detectDefectSignal(transcriptOverride)
-        : inferredZone === "BIT-4-TG03";
-      const isCritical = hasDefect && inferredZone === "BIT-4-TG03";
+      const hasDefect = cleanedFallbackText
+        ? detectDefectSignal(cleanedFallbackText)
+        : false;
+      const isCritical = hasDefect && inferredZone === "BIT-4-TG03" && !mentionsWall;
       const lienAmt = isCritical ? zMeta.defaultLienInr : 0;
+
+      const elementLabel = mentionsWall
+        ? `${projectMeta.name} — Wall / Masonry Inspection`
+        : zMeta.structuralElement;
 
       parsed = {
         matched_bim_zone_id: zMeta.zoneId,
-        structural_element: zMeta.structuralElement,
-        transcript_vernacular: transcriptOverride || "Field media captured for structural and spatial verification.",
-        engineering_summary: transcriptOverride
-          ? `Site report logged on ${zMeta.structuralElement}: ${transcriptOverride}`
-          : `Structural and spatial telemetry verified on ${zMeta.structuralElement}.`,
-        confidence_score: forceLowConfidence ? 0.62 : 0.91,
+        structural_element: elementLabel,
+        transcript_vernacular: cleanedFallbackText || "Field voice/photo observation captured.",
+        engineering_summary: cleanedFallbackText
+          ? `Observation logged for ${elementLabel}: "${cleanedFallbackText}". ${
+              mentionsWall ? "Please specify exact floor/grid or attach a photo if a structural NCR hold is required." : ""
+            }`.trim()
+          : `Field observation captured on ${elementLabel}.`,
+        confidence_score: forceLowConfidence || mentionsWall ? 0.68 : 0.91,
         severity: isCritical ? "CRITICAL_HOLD" : hasDefect ? "MODERATE_NCR" : "ROUTINE_DPR",
-        is_code_clause: "IS 456:2000 Cl. 17.4.3",
+        is_code_clause: mentionsWall ? "IS 2212 / IS 1661 Masonry & Plaster" : "IS 456:2000 Cl. 17.4.3",
         escrow_action: isCritical ? "FREEZE_MILESTONE" : "NO_CHANGE",
         withholding_amount_inr: lienAmt,
         governance_council: {
           structural_qa_agent: {
             verdict: isCritical
-              ? `Structural defect flagged on ${zMeta.structuralElement} under IS 456:2000 Cl. 17.4.3.`
-              : `Routine inspection logged on ${zMeta.structuralElement}; no structural hold required.`,
-            is_456_clause: "IS 456:2000 Cl. 17.4.3",
+              ? `Structural defect flagged on ${elementLabel} under IS 456:2000 Cl. 17.4.3.`
+              : `Field note logged for ${elementLabel}; no automatic structural hold triggered.`,
+            is_456_clause: mentionsWall ? "IS 2212 / IS 1661" : "IS 456:2000 Cl. 17.4.3",
             hold_status: isCritical ? "HOLD_ENFORCED" : hasDefect ? "ADVISORY_NCR" : "CLEARED",
           },
           commercial_escrow_agent: {
@@ -281,7 +317,7 @@ export async function POST(req: NextRequest) {
       : projectMeta.projectId;
 
     const linkedNcrId =
-      zoneMeta.linkedNcrId && resolvedProjectId === VANGUARD_GENOME.projectId
+      zoneMeta.linkedNcrId && resolvedProjectId === VANGUARD_GENOME.projectId && extraction.escrow_action === "FREEZE_MILESTONE"
         ? zoneMeta.linkedNcrId
         : `NCR-${projectMeta.code}-${Date.now().toString().slice(-4)}`;
 
@@ -290,13 +326,15 @@ export async function POST(req: NextRequest) {
         ? Math.max(extraction.withholding_amount_inr || 0, zoneMeta.defaultLienInr)
         : 0;
 
+    const resolvedElement = extraction.structural_element || zoneMeta.structuralElement;
+
     const record: FieldGroundingRecord = {
       ...extraction,
       matched_bim_zone_id: zoneMeta.zoneId,
       bit_id: zoneMeta.bitId,
-      zone_label: zoneMeta.label,
+      zone_label: resolvedElement || zoneMeta.label,
       world_pos: zoneMeta.worldPos,
-      structural_element: extraction.structural_element || zoneMeta.structuralElement,
+      structural_element: resolvedElement,
       confidence_score: effectiveConfidence,
       withholding_amount_inr: withholdingInr,
       id: `FLD-${Date.now()}`,

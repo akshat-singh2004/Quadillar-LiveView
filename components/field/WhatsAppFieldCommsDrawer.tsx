@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   ExternalLink,
   AlertTriangle,
-  WifiOff,
   Box,
 } from "lucide-react";
 import { startFieldVoiceCapture, LiveAudioCaptureHandle } from "@/lib/audio/openSourceAudioEngine";
@@ -48,11 +47,12 @@ export default function WhatsAppFieldCommsDrawer({
       id: "entry-init",
       sender: "SYSTEM",
       time: "READY",
-      text: "Speak, snap a photo, or type what you see on site. The system automatically maps the building zone, runs IS 456 checks, updates escrow holds, and seals legal proof.",
+      text: "Speak, snap a photo, or type what you see on site. Gemini 2.5 Flash transcribes your audio directly, maps the building zone using live project state, runs IS 456 checks, and seals legal proof.",
     },
   ]);
 
   const [inputText, setInputText] = useState("");
+  const [liveSpeechHint, setLiveSpeechHint] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [waveformBars, setWaveformBars] = useState<number[]>(Array(12).fill(20));
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
@@ -65,19 +65,32 @@ export default function WhatsAppFieldCommsDrawer({
   if (!isOpen) return null;
 
   const handleStartRecording = async () => {
-    if (isRecording) return;
+    if (isRecording || isSending) return;
     setNotice(null);
+    setLiveSpeechHint("");
     setIsRecording(true);
     try {
       const handle = await startFieldVoiceCapture({
         onWaveformFrame: (bars) => setWaveformBars(bars),
-        onInterimTranscript: (txt) => setInputText(txt),
+        // Keep browser STT strictly as a separate read-only hint; never overwrite user's typed text box
+        onInterimTranscript: (txt) => setLiveSpeechHint(txt.trim()),
       });
       captureHandleRef.current = handle;
     } catch {
       setIsRecording(false);
       setNotice("Microphone unavailable. Check browser permissions or type your report below.");
     }
+  };
+
+  const handleCancelRecording = async () => {
+    if (!isRecording || !captureHandleRef.current) return;
+    setIsRecording(false);
+    setLiveSpeechHint("");
+    setWaveformBars(Array(12).fill(20));
+    try {
+      await captureHandleRef.current.stop();
+    } catch {}
+    captureHandleRef.current = null;
   };
 
   const handleStopAndSendVoice = async () => {
@@ -87,14 +100,18 @@ export default function WhatsAppFieldCommsDrawer({
     const result = await captureHandleRef.current.stop();
     captureHandleRef.current = null;
 
-    const finalVoiceText = result.transcript.trim() || inputText.trim();
-    if (!finalVoiceText && !result.audioBlob) {
-      setNotice("No speech captured. Tap the microphone again or type your site observation.");
+    const browserHint = (result.transcript || liveSpeechHint || "").trim();
+    const typedText = inputText.trim();
+    setLiveSpeechHint("");
+
+    if (!result.audioBlob && !typedText && !browserHint) {
+      setNotice("No audio captured. Tap the microphone again or type your site observation.");
       return;
     }
 
     await submitFieldReport({
-      text: finalVoiceText || "Voice recording captured on site",
+      text: typedText,
+      browserSttHint: browserHint,
       audioBlob: result.audioBlob,
       audioUrl: result.audioUrl,
       audioDurationSec: result.durationSec,
@@ -103,12 +120,14 @@ export default function WhatsAppFieldCommsDrawer({
 
   const submitFieldReport = async (opts: {
     text: string;
+    browserSttHint?: string;
     audioBlob?: Blob | null;
     audioUrl?: string | null;
     audioDurationSec?: number;
   }) => {
-    const cleanText = opts.text.trim();
-    if (!cleanText && !selectedPhotoFile && !opts.audioBlob) return;
+    const cleanTypedText = opts.text.trim();
+    const hasAudio = Boolean(opts.audioBlob && opts.audioBlob.size > 0);
+    if (!cleanTypedText && !selectedPhotoFile && !hasAudio) return;
 
     setNotice(null);
     const nowTime = new Date().toTimeString().slice(0, 5);
@@ -116,13 +135,17 @@ export default function WhatsAppFieldCommsDrawer({
     const photoPreview = selectedPhotoPreview;
     const photoFileToSend = selectedPhotoFile;
 
+    const initialBubbleText =
+      cleanTypedText ||
+      (hasAudio ? "Voice note captured — transcribing with Gemini 2.5 Flash..." : "Site Photo Report");
+
     setEntries((prev) => [
       ...prev,
       {
         id: entryId,
         sender: "ENGINEER",
         time: nowTime,
-        text: cleanText || "Site Photo / Audio Report",
+        text: initialBubbleText,
         audioUrl: opts.audioUrl,
         audioDurationSec: opts.audioDurationSec,
         photoPreviewUrl: photoPreview,
@@ -153,8 +176,12 @@ export default function WhatsAppFieldCommsDrawer({
       const fd = new FormData();
       fd.append("project_id", activeProject.projectId);
       fd.append("submitter_id", "SITE-ENG-LKO-01");
-      if (cleanText) {
-        fd.append("transcript_override", cleanText);
+
+      // Only send transcript_override when user explicitly typed text (never force garbled browser STT over real audio)
+      if (cleanTypedText) {
+        fd.append("transcript_override", cleanTypedText);
+      } else if (opts.browserSttHint) {
+        fd.append("browser_stt_hint", opts.browserSttHint);
       }
 
       if (photoFileToSend) {
@@ -169,6 +196,16 @@ export default function WhatsAppFieldCommsDrawer({
 
       if (res.ok && data?.record) {
         const rec = data.record as FieldGroundingRecord;
+
+        // Replace placeholder on engineer's audio bubble with Gemini's verified transcript
+        if (hasAudio && !cleanTypedText && rec.transcript_vernacular) {
+          setEntries((prev) =>
+            prev.map((item) =>
+              item.id === entryId ? { ...item, text: rec.transcript_vernacular } : item
+            )
+          );
+        }
+
         recordMemoryEngram({
           category: "EPISODIC_EVENT",
           source: "FIELD_VOICE_INGRESS",
@@ -207,7 +244,9 @@ export default function WhatsAppFieldCommsDrawer({
             id: `SYS-ERR-${Date.now()}`,
             sender: "SYSTEM",
             time: new Date().toTimeString().slice(0, 5),
-            text: data?.error || "Could not process report. Please attach a clear note, voice clip, or photo.",
+            text:
+              data?.error ||
+              "Could not process report. Please attach a clear note, voice clip, or photo.",
             isError: true,
           },
         ]);
@@ -231,7 +270,7 @@ export default function WhatsAppFieldCommsDrawer({
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-end p-0 sm:p-4 font-sans">
       <div className="w-full max-w-md h-full sm:h-[88vh] bg-zinc-950 border border-zinc-800 sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-        {/* Clean Header */}
+        {/* Header */}
         <div className="px-4 py-3.5 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 flex items-center justify-center">
@@ -296,14 +335,18 @@ export default function WhatsAppFieldCommsDrawer({
                           {m.record.zone_label}
                         </span>
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold shrink-0 ${
                             m.record.escrow_action === "FREEZE_MILESTONE"
                               ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                              : m.record.status === "NEEDS_ENGINEER_PIN"
+                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
                               : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/35"
                           }`}
                         >
                           {m.record.escrow_action === "FREEZE_MILESTONE"
                             ? `HOLD: INR ${m.record.withholding_amount_inr.toLocaleString("en-IN")}`
+                            : m.record.status === "NEEDS_ENGINEER_PIN"
+                            ? "NEEDS PIN"
                             : "LOGGED"}
                         </span>
                       </div>
@@ -353,7 +396,7 @@ export default function WhatsAppFieldCommsDrawer({
           {isSending && (
             <div className="text-xs text-zinc-400 flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Verifying zone, running IS 456 rules, and sealing record...</span>
+              <span>Gemini 2.5 Flash analyzing audio/report against live project context...</span>
             </div>
           )}
         </div>
@@ -391,32 +434,45 @@ export default function WhatsAppFieldCommsDrawer({
           </div>
         )}
 
-        {/* Active Recording Indicator */}
+        {/* Active Recording Indicator (with Cancel + live waveform) */}
         {isRecording && (
-          <div className="px-4 py-2.5 bg-rose-950/40 border-t border-rose-500/40 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-              <span className="text-xs font-medium text-rose-200">
-                Recording site audio (Hindi / Hinglish / English)...
+          <div className="px-4 py-2.5 bg-rose-950/40 border-t border-rose-500/40 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+              <span className="text-xs font-medium text-rose-200 truncate">
+                Recording audio for Gemini 2.5 Flash... tap stop to submit
               </span>
             </div>
-            <div className="flex items-end gap-1 h-4">
-              {waveformBars.map((h, i) => (
-                <span
-                  key={i}
-                  style={{ height: `${Math.max(20, h)}%` }}
-                  className="w-1 bg-emerald-400 rounded-full transition-all duration-75"
-                />
-              ))}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-end gap-1 h-4">
+                {waveformBars.map((h, i) => (
+                  <span
+                    key={i}
+                    style={{ height: `${Math.max(20, h)}%` }}
+                    className="w-1 bg-emerald-400 rounded-full transition-all duration-75"
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={handleCancelRecording}
+                className="px-2 py-1 rounded-md bg-zinc-900 border border-zinc-700 text-[10px] text-zinc-300 hover:text-white cursor-pointer"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         )}
 
-        {/* Simple Input Bar: Photo, Text, or Speak */}
+        {/* Input Bar: Recording Stop always takes priority while mic is active */}
         <div className="p-3 bg-zinc-900 border-t border-zinc-800 space-y-2">
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              if (isRecording) {
+                void handleStopAndSendVoice();
+                return;
+              }
               void submitFieldReport({ text: inputText });
             }}
             className="flex items-center gap-2"
@@ -443,12 +499,26 @@ export default function WhatsAppFieldCommsDrawer({
             <input
               type="text"
               value={inputText}
+              disabled={isRecording}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Describe the issue or tap mic..."
-              className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 outline-none focus:border-zinc-500"
+              placeholder={
+                isRecording
+                  ? "Listening... click red stop button to send audio"
+                  : "Describe the issue or tap mic..."
+              }
+              className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 outline-none focus:border-zinc-500 disabled:opacity-60"
             />
 
-            {inputText.trim() || selectedPhotoFile ? (
+            {isRecording ? (
+              <button
+                type="button"
+                onClick={handleStopAndSendVoice}
+                className="p-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-semibold shrink-0 cursor-pointer"
+                title="Stop and send audio to Gemini"
+              >
+                <Square className="w-4 h-4" />
+              </button>
+            ) : inputText.trim() || selectedPhotoFile ? (
               <button
                 type="submit"
                 disabled={isSending}
@@ -457,20 +527,12 @@ export default function WhatsAppFieldCommsDrawer({
               >
                 <Send className="w-4 h-4" />
               </button>
-            ) : isRecording ? (
-              <button
-                type="button"
-                onClick={handleStopAndSendVoice}
-                className="p-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-semibold shrink-0 cursor-pointer"
-                title="Stop and submit recording"
-              >
-                <Square className="w-4 h-4" />
-              </button>
             ) : (
               <button
                 type="button"
                 onClick={handleStartRecording}
-                className="p-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold shrink-0 cursor-pointer"
+                disabled={isSending}
+                className="p-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold shrink-0 cursor-pointer disabled:opacity-50"
                 title="Record voice note"
               >
                 <Mic className="w-4 h-4" />
@@ -478,9 +540,8 @@ export default function WhatsAppFieldCommsDrawer({
             )}
           </form>
 
-          {/* Subtle demo helper for loud pitch halls (not disguised as a site feature) */}
           <div className="flex items-center justify-between text-[10.5px] text-zinc-500 px-1">
-            <span>Supports voice, camera photo, or text</span>
+            <span>Native Gemini 2.5 Flash audio, photo, or text</span>
             <button
               type="button"
               onClick={() =>
