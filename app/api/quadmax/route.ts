@@ -204,7 +204,7 @@ function buildPortfolioDeterministicSynthesis(params: {
         { label: "Escrow / Risk Hold", value: `₹${(totalHeldInr / 100000).toFixed(2)} L`, tone: totalHeldInr > 0 ? "watch" : "nominal" },
       ],
       citations: [
-        { label: "Inspect Vanguard TG-03 in 3D BIM", href: "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042", tag: "3D BIM" },
+        { label: "Trigger 3D BIM PTZ/Laser Escalation (TG-03)", href: "/site/digital-twin?zone=BIT-4-TG03&autoEscalate=1", tag: "3D AGENT" },
         { label: "Open Section 65B Evidence Vault", href: "/site/audit-ledger", tag: "65B VAULT" },
       ],
       followUps: [

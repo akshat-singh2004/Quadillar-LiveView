@@ -282,6 +282,15 @@ export default function MasterCommandCenterPage() {
             <span>📷 LIVE SPOOF SCAN</span>
           </button>
 
+          {latestFieldRecord && (
+            <a
+              href={`/site/digital-twin?zone=${encodeURIComponent(latestFieldRecord.matched_bim_zone_id)}&autoEscalate=1¬e=${encodeURIComponent(latestFieldRecord.transcript_vernacular)}`}
+              className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/45 text-emerald-400 font-bold rounded-xl transition inline-flex items-center gap-1.5"
+            >
+              <span>🎯 3D BIM Laser Escalate</span>
+            </a>
+          )}
+
           <button
             type="button"
             onClick={() => setIsFieldDrawerOpen(true)}

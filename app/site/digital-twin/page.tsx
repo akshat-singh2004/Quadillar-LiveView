@@ -22,6 +22,7 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import { useActiveProject } from "@/context/ProjectContext";
 import MillimeterHeatmapHud from "@/components/bim/MillimeterHeatmapHud";
+import AutonomousEscalationHud from "@/components/bim/AutonomousEscalationHud";
 
 interface DisciplineLayerUI {
   id: DisciplineId;
@@ -64,6 +65,11 @@ export default function DigitalTwinBimPage() {
   const [selectedMeta, setSelectedMeta] = useState<SelectedElementMeta | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [showSchematicDrawer, setShowSchematicDrawer] = useState(false);
+  const [showHeatmapDrawer, setShowHeatmapDrawer] = useState(false);
+  const [showEscalationDrawer, setShowEscalationDrawer] = useState(false);
+  const [showControlsDrawer, setShowControlsDrawer] = useState(false);
+  const [autoEscalateRequested, setAutoEscalateRequested] = useState(false);
+  const [deepLinkTranscript, setDeepLinkTranscript] = useState<string | undefined>(undefined);
 
   // Live NCR / Escrow Gate State (Synced with Step 3 Kill Switch)
   const [escrowLocked, setEscrowLocked] = useState<boolean>(true);
@@ -1163,10 +1169,119 @@ export default function DigitalTwinBimPage() {
 
   const activeReconciledPacket = reconciledAsBuiltZones[activeZoneId];
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const qZone = params.get("zone");
+    const qAuto = params.get("autoEscalate");
+    const qNote = params.get("note");
+    if (qNote) setDeepLinkTranscript(qNote);
+    if (qZone) {
+      setActiveZoneId(qZone);
+      const zMeta = findBimZone(qZone);
+      if (zMeta) {
+        setTimeout(() => focusCameraOn(zMeta.worldPos, 28), 350);
+      }
+    }
+    if (qAuto === "1") {
+      setShowEscalationDrawer(true);
+      setAutoEscalateRequested(true);
+    }
+  }, [focusCameraOn]);
+
   return (
-    <div className="min-h-screen h-screen bg-zinc-950 text-zinc-100 flex flex-col font-mono select-none overflow-hidden">
-      <MillimeterHeatmapHud />
-      {/* Top Header */}
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-950 text-zinc-100 p-3 md:p-4 flex flex-col gap-2.5 font-mono">
+      {/* Compact Single-Row 3D BIM Command Bar */}
+      <div className="bg-zinc-900/85 border border-zinc-800 rounded-2xl px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-[10px] font-bold shrink-0">
+            {activeProject.code} • LOD-400
+          </span>
+          <h1 className="font-bold text-sm text-white truncate">
+            {activeProject.name} — 3D Spatial & Multi-Ray Twin
+          </h1>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 text-[10.5px]">
+          <button
+            type="button"
+            onClick={() => {
+              setShowEscalationDrawer((v) => !v);
+              setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+            }}
+            className={`px-2.5 py-1.5 rounded-xl border font-bold transition cursor-pointer ${
+              showEscalationDrawer
+                ? "bg-emerald-500 text-zinc-950 border-emerald-400"
+                : "bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/40 text-emerald-400"
+            }`}
+          >
+            🤖 Agent Camera/Laser Escalation
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowHeatmapDrawer((v) => !v);
+              setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+            }}
+            className={`px-2.5 py-1.5 rounded-xl border font-bold transition cursor-pointer ${
+              showHeatmapDrawer
+                ? "bg-zinc-100 text-zinc-950 border-white"
+                : "bg-zinc-950 hover:bg-zinc-800 border-zinc-700 text-zinc-200"
+            }`}
+          >
+            📏 mm Heatmap
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowControlsDrawer((v) => !v);
+              setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+            }}
+            className="px-2.5 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold transition cursor-pointer"
+          >
+            {showControlsDrawer ? "Hide Zones & Layers" : "Zones & Layers"}
+          </button>
+
+          <a
+            href="/"
+            className="px-2.5 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white font-bold transition"
+          >
+            ← Command Center
+          </a>
+        </div>
+      </div>
+
+      {showEscalationDrawer && (
+        <AutonomousEscalationHud
+          isOpen={showEscalationDrawer}
+          autoTriggerOnMount={autoEscalateRequested}
+          initialTranscript={deepLinkTranscript}
+          onClose={() => {
+            setShowEscalationDrawer(false);
+            setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+          }}
+          activeZoneId={activeZoneId}
+          onHardwareTriggered={({ zoneId, worldPos, modalities, result }) => {
+            setActiveZoneId(zoneId);
+            setDeployedSensorsByZone((prev) => ({
+              ...prev,
+              [zoneId]: Array.from(new Set([...(prev[zoneId] || []), ...modalities])),
+            }));
+            if (result.escrowAction === "LOCK_ESCROW_HOLD") {
+              setEscrowLocked(true);
+              setEscrowLienInr(result.withholdingInr);
+            }
+            focusCameraOn(worldPos, 28);
+            setUploadStatus(`Agent Escalation Confirmed on ${zoneId}: PTZ + 905nm LiDAR + 24GHz Radar locked.`);
+          }}
+        />
+      )}
+
+      {showHeatmapDrawer && <MillimeterHeatmapHud />}
+
+{/* Top Header */}
       <div className="border-b border-zinc-800 bg-zinc-950/95 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -1271,7 +1386,7 @@ export default function DigitalTwinBimPage() {
 
       {/* Main 3D WebGL Canvas & Overlays */}
       <div className="relative flex-1 w-full bg-[#060911] overflow-hidden">
-        <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+        <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing min-h-[640px] h-[76vh]" />
 
         {!isLoaded && (
           <div className="absolute inset-0 bg-zinc-950/90 flex items-center justify-center z-20 text-xs text-zinc-300 font-bold">
