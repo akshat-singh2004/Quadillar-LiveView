@@ -31,6 +31,9 @@ export async function dispatchIPCApplication(
 
         // 2. Append to immutable audit trail if table exists
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${applicationId}`,
+            action_title: `IPC ${applicationId} Sanctioned & Dispatched`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: "Ar. Akshat Singh Rathore",
             signatory_role: "Principal Architect & SEOR",
             action_category: `IPC ${applicationId} Sanctioned & Dispatched`,

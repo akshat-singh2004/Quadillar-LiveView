@@ -32,6 +32,9 @@ export async function saveDrawingMarkupDraft(input: SaveMarkupDraftInput) {
 
         // 2. Audit Trail Record for ISO 19650 WIP container
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${input.drawingNumber}`,
+            action_title: `ISO 19650 WIP Draft Saved: ${input.drawingNumber}`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: input.authorName || "Ar. Akshat Singh Rathore",
             signatory_role: "Principal Architect & SEOR",
             action_category: `ISO 19650 WIP Draft Saved: ${input.drawingNumber}`,
@@ -79,6 +82,9 @@ export async function issueDrawingRevision(
 
         // 2. Transmittal Dispatch Logged into Immutable Statutory Vault
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${`${drawingNumber}-${nextRevision}`}`,
+            action_title: `GFC REVISION ISSUED: ${drawingNumber} ${nextRevision} (Contractor Broadcast)`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: authorName,
             signatory_role: "Principal Architect & SEOR",
             action_category: `GFC REVISION ISSUED: ${drawingNumber} ${nextRevision} (Contractor Broadcast)`,

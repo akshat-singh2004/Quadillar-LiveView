@@ -330,7 +330,7 @@ export default function QualityEscrowKillSwitch({
                 <input
                   type="number"
                   step="0.01"
-                  value={core1}
+                  data-quadmax-target="core-1-input" value={core1}
                   onChange={(e) => setCore1(e.target.value)}
                   className="mt-1 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-zinc-100 text-xs"
                   required
@@ -341,7 +341,7 @@ export default function QualityEscrowKillSwitch({
                 <input
                   type="number"
                   step="0.01"
-                  value={core2}
+                  data-quadmax-target="core-2-input" value={core2}
                   onChange={(e) => setCore2(e.target.value)}
                   className="mt-1 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-zinc-100 text-xs"
                   required
@@ -352,7 +352,7 @@ export default function QualityEscrowKillSwitch({
                 <input
                   type="number"
                   step="0.01"
-                  value={core3}
+                  data-quadmax-target="core-3-input" value={core3}
                   onChange={(e) => setCore3(e.target.value)}
                   className="mt-1 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-zinc-100 text-xs"
                   required

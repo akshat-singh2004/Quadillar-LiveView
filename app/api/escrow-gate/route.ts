@@ -161,7 +161,8 @@ export async function POST(req: NextRequest) {
             primary_governor: "MIDAS-ESCROW-LOCK",
             synthesis_report: `[${lockedGate.ncr_id}] ESCROW LOCKED — ₹${lienInr.toLocaleString("en-IN")} Lien Enforced on ${lockedGate.structural_element} (IS 456:2000 Cl. 17.4.3)`,
             merkle_root_hash: hash65b,
-            created_at: now,
+            timestamp: now,
+            notarized_by: "HERMES-CORE-V2",
           });
         } catch {}
       }
@@ -252,7 +253,8 @@ export async function POST(req: NextRequest) {
             primary_governor: "THEMIS-NDT-CORE",
             synthesis_report: `[${clearedGate.ncr_id}] CLEARED — ₹0 Lien (${validation.actualMeanMpa} MPa Verified per IS 456:2000 Cl. 17.4.3 • Cert ${labCertRef})`,
             merkle_root_hash: hash65b,
-            created_at: now,
+            timestamp: now,
+            notarized_by: "HERMES-CORE-V2",
           });
         } catch {}
       }

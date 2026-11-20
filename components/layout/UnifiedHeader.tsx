@@ -187,7 +187,7 @@ export function UnifiedHeader() {
         <button
           type="button"
           disabled={bursting}
-          onClick={handleStageTelemetryBurst}
+          data-quadmax-target="trigger-iot-burst" onClick={handleStageTelemetryBurst}
           className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 font-bold inline-flex items-center gap-1 transition cursor-pointer"
           title="Fire a live multi-ray LiDAR/IR/GPR edge telemetry packet into the Section 65B ledger"
         >

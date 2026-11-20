@@ -79,6 +79,9 @@ export async function createIntermediateRABill(input: CreateBillInput) {
         if (error) throw new Error(error.message);
 
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${input.billNumber}`,
+            action_title: `COMPILED RA BILL: ${input.billNumber} (Gross: ₹${gross.toLocaleString("en-IN")})`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: input.signatoryRole || "Lead Quantity Surveyor",
             signatory_role: "Quantity Surveyor",
             action_category: `COMPILED RA BILL: ${input.billNumber} (Gross: ₹${gross.toLocaleString("en-IN")})`,
@@ -124,6 +127,9 @@ export async function verifyBillStatutoryGates(billId: string, projectId: string
         if (error) throw new Error(error.message);
 
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${billNumber}`,
+            action_title: `STATUTORY GATES AUDITED: ${billNumber} -> ${nextStatus}`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: qsAuditor,
             signatory_role: "Lead Quantity Surveyor",
             action_category: `STATUTORY GATES AUDITED: ${billNumber} -> ${nextStatus}`,
@@ -160,6 +166,9 @@ export async function certifyBillIPC(billId: string, projectId: string, billNumb
         if (error) throw new Error(error.message);
 
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${billNumber}`,
+            action_title: `IPC SANCTIONED: ${billNumber} (Form 26 / FIDIC 14.6)`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: seorName,
             signatory_role: "Resident SEOR / Principal Consultant",
             action_category: `IPC SANCTIONED: ${billNumber} (Form 26 / FIDIC 14.6)`,
@@ -196,6 +205,9 @@ export async function disburseBillPayment(billId: string, billNumber: string, ne
         if (error) throw new Error(error.message);
 
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${billNumber}`,
+            action_title: `RTGS DISBURSEMENT: ₹${netAmount.toLocaleString("en-IN")} for ${billNumber} (UTR: ${utrRef})`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: financeOfficer,
             signatory_role: "Finance Director / Accounts Disbursal",
             action_category: `RTGS DISBURSEMENT: ₹${netAmount.toLocaleString("en-IN")} for ${billNumber} (UTR: ${utrRef})`,

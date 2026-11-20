@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 3200);
         const res = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: "gemini-2.5-flash",
           contents: [
             {
               role: "user",

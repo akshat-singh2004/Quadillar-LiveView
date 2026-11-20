@@ -17,6 +17,13 @@ import {
 import { useLiveviewTheme } from "@/lib/theme/liveviewTheme";
 import { useActiveProject } from "@/context/ProjectContext";
 import {
+  AutopilotSettings,
+  getAutopilotSettings,
+  planUiActionsFromCommand,
+  saveAutopilotSettings,
+  UiActionPlan,
+} from "@/lib/agents/uiActionPlanner";
+import {
   getAllPortfolioAlerts,
   HIERARCHICAL_AGENT_MESH,
   PORTFOLIO_10_PROJECTS,
@@ -71,6 +78,12 @@ export default function QuadmaxKernelFloatingWidget() {
 
   const [customAgents, setCustomAgents] = useState<CustomAgentSpec[]>([]);
   const [showCustomBuilder, setShowCustomBuilder] = useState(false);
+  const [showAutopilotSettings, setShowAutopilotSettings] = useState<boolean>(false);
+  const [autopilotSettings, setAutopilotSettings] = useState<AutopilotSettings>({
+    enabled: true,
+    requireConfirmation: true,
+  });
+  const [pendingActionPlan, setPendingActionPlan] = useState<UiActionPlan | null>(null);
   const [newAgentName, setNewAgentName] = useState("");
   const [newAgentToleranceMm, setNewAgentToleranceMm] = useState("2.0");
   const [newAgentInstruction, setNewAgentInstruction] = useState("");
@@ -226,6 +239,29 @@ export default function QuadmaxKernelFloatingWidget() {
     async (overridePrompt?: string) => {
       const prompt = (overridePrompt ?? input).trim();
       if (!prompt || isSending) return;
+
+      const currentSettings = getAutopilotSettings();
+      const plannedUi = currentSettings.enabled ? planUiActionsFromCommand(prompt) : null;
+      if (plannedUi) {
+        const nowPlanTime = new Date().toTimeString().slice(0, 5);
+        if (currentSettings.requireConfirmation) {
+          setPendingActionPlan(plannedUi);
+          setMessages((prev) => [
+            ...prev,
+            { id: `u-${Date.now()}`, role: "user", content: prompt, timestamp: nowPlanTime },
+            {
+              id: `a-plan-${Date.now()}`,
+              role: "assistant",
+              content: `The command you've given will result in: ${plannedUi.summaryOutcome} — Confirm below if I should proceed.`,
+              timestamp: nowPlanTime,
+            },
+          ]);
+          if (!overridePrompt) setInput("");
+          return;
+        } else {
+          window.dispatchEvent(new CustomEvent("quadmax-execute-plan", { detail: plannedUi }));
+        }
+      }
 
       const nowTime = new Date().toTimeString().slice(0, 5);
       const userMsg: ChatMessage = {
@@ -633,6 +669,20 @@ export default function QuadmaxKernelFloatingWidget() {
             <div className="flex items-center gap-1 text-[10px]">
               <button
                 type="button"
+                onClick={() => setShowAutopilotSettings((v) => !v)}
+                style={{
+                  backgroundColor: showAutopilotSettings ? accentColor : surfaceBg,
+                  borderColor: borderSubtle,
+                  color: showAutopilotSettings ? "#09090B" : mutedText,
+                }}
+                className="px-2 py-0.5 rounded-lg border font-bold"
+                title="Configure Autonomous UI Co-Pilot & Confirmation Settings"
+              >
+                ⚙️ Autopilot
+              </button>
+
+              <button
+                type="button"
                 onClick={toggleWakeWord}
                 style={{
                   backgroundColor: wakeWordArmed ? accentColor : surfaceBg,
@@ -977,7 +1027,48 @@ export default function QuadmaxKernelFloatingWidget() {
               </div>
             )}
 
-            <div ref={threadEndRef} />
+            {pendingActionPlan && (
+            <div
+              style={{ borderColor: accentColor, backgroundColor: surfaceBg }}
+              className="p-3 rounded-2xl border flex flex-col gap-2 text-[10.5px] shadow-lg"
+            >
+              <div style={{ color: accentColor }} className="font-bold uppercase">
+                ⚡ ACTION PREVIEW — SHOULD I PROCEED?
+              </div>
+              <p className="leading-relaxed">{pendingActionPlan.summaryOutcome}</p>
+              <div className="space-y-1 pl-2 border-l-2 border-emerald-500/50">
+                {pendingActionPlan.steps.map((st, idx) => (
+                  <div key={st.id} style={{ color: mutedText }}>
+                    {idx + 1}. {st.label}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const planToRun = pendingActionPlan;
+                    setPendingActionPlan(null);
+                    window.dispatchEvent(
+                      new CustomEvent("quadmax-execute-plan", { detail: planToRun })
+                    );
+                  }}
+                  className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold cursor-pointer"
+                >
+                  ✅ Proceed & Take Control
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingActionPlan(null)}
+                  style={{ borderColor: borderSubtle }}
+                  className="py-1.5 px-3 rounded-xl border font-bold cursor-pointer"
+                >
+                  ✕ Cancel
+                </button>
+              </div>
+            </div>
+          )}
+          <div ref={threadEndRef} />
           </div>
 
           {activeFollowUps.length > 0 && !isSending && (

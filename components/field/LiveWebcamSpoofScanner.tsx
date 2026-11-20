@@ -214,7 +214,7 @@ export default function LiveWebcamSpoofScanner({
                   <button
                     type="button"
                     disabled={isScanning}
-                    onClick={handleSyntheticCardboardTest}
+                    data-quadmax-target="run-cardboard-spoof" onClick={handleSyntheticCardboardTest}
                     className="py-2 px-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-[10px]"
                   >
                     Test Cardboard Spoof

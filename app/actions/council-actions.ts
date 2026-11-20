@@ -340,7 +340,7 @@ export async function generateSection65BCertificate(payload: Generate65BCertific
       .limit(1)
       .maybeSingle();
 
-    const blockHash = auditLog?.block_hash || `GENESIS-SEAL-${Date.now().toString(16)}`;
+    const blockHash = auditLog?.merkle_root_hash || auditLog?.block_hash || `GENESIS-SEAL-${Date.now().toString(16)}`;
     const eventTime = auditLog?.created_at || new Date().toISOString();
 
     const affidavitText = `

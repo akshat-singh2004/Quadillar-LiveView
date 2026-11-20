@@ -59,7 +59,7 @@ export interface QuadmaxChatPayload {
 // 30-second bounded TTL cache for sub-5ms repeated stage briefings
 const QUADMAX_TTL_CACHE = new Map<string, { expiresAt: number; payload: QuadmaxChatPayload }>();
 const MAX_CACHE_ENTRIES = 100;
-const GEMINI_TIMEOUT_MS = 3200;
+const GEMINI_TIMEOUT_MS = 8500;
 const DB_READ_TIMEOUT_MS = 750;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -419,7 +419,7 @@ Be crisp, factual, and millimeter-precise:
     try {
       const res = await withTimeout(
         ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: "gemini-2.5-flash",
           contents: [
             {
               role: "user",

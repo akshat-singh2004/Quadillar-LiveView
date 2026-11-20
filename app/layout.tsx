@@ -1,4 +1,5 @@
 import QuadmaxKernelFloatingWidget from "@/components/QuadmaxKernelFloatingWidget";
+import QuadmaxAutonomousOperator from "@/components/QuadmaxAutonomousOperator";
 import LiveviewThemeQuickToggle from "@/components/LiveviewThemeQuickToggle";
 import { LiveviewThemeProvider } from "@/lib/theme/liveviewTheme";
 
@@ -29,7 +30,8 @@ export default function RootLayout({
           </AppShell>
         </RoleProvider>
         
-      <QuadmaxKernelFloatingWidget /></LiveviewThemeProvider></body>
+      <QuadmaxAutonomousOperator />
+            <QuadmaxKernelFloatingWidget /></LiveviewThemeProvider></body>
     </html>
   );
 }

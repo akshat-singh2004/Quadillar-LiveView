@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
 import { FieldGroundingRecord } from "@/lib/grounding/fieldGroundingSchema";
 import FieldGroundingDrawer from "@/components/field/FieldGroundingDrawer";
+import WhatsAppFieldCommsDrawer from "@/components/field/WhatsAppFieldCommsDrawer";
 import LiveWebcamSpoofScanner from "@/components/field/LiveWebcamSpoofScanner";
 import ComplianceCertificateModal from "@/components/commercial/ComplianceCertificateModal";
 import QualityEscrowKillSwitch from "@/components/commercial/QualityEscrowKillSwitch";
@@ -118,6 +119,8 @@ export default function MasterCommandCenterPage() {
   const [airspaceBreach, setAirspaceBreach] = useState<boolean>(false);
 
   const [isFieldDrawerOpen, setIsFieldDrawerOpen] = useState<boolean>(false);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState<boolean>(false);
+  const [isHeaderToolsOpen, setIsHeaderToolsOpen] = useState<boolean>(false);
   const [isSpoofScannerOpen, setIsSpoofScannerOpen] = useState<boolean>(false);
   const [isCertModalOpen, setIsCertModalOpen] = useState<boolean>(false);
   const [latestFieldRecord, setLatestFieldRecord] = useState<FieldGroundingRecord | null>(null);
@@ -243,61 +246,81 @@ export default function MasterCommandCenterPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs shrink-0">
+        <div className="flex items-center gap-2 text-xs shrink-0 relative">
           <button
             type="button"
-            onClick={() => {
-              setSimulateStaleFeed((s) => !s);
-              if (simulateStaleFeed) setIotTimestampIso(new Date().toISOString());
-            }}
-            className={`px-3 py-2 rounded-xl border text-[11px] font-bold transition ${
-              simulateStaleFeed
-                ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
-                : "bg-zinc-900/80 hover:bg-zinc-900 border-zinc-800 text-zinc-300"
-            }`}
+            data-quadmax-target="open-whatsapp-field"
+            onClick={() => setIsWhatsAppOpen(true)}
+            className="px-3.5 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/45 text-emerald-300 font-bold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer"
           >
-            {simulateStaleFeed ? "Restore Heartbeat" : "Test >15m Stale"}
+            <span>💬 WhatsApp Field</span>
           </button>
 
           <a
             href={`/site/digital-twin?project_id=${encodeURIComponent(activeProject.projectId)}`}
-            className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-100 font-bold rounded-xl transition inline-flex items-center gap-1.5"
-          >
-            <span>🏛️ 3D BIM TWIN</span>
-          </a>
-
-          <button
-            type="button"
-            onClick={() => setIsCertModalOpen(true)}
-            className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-100 font-bold rounded-xl transition inline-flex items-center gap-1.5"
-          >
-            <span>📄 65B QR CERT</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsSpoofScannerOpen(true)}
-            className="px-3 py-2 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/45 text-rose-400 font-bold rounded-xl transition inline-flex items-center gap-1.5"
-          >
-            <span>📷 LIVE SPOOF SCAN</span>
-          </button>
-
-          {latestFieldRecord && (
-            <a
-              href={`/site/digital-twin?zone=${encodeURIComponent(latestFieldRecord.matched_bim_zone_id)}&autoEscalate=1¬e=${encodeURIComponent(latestFieldRecord.transcript_vernacular)}`}
-              className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/45 text-emerald-400 font-bold rounded-xl transition inline-flex items-center gap-1.5"
-            >
-              <span>🎯 3D BIM Laser Escalate</span>
-            </a>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setIsFieldDrawerOpen(true)}
             className="px-3.5 py-2 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition inline-flex items-center gap-1.5 shadow-sm"
           >
-            <span>🎙️ FIELD INGRESS</span>
-          </button>
+            <span>🏛️ 3D BIM Twin</span>
+          </a>
+
+          <div className="relative">
+            <button
+              type="button"
+              data-quadmax-target="open-tools-menu"
+              onClick={() => setIsHeaderToolsOpen((v) => !v)}
+              className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold rounded-xl transition inline-flex items-center gap-1 cursor-pointer"
+            >
+              <span>Tools ▾</span>
+            </button>
+
+            {isHeaderToolsOpen && (
+              <div className="absolute right-0 mt-1.5 w-60 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl p-1.5 z-40 flex flex-col gap-1 text-[11px]">
+                <button
+                  type="button"
+                  data-quadmax-target="open-spoof-scanner"
+                  onClick={() => {
+                    setIsHeaderToolsOpen(false);
+                    setIsSpoofScannerOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-rose-400 font-bold flex items-center justify-between"
+                >
+                  <span>📷 Live Webcam Spoof Scan</span>
+                </button>
+                <button
+                  type="button"
+                  data-quadmax-target="open-65b-cert"
+                  onClick={() => {
+                    setIsHeaderToolsOpen(false);
+                    setIsCertModalOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-zinc-200 font-bold flex items-center justify-between"
+                >
+                  <span>📄 65B QR Compliance Cert</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsHeaderToolsOpen(false);
+                    setIsFieldDrawerOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-zinc-200 font-bold flex items-center justify-between"
+                >
+                  <span>🎙️ Structured Field Ingress</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsHeaderToolsOpen(false);
+                    setSimulateStaleFeed((s) => !s);
+                    if (simulateStaleFeed) setIotTimestampIso(new Date().toISOString());
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-zinc-400 font-bold flex items-center justify-between"
+                >
+                  <span>{simulateStaleFeed ? "✓ Restore IoT Heartbeat" : "⏱️ Test >15m Stale Feed"}</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -744,6 +767,12 @@ export default function MasterCommandCenterPage() {
         projectName={activeProject.name}
         location={activeProject.location}
         contractValueCr={activeProject.contractValueCr}
+      />
+
+      <WhatsAppFieldCommsDrawer
+        isOpen={isWhatsAppOpen}
+        onClose={() => setIsWhatsAppOpen(false)}
+        onRecordCommitted={(rec) => setLatestFieldRecord(rec)}
       />
 
       <FieldGroundingDrawer

@@ -61,6 +61,9 @@ export async function logGateInwardConsignment(input: LogGateInwardInput) {
 
         // Cryptographic event in immutable audit vault
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${gatePassId}`,
+            action_title: `GATE INWARD: ${gatePassId} (${input.material}) - Net: ${netWeightMt} MT [${resolvedStatus}]`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: input.driverName || "Weighbridge Inward Officer",
             signatory_role: "Materials Logistics Lead",
             action_category: `GATE INWARD: ${gatePassId} (${input.material}) - Net: ${netWeightMt} MT [${resolvedStatus}]`,
@@ -110,6 +113,9 @@ export async function linkConsignmentToForm31(consignmentId: string, projectId: 
 
         // Append to audit trail
         await supabase.from("immutable_audit_logs").insert({
+            details: `Sealed audit record for ${consignmentId}`,
+            action_title: `CPWD FORM 31 ADVANCE SANCTIONED: ₹${securedAdvance75Pct.toLocaleString("en-IN")} on ${consignmentId}`,
+            project_id: "UP-LDA-VANGUARD-CAMPUS",
             signatory_name: "Lead Quantity Surveyor",
             signatory_role: "QS Auditor",
             action_category: `CPWD FORM 31 ADVANCE SANCTIONED: ₹${securedAdvance75Pct.toLocaleString("en-IN")} on ${consignmentId}`,

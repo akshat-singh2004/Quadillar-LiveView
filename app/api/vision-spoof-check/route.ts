@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
       const ai = new GoogleGenAI({ apiKey });
-      const models = ["gemini-3.8-flash", "gemini-3.8-flash-lite"];
+      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
 
       for (const modelName of models) {
         try {

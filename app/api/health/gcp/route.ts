@@ -10,7 +10,7 @@ export async function GET() {
     cloudRunRevision: process.env.K_REVISION || "dev-local",
     region: "asia-south1",
     gcsBucket: process.env.GCS_BUCKET_NAME || "local-hash-vault",
-    geminiModel: "gemini-3.8-flash",
+    geminiModel: "gemini-2.5-flash",
     geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
     supabaseConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
     timestampIso: new Date().toISOString(),

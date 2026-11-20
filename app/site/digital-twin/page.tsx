@@ -23,6 +23,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { useActiveProject } from "@/context/ProjectContext";
 import MillimeterHeatmapHud from "@/components/bim/MillimeterHeatmapHud";
 import AutonomousEscalationHud from "@/components/bim/AutonomousEscalationHud";
+import RevitMolecularInspectorDrawer from "@/components/bim/RevitMolecularInspectorDrawer";
+import {
+  buildUnifiedVanguardRevitTwin,
+  BimMolecularElement,
+  UnifiedRevitTwinHandle,
+} from "@/lib/bim/vanguardRevitEngine";
 
 interface DisciplineLayerUI {
   id: DisciplineId;
@@ -51,10 +57,9 @@ interface SelectedElementMeta {
 export default function DigitalTwinBimPage() {
   const { activeProject } = useActiveProject();
   const mountRef = useRef<HTMLDivElement>(null);
-  const bimRootRef = useRef<THREE.Group | null>(null);
+  const twinHandleRef = useRef<UnifiedRevitTwinHandle | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<any>(null);
-  const zoneMeshMapRef = useRef<Record<string, THREE.Mesh>>({});
   const tweenFrameRef = useRef<number | null>(null);
 
   const [isLoaded, setIsLoaded] = useState(false);
@@ -63,25 +68,25 @@ export default function DigitalTwinBimPage() {
   const [activeZoneId, setActiveZoneId] = useState<string>("BIT-4-TG03");
   const [totalMeshes, setTotalMeshes] = useState(0);
   const [selectedMeta, setSelectedMeta] = useState<SelectedElementMeta | null>(null);
+  const [selectedMolecularElement, setSelectedMolecularElement] =
+    useState<BimMolecularElement | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
   const [showSchematicDrawer, setShowSchematicDrawer] = useState(false);
   const [showHeatmapDrawer, setShowHeatmapDrawer] = useState(false);
   const [showEscalationDrawer, setShowEscalationDrawer] = useState(false);
-  const [showControlsDrawer, setShowControlsDrawer] = useState(false);
+  const [leftHudOpen, setLeftHudOpen] = useState(false);
+  const [rightHudOpen, setRightHudOpen] = useState(false);
   const [autoEscalateRequested, setAutoEscalateRequested] = useState(false);
   const [deepLinkTranscript, setDeepLinkTranscript] = useState<string | undefined>(undefined);
 
-  // Live NCR / Escrow Gate State (Synced with Step 3 Kill Switch)
   const [escrowLocked, setEscrowLocked] = useState<boolean>(true);
   const [escrowLienInr, setEscrowLienInr] = useState<number>(450000);
   const [activeNcrCode, setActiveNcrCode] = useState<string>("NCR-2026-STR-042");
 
-  // Multi-Ray Sensor Fusion State (LiDAR + LWIR Thermal IR + mmWave Cavity Radar + Active NIR)
   const [deployedSensorsByZone, setDeployedSensorsByZone] = useState<
     Record<string, RayModality[]>
   >({});
-
-  // As-Built Field Variation -> Revit / IFC Delta Write-Back State
   const [reconciledAsBuiltZones, setReconciledAsBuiltZones] = useState<
     Record<string, RevitAsBuiltDeltaPacket>
   >({});
@@ -92,8 +97,7 @@ export default function DigitalTwinBimPage() {
   );
 
   const activeZoneFusion = useMemo(
-    () =>
-      multiRayStates.find((s) => s.zoneId === activeZoneId) || multiRayStates[0],
+    () => multiRayStates.find((s) => s.zoneId === activeZoneId) || multiRayStates[0],
     [multiRayStates, activeZoneId]
   );
 
@@ -103,16 +107,15 @@ export default function DigitalTwinBimPage() {
   );
 
   const [layers, setLayers] = useState<DisciplineLayerUI[]>([
-    { id: "STRUCTURAL", label: "Structural Frame, Arch & Space-Frame", colorHex: "#38bdf8", active: true, meshCount: 0 },
-    { id: "HVAC", label: "HVAC 2,400 TR Chillers & 14F Risers", colorHex: "#4ade80", active: true, meshCount: 0 },
-    { id: "PLUMBING", label: "Fire Wet Risers & Siphonic Mains", colorHex: "#fbbf24", active: true, meshCount: 0 },
-    { id: "ELECTRICAL", label: "4-Car Lift Core & 11kV Busducts", colorHex: "#c084fc", active: true, meshCount: 0 },
-    { id: "ARCHITECTURE", label: "Diagrid Glass, Kalzip & Terracotta", colorHex: "#94a3b8", active: true, meshCount: 0 },
-    { id: "SITE_PLANT", label: "Liebherr 280 EC-H Crane & Snag Pins", colorHex: "#f43f5e", active: true, meshCount: 0 },
+    { id: "STRUCTURAL", label: "Structural Slabs, Core & Girder TG-03", colorHex: "#38bdf8", active: true, meshCount: 0 },
+    { id: "ARCHITECTURE", label: "Partitions, Ceilings, Pelmets, Doors & Glass", colorHex: "#f59e0b", active: true, meshCount: 0 },
+    { id: "HVAC", label: "HVAC Ducts, VAV Diffusers, VRV ACs & Chillers", colorHex: "#4ade80", active: true, meshCount: 0 },
+    { id: "PLUMBING", label: "Fire Hydrant Cabinets & Wet Riser Mains", colorHex: "#ef4444", active: true, meshCount: 0 },
+    { id: "ELECTRICAL", label: "MDB Switchgear, Lift Core & Cable Trays", colorHex: "#c084fc", active: true, meshCount: 0 },
+    { id: "SITE_PLANT", label: "Liebherr 280 EC-H Crane & QA Pins", colorHex: "#eab308", active: true, meshCount: 0 },
   ]);
 
-  // Smooth Camera Focus Tweening
-  const focusCameraOn = useCallback((targetPos: [number, number, number], distance = 36) => {
+  const focusCameraOn = useCallback((targetPos: [number, number, number], distance = 32) => {
     const camera = cameraRef.current;
     const controls = controlsRef.current;
     if (!camera || !controls) return;
@@ -124,12 +127,12 @@ export default function DigitalTwinBimPage() {
     const startCam = camera.position.clone();
     const endCam = new THREE.Vector3(
       targetPos[0] + distance * 0.85,
-      targetPos[1] + distance * 0.65,
+      targetPos[1] + distance * 0.55,
       targetPos[2] + distance * 0.95
     );
 
     let step = 0;
-    const totalSteps = 28;
+    const totalSteps = 26;
     const tick = () => {
       step += 1;
       const t = 1 - Math.pow(1 - step / totalSteps, 3);
@@ -148,7 +151,7 @@ export default function DigitalTwinBimPage() {
       const zone = findBimZone(zoneId);
       setActiveZoneId(zone.zoneId);
       setActiveBitFocus(zone.bitId);
-      focusCameraOn(zone.worldPos, 26);
+      focusCameraOn(zone.worldPos, 24);
 
       const isReconciled = Boolean(reconciledAsBuiltZones[zone.zoneId]);
       const isTg03 = zone.zoneId === "BIT-4-TG03";
@@ -193,7 +196,6 @@ export default function DigitalTwinBimPage() {
     focusCameraOn([0, 14, 0], 68);
   }, [focusCameraOn]);
 
-  // Fetch initial Escrow Gate state & subscribe to Realtime updates
   useEffect(() => {
     const fetchGate = async () => {
       try {
@@ -229,9 +231,8 @@ export default function DigitalTwinBimPage() {
     };
   }, []);
 
-  // Dynamically highlight Transfer Girder TG-03 / Node #14B based on Hold / Clearance / As-Built Sync
   useEffect(() => {
-    const tg03Mesh = zoneMeshMapRef.current["BIT-4-TG03"];
+    const tg03Mesh = twinHandleRef.current?.zoneMeshMap["BIT-4-TG03"];
     if (tg03Mesh) {
       const mat = tg03Mesh.material as THREE.MeshStandardMaterial;
       const isReconciled = Boolean(reconciledAsBuiltZones["BIT-4-TG03"]);
@@ -242,568 +243,10 @@ export default function DigitalTwinBimPage() {
       } else {
         mat.color.setHex(0xef4444);
         mat.emissive.setHex(0x991b1b);
-        mat.emissiveIntensity = 0.75;
-      }
-    }
-
-    const domePin = zoneMeshMapRef.current["BIT-2-DOME"];
-    if (domePin) {
-      const mat = domePin.material as THREE.MeshStandardMaterial;
-      if (reconciledAsBuiltZones["BIT-2-DOME"]) {
-        mat.color.setHex(0x10b981);
-        mat.emissive.setHex(0x065f46);
-      } else {
-        mat.color.setHex(0xef4444);
-        mat.emissive.setHex(0x991b1b);
+        mat.emissiveIntensity = 0.72;
       }
     }
   }, [escrowLocked, reconciledAsBuiltZones, isLoaded]);
-
-  // Build True LOD-400 Parametric Multi-Discipline Model of Project Vanguard Commercial Hub
-  const buildVanguardCampusBim = useCallback((root: THREE.Group) => {
-    const groups: Record<DisciplineId, THREE.Group> = {
-      STRUCTURAL: new THREE.Group(),
-      HVAC: new THREE.Group(),
-      PLUMBING: new THREE.Group(),
-      ELECTRICAL: new THREE.Group(),
-      ARCHITECTURE: new THREE.Group(),
-      SITE_PLANT: new THREE.Group(),
-    };
-
-    (Object.keys(groups) as DisciplineId[]).forEach((key) => {
-      groups[key].name = `LAYER_${key}`;
-      root.add(groups[key]);
-    });
-
-    const addPart = (
-      discipline: DisciplineId,
-      geom: THREE.BufferGeometry,
-      mat: THREE.Material,
-      pos: [number, number, number],
-      meta: SelectedElementMeta,
-      rot: [number, number, number] = [0, 0, 0],
-      registerZoneId?: string
-    ) => {
-      const mesh = new THREE.Mesh(geom, mat);
-      mesh.position.set(pos[0], pos[1], pos[2]);
-      mesh.rotation.set(rot[0], rot[1], rot[2]);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.userData = meta;
-      if (registerZoneId) {
-        mesh.name = `BIM_ZONE_${registerZoneId}`;
-        zoneMeshMapRef.current[registerZoneId] = mesh;
-      }
-      groups[discipline].add(mesh);
-      return mesh;
-    };
-
-    const concreteMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7, metalness: 0.15 });
-    const columnSteelMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.35, metalness: 0.65 });
-    const glassCurtainMat = new THREE.MeshPhysicalMaterial({
-      color: 0x0ea5e9,
-      transparent: true,
-      opacity: 0.28,
-      roughness: 0.12,
-      metalness: 0.2,
-      side: THREE.DoubleSide,
-    });
-    const kalzipShellMat = new THREE.MeshStandardMaterial({
-      color: 0xcbd5e1,
-      transparent: true,
-      opacity: 0.42,
-      roughness: 0.25,
-      metalness: 0.85,
-      side: THREE.DoubleSide,
-    });
-    const terracottaMat = new THREE.MeshStandardMaterial({ color: 0xc2410c, roughness: 0.65, metalness: 0.1 });
-    const greenTurfMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85 });
-    const hvacDuctMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.3, metalness: 0.6 });
-    const chillerMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.25, metalness: 0.7 });
-    const firePipeMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.35, metalness: 0.5 });
-    const elecLiftMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, roughness: 0.3, metalness: 0.6 });
-    const craneYellowMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.4, metalness: 0.5 });
-
-    // 1. BIT-4: PODIUM TRANSFER DECK (+4.50m RL) & TRANSFER GIRDER TG-03 (NCR-2026-STR-042)
-    addPart(
-      "STRUCTURAL",
-      new THREE.BoxGeometry(64, 1.2, 52),
-      concreteMat,
-      [0, 3.9, 0],
-      {
-        zoneId: "BIT-4-TG03",
-        title: "Podium Transfer Slab (+4.50m RL)",
-        ifcClass: "IfcSlab",
-        bitCode: "BIT-4 PODIUM",
-        discipline: "STRUCTURAL",
-        spec: "M45 Post-Tensioned Transfer Deck (1,200mm thick)",
-        elevation: "+4.50m RL",
-        concreteGrade: "M45",
-        budgetOrMetric: "₹132.20 Cr Package • 94% Complete",
-        tourZone: "BIT-4",
-      }
-    );
-
-    // Highlightable Transfer Girder TG-03 (Grid C2–C5, Level 3 Podium Deck)
-    addPart(
-      "STRUCTURAL",
-      new THREE.BoxGeometry(16.0, 1.65, 2.2),
-      new THREE.MeshStandardMaterial({
-        color: 0xef4444,
-        emissive: 0x991b1b,
-        emissiveIntensity: 0.75,
-        roughness: 0.4,
-      }),
-      [-6.0, 4.8, -6.0],
-      {
-        zoneId: "BIT-4-TG03",
-        title: "Tower A / BIT-4 – Level 3 Transfer Girder (TG-03)",
-        ifcClass: "IfcBeam",
-        bitCode: "BIT-4 PODIUM",
-        discipline: "STRUCTURAL",
-        spec: "M50 High-Strength Transfer Girder (Grid C2–C5) • IS 456:2000 Cl. 17.4.3 Gate",
-        elevation: "+4.50m RL",
-        concreteGrade: "M50",
-        ncrStatus: "NCR-2026-STR-042",
-        lienStatus: "LOCKED — ₹4,50,000 Lien Active",
-        budgetOrMetric: "NCR-2026-STR-042 Linked",
-        tourZone: "BIT-4",
-        hasFieldDeviation: true,
-      },
-      [0, 0, 0],
-      "BIT-4-TG03"
-    );
-
-    for (let gx = -28; gx <= 28; gx += 14) {
-      for (let gz = -22; gz <= 22; gz += 11) {
-        const isColC2 = gx === -14 && gz === -11;
-        addPart(
-          "STRUCTURAL",
-          new THREE.BoxGeometry(0.9, 4.5, 0.9),
-          isColC2 ? new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x064e3b }) : columnSteelMat,
-          [gx, 2.25, gz],
-          {
-            zoneId: "BIT-4-TG03",
-            title: isColC2 ? "Column C2 (NCR #009 Post-Grout Certified)" : `Podium Column Grid (${gx}, ${gz})`,
-            ifcClass: "IfcColumn",
-            bitCode: "BIT-4 PODIUM",
-            discipline: "STRUCTURAL",
-            spec: isColC2 ? "M35 RCC • SikaGrout 214 Remediated • SonReb 32.8 MPa" : "M45 Reinforced Concrete Column (900×900mm)",
-            elevation: "0.00m to +4.50m RL",
-            concreteGrade: isColC2 ? "M35" : "M45",
-            budgetOrMetric: isColC2 ? "₹2,08,720 Lien Released" : "IS 456 / IS 2911 Pile Supported",
-            tourZone: "BIT-4",
-          }
-        );
-      }
-    }
-
-    [-4, 2, 8].forEach((cx, idx) => {
-      addPart(
-        "HVAC",
-        new THREE.BoxGeometry(4.2, 2.4, 2.2),
-        chillerMat,
-        [cx, 1.4, -2],
-        {
-          zoneId: "BIT-4-TG03",
-          title: `800-Ton VFD Centrifugal Chiller #0${idx + 1}`,
-          ifcClass: "IfcChiller",
-          bitCode: "BIT-4 PODIUM",
-          discipline: "HVAC",
-          spec: "800 TR Variable-Speed Magnetic Bearing Chiller (2,400 TR Plant)",
-          elevation: "+0.20m RL",
-          budgetOrMetric: "COP 6.45 • Primary Loop Balanced",
-          tourZone: "BIT-4",
-        }
-      );
-    });
-
-    // 2. BIT-3: 14-STOREY COMMERCIAL & HOSPITALITY TOWER (+54.00m RL)
-    const towerX = -10;
-    const towerZ = -13;
-    const towerW = 20;
-    const towerD = 18;
-    const floors = 14;
-    const floorH = 3.5;
-
-    addPart(
-      "STRUCTURAL",
-      new THREE.BoxGeometry(6.5, floors * floorH, 5.5),
-      concreteMat,
-      [towerX, 4.5 + (floors * floorH) / 2, towerZ],
-      {
-        zoneId: "BIT-3-CORE",
-        title: "14-Storey RCC Central Shear Core",
-        ifcClass: "IfcWall",
-        bitCode: "BIT-3 HOTEL CORE",
-        discipline: "STRUCTURAL",
-        spec: "M50 High-Strength Reinforced Concrete Core Wall (450mm)",
-        elevation: "+4.50m to +54.00m RL",
-        concreteGrade: "M50",
-        budgetOrMetric: "IS 1893 Seismic Zone III Compliant",
-        tourZone: "BIT-3",
-      },
-      [0, 0, 0],
-      "BIT-3-CORE"
-    );
-
-    for (let f = 1; f <= floors; f++) {
-      const fy = 4.5 + f * floorH;
-      addPart(
-        "STRUCTURAL",
-        new THREE.BoxGeometry(towerW, 0.32, towerD),
-        concreteMat,
-        [towerX, fy, towerZ],
-        {
-          zoneId: "BIT-3-CORE",
-          title: `Tower Level ${f.toString().padStart(2, "0")} Floor Slab`,
-          ifcClass: "IfcSlab",
-          bitCode: "BIT-3 HOTEL CORE",
-          discipline: "STRUCTURAL",
-          spec: `Post-Tensioned Flat Slab • Level ${f} (+${fy.toFixed(1)}m RL)`,
-          elevation: `+${fy.toFixed(1)}m RL`,
-          concreteGrade: "M50",
-          budgetOrMetric: "₹286.50 Cr Tower Package",
-          tourZone: "BIT-3",
-        }
-      );
-    }
-
-    [-2.1, -0.7, 0.7, 2.1].forEach((lx, idx) => {
-      addPart(
-        "ELECTRICAL",
-        new THREE.BoxGeometry(1.1, floors * floorH - 1, 1.3),
-        elecLiftMat,
-        [towerX + lx, 4.5 + (floors * floorH) / 2, towerZ + 3.4],
-        {
-          zoneId: "BIT-3-CORE",
-          title: `High-Speed Passenger Lift Shaft #0${idx + 1}`,
-          ifcClass: "IfcTransportElement",
-          bitCode: "BIT-3 HOTEL CORE",
-          discipline: "ELECTRICAL",
-          spec: "3.5 m/s Gearless Traction Lift • Zero Clash with 14F HVAC Risers",
-          elevation: "+4.50m to +54.00m RL",
-          budgetOrMetric: "MINERVA LOD-400 Clash-Free",
-          tourZone: "BIT-3",
-        }
-      );
-    });
-
-    [-4.2, 4.2].forEach((hx, idx) => {
-      addPart(
-        "HVAC",
-        new THREE.BoxGeometry(1.1, floors * floorH, 0.95),
-        hvacDuctMat,
-        [towerX + hx, 4.5 + (floors * floorH) / 2, towerZ + 3.4],
-        {
-          zoneId: "BIT-3-CORE",
-          title: idx === 0 ? "14th Fl Vertical HVAC Supply Riser" : "14th Fl Vertical HVAC Return Riser",
-          ifcClass: "IfcDuctSegment",
-          bitCode: "BIT-3 HOTEL CORE",
-          discipline: "HVAC",
-          spec: "Galvanized 18G Acoustic Insulated Main Riser Shaft",
-          elevation: "+4.50m to +54.00m RL",
-          budgetOrMetric: "0mm Clearance Conflict",
-          tourZone: "BIT-3",
-        }
-      );
-    });
-
-    addPart(
-      "PLUMBING",
-      new THREE.CylinderGeometry(0.22, 0.22, floors * floorH, 12),
-      firePipeMat,
-      [towerX + 5.2, 4.5 + (floors * floorH) / 2, towerZ - 2.2],
-      {
-        zoneId: "BIT-3-CORE",
-        title: "DN150 Pressurized Fire Wet Riser Stack",
-        ifcClass: "IfcPipeSegment",
-        bitCode: "BIT-3 HOTEL CORE",
-        discipline: "PLUMBING",
-        spec: "IS 3844 Heavy-Duty GI Fire Hydrant & Sprinkler Riser",
-        elevation: "+4.50m to +54.00m RL",
-        budgetOrMetric: "Hydro-tested at 14 bar",
-        tourZone: "BIT-3",
-      }
-    );
-
-    addPart(
-      "ARCHITECTURE",
-      new THREE.BoxGeometry(towerW + 0.3, floors * floorH, towerD + 0.3),
-      glassCurtainMat,
-      [towerX, 4.5 + (floors * floorH) / 2, towerZ],
-      {
-        zoneId: "BIT-3-CORE",
-        title: "14th Floor Diagonal Curtain Wall Atrium Envelope",
-        ifcClass: "IfcCurtainWall",
-        bitCode: "BIT-3 HOTEL CORE",
-        discipline: "ARCHITECTURE",
-        spec: "Unitized Double-Glazed Low-E Diagrid Curtain Wall",
-        elevation: "+54.00m RL Crown",
-        budgetOrMetric: "U-Value 1.6 W/m²K",
-        tourZone: "BIT-3",
-      }
-    );
-
-    // 3. BIT-2: ACOUSTIC AUDITORIUM CONCOURSE & KALZIP SILVER DOME (+16.50m RL)
-    const domeX = 14;
-    const domeZ = 12;
-    const domeR = 11.5;
-
-    addPart(
-      "STRUCTURAL",
-      new THREE.CylinderGeometry(domeR, domeR + 0.6, 5.5, 32, 1, true),
-      concreteMat,
-      [domeX, 7.25, domeZ],
-      {
-        zoneId: "BIT-2-DOME",
-        title: "Acoustic Auditorium Ring Beam & Perimeter Wall",
-        ifcClass: "IfcWall",
-        bitCode: "BIT-2 SILVER DOME",
-        discipline: "STRUCTURAL",
-        spec: "M45 Circular Tension Ring Beam supporting 2,100-Ton Dome",
-        elevation: "+4.50m to +10.00m RL",
-        concreteGrade: "M45",
-        budgetOrMetric: "₹164.80 Cr Package • 85% Complete",
-        tourZone: "BIT-2",
-      }
-    );
-
-    addPart(
-      "STRUCTURAL",
-      new THREE.SphereGeometry(domeR, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2),
-      new THREE.MeshStandardMaterial({ color: 0x38bdf8, wireframe: true, roughness: 0.3 }),
-      [domeX, 10.0, domeZ],
-      {
-        zoneId: "BIT-2-DOME",
-        title: "2,100-Ton Space-Frame Truss Dome Lattice (Node #14B)",
-        ifcClass: "IfcRoof",
-        bitCode: "BIT-2 SILVER DOME",
-        discipline: "STRUCTURAL",
-        spec: "MERO-Type Spherical Node Space-Frame (Node #14B Δ 4.2mm Field Offset)",
-        elevation: "+10.00m to +21.50m RL",
-        concreteGrade: "Structural Steel E350",
-        budgetOrMetric: "SNAG-VANGUARD-401 Active",
-        tourZone: "BIT-2",
-        hasFieldDeviation: true,
-      }
-    );
-
-    addPart(
-      "ARCHITECTURE",
-      new THREE.SphereGeometry(domeR + 0.25, 32, 18, 0, Math.PI * 2, 0, Math.PI / 2),
-      kalzipShellMat,
-      [domeX, 10.0, domeZ],
-      {
-        zoneId: "BIT-2-DOME",
-        title: "Kalzip Standing-Seam Aluminum Acoustic Dome Shell",
-        ifcClass: "IfcCovering",
-        bitCode: "BIT-2 SILVER DOME",
-        discipline: "ARCHITECTURE",
-        spec: "Kalzip 65/400 Standing-Seam Roof + Gypsum Acoustic Soffit",
-        elevation: "+16.50m RL Mean Datum",
-        budgetOrMetric: "mmWave Plenum Radar Recommended",
-        tourZone: "BIT-2",
-      }
-    );
-
-    // 4. BIT-1: MONUMENTAL TERRACOTTA BRIDGE ARCH & GREEN WEDGE (+12.00m RL)
-    const archX = -14;
-    const archZ = 12;
-
-    addPart(
-      "STRUCTURAL",
-      new THREE.BoxGeometry(24, 1.4, 14.0),
-      concreteMat,
-      [archX, 12.2, archZ],
-      {
-        zoneId: "BIT-1-ARCH",
-        title: "48m Clear-Span Post-Tensioned Bridge Arch Deck",
-        ifcClass: "IfcBeam",
-        bitCode: "BIT-1 GREEN WEDGE",
-        discipline: "STRUCTURAL",
-        spec: "Post-Tensioned Box Girder supporting Stepped Green Amphitheatre",
-        elevation: "+12.00m RL",
-        concreteGrade: "M45",
-        budgetOrMetric: "78% Complete",
-        tourZone: "BIT-1",
-      },
-      [0, 0, 0],
-      "BIT-1-ARCH"
-    );
-
-    addPart(
-      "ARCHITECTURE",
-      new THREE.BoxGeometry(24.4, 2.2, 14.4),
-      terracottaMat,
-      [archX, 11.4, archZ],
-      {
-        zoneId: "BIT-1-ARCH",
-        title: "Extruded Terracotta Louver Facade Band",
-        ifcClass: "IfcCurtainWall",
-        bitCode: "BIT-1 GREEN WEDGE",
-        discipline: "ARCHITECTURE",
-        spec: "Ventilated Terracotta Baguette Rainscreen",
-        elevation: "+11.40m RL",
-        budgetOrMetric: "CPWD Cladding Ledger OK",
-        tourZone: "BIT-1",
-      }
-    );
-
-    addPart(
-      "ARCHITECTURE",
-      new THREE.BoxGeometry(23.5, 0.7, 13.5),
-      greenTurfMat,
-      [archX, 13.1, archZ],
-      {
-        zoneId: "BIT-1-ARCH",
-        title: "Stepped Green Turf Amphitheatre Roof Deck",
-        ifcClass: "IfcRoof",
-        bitCode: "BIT-1 GREEN WEDGE",
-        discipline: "ARCHITECTURE",
-        spec: "Intensive Green Roof Retention Substrate",
-        elevation: "+13.10m RL",
-        budgetOrMetric: "GRIHA 5-Star Envelope",
-        tourZone: "BIT-1",
-      }
-    );
-
-    // 5. BIT-5 (EAST WING) & BIT-6 (SLIM HELIPAD DECK)
-    const eastX = 18;
-    const eastZ = -12;
-    const eastFloors = 7;
-
-    for (let ef = 1; ef <= eastFloors; ef++) {
-      const ey = 4.5 + ef * 3.35;
-      addPart(
-        "STRUCTURAL",
-        new THREE.BoxGeometry(17, 0.28, 17),
-        columnSteelMat,
-        [eastX, ey, eastZ],
-        {
-          zoneId: "BIT-5-WING",
-          title: `East Innovation Wing Steel-Composite Deck L${ef}`,
-          ifcClass: "IfcSlab",
-          bitCode: "BIT-5 EAST WING",
-          discipline: "STRUCTURAL",
-          spec: `ISMB 450 Composite Frame Deck (+${ey.toFixed(1)}m RL)`,
-          elevation: `+${ey.toFixed(1)}m RL`,
-          concreteGrade: "M40 Composite",
-          budgetOrMetric: "₹108.60 Cr Package",
-          tourZone: "BIT-5",
-        },
-        [0, 0, 0],
-        ef === 4 ? "BIT-5-WING" : undefined
-      );
-    }
-
-    const heliY = 4.5 + eastFloors * 3.35 + 1.4;
-    addPart(
-      "STRUCTURAL",
-      new THREE.CylinderGeometry(7.6, 7.2, 0.9, 24),
-      columnSteelMat,
-      [eastX, heliY, eastZ],
-      {
-        zoneId: "BIT-6-HELI",
-        title: "BIT-6 Cantilevered Steel Box-Girder Helipad Deck",
-        ifcClass: "IfcSlab",
-        bitCode: "BIT-6 SLIM PAD",
-        discipline: "STRUCTURAL",
-        spec: "Structural Steel Cantilevered Helideck (Bell 429 / AW109 Rated)",
-        elevation: "+23.00m / +29.3m RL",
-        concreteGrade: "Structural Steel E350",
-        budgetOrMetric: "₹54.00 Cr Package",
-        tourZone: "BIT-6",
-      },
-      [0, 0, 0],
-      "BIT-6-HELI"
-    );
-
-    // 6. SITE PLANT: LIEBHERR 280 EC-H TOWER CRANE + SNAG/NCR PINS
-    const [cx, , cz] = VANGUARD_GENOME.craneTelemetry.basePos;
-    const jibRad = (VANGUARD_GENOME.craneTelemetry.azimuthDeg * Math.PI) / 180;
-
-    addPart(
-      "SITE_PLANT",
-      new THREE.BoxGeometry(2.0, 62, 2.0),
-      craneYellowMat,
-      [cx, 31, cz],
-      {
-        zoneId: "BIT-2-DOME",
-        title: "Liebherr 280 EC-H High-Top Tower Crane Mast",
-        ifcClass: "IfcBuildingElementProxy",
-        bitCode: "CRANE-01",
-        discipline: "SITE_PLANT",
-        spec: "Liebherr 280 EC-H • 65m Jib • Locked over Green Wedge & Silver Dome",
-        elevation: "+62.00m Hook Height",
-        budgetOrMetric: "ARGUS Radar Active (12ms)",
-        tourZone: "BIT-2",
-      }
-    );
-
-    const jibGroup = new THREE.Group();
-    jibGroup.position.set(cx, 60.5, cz);
-    jibGroup.rotation.y = jibRad;
-    groups.SITE_PLANT.add(jibGroup);
-
-    const jibMesh = new THREE.Mesh(new THREE.BoxGeometry(54, 1.4, 1.4), craneYellowMat);
-    jibMesh.position.set(16, 0, 0);
-    jibGroup.add(jibMesh);
-
-    VANGUARD_GENOME.spatialPins.forEach((pin) => {
-      const pinColor =
-        pin.severity === "MINOR"
-          ? 0xef4444
-          : pin.severity === "RESOLVED_CERTIFIED"
-          ? 0x10b981
-          : 0x38bdf8;
-
-      const mappedZone =
-        pin.bitId === "BIT-4"
-          ? "BIT-4-TG03"
-          : pin.bitId === "BIT-2"
-          ? "BIT-2-DOME"
-          : pin.bitId === "BIT-3"
-          ? "BIT-3-CORE"
-          : "BIT-1-ARCH";
-
-      addPart(
-        "SITE_PLANT",
-        new THREE.OctahedronGeometry(1.25, 0),
-        new THREE.MeshStandardMaterial({
-          color: pinColor,
-          emissive: pinColor,
-          emissiveIntensity: 0.55,
-        }),
-        pin.worldPos,
-        {
-          zoneId: mappedZone,
-          title: `${pin.pinId}: ${pin.title}`,
-          ifcClass: "IfcSpatialAnnotation",
-          bitCode: pin.bitId,
-          discipline: pin.discipline,
-          spec: pin.description,
-          elevation: `Y = +${pin.worldPos[1].toFixed(1)}m RL`,
-          ncrStatus: pin.pinId,
-          budgetOrMetric: pin.metricLabel,
-          tourZone: pin.bitId,
-          hasFieldDeviation: pin.severity === "MINOR",
-        },
-        [0, 0, 0],
-        pin.bitId === "BIT-2" ? "BIT-2-DOME" : undefined
-      );
-    });
-
-    setLayers((prev) =>
-      prev.map((l) => ({ ...l, meshCount: groups[l.id].children.length }))
-    );
-
-    let total = 0;
-    (Object.keys(groups) as DisciplineId[]).forEach((k) => {
-      total += groups[k].children.length;
-    });
-    setTotalMeshes(total);
-  }, []);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -817,7 +260,7 @@ export default function DigitalTwinBimPage() {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060911);
-    scene.fog = new THREE.FogExp2(0x060911, 0.0032);
+    scene.fog = new THREE.FogExp2(0x060911, 0.0028);
 
     let grid = new THREE.GridHelper(120, 60, 0x1e293b, 0x0f172a);
     scene.add(grid);
@@ -826,7 +269,7 @@ export default function DigitalTwinBimPage() {
       const isLight = mode === "claude-light";
       const bgHex = isLight ? 0xefece4 : 0x060911;
       scene.background = new THREE.Color(bgHex);
-      scene.fog = new THREE.FogExp2(bgHex, isLight ? 0.0022 : 0.0032);
+      scene.fog = new THREE.FogExp2(bgHex, isLight ? 0.002 : 0.0028);
       scene.remove(grid);
       grid = new THREE.GridHelper(
         120,
@@ -840,34 +283,35 @@ export default function DigitalTwinBimPage() {
     const onThemeEvt = (e: any) => applyThreeTheme(e.detail);
     window.addEventListener("liveview-theme-change", onThemeEvt);
 
-    const bimRoot = new THREE.Group();
-    bimRoot.name = "VANGUARD_LOD400_CAMPUS";
-    scene.add(bimRoot);
-    bimRootRef.current = bimRoot;
-
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.2, 1000);
-    camera.position.set(58, 44, 62);
+    camera.position.set(54, 42, 58);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({
+      logarithmicDepthBuffer: true, antialias: true, powerPreference: "high-performance" });
     renderer.setSize(width, height);
-    // Cap WebGL devicePixelRatio at 1.5 for smooth 60fps rendering on field laptops & tablets
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.shadowMap.enabled = true;
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+    scene.add(new THREE.AmbientLight(0xffffff, 1.05));
     const sunLight = new THREE.DirectionalLight(0xffffff, 1.45);
     sunLight.position.set(60, 90, 50);
     sunLight.castShadow = true;
     scene.add(sunLight);
 
-    const skyFill = new THREE.DirectionalLight(0x38bdf8, 0.55);
+    const skyFill = new THREE.DirectionalLight(0x38bdf8, 0.6);
     skyFill.position.set(-50, 35, -45);
     scene.add(skyFill);
 
-    buildVanguardCampusBim(bimRoot);
+    // Build Single Unified Revit LOD-400 Campus & Crane Twin
+    const handle = buildUnifiedVanguardRevitTwin(scene);
+    twinHandleRef.current = handle;
+    setTotalMeshes(handle.totalSelectableCount);
+    setLayers((prev) =>
+      prev.map((l) => ({ ...l, meshCount: handle.disciplineCounts[l.id] || 0 }))
+    );
 
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -898,28 +342,10 @@ export default function DigitalTwinBimPage() {
         const zone = findBimZone(requestedZone);
         const [tx, ty, tz] = zone.worldPos;
         controls.target.set(tx, ty, tz);
-        camera.position.set(tx + 22, ty + 16, tz + 24);
+        camera.position.set(tx + 22, ty + 15, tz + 24);
         controls.update();
         setActiveZoneId(zone.zoneId);
         setActiveBitFocus(zone.bitId);
-        setSelectedMeta({
-          zoneId: zone.zoneId,
-          title: zone.label,
-          ifcClass: "IfcBeam / IfcBuildingStorey",
-          bitCode: zone.bitId,
-          discipline: "STRUCTURAL",
-          spec: zone.structuralElement,
-          elevation: zone.elevationLabel,
-          concreteGrade: zone.concreteGrade,
-          ncrStatus: requestedNcr || zone.linkedNcrId || "ACTIVE TELEMETRY",
-          lienStatus:
-            zone.zoneId === "BIT-4-TG03"
-              ? "LOCKED — ₹4,50,000 Lien Active"
-              : "UNLOCKED — ₹0 Lien",
-          budgetOrMetric: requestedNcr || zone.linkedNcrId || "LOD-400 Grounded",
-          tourZone: zone.bitId,
-          hasFieldDeviation: true,
-        });
       } else if (requestedBit) {
         const matchedBit = VANGUARD_GENOME.bits.find(
           (b) => b.bitId === requestedBit.toUpperCase()
@@ -927,7 +353,7 @@ export default function DigitalTwinBimPage() {
         if (matchedBit) {
           const [tx, ty, tz] = matchedBit.worldPos;
           controls.target.set(tx, ty, tz);
-          camera.position.set(tx + 28, ty + 20, tz + 30);
+          camera.position.set(tx + 26, ty + 18, tz + 28);
           controls.update();
           setActiveBitFocus(matchedBit.bitId);
         } else {
@@ -942,45 +368,66 @@ export default function DigitalTwinBimPage() {
     };
     initControls();
 
+    // Molecular Raycaster with Smart X-Ray Interior Piercing
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-    let highlighted: THREE.Mesh | null = null;
-    let prevEmissive: THREE.Color | null = null;
+    let downX = 0;
+    let downY = 0;
 
     const onPointerDown = (e: PointerEvent) => {
+      downX = e.clientX;
+      downY = e.clientY;
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;
+
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects(bimRoot.children, true);
+      const visibleMeshes = handle.allMeshes.filter((m) => {
+        let p: THREE.Object3D | null = m;
+        while (p) {
+          if (!p.visible) return false;
+          p = p.parent;
+        }
+        return true;
+      });
 
-      if (highlighted && prevEmissive) {
-        const oldMat = highlighted.material as THREE.MeshStandardMaterial;
-        if (oldMat?.emissive) oldMat.emissive.copy(prevEmissive);
-        highlighted = null;
-      }
-
+      const hits = raycaster.intersectObjects(visibleMeshes, false);
       if (hits.length > 0) {
-        const mesh = hits[0].object as THREE.Mesh;
-        const mat = mesh.material as THREE.MeshStandardMaterial;
-        if (mat?.emissive) {
-          highlighted = mesh;
-          prevEmissive = mat.emissive.clone();
-          mat.emissive.setHex(0x0284c7);
+        // When X-Ray is ON, pierce outer semi-transparent glazing/dome shell to select interior partitions, ceilings, pelmets & MEP
+        const interiorHit = hits.find(
+          (h) => !(h.object as THREE.Mesh).userData?.bimElement?.isOuterShell
+        );
+        const chosenHit = interiorHit || hits[0];
+        const mesh = chosenHit.object as THREE.Mesh;
+        const bimEl = mesh.userData?.bimElement as BimMolecularElement | undefined;
+
+        handle.highlightElement(mesh);
+
+        if (bimEl) {
+          setSelectedMolecularElement(bimEl);
+          setActiveZoneId(bimEl.zoneId);
+          setUploadStatus(
+            `Selected ${bimEl.mark} (${bimEl.ifcClass} • ${bimEl.level})`
+          );
         }
         if (mesh.userData?.title) {
-          const meta = mesh.userData as SelectedElementMeta;
-          if (meta.zoneId) setActiveZoneId(meta.zoneId);
-          setSelectedMeta(meta);
+          setSelectedMeta(mesh.userData as SelectedElementMeta);
         }
       }
     };
 
     renderer.domElement.addEventListener("pointerdown", onPointerDown);
+    renderer.domElement.addEventListener("pointerup", onPointerUp);
 
+    const t0 = performance.now();
     const animate = () => {
       reqId = requestAnimationFrame(animate);
+      handle.animate((performance.now() - t0) / 1000);
       if (controlsRef.current) controlsRef.current.update();
       renderer.render(scene, camera);
     };
@@ -993,17 +440,37 @@ export default function DigitalTwinBimPage() {
       window.removeEventListener("liveview-theme-change", onThemeEvt);
       resizeObserver.disconnect();
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
+      renderer.domElement.removeEventListener("pointerup", onPointerUp);
+      handle.dispose();
+      twinHandleRef.current = null;
       renderer.dispose();
     };
-  }, [buildVanguardCampusBim]);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const qZone = params.get("zone");
+    const qAuto = params.get("autoEscalate");
+    const qNote = params.get("note");
+    if (qNote) setDeepLinkTranscript(qNote);
+    if (qZone) {
+      setActiveZoneId(qZone);
+      const zMeta = findBimZone(qZone);
+      if (zMeta) setTimeout(() => focusCameraOn(zMeta.worldPos, 26), 350);
+    }
+    if (qAuto === "1") {
+      setShowEscalationDrawer(true);
+      setAutoEscalateRequested(true);
+    }
+  }, [focusCameraOn]);
 
   const toggleLayer = (id: DisciplineId) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === id) {
           const next = !l.active;
-          const grp = bimRootRef.current?.getObjectByName(`LAYER_${id}`);
-          if (grp) grp.visible = next;
+          twinHandleRef.current?.setDisciplineVisibility(id, next);
           return { ...l, active: next };
         }
         return l;
@@ -1014,20 +481,14 @@ export default function DigitalTwinBimPage() {
   const toggleXrayMode = () => {
     const nextXray = !xrayArch;
     setXrayArch(nextXray);
-    const archGrp = bimRootRef.current?.getObjectByName("LAYER_ARCHITECTURE");
-    archGrp?.traverse((obj: any) => {
-      if (obj.isMesh && obj.material && obj.material.transparent) {
-        obj.material.opacity = nextXray ? 0.28 : 0.85;
-        obj.material.needsUpdate = true;
-      }
-    });
+    twinHandleRef.current?.setXrayMode(nextXray);
   };
 
   const focusBit = (bit: ArchitecturalBitSpec) => {
     setActiveBitFocus(bit.bitId);
     const matchingZone = BIM_ZONE_REGISTRY.find((z) => z.bitId === bit.bitId);
     if (matchingZone) setActiveZoneId(matchingZone.zoneId);
-    focusCameraOn(bit.worldPos, Math.max(bit.dimensionsM[0], bit.dimensionsM[1]) * 1.15);
+    focusCameraOn(bit.worldPos, Math.max(bit.dimensionsM[0], bit.dimensionsM[1]) * 0.95);
     setSelectedMeta({
       zoneId: matchingZone?.zoneId,
       title: `${bit.code}: ${bit.name}`,
@@ -1089,9 +550,7 @@ export default function DigitalTwinBimPage() {
   };
 
   const downloadRevitDeltaJson = (packet: RevitAsBuiltDeltaPacket) => {
-    const blob = new Blob([JSON.stringify(packet, null, 2)], {
-      type: "application/json",
-    });
+    const blob = new Blob([JSON.stringify(packet, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -1102,8 +561,8 @@ export default function DigitalTwinBimPage() {
 
   const handleExternalModelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    const bimRoot = bimRootRef.current;
-    if (!file || !bimRoot) return;
+    const handle = twinHandleRef.current;
+    if (!file || !handle) return;
 
     setUploadStatus(`Parsing ${file.name}...`);
     try {
@@ -1114,9 +573,9 @@ export default function DigitalTwinBimPage() {
         const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
         const loader = new GLTFLoader();
         loader.parse(buffer, "", (gltf) => {
-          gltf.scene.name = `UPLOAD_${Date.now()}`;
-          bimRoot.add(gltf.scene);
-          setUploadStatus(`Mounted ${file.name} (Confined to Campus Datum)`);
+          const added = handle.registerExternalObject(gltf.scene, file.name);
+          setTotalMeshes((prev) => prev + added);
+          setUploadStatus(`Mounted ${file.name} (${added} selectable Revit/GLB nodes)`);
         });
       } else if (ext === "ifc") {
         const WebIFC = await import("web-ifc");
@@ -1159,8 +618,9 @@ export default function DigitalTwinBimPage() {
           }
         });
         ifcApi.CloseModel(modelID);
-        bimRoot.add(customGroup);
-        setUploadStatus(`Mounted IFC: ${file.name}`);
+        const added = handle.registerExternalObject(customGroup, file.name);
+        setTotalMeshes((prev) => prev + added);
+        setUploadStatus(`Mounted IFC: ${file.name} (${added} molecular IFC entities)`);
       }
     } catch (err: any) {
       setUploadStatus(`Upload error: ${err?.message || "Invalid file"}`);
@@ -1169,36 +629,16 @@ export default function DigitalTwinBimPage() {
 
   const activeReconciledPacket = reconciledAsBuiltZones[activeZoneId];
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const qZone = params.get("zone");
-    const qAuto = params.get("autoEscalate");
-    const qNote = params.get("note");
-    if (qNote) setDeepLinkTranscript(qNote);
-    if (qZone) {
-      setActiveZoneId(qZone);
-      const zMeta = findBimZone(qZone);
-      if (zMeta) {
-        setTimeout(() => focusCameraOn(zMeta.worldPos, 28), 350);
-      }
-    }
-    if (qAuto === "1") {
-      setShowEscalationDrawer(true);
-      setAutoEscalateRequested(true);
-    }
-  }, [focusCameraOn]);
-
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-950 text-zinc-100 p-3 md:p-4 flex flex-col gap-2.5 font-mono">
-      {/* Compact Single-Row 3D BIM Command Bar */}
-      <div className="bg-zinc-900/85 border border-zinc-800 rounded-2xl px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-[10px] font-bold shrink-0">
-            {activeProject.code} • LOD-400
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-950 text-zinc-100 flex flex-col font-mono">
+      {/* Unified Single-Row 3D BIM Command Bar */}
+      <div className="border-b border-zinc-800 bg-zinc-950/95 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 text-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 rounded shrink-0">
+            {activeProject.code} • LOD-400 ({totalMeshes} PARTS)
           </span>
-          <h1 className="font-bold text-sm text-white truncate">
-            {activeProject.name} — 3D Spatial & Multi-Ray Twin
+          <h1 className="text-sm font-bold text-white truncate">
+            {activeProject.name} — 3D Revit & Multi-Ray Twin
           </h1>
         </div>
 
@@ -1206,28 +646,36 @@ export default function DigitalTwinBimPage() {
           <button
             type="button"
             onClick={() => {
-              setShowEscalationDrawer((v) => !v);
-              setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+              const target = twinHandleRef.current?.interiorFocusPos || [-10, 14.5, -13];
+              twinHandleRef.current?.setXrayMode(true);
+              setXrayArch(true);
+              focusCameraOn(target, 16);
+              setUploadStatus("Interior Cutaway Focused: Click any Room Partition, False Ceiling, Pelmet, Doorway, AC Unit, Hydrant or Panel.");
             }}
+            className="px-2.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/45 text-cyan-300 font-bold transition cursor-pointer"
+          >
+            🏢 Interior Cutaway
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowEscalationDrawer((v) => !v)}
             className={`px-2.5 py-1.5 rounded-xl border font-bold transition cursor-pointer ${
               showEscalationDrawer
                 ? "bg-emerald-500 text-zinc-950 border-emerald-400"
                 : "bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/40 text-emerald-400"
             }`}
           >
-            🤖 Agent Camera/Laser Escalation
+            🤖 Agent Escalate
           </button>
 
           <button
             type="button"
-            onClick={() => {
-              setShowHeatmapDrawer((v) => !v);
-              setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
-            }}
+            onClick={() => setShowHeatmapDrawer((v) => !v)}
             className={`px-2.5 py-1.5 rounded-xl border font-bold transition cursor-pointer ${
               showHeatmapDrawer
                 ? "bg-zinc-100 text-zinc-950 border-white"
-                : "bg-zinc-950 hover:bg-zinc-800 border-zinc-700 text-zinc-200"
+                : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-200"
             }`}
           >
             📏 mm Heatmap
@@ -1235,18 +683,24 @@ export default function DigitalTwinBimPage() {
 
           <button
             type="button"
-            onClick={() => {
-              setShowControlsDrawer((v) => !v);
-              setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
-            }}
-            className="px-2.5 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold transition cursor-pointer"
+            onClick={() => setShowSchematicDrawer((v) => !v)}
+            className={`px-2.5 py-1.5 rounded-xl border font-bold transition cursor-pointer ${
+              showSchematicDrawer
+                ? "bg-zinc-100 text-zinc-950 border-white"
+                : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-200"
+            }`}
           >
-            {showControlsDrawer ? "Hide Zones & Layers" : "Zones & Layers"}
+            📐 VR & Zones
           </button>
+
+          <label className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-xl font-bold cursor-pointer transition">
+            + .IFC/.GLB
+            <input type="file" accept=".ifc,.glb,.gltf" onChange={handleExternalModelUpload} className="hidden" />
+          </label>
 
           <a
             href="/"
-            className="px-2.5 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white font-bold transition"
+            className="px-2.5 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition"
           >
             ← Command Center
           </a>
@@ -1254,108 +708,60 @@ export default function DigitalTwinBimPage() {
       </div>
 
       {showEscalationDrawer && (
-        <AutonomousEscalationHud
-          isOpen={showEscalationDrawer}
-          autoTriggerOnMount={autoEscalateRequested}
-          initialTranscript={deepLinkTranscript}
-          onClose={() => {
-            setShowEscalationDrawer(false);
-            setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
-          }}
-          activeZoneId={activeZoneId}
-          onHardwareTriggered={({ zoneId, worldPos, modalities, result }) => {
-            setActiveZoneId(zoneId);
-            setDeployedSensorsByZone((prev) => ({
-              ...prev,
-              [zoneId]: Array.from(new Set([...(prev[zoneId] || []), ...modalities])),
-            }));
-            if (result.escrowAction === "LOCK_ESCROW_HOLD") {
-              setEscrowLocked(true);
-              setEscrowLienInr(result.withholdingInr);
-            }
-            focusCameraOn(worldPos, 28);
-            setUploadStatus(`Agent Escalation Confirmed on ${zoneId}: PTZ + 905nm LiDAR + 24GHz Radar locked.`);
-          }}
-        />
+        <div className="p-2.5 border-b border-zinc-800 bg-zinc-950">
+          <AutonomousEscalationHud
+            isOpen={showEscalationDrawer}
+            autoTriggerOnMount={autoEscalateRequested}
+            initialTranscript={deepLinkTranscript}
+            onClose={() => setShowEscalationDrawer(false)}
+            activeZoneId={activeZoneId}
+            onHardwareTriggered={({ zoneId, worldPos, modalities, result }) => {
+              setActiveZoneId(zoneId);
+              setDeployedSensorsByZone((prev) => ({
+                ...prev,
+                [zoneId]: Array.from(new Set([...(prev[zoneId] || []), ...modalities])),
+              }));
+              if (result.escrowAction === "LOCK_ESCROW_HOLD") {
+                setEscrowLocked(true);
+                setEscrowLienInr(result.withholdingInr);
+              }
+              focusCameraOn(worldPos, 24);
+              setUploadStatus(`Agent Escalation Confirmed on ${zoneId}: PTZ + 905nm LiDAR + 24GHz Radar locked.`);
+            }}
+          />
+        </div>
       )}
 
-      {showHeatmapDrawer && <MillimeterHeatmapHud />}
-
-{/* Top Header */}
-      <div className="border-b border-zinc-800 bg-zinc-950/95 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2 py-0.5 text-[10px] font-bold bg-zinc-900 text-zinc-200 border border-zinc-700 rounded">
-              {activeProject.code} • {activeProject.projectId}
-            </span>
-            <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded">
-              LOD-400 • {totalMeshes} ELEMENTS • {STRUCTURE_DATUM_SPEC.datumLabel}
-            </span>
-          </div>
-          <h1 className="text-sm font-bold text-white mt-1">
-            {activeProject.name.toUpperCase()} — SPATIAL 3D BIM & MULTI-RAY DIGITAL TWIN
-          </h1>
+      {showHeatmapDrawer && (
+        <div className="p-2.5 border-b border-zinc-800 bg-zinc-950">
+          <MillimeterHeatmapHud />
         </div>
+      )}
 
-        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-          <button
-            type="button"
-            onClick={() => setShowSchematicDrawer((v) => !v)}
-            className={`px-2.5 py-1.5 rounded-lg border font-bold transition ${
-              showSchematicDrawer
-                ? "bg-zinc-100 text-zinc-950 border-white"
-                : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-200"
-            }`}
-          >
-            📐 SPATIAL SCHEMATIC & 1:1 VR REF
-          </button>
-          <button
-            type="button"
-            onClick={toggleXrayMode}
-            className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold transition"
-          >
-            {xrayArch ? "X-RAY ENVELOPE: ON" : "SOLID FACADE"}
-          </button>
+      {/* Slim Architectural Bits, Crane Focus & X-Ray Ribbon */}
+      <div className="border-b border-zinc-800/90 bg-zinc-900/70 px-3.5 py-1.5 flex items-center justify-between gap-2 overflow-x-auto shrink-0 text-xs">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={resetFullCampusView}
-            className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-lg font-bold transition"
+            className={`px-2 py-1 rounded-lg border text-[10px] font-bold shrink-0 transition cursor-pointer ${
+              activeBitFocus === "ALL"
+                ? "bg-zinc-100 border-white text-zinc-950"
+                : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-600"
+            }`}
           >
             FULL CAMPUS
           </button>
-          <label className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-lg cursor-pointer transition">
-            + .IFC/.GLB
-            <input type="file" accept=".ifc,.glb,.gltf" onChange={handleExternalModelUpload} className="hidden" />
-          </label>
-          <a
-            href="/site/vr-walkthrough"
-            className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-lg font-bold transition"
-          >
-            �� QUEST 3S VR
-          </a>
-          <a
-            href="/"
-            className="px-2.5 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-lg transition"
-          >
-            ← COMMAND CENTER
-          </a>
-        </div>
-      </div>
 
-      {/* 6 Architectural Bits & Active Hold Ribbon */}
-      <div className="border-b border-zinc-800/90 bg-zinc-900/70 px-4 py-1.5 flex items-center justify-between gap-2 overflow-x-auto shrink-0 text-xs">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] text-zinc-400 font-bold uppercase shrink-0">
-            BIM ZONES:
-          </span>
           {VANGUARD_GENOME.bits.map((bit) => {
-            const isBlockedBit = bit.bitId === "BIT-4" && escrowLocked && !reconciledAsBuiltZones["BIT-4-TG03"];
+            const isBlockedBit =
+              bit.bitId === "BIT-4" && escrowLocked && !reconciledAsBuiltZones["BIT-4-TG03"];
             return (
               <button
                 key={bit.bitId}
                 type="button"
                 onClick={() => focusBit(bit)}
-                className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold shrink-0 transition flex items-center gap-1.5 ${
+                className={`px-2 py-1 rounded-lg border text-[10px] font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
                   activeBitFocus === bit.bitId
                     ? "bg-zinc-100 border-white text-zinc-950"
                     : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-600"
@@ -1368,51 +774,80 @@ export default function DigitalTwinBimPage() {
               </button>
             );
           })}
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveBitFocus("CRANE-01");
+              focusCameraOn([-24, 48, 14], 32);
+              setUploadStatus("Focused Liebherr 280 EC-H Tower Crane: Click Mast, LiCAB Cabin, Jib, Ballast or Hook Trolley.");
+            }}
+            className={`px-2 py-1 rounded-lg border text-[10px] font-bold shrink-0 transition cursor-pointer ${
+              activeBitFocus === "CRANE-01"
+                ? "bg-amber-400 border-amber-300 text-zinc-950"
+                : "bg-zinc-950 border-zinc-800 text-amber-300 hover:border-amber-500/50"
+            }`}
+          >
+            🏗️ CRANE-01
+          </button>
         </div>
 
-        {/* Active Sensor Blind-Spot Pill */}
-        <div className="shrink-0 flex items-center gap-2 text-[10px]">
-          {activeAdvisories.length > 0 ? (
-            <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold">
-              ⚠ {activeAdvisories.length} SENSOR BLIND-SPOT ADVISORIES ACTIVE
-            </span>
-          ) : (
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold">
-              ✓ ALL 4 RAY SPECTRUMS VERIFIED ACROSS CAMPUS
+        <div className="shrink-0 flex items-center gap-1.5 text-[10px]">
+          <button
+            type="button"
+            onClick={toggleXrayMode}
+            className="px-2 py-1 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold transition cursor-pointer"
+          >
+            {xrayArch ? "X-RAY: ON" : "SOLID FACADE"}
+          </button>
+          {activeAdvisories.length > 0 && (
+            <span className="px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold">
+              ⚠ {activeAdvisories.length} BLIND-SPOTS
             </span>
           )}
         </div>
       </div>
 
-      {/* Main 3D WebGL Canvas & Overlays */}
+      {/* Full-Screen 3D WebGL Canvas & Retractable HUDs */}
       <div className="relative flex-1 w-full bg-[#060911] overflow-hidden">
-        <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing min-h-[640px] h-[76vh]" />
+        <div
+          ref={mountRef}
+          className="w-full h-full cursor-grab active:cursor-grabbing min-h-[660px] h-[calc(100vh-8.2rem)]"
+        />
 
         {!isLoaded && (
           <div className="absolute inset-0 bg-zinc-950/90 flex items-center justify-center z-20 text-xs text-zinc-300 font-bold">
-            Compiling LOD-400 Structural, MEP & Multi-Ray Campus Twin...
+            Compiling Unified Revit LOD-400 Structural, Interior, MEP & Crane Twin...
           </div>
         )}
 
         {/* Low-Bandwidth Spatial Zone Schematic & 1:1 VR Walkthrough Overlay */}
         {showSchematicDrawer && (
-          <div className="absolute inset-x-4 top-4 z-30 bg-zinc-950/95 backdrop-blur-md border border-zinc-700 rounded-2xl p-4 shadow-2xl flex flex-col gap-3 text-xs">
+          <div className="absolute inset-x-4 top-3 z-30 bg-zinc-950/95 backdrop-blur-md border border-zinc-700 rounded-2xl p-4 shadow-2xl flex flex-col gap-3 text-xs">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
               <div>
                 <div className="text-[10px] font-bold uppercase text-zinc-400">
-                  LOW-BANDWIDTH SPATIAL SCHEMATIC & 1:1 META QUEST 3 / 3S VR WALKTHROUGH REFERENCE
+                  SPATIAL SCHEMATIC & 1:1 META QUEST 3 / 3S VR WALKTHROUGH REFERENCE
                 </div>
                 <div className="text-sm font-bold text-white">
-                  Single-Structure Confinement: {STRUCTURE_DATUM_SPEC.envelopeMeters} • {STRUCTURE_DATUM_SPEC.datumLabel}
+                  {STRUCTURE_DATUM_SPEC.envelopeMeters} • {STRUCTURE_DATUM_SPEC.datumLabel}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowSchematicDrawer(false)}
-                className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 font-bold"
-              >
-                Close Schematic ✕
-              </button>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/site/vr-walkthrough"
+                  className="px-2.5 py-1 rounded-lg bg-emerald-500 text-zinc-950 font-bold"
+                >
+                  🥽 Launch Quest 3S VR
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowSchematicDrawer(false)}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 font-bold cursor-pointer"
+                >
+                  Close ✕
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
@@ -1441,317 +876,268 @@ export default function DigitalTwinBimPage() {
                   <div className="text-[10px] text-zinc-400">
                     Coords: [{st.worldPos.join(", ")}]m • Residual: {st.datumResidualMm}mm • Lux: {st.ambientLux} lx
                   </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-zinc-800 text-[10px]">
-                    <span className="text-zinc-300">1:1 VR Ref: Enscape / Quest 3S</span>
-                    <span className="text-emerald-400 font-bold">Focus Zone →</span>
-                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Left Discipline Toggle Matrix & Pinned Telemetry */}
-        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 w-72 bg-zinc-950/85 backdrop-blur-md p-3 rounded-2xl border border-zinc-800 shadow-2xl max-h-[calc(100%-24px)] overflow-y-auto">
-          <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
-            FEDERATED BIM DISCIPLINES
-          </span>
-          <div className="flex flex-col gap-1">
-            {layers.map((layer) => (
-              <button
-                key={layer.id}
-                type="button"
-                onClick={() => toggleLayer(layer.id)}
-                className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition ${
-                  layer.active
-                    ? "bg-zinc-900 border-zinc-700 text-white"
-                    : "bg-zinc-950/50 border-zinc-900 text-zinc-500"
-                }`}
-              >
-                <div className="flex items-center gap-2 truncate pr-2">
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: layer.active ? layer.colorHex : "#52525b" }}
-                  />
-                  <span className="truncate">{layer.label}</span>
-                </div>
-                <span className="text-[10px] shrink-0 text-zinc-400">{layer.meshCount}</span>
-              </button>
-            ))}
-          </div>
+        {/* Retractable Left Discipline & NCR Drawer */}
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 max-h-[calc(100%-24px)]">
+          <button
+            type="button"
+            onClick={() => setLeftHudOpen((v) => !v)}
+            className="self-start px-3 py-1.5 rounded-xl bg-zinc-950/90 hover:bg-zinc-900 border border-zinc-700 text-zinc-100 text-[10.5px] font-bold shadow-lg backdrop-blur-md cursor-pointer"
+          >
+            {leftHudOpen ? "✕ Hide Layers & NCRs" : `☰ Layers & NCRs (${totalMeshes})`}
+          </button>
 
-          {/* Bidirectional NCR & Spatial Telemetry Quick-Jump */}
-          <div className="pt-2 mt-1 border-t border-zinc-800 flex flex-col gap-1.5">
-            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
-              PINNED NCR & SPATIAL TELEMETRY
-            </span>
-
-            <button
-              type="button"
-              onClick={() => focusBimZone("BIT-4-TG03", activeNcrCode)}
-              className={`text-left px-2.5 py-2 rounded-xl border text-[10px] flex flex-col gap-0.5 transition ${
-                escrowLocked && !reconciledAsBuiltZones["BIT-4-TG03"]
-                  ? "bg-rose-500/15 border-rose-500/40 text-rose-200"
-                  : "bg-emerald-500/15 border-emerald-500/40 text-emerald-200"
-              }`}
-            >
-              <div className="flex justify-between items-center font-bold">
-                <span>{activeNcrCode} (TG-03)</span>
-                <span>{escrowLocked ? "₹4.50L HOLD" : "CLEARED"}</span>
-              </div>
-              <span className="text-[9px] text-zinc-400">
-                Tower A / BIT-4 Level 3 Transfer Girder (M50)
+          {leftHudOpen && (
+            <div className="flex flex-col gap-2 w-72 bg-zinc-950/92 backdrop-blur-md p-3 rounded-2xl border border-zinc-800 shadow-2xl overflow-y-auto">
+              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+                REVIT DISCIPLINE VISIBILITY
               </span>
-            </button>
-
-            {VANGUARD_GENOME.spatialPins.map((pin) => {
-              const targetZone =
-                pin.bitId === "BIT-4"
-                  ? "BIT-4-TG03"
-                  : pin.bitId === "BIT-2"
-                  ? "BIT-2-DOME"
-                  : pin.bitId === "BIT-3"
-                  ? "BIT-3-CORE"
-                  : "BIT-1-ARCH";
-              return (
-                <button
-                  key={pin.pinId}
-                  type="button"
-                  onClick={() => focusBimZone(targetZone, pin.pinId)}
-                  className="text-left px-2.5 py-1.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-900 border border-zinc-800 text-[10px] flex justify-between items-center"
-                >
-                  <span className="text-zinc-200 font-bold truncate pr-2">{pin.pinId}</span>
-                  <span
-                    className={
-                      pin.severity === "MINOR"
-                        ? "text-rose-400 font-bold"
-                        : pin.severity === "RESOLVED_CERTIFIED"
-                        ? "text-emerald-400 font-bold"
-                        : "text-zinc-300"
-                    }
+              <div className="flex flex-col gap-1">
+                {layers.map((layer) => (
+                  <button
+                    key={layer.id}
+                    type="button"
+                    onClick={() => toggleLayer(layer.id)}
+                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition cursor-pointer ${
+                      layer.active
+                        ? "bg-zinc-900 border-zinc-700 text-white"
+                        : "bg-zinc-950/50 border-zinc-900 text-zinc-500"
+                    }`}
                   >
-                    {pin.metricLabel}
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: layer.active ? layer.colorHex : "#52525b" }}
+                      />
+                      <span className="truncate">{layer.label}</span>
+                    </div>
+                    <span className="text-[10px] shrink-0 text-zinc-400">{layer.meshCount}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-2 mt-1 border-t border-zinc-800 flex flex-col gap-1.5">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+                  PINNED NCR & SPATIAL TELEMETRY
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => focusBimZone("BIT-4-TG03", activeNcrCode)}
+                  className={`text-left px-2.5 py-2 rounded-xl border text-[10px] flex flex-col gap-0.5 transition cursor-pointer ${
+                    escrowLocked && !reconciledAsBuiltZones["BIT-4-TG03"]
+                      ? "bg-rose-500/15 border-rose-500/40 text-rose-200"
+                      : "bg-emerald-500/15 border-emerald-500/40 text-emerald-200"
+                  }`}
+                >
+                  <div className="flex justify-between items-center font-bold">
+                    <span>{activeNcrCode} (TG-03)</span>
+                    <span>{escrowLocked ? "₹4.50L HOLD" : "CLEARED"}</span>
+                  </div>
+                  <span className="text-[9px] text-zinc-400">
+                    Tower A / BIT-4 Level 3 Transfer Girder (M50)
                   </span>
                 </button>
-              );
-            })}
-          </div>
+
+                {VANGUARD_GENOME.spatialPins.map((pin) => {
+                  const targetZone =
+                    pin.bitId === "BIT-4"
+                      ? "BIT-4-TG03"
+                      : pin.bitId === "BIT-2"
+                      ? "BIT-2-DOME"
+                      : pin.bitId === "BIT-3"
+                      ? "BIT-3-CORE"
+                      : "BIT-1-ARCH";
+                  return (
+                    <button
+                      key={pin.pinId}
+                      type="button"
+                      onClick={() => focusBimZone(targetZone, pin.pinId)}
+                      className="text-left px-2.5 py-1.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-900 border border-zinc-800 text-[10px] flex justify-between items-center cursor-pointer"
+                    >
+                      <span className="text-zinc-200 font-bold truncate pr-2">{pin.pinId}</span>
+                      <span
+                        className={
+                          pin.severity === "MINOR"
+                            ? "text-rose-400 font-bold"
+                            : pin.severity === "RESOLVED_CERTIFIED"
+                            ? "text-emerald-400 font-bold"
+                            : "text-zinc-300"
+                        }
+                      >
+                        {pin.metricLabel}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Right Glassmorphic Telemetry HUD: Element Inspector + Multi-Ray Fusion + Revit As-Built Write-Back */}
-        <div className="absolute top-3 right-3 z-10 w-96 max-w-[calc(100vw-24px)] bg-zinc-950/90 backdrop-blur-md p-3.5 rounded-2xl border border-zinc-800 shadow-2xl flex flex-col gap-3 text-xs max-h-[calc(100%-24px)] overflow-y-auto">
-          {selectedMeta ? (
-            <div className="flex flex-col gap-2 border-b border-zinc-800 pb-3">
-              <div className="flex justify-between items-start gap-2">
-                <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-200 text-[10px] font-bold">
-                  {selectedMeta.bitCode} • {selectedMeta.discipline}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedMeta(null)}
-                  className="text-zinc-400 hover:text-white text-xs font-bold"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="text-sm font-bold text-white leading-snug">{selectedMeta.title}</div>
-              <div className="text-[10px] text-zinc-400">
-                IFC: {selectedMeta.ifcClass} • Grade: {selectedMeta.concreteGrade || "M45"} • {selectedMeta.elevation}
-              </div>
-              <div className="text-[11px] text-zinc-300 bg-zinc-900/90 p-2.5 rounded-xl border border-zinc-800 leading-relaxed">
-                {selectedMeta.spec}
-              </div>
+        {/* Retractable Right Multi-Ray & As-Built Reconciliation HUD */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-2 max-h-[calc(100%-24px)]">
+          <button
+            type="button"
+            onClick={() => setRightHudOpen((v) => !v)}
+            className="px-3 py-1.5 rounded-xl bg-zinc-950/90 hover:bg-zinc-900 border border-zinc-700 text-zinc-100 text-[10.5px] font-bold shadow-lg backdrop-blur-md cursor-pointer"
+          >
+            {rightHudOpen ? "✕ Hide Multi-Ray HUD" : "📡 Multi-Ray & As-Built HUD"}
+          </button>
 
-              {selectedMeta.ncrStatus && (
-                <div className="flex justify-between items-center text-[10px] bg-zinc-900 px-2.5 py-1.5 rounded-lg border border-zinc-800">
-                  <span className="text-zinc-400">NCR / QA GATE:</span>
-                  <span
-                    className={`font-bold ${
-                      selectedMeta.ncrStatus.includes("HOLD") || selectedMeta.ncrStatus.includes("042")
-                        ? escrowLocked && !activeReconciledPacket
-                          ? "text-rose-400"
-                          : "text-emerald-400"
-                        : "text-emerald-400"
-                    }`}
-                  >
-                    {selectedMeta.ncrStatus}
-                  </span>
-                </div>
-              )}
-
-              {selectedMeta.lienStatus && (
-                <div className="flex justify-between items-center text-[10px] bg-zinc-900 px-2.5 py-1.5 rounded-lg border border-zinc-800">
-                  <span className="text-zinc-400">ESCROW LIEN:</span>
-                  <span
-                    className={`font-bold ${
-                      selectedMeta.lienStatus.startsWith("LOCKED")
-                        ? "text-amber-400"
-                        : "text-emerald-400"
-                    }`}
-                  >
-                    {selectedMeta.lienStatus}
-                  </span>
-                </div>
-              )}
-
-              {/* As-Built Field Deviation -> Revit / IFC Delta Write-Back */}
-              {(selectedMeta.hasFieldDeviation || activeReconciledPacket) && (
-                <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-700 flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="font-bold text-zinc-100">
-                      REVIT / IFC AS-BUILT RECONCILIATION LOOP
+          {rightHudOpen && (
+            <div className="flex flex-col gap-2.5 w-80 bg-zinc-950/92 backdrop-blur-md p-3.5 rounded-2xl border border-zinc-800 shadow-2xl overflow-y-auto">
+              {selectedMeta && (
+                <div className="flex flex-col gap-2 border-b border-zinc-800 pb-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-200 text-[10px] font-bold">
+                      {selectedMeta.bitCode} • {selectedMeta.discipline}
                     </span>
-                    <span className="text-emerald-400 font-bold">
-                      {activeReconciledPacket ? "SYNCED" : "DELTA DETECTED"}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMeta(null)}
+                      className="text-zinc-400 hover:text-white text-xs font-bold cursor-pointer"
+                    >
+                      ✕
+                    </button>
                   </div>
-                  {!activeReconciledPacket ? (
-                    <>
-                      <p className="text-[10px] text-zinc-400 leading-relaxed">
-                        If this on-site deviation is structurally workable, approve it as the new As-Built baseline and emit a Revit Dynamo / IFC patch so downstream MEP models stay synchronized.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => handleApproveAsBuiltRevitSync(activeZoneId)}
-                        className="w-full py-1.5 px-2.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-[10px] transition"
-                      >
-                        Approve Field Variation & Write-Back to Revit/IFC
-                      </button>
-                    </>
-                  ) : (
-                    <div className="flex flex-col gap-1.5 text-[10px]">
-                      <div className="text-emerald-400 font-bold">
-                        ✓ As-Built Offset [{activeReconciledPacket.asBuiltDeviationDeltaMm.join(", ")}]mm Committed
+                  <div className="text-sm font-bold text-white leading-snug">{selectedMeta.title}</div>
+                  <div className="text-[11px] text-zinc-300 bg-zinc-900/90 p-2 rounded-xl border border-zinc-800">
+                    {selectedMeta.spec}
+                  </div>
+
+                  {(selectedMeta.hasFieldDeviation || activeReconciledPacket) && (
+                    <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-700 flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="font-bold text-zinc-100">REVIT / IFC AS-BUILT PATCH</span>
+                        <span className="text-emerald-400 font-bold">
+                          {activeReconciledPacket ? "SYNCED" : "DELTA DETECTED"}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => downloadRevitDeltaJson(activeReconciledPacket)}
-                        className="w-full py-1.5 px-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-[10px] hover:bg-emerald-500/30 transition"
-                      >
-                        Download Revit Dynamo / IFC Delta Patch (.json)
-                      </button>
+                      {!activeReconciledPacket ? (
+                        <button
+                          type="button"
+                          onClick={() => handleApproveAsBuiltRevitSync(activeZoneId)}
+                          className="w-full py-1.5 px-2.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-[10px] transition cursor-pointer"
+                        >
+                          Approve Field Variation & Emit Revit Patch
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => downloadRevitDeltaJson(activeReconciledPacket)}
+                          className="w-full py-1.5 px-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-[10px] hover:bg-emerald-500/30 transition cursor-pointer"
+                        >
+                          Download Revit Dynamo / IFC Patch (.json)
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
               )}
 
-              <a
-                href={`/site/360-tour?zone=${selectedMeta.tourZone || "BIT-4"}`}
-                className="py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-100 font-bold text-[10px] text-center transition"
-              >
-                OPEN 1:1 VR & 360° REALITY WALKTHROUGH ({selectedMeta.tourZone || "BIT-4"}) →
-              </a>
-            </div>
-          ) : (
-            <div className="text-[11px] text-zinc-400 border-b border-zinc-800 pb-2">
-              Click any 3D structural member or NCR pin to inspect grade, escrow lien, and Revit As-Built delta.
-            </div>
-          )}
-
-          {/* Multi-Ray Sensor Fusion & Active "Needs More Data" Advisory Engine */}
-          {activeZoneFusion && (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">
-                  MULTI-RAY SENSOR FUSION ({activeZoneFusion.zoneId})
-                </span>
-                <span
-                  className={`text-[10px] font-bold ${
-                    activeZoneFusion.compositeConfidencePct >= 85
-                      ? "text-emerald-400"
-                      : "text-amber-400"
-                  }`}
-                >
-                  {activeZoneFusion.compositeConfidencePct}% MAPPED
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                {(Object.keys(RAY_MODALITY_META) as RayModality[]).map((mod) => {
-                  const cov = activeZoneFusion.rayCoverage[mod];
-                  return (
-                    <div
-                      key={mod}
-                      className={`p-2 rounded-xl border ${
-                        cov.active
-                          ? "bg-zinc-900/90 border-zinc-800 text-zinc-200"
-                          : "bg-amber-500/10 border-amber-500/35 text-amber-200"
+              {activeZoneFusion && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">
+                      MULTI-RAY FUSION ({activeZoneFusion.zoneId})
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold ${
+                        activeZoneFusion.compositeConfidencePct >= 85
+                          ? "text-emerald-400"
+                          : "text-amber-400"
                       }`}
                     >
-                      <div className="flex justify-between font-bold">
-                        <span>{RAY_MODALITY_META[mod].shortLabel}</span>
-                        <span>{cov.coveragePct}%</span>
-                      </div>
-                      <div className="text-[9px] text-zinc-400 truncate mt-0.5">
-                        {cov.sourceTag}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Anti-Spoof Material & Curing Signature */}
-              <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[10px] flex flex-col gap-1">
-                <div className="flex justify-between">
-                  <span className="text-zinc-400">MATERIAL & CURING TRUTH:</span>
-                  <span
-                    className={`font-bold ${
-                      activeZoneFusion.materialSignature.antiSpoofVerified
-                        ? "text-emerald-400"
-                        : "text-rose-400"
-                    }`}
-                  >
-                    {activeZoneFusion.materialSignature.antiSpoofVerified
-                      ? "BULK VERIFIED"
-                      : "SPOOF RISK"}
-                  </span>
-                </div>
-                <div className="text-zinc-200 font-bold">
-                  {activeZoneFusion.materialSignature.detectedMaterial}
-                </div>
-                <div className="text-zinc-400">
-                  Dielectric εr: {activeZoneFusion.materialSignature.dielectricEr} • Temp:{" "}
-                  {activeZoneFusion.materialSignature.surfaceTempC}°C • Hydration:{" "}
-                  {activeZoneFusion.materialSignature.curingHydrationPct}% • Lux:{" "}
-                  {activeZoneFusion.ambientLux} lx
-                </div>
-              </div>
-
-              {/* Active "Needs More Data" Sensor Prescription */}
-              {activeZoneFusion.advisory && (
-                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/40 flex flex-col gap-2 text-[10px]">
-                  <div className="font-bold text-amber-300">
-                    ⚠ NEEDS MORE DATA: {activeZoneFusion.advisory.blindSpotType.replace(/_/g, " ")}
+                      {activeZoneFusion.compositeConfidencePct}% MAPPED
+                    </span>
                   </div>
-                  <p className="text-zinc-300 leading-relaxed">
-                    {activeZoneFusion.advisory.diagnosticReason}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDeployMissingRay(
-                        activeZoneFusion.zoneId,
-                        activeZoneFusion.advisory!.missingModality
-                      )
-                    }
-                    className="w-full py-1.5 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold transition"
-                  >
-                    + Deploy {RAY_MODALITY_META[activeZoneFusion.advisory.missingModality].shortLabel} to Close Blind Spot
-                  </button>
+
+                  <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                    {(Object.keys(RAY_MODALITY_META) as RayModality[]).map((mod) => {
+                      const cov = activeZoneFusion.rayCoverage[mod];
+                      return (
+                        <div
+                          key={mod}
+                          className={`p-2 rounded-xl border ${
+                            cov.active
+                              ? "bg-zinc-900/90 border-zinc-800 text-zinc-200"
+                              : "bg-amber-500/10 border-amber-500/35 text-amber-200"
+                          }`}
+                        >
+                          <div className="flex justify-between font-bold">
+                            <span>{RAY_MODALITY_META[mod].shortLabel}</span>
+                            <span>{cov.coveragePct}%</span>
+                          </div>
+                          <div className="text-[9px] text-zinc-400 truncate mt-0.5">
+                            {cov.sourceTag}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {activeZoneFusion.advisory && (
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/40 flex flex-col gap-2 text-[10px]">
+                      <div className="font-bold text-amber-300">
+                        ⚠ NEEDS MORE DATA: {activeZoneFusion.advisory.blindSpotType.replace(/_/g, " ")}
+                      </div>
+                      <p className="text-zinc-300 leading-relaxed">
+                        {activeZoneFusion.advisory.diagnosticReason}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDeployMissingRay(
+                            activeZoneFusion.zoneId,
+                            activeZoneFusion.advisory!.missingModality
+                          )
+                        }
+                        className="w-full py-1.5 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold transition cursor-pointer"
+                      >
+                        + Deploy {RAY_MODALITY_META[activeZoneFusion.advisory.missingModality].shortLabel}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
         </div>
 
+        {/* Molecular Revit Element Properties & Ecosystem Action Drawer */}
+        {selectedMolecularElement && (
+          <div className="absolute bottom-11 left-3 z-20">
+            <RevitMolecularInspectorDrawer
+              element={selectedMolecularElement}
+              onClose={() => {
+                twinHandleRef.current?.highlightElement(null);
+                setSelectedMolecularElement(null);
+              }}
+              onFocusElement={(pos) => focusCameraOn(pos, 14)}
+              onEscalateHardware={(el) => {
+                setDeepLinkTranscript(
+                  `Inspect ${el.mark} (${el.name} • ${el.revitFamily}) at ${el.level} ${el.gridline}`
+                );
+                setShowEscalationDrawer(true);
+              }}
+            />
+          </div>
+        )}
+
         {uploadStatus && (
-          <div className="absolute bottom-10 left-4 z-10 bg-zinc-900/95 border border-zinc-700 text-zinc-200 px-3 py-1.5 rounded-xl text-xs">
+          <div className="absolute bottom-3 left-3 z-10 bg-zinc-950/90 border border-zinc-800 text-zinc-200 px-3 py-1 rounded-xl text-[10.5px]">
             {uploadStatus}
           </div>
         )}
 
         <div className="absolute bottom-3 right-3 z-10 text-[10px] text-zinc-400 bg-zinc-950/85 px-2.5 py-1 rounded-lg border border-zinc-800">
-          DPR Capped 1.5× • SE(3) Datum Confined • Click Any Structural Member or Pin
+          Revit LOD-400 Unified Engine • Click Any Partition, Ceiling, Pelmet, Door, MEP or Crane Part
         </div>
       </div>
     </div>
