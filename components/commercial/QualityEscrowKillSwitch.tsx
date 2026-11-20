@@ -322,7 +322,7 @@ export default function QualityEscrowKillSwitch({
             <span className="text-zinc-100 font-semibold">{gate.structural_element}</span>
           </div>
           <span className="text-[11px] font-mono text-zinc-400">
-            Grade <strong className="text-zinc-200">M{gradeMpa}</strong> | Pass Rule: Mean >= {requiredMeanMpa.toFixed(2)} MPa, Min >= {requiredMinMpa.toFixed(2)} MPa
+            Grade <strong className="text-zinc-200">M{gradeMpa}</strong> | Pass Rule: Mean {">="} {requiredMeanMpa.toFixed(2)} MPa, Min {">="} {requiredMinMpa.toFixed(2)} MPa
           </span>
         </div>
 
@@ -344,7 +344,7 @@ export default function QualityEscrowKillSwitch({
                   previewPasses ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
-                Average: {previewMean} MPa (Need >= {requiredMeanMpa.toFixed(2)} MPa)
+                Average: {previewMean} MPa (Need {">="} {requiredMeanMpa.toFixed(2)} MPa)
               </span>
             </div>
 
