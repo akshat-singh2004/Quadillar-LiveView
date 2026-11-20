@@ -15,6 +15,7 @@ export const runtime = "nodejs";
 
 // Server-side SHA-256 deduplication cache (backs up Supabase unique constraint)
 const INGESTED_MEDIA_HASH_CACHE = new Map<string, { id: string; bim_zone_id: string; created_at: string }>();
+const MAX_HASH_CACHE_SIZE = 500;
 
 const ALLOWED_AUDIO_TYPES = new Set([
   "audio/ogg", "audio/webm", "audio/mp3", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/mp4",
@@ -295,6 +296,7 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
+    if (INGESTED_MEDIA_HASH_CACHE.size >= MAX_HASH_CACHE_SIZE) { const oldest = INGESTED_MEDIA_HASH_CACHE.keys().next().value; if (oldest) INGESTED_MEDIA_HASH_CACHE.delete(oldest); }
     INGESTED_MEDIA_HASH_CACHE.set(mediaSha256, {
       id: record.id,
       bim_zone_id: record.matched_bim_zone_id,

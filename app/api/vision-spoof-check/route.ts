@@ -4,6 +4,23 @@ import crypto from "crypto";
 
 export const runtime = "nodejs";
 
+const VISION_TIMEOUT_MS = 4500;
+
+function withVisionTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("VISION_TIMEOUT_SLA")), ms);
+    promise
+      .then((val) => {
+        clearTimeout(timer);
+        resolve(val);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
 export interface VisionSpoofVerdict {
   verdict: "SPOOF_DETECTED" | "AUTHENTIC_STRUCTURAL" | "REQUIRES_MULTI_RAY_SCAN";
   materialDetected: string;
@@ -50,13 +67,17 @@ export async function POST(req: NextRequest) {
   const now = new Date().toISOString();
 
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+    }
+
     const rawBase64 = String(body.imageBase64 || "").replace(/^data:image\/[a-zA-Z]+;base64,/, "");
     const claimedElement = String(
       body.claimedElement || "Tower A / BIT-4 – Level 3 Transfer Girder TG-03 (M50 Cast-in-Situ RCC)"
-    );
-    const bimZoneId = String(body.bimZoneId || "BIT-4-TG03");
-    const projectId = String(body.projectId || "UP-LDA-VANGUARD-CAMPUS");
+    ).slice(0, 240);
+    const bimZoneId = String(body.bimZoneId || "BIT-4-TG03").slice(0, 64);
+    const projectId = String(body.projectId || "UP-LDA-VANGUARD-CAMPUS").slice(0, 64);
 
     if (!rawBase64) {
       return NextResponse.json({ error: "imageBase64 is required" }, { status: 400 });
@@ -76,34 +97,37 @@ export async function POST(req: NextRequest) {
 
       for (const modelName of models) {
         try {
-          const response = await ai.models.generateContent({
-            model: modelName,
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  {
-                    inlineData: {
-                      data: rawBase64,
-                      mimeType: "image/jpeg",
+          const response = await withVisionTimeout(
+            ai.models.generateContent({
+              model: modelName,
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    {
+                      inlineData: {
+                        data: rawBase64,
+                        mimeType: "image/jpeg",
+                      },
                     },
-                  },
-                  {
-                    text:
-                      `You are ARGUS-SPATIAL, a forensic construction QA vision governor inspecting a live site camera feed for "${claimedElement}" (Zone: ${bimZoneId}). ` +
-                      `The contractor claims this image shows genuine cast-in-situ reinforced concrete / structural masonry. ` +
-                      `Inspect the image critically: if it shows cardboard, paper, indoor office objects, human faces, screens, plastic, or anything that is NOT authentic cured structural concrete/masonry, classify verdict as "SPOOF_DETECTED" with low dielectric permittivity (εr ~ 1.4–2.1 vs 6.9–9.5 for concrete). ` +
-                      `If concrete is shown but lighting/surface voids require subsurface confirmation, return "REQUIRES_MULTI_RAY_SCAN".`,
-                  },
-                ],
+                    {
+                      text:
+                        `You are ARGUS-SPATIAL, a forensic construction QA vision governor inspecting a live site camera feed for "${claimedElement}" (Zone: ${bimZoneId}). ` +
+                        `The contractor claims this image shows genuine cast-in-situ reinforced concrete / structural masonry. ` +
+                        `Inspect the image critically: if it shows cardboard, paper, indoor office objects, human faces, screens, plastic, or anything that is NOT authentic cured structural concrete/masonry, classify verdict as "SPOOF_DETECTED" with low dielectric permittivity (εr ~ 1.4–2.1 vs 6.9–9.5 for concrete). ` +
+                        `If concrete is shown but lighting/surface voids require subsurface confirmation, return "REQUIRES_MULTI_RAY_SCAN".`,
+                    },
+                  ],
+                },
+              ],
+              config: {
+                responseMimeType: "application/json",
+                responseSchema: SPOOF_RESPONSE_SCHEMA,
+                thinkingConfig: { thinkingBudget: 0 },
               },
-            ],
-            config: {
-              responseMimeType: "application/json",
-              responseSchema: SPOOF_RESPONSE_SCHEMA,
-              thinkingConfig: { thinkingBudget: 0 },
-            },
-          });
+            }),
+            VISION_TIMEOUT_MS
+          );
 
           if (response.text) {
             const parsed = JSON.parse(response.text);

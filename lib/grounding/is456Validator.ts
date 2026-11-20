@@ -13,20 +13,25 @@ export function validateIs456CoreTest(
   coreReadingsMpa: number[],
   characteristicGradeMpa = 50
 ): Is456CoreValidationResult {
-  const valid = coreReadingsMpa.filter((n) => Number.isFinite(n) && n > 0);
-  const requiredMeanMpa = Number((characteristicGradeMpa * 0.85).toFixed(2));
-  const requiredMinIndividualMpa = Number((characteristicGradeMpa * 0.75).toFixed(2));
+  const safeGrade =
+    Number.isFinite(characteristicGradeMpa) && characteristicGradeMpa > 0
+      ? characteristicGradeMpa
+      : 50;
+  const safeArray = Array.isArray(coreReadingsMpa) ? coreReadingsMpa : [];
+  const valid = safeArray.filter((n) => Number.isFinite(n) && n > 0 && n < 250);
+  const requiredMeanMpa = Number((safeGrade * 0.85).toFixed(2));
+  const requiredMinIndividualMpa = Number((safeGrade * 0.75).toFixed(2));
 
   if (valid.length < 3) {
     return {
       passed: false,
-      characteristicGradeMpa,
+      characteristicGradeMpa: safeGrade,
       requiredMeanMpa,
       requiredMinIndividualMpa,
       actualMeanMpa: 0,
       actualMinIndividualMpa: 0,
       clauseRef: "IS 456:2000 Cl. 17.4.3",
-      reason: "Minimum 3 extracted concrete cores are mandatory under IS 456:2000 Cl. 17.4.2.",
+      reason: "Minimum 3 valid extracted concrete cores are mandatory under IS 456:2000 Cl. 17.4.2.",
     };
   }
 
@@ -39,12 +44,12 @@ export function validateIs456CoreTest(
   const reason = passed
     ? `Verified ${actualMeanMpa} MPa mean (>= ${requiredMeanMpa} MPa) and ${actualMinIndividualMpa} MPa min (>= ${requiredMinIndividualMpa} MPa) per IS 456:2000 Cl. 17.4.3.`
     : !meanPass
-    ? `REJECTED: Average equivalent core strength ${actualMeanMpa} MPa is below 85% threshold (${requiredMeanMpa} MPa for M${characteristicGradeMpa}).`
-    : `REJECTED: Individual core reading ${actualMinIndividualMpa} MPa is below 75% minimum (${requiredMinIndividualMpa} MPa for M${characteristicGradeMpa}).`;
+    ? `REJECTED: Average equivalent core strength ${actualMeanMpa} MPa is below 85% threshold (${requiredMeanMpa} MPa for M${safeGrade}).`
+    : `REJECTED: Individual core reading ${actualMinIndividualMpa} MPa is below 75% minimum (${requiredMinIndividualMpa} MPa for M${safeGrade}).`;
 
   return {
     passed,
-    characteristicGradeMpa,
+    characteristicGradeMpa: safeGrade,
     requiredMeanMpa,
     requiredMinIndividualMpa,
     actualMeanMpa,

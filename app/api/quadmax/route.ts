@@ -52,6 +52,29 @@ export interface QuadmaxChatPayload {
   sha256Seal: string;
   engineMode: "GEMINI_LIVE" | "QUADMAX_DETERMINISTIC_KERNEL";
   timestampIso: string;
+  latencyMs?: number;
+  cacheHit?: boolean;
+}
+
+// 30-second bounded TTL cache for sub-5ms repeated stage briefings
+const QUADMAX_TTL_CACHE = new Map<string, { expiresAt: number; payload: QuadmaxChatPayload }>();
+const MAX_CACHE_ENTRIES = 100;
+const GEMINI_TIMEOUT_MS = 3200;
+const DB_READ_TIMEOUT_MS = 750;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("GEMINI_TIMEOUT_SLA")), ms);
+    promise
+      .then((val) => {
+        clearTimeout(timer);
+        resolve(val);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
 }
 
 function getServerSupabase() {
@@ -67,13 +90,9 @@ const PORTFOLIO_RESPONSE_SCHEMA: Schema = {
     activeAgentChain: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description:
-        "Ordered hierarchy of agents invoked, e.g. ['PRIME-COMMAND', 'MINERVA-ARCH', 'μ-GRIDLINE-DELTA'].",
     },
     answer: {
       type: Type.STRING,
-      description:
-        "QUADMAX.AI-grade executive & millimeter-precise engineering briefing. Use crisp paragraphs and • bullets. Clearly call out any site wrongdoing, floor/gridline offset in mm/m, out-of-sequence build, or escrow lien.",
     },
     standardRef: { type: Type.STRING },
     metrics: {
@@ -136,11 +155,7 @@ function buildPortfolioDeterministicSynthesis(params: {
   const isLocked = params.escrowGate?.gate_status === "LOCKED";
   const vanguardLienStr = `₹${Number(params.escrowGate?.withholding_lien_inr ?? 450000).toLocaleString("en-IN")}`;
 
-  // Sync live Supabase NCR-2026-STR-042 state into PRJ-01 alert list
-  const alerts = getAllPortfolioAlerts(
-    effectiveProjectId,
-    params.scope
-  ).map((a) => {
+  const alerts = getAllPortfolioAlerts(effectiveProjectId, params.scope).map((a) => {
     if (a.alertId === "NCR-2026-STR-042") {
       return {
         ...a,
@@ -159,10 +174,12 @@ function buildPortfolioDeterministicSynthesis(params: {
     ? ["PRIME-COMMAND", params.agentId]
     : ["PRIME-COMMAND", "MINERVA-ARCH", "ARGUS-SPATIAL", "μ-GRIDLINE-DELTA"];
 
-  // Case A: Portfolio-Wide 10-Project Principal Architect Briefing
   if (isAllSites && effectiveProjectId === "ALL_10") {
     const totalPortfolioCr = PORTFOLIO_10_PROJECTS.reduce((s, p) => s + p.contractValueCr, 0);
-    const totalHeldInr = alerts.reduce((s, a) => s + (a.alertId === "NCR-2026-STR-042" && !isLocked ? 0 : a.financialImpactInr), 0);
+    const totalHeldInr = alerts.reduce(
+      (s, a) => s + (a.alertId === "NCR-2026-STR-042" && !isLocked ? 0 : a.financialImpactInr),
+      0
+    );
 
     const wrongdoingBullets =
       alerts.length > 0
@@ -200,7 +217,6 @@ function buildPortfolioDeterministicSynthesis(params: {
     };
   }
 
-  // Case B: Single-Site & Single-Scope Precision Report
   const targetProj = projectNode || PORTFOLIO_10_PROJECTS[0];
   const siteBullets =
     alerts.length > 0
@@ -243,6 +259,7 @@ function buildPortfolioDeterministicSynthesis(params: {
 }
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
   let prompt = "";
   let projectId = "ALL_10";
   let scope: ScopeDomainId = "ALL_SCOPES";
@@ -251,20 +268,46 @@ export async function POST(req: NextRequest) {
   let history: ChatTurnInput[] = [];
 
   try {
-    const body = await req.json();
-    prompt = String(body.query || "").trim();
-    if (body.projectId) projectId = String(body.projectId);
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Invalid JSON request body" }, { status: 400 });
+    }
+
+    prompt = String(body.query || "")
+      .replace(/[\u0000-\u001F\u007F]/g, " ")
+      .trim()
+      .slice(0, 1200);
+
+    if (body.projectId) projectId = String(body.projectId).slice(0, 64);
     if (body.scope) scope = body.scope as ScopeDomainId;
-    if (body.agentId) agentId = String(body.agentId);
-    if (body.customAgent) customAgent = body.customAgent as CustomAgentSpec;
+    if (body.agentId) agentId = String(body.agentId).slice(0, 64);
+    if (body.customAgent && typeof body.customAgent === "object") {
+      customAgent = body.customAgent as CustomAgentSpec;
+    }
     if (Array.isArray(body.history)) {
       history = body.history
-        .slice(-8)
+        .slice(-6)
         .filter((m: any) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string");
     }
 
     if (!prompt) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
+    }
+
+    // Fast path: 30-second TTL cache check for repeated queries without custom agent mutations
+    const cacheKey = `${projectId}::${scope}::${agentId}::${prompt.toLowerCase()}`;
+    if (!customAgent) {
+      const cached = QUADMAX_TTL_CACHE.get(cacheKey);
+      if (cached && cached.expiresAt > Date.now()) {
+        return NextResponse.json({
+          ok: true,
+          payload: {
+            ...cached.payload,
+            latencyMs: Date.now() - startTime,
+            cacheHit: true,
+          },
+        });
+      }
     }
 
     const supabase = getServerSupabase();
@@ -281,14 +324,17 @@ export async function POST(req: NextRequest) {
 
     if (supabase) {
       try {
-        const [gateRes, fieldRes] = await Promise.all([
-          supabase.from("ncr_escrow_gates").select("*").order("updated_at", { ascending: false }).limit(2),
-          supabase
-            .from("field_grounding_logs")
-            .select("id, bim_zone_id, severity, transcript_vernacular, engineering_summary, withholding_amount_inr, workflow_status, created_at")
-            .order("created_at", { ascending: false })
-            .limit(4),
-        ]);
+        const [gateRes, fieldRes] = await withTimeout(
+          Promise.all([
+            supabase.from("ncr_escrow_gates").select("*").order("updated_at", { ascending: false }).limit(1),
+            supabase
+              .from("field_grounding_logs")
+              .select("id, bim_zone_id, severity, engineering_summary, withholding_amount_inr, workflow_status")
+              .order("created_at", { ascending: false })
+              .limit(3),
+          ]),
+          DB_READ_TIMEOUT_MS
+        );
         if (gateRes.data && gateRes.data.length > 0) escrowGate = gateRes.data[0];
         if (fieldRes.data) recentFieldLogs = fieldRes.data;
       } catch {}
@@ -325,6 +371,7 @@ export async function POST(req: NextRequest) {
         sha256Seal,
         now,
       });
+      payload.latencyMs = Date.now() - startTime;
       return NextResponse.json({ ok: true, payload });
     }
 
@@ -334,48 +381,53 @@ export async function POST(req: NextRequest) {
         ? null
         : PORTFOLIO_10_PROJECTS.find((p) => p.projectId === projectId) || null;
 
+    // Compact portfolio digest (~65% fewer input tokens for faster Gemini round-trip)
+    const compactPortfolio = PORTFOLIO_10_PROJECTS.map((p) => ({
+      id: p.projectId,
+      code: p.code,
+      name: p.name,
+      cr: p.contractValueCr,
+      pct: p.physicalPct,
+      rmsMm: p.lidarRmsMm,
+      alerts: p.activeAlerts.map((a) => `${a.floorOrZone}: ${a.headline} (${a.deviationMetric})`),
+    }));
+
     const livePortfolioContext = {
-      selectedSiteFilter: selectedProj ? selectedProj.name : "ALL 10 PORTFOLIO SITES",
-      selectedScopeFilter: scopeMeta.label,
-      selectedAgentNode: customAgent || HIERARCHICAL_AGENT_MESH.find((a) => a.id === agentId) || "AUTO_HIERARCHY",
-      portfolio10Projects: PORTFOLIO_10_PROJECTS,
-      vanguardLiveEscrowGate: escrowGate,
-      vanguardRecentFieldVoiceLogs: recentFieldLogs,
-      vanguardMultiRaySensorBlindSpots: sensorAdvisories,
-      validRoutes: [
-        { label: "Focus TG-03 in 3D BIM", href: "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042", tag: "3D BIM" },
-        { label: "3D BIM & Multi-Ray Twin", href: "/site/digital-twin", tag: "3D BIM" },
-        { label: "Section 65B Audit Vault", href: "/site/audit-ledger", tag: "65B VAULT" },
-        { label: "Structural NDT Register", href: "/site/ndt", tag: "IS 456 NDT" },
-        { label: "Master CPM Schedule", href: "/schedule/gantt", tag: "CPM" },
-      ],
+      siteFilter: selectedProj ? selectedProj.name : "ALL_10_SITES",
+      scopeFilter: scopeMeta.label,
+      agentNode: customAgent || HIERARCHICAL_AGENT_MESH.find((a) => a.id === agentId) || "AUTO_3_TIER",
+      sites: compactPortfolio,
+      vanguardEscrowGate: escrowGate,
+      recentFieldLogs,
+      sensorBlindSpots: sensorAdvisories,
     };
 
-    const systemInstruction = `You are QUADMAX.AI (QUADMAX.AI Construction Operating Kernel) assisting the Principal Architect & EPC Executive across 10 active construction sites in Lucknow, India.
-Be razor-sharp, proactive, and millimeter-accurate:
-1. Explicitly flag any wrongdoing, geometric offset (such as Summit Corporate Building's 12th-floor wall cast 1,000 mm / 1.00 m off-grid 9 days ahead of sequence), concrete cube/core failure (Project Vanguard NCR-2026-STR-042), or dielectric spoof.
-2. Strictly honor selectedSiteFilter and selectedScopeFilter: if a single site or single scope is selected, focus exclusively on that site and domain without diluting with unrelated sites.
-3. Show which Management Agent -> Sub-Agent -> Micro-Agent (or Custom Agent) executed the verification in activeAgentChain.`;
+    const systemInstruction = `You are QUADMAX.AI Construction Operating Kernel for 10 active sites in Lucknow, India.
+Be crisp, factual, and millimeter-precise:
+1. Call out any geometric offset (e.g., Summit Building 12th-floor wall cast 1,000 mm / 1.00 m off-grid 9d early), concrete test failure (Vanguard NCR-2026-STR-042), or dielectric spoof.
+2. Honor siteFilter and scopeFilter strictly.
+3. Return valid route hrefs from: /site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042, /site/digital-twin, /site/audit-ledger, /site/ndt, /schedule/gantt.`;
 
     const transcript = history
-      .map((t) => `${t.role === "user" ? "ARCHITECT" : "QUADMAX"}: ${t.content}`)
+      .slice(-4)
+      .map((t) => `${t.role === "user" ? "ARCHITECT" : "QUADMAX"}: ${t.content.slice(0, 320)}`)
       .join("\n");
 
     const ai = new GoogleGenAI({ apiKey });
-    const candidateModels = ["gemini-3.8-flash", "gemini-3.8-flash-lite", "gemini-3.0-flash"];
     let parsed: any = null;
 
-    for (const modelName of candidateModels) {
-      try {
-        const res = await ai.models.generateContent({
-          model: modelName,
+    try {
+      const res = await withTimeout(
+        ai.models.generateContent({
+          model: "gemini-3.8-flash",
           contents: [
             {
               role: "user",
               parts: [
                 {
-                  text: `${transcript ? `PRIOR THREAD:\n${transcript}\n\n` : ""}COMMAND: "${prompt}"\n\nLIVE_PORTFOLIO_TELEMETRY:
-${JSON.stringify(livePortfolioContext)}`,
+                  text: `${transcript ? `PRIOR:\n${transcript}\n\n` : ""}CMD: "${prompt}"\n\nTELEMETRY:\n${JSON.stringify(
+                    livePortfolioContext
+                  )}`,
                 },
               ],
             },
@@ -386,13 +438,11 @@ ${JSON.stringify(livePortfolioContext)}`,
             responseSchema: PORTFOLIO_RESPONSE_SCHEMA,
             thinkingConfig: { thinkingBudget: 0 },
           },
-        });
-        if (res.text) {
-          parsed = JSON.parse(res.text);
-          break;
-        }
-      } catch {}
-    }
+        }),
+        GEMINI_TIMEOUT_MS
+      );
+      if (res.text) parsed = JSON.parse(res.text);
+    } catch {}
 
     if (!parsed) {
       const payload = buildPortfolioDeterministicSynthesis({
@@ -406,6 +456,14 @@ ${JSON.stringify(livePortfolioContext)}`,
         sha256Seal,
         now,
       });
+      payload.latencyMs = Date.now() - startTime;
+      if (!customAgent) {
+        if (QUADMAX_TTL_CACHE.size >= MAX_CACHE_ENTRIES) {
+          const oldest = QUADMAX_TTL_CACHE.keys().next().value;
+          if (oldest) QUADMAX_TTL_CACHE.delete(oldest);
+        }
+        QUADMAX_TTL_CACHE.set(cacheKey, { expiresAt: Date.now() + 30000, payload });
+      }
       return NextResponse.json({ ok: true, payload });
     }
 
@@ -423,7 +481,17 @@ ${JSON.stringify(livePortfolioContext)}`,
       sha256Seal,
       engineMode: "GEMINI_LIVE",
       timestampIso: now,
+      latencyMs: Date.now() - startTime,
+      cacheHit: false,
     };
+
+    if (!customAgent) {
+      if (QUADMAX_TTL_CACHE.size >= MAX_CACHE_ENTRIES) {
+        const oldest = QUADMAX_TTL_CACHE.keys().next().value;
+        if (oldest) QUADMAX_TTL_CACHE.delete(oldest);
+      }
+      QUADMAX_TTL_CACHE.set(cacheKey, { expiresAt: Date.now() + 30000, payload });
+    }
 
     return NextResponse.json({ ok: true, payload });
   } catch {
@@ -453,6 +521,7 @@ ${JSON.stringify(livePortfolioContext)}`,
       }),
       now,
     });
+    fallback.latencyMs = Date.now() - startTime;
     return NextResponse.json({ ok: true, payload: fallback });
   }
 }
