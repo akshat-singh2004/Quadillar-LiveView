@@ -37,10 +37,10 @@ const GUIDE_STEPS: GuideStep[] = [
     deckSync: "Deck Slide 4 | Video 0:30",
     title: "Seal Live Telemetry in Immutable Ledger",
     actionInstruction:
-      "Click the highlighted IoT Telemetry Burst button in the top bar to send a real multi-ray sensor packet.",
+      "Click the highlighted IoT Burst button in the top bar to send a real multi-ray sensor packet.",
     underTheHood:
       "Hits /api/telemetry/ingress, computes a canonical SHA-256 digest, and writes to PostgreSQL section_65b_audit_ledger protected by BEFORE UPDATE/DELETE immutability triggers.",
-    selectors: ['[data-guide-target="iot-burst"]', '[data-quadmax-target="iot-burst-btn"]'],
+    selectors: ['[data-guide-target="iot-burst"]', '[data-quadmax-target="trigger-iot-burst"]'],
   },
   {
     id: "gemini-field",
@@ -105,24 +105,40 @@ interface RectBox {
   height: number;
 }
 
-function isTargetUnobstructed(el: HTMLElement, rect: RectBox): boolean {
-  // 1. Hide spotlight immediately if any full-screen drawer/modal overlay (z-50) is open
-  const openOverlays = document.querySelectorAll(".fixed.inset-0");
-  for (const overlay of Array.from(openOverlays)) {
+function detectOpenOverlay(): boolean {
+  const overlays = document.querySelectorAll(
+    '.fixed.inset-0:not([data-walkthrough-disclaimer="true"]), [role="dialog"]:not([data-walkthrough-disclaimer="true"])'
+  );
+  for (const overlay of Array.from(overlays)) {
     const style = window.getComputedStyle(overlay);
-    if (style.display !== "none" && style.visibility !== "hidden") {
-      return false;
+    if (style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0") {
+      return true;
     }
   }
+  return false;
+}
 
-  // 2. Ensure target center is within the visible viewport
+function closeOpenOverlays(): void {
+  const overlays = document.querySelectorAll(
+    '.fixed.inset-0:not([data-walkthrough-disclaimer="true"])'
+  );
+  overlays.forEach((overlay) => {
+    const closeBtn = overlay.querySelector(
+      '[data-overlay-close="true"], button[aria-label*="Close" i]'
+    ) as HTMLButtonElement | null;
+    if (closeBtn) {
+      closeBtn.click();
+    }
+  });
+}
+
+function isTargetUnobstructed(el: HTMLElement, rect: RectBox): boolean {
+  if (detectOpenOverlay()) return false;
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
   if (cx < 0 || cy < 0 || cx > window.innerWidth || cy > window.innerHeight) {
     return false;
   }
-
-  // 3. Check top-most hit element at target center so ring never floats over QUADMAX chat or menus
   const topEl = document.elementFromPoint(cx, cy);
   if (!topEl) return false;
   return el === topEl || el.contains(topEl) || topEl.contains(el);
@@ -134,6 +150,8 @@ export default function EvaluatorWalkthrough() {
   const [showComplete, setShowComplete] = useState(false);
   const [spotlightRect, setSpotlightRect] = useState<RectBox | null>(null);
   const [stepClicked, setStepClicked] = useState(false);
+  const [hasOpenOverlay, setHasOpenOverlay] = useState(false);
+  const [manualExpand, setManualExpand] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
   useEffect(() => {
@@ -148,15 +166,25 @@ export default function EvaluatorWalkthrough() {
 
   useEffect(() => {
     const onOpen = () => {
+      closeOpenOverlays();
       setShowComplete(false);
       setActiveStepIdx(null);
       setSpotlightRect(null);
       setIsMinimized(false);
+      setManualExpand(false);
       setShowDisclaimer(true);
     };
     window.addEventListener("quadillar-open-evaluator-guide", onOpen);
     return () => window.removeEventListener("quadillar-open-evaluator-guide", onOpen);
   }, []);
+
+  // Reset per-step state ONLY when step index changes (never re-runs on click)
+  useEffect(() => {
+    setStepClicked(false);
+    setIsMinimized(false);
+    setManualExpand(false);
+    setSpotlightRect(null);
+  }, [activeStepIdx]);
 
   const currentStep = activeStepIdx !== null ? GUIDE_STEPS[activeStepIdx] : null;
 
@@ -174,21 +202,29 @@ export default function EvaluatorWalkthrough() {
   useEffect(() => {
     if (!currentStep) {
       setSpotlightRect(null);
+      setHasOpenOverlay(false);
       return;
     }
 
-    setStepClicked(false);
-    setIsMinimized(false);
     let scrolledOnce = false;
     let boundEl: HTMLElement | null = null;
 
-    const onTargetClick = () => {
+    const onTargetClick = (ev: Event) => {
+      const targetEl = ev.currentTarget as HTMLElement | null;
+      // In Step 4, allow clicking Tools dropdown to transition spotlight onto Legal Proof Cert
+      if (targetEl?.getAttribute("data-quadmax-target") === "open-tools-menu") {
+        setSpotlightRect(null);
+        return;
+      }
       setStepClicked(true);
       setSpotlightRect(null);
     };
 
-    const syncRect = () => {
-      if (stepClicked) {
+    const syncState = () => {
+      const overlayActive = detectOpenOverlay();
+      setHasOpenOverlay(overlayActive);
+
+      if (overlayActive || stepClicked) {
         setSpotlightRect(null);
         return;
       }
@@ -231,15 +267,15 @@ export default function EvaluatorWalkthrough() {
       });
     };
 
-    syncRect();
-    const interval = setInterval(syncRect, 200);
-    window.addEventListener("resize", syncRect);
-    window.addEventListener("scroll", syncRect, true);
+    syncState();
+    const interval = setInterval(syncState, 180);
+    window.addEventListener("resize", syncState);
+    window.addEventListener("scroll", syncState, true);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("resize", syncRect);
-      window.removeEventListener("scroll", syncRect, true);
+      window.removeEventListener("resize", syncState);
+      window.removeEventListener("scroll", syncState, true);
       if (boundEl) boundEl.removeEventListener("click", onTargetClick);
     };
   }, [currentStep, findActiveElement, stepClicked]);
@@ -255,14 +291,17 @@ export default function EvaluatorWalkthrough() {
     try {
       sessionStorage.setItem(SESSION_KEY, "1");
     } catch {}
+    closeOpenOverlays();
     setShowDisclaimer(false);
     setShowComplete(false);
     setIsMinimized(false);
+    setManualExpand(false);
     setActiveStepIdx(0);
   };
 
   const handleNext = () => {
     if (activeStepIdx === null) return;
+    closeOpenOverlays();
     setSpotlightRect(null);
     if (activeStepIdx + 1 < GUIDE_STEPS.length) {
       setActiveStepIdx(activeStepIdx + 1);
@@ -274,6 +313,7 @@ export default function EvaluatorWalkthrough() {
 
   const handleBack = () => {
     if (activeStepIdx === null || activeStepIdx === 0) return;
+    closeOpenOverlays();
     setSpotlightRect(null);
     setActiveStepIdx(activeStepIdx - 1);
   };
@@ -284,11 +324,16 @@ export default function EvaluatorWalkthrough() {
     setShowComplete(false);
   };
 
+  const compactPillMode = Boolean(currentStep && (isMinimized || (hasOpenOverlay && !manualExpand)));
+
   return (
     <>
       {/* 1. Upfront Evaluator Disclaimer & Walkthrough Intro Modal */}
       {showDisclaimer && (
-        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 font-sans">
+        <div
+          data-walkthrough-disclaimer="true"
+          className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 font-sans"
+        >
           <div className="w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
@@ -382,10 +427,10 @@ export default function EvaluatorWalkthrough() {
         </div>
       )}
 
-      {/* 2. Unobstructed Spotlight Ring (z-[30], strictly BELOW z-40/z-50 modals, drawers & chats) */}
-      {currentStep && spotlightRect && !stepClicked && (
+      {/* 2. Unobstructed Spotlight Ring — NEVER rendered while any modal/drawer is open or after click */}
+      {currentStep && spotlightRect && !stepClicked && !hasOpenOverlay && (
         <div
-          className="fixed z-[30] pointer-events-none rounded-2xl border-2 border-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_0_20px_rgba(16,185,129,0.4)] transition-all duration-150"
+          className="fixed z-30 pointer-events-none rounded-2xl border-2 border-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_0_20px_rgba(16,185,129,0.4)] transition-all duration-150"
           style={{
             top: `${spotlightRect.top}px`,
             left: `${spotlightRect.left}px`,
@@ -395,9 +440,49 @@ export default function EvaluatorWalkthrough() {
         />
       )}
 
-      {/* 3. Compact Floating Interactive Guide Card (z-[45], stays below z-50 modals/drawers) */}
-      {currentStep && (
-        <div className="fixed bottom-4 left-4 z-[45] w-[355px] max-w-[calc(100vw-2rem)] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-3.5 font-sans text-xs space-y-2.5">
+      {/* 3. Floating Interactive Guide — Auto-collapses to 1-line pill whenever a modal/drawer is open */}
+      {currentStep && compactPillMode && (
+        <div className="fixed bottom-3 left-3 z-[55] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-full shadow-2xl px-3 py-1.5 font-sans text-xs flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px]">
+            STEP {currentStep.stepNumber}/{GUIDE_STEPS.length}
+          </span>
+          <span className="text-[11px] font-semibold text-zinc-200 max-w-[160px] truncate hidden sm:inline">
+            {currentStep.title}
+          </span>
+          <button
+            type="button"
+            onClick={handleNext}
+            className="px-3 py-1 rounded-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-[11px] inline-flex items-center gap-1 cursor-pointer"
+          >
+            <span>{activeStepIdx === GUIDE_STEPS.length - 1 ? "Finish" : "Next Step"}</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsMinimized(false);
+              setManualExpand(true);
+            }}
+            className="p-1 rounded-full text-zinc-400 hover:text-white cursor-pointer"
+            title="Expand guide card"
+            aria-label="Expand guide card"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleExit}
+            className="p-1 rounded-full text-zinc-500 hover:text-white cursor-pointer"
+            title="Exit guide"
+            aria-label="Exit guide"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {currentStep && !compactPillMode && (
+        <div className="fixed bottom-4 left-4 z-[55] w-[355px] max-w-[calc(100vw-2rem)] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-3.5 font-sans text-xs space-y-2.5">
           <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-2">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px]">
@@ -410,12 +495,15 @@ export default function EvaluatorWalkthrough() {
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setIsMinimized((v) => !v)}
+                onClick={() => {
+                  setIsMinimized(true);
+                  setManualExpand(false);
+                }}
                 className="p-1 rounded-md text-zinc-400 hover:text-white cursor-pointer"
-                aria-label={isMinimized ? "Expand guide" : "Minimize guide"}
-                title={isMinimized ? "Expand guide" : "Minimize guide"}
+                aria-label="Minimize guide"
+                title="Minimize guide"
               >
-                {isMinimized ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
@@ -428,28 +516,24 @@ export default function EvaluatorWalkthrough() {
             </div>
           </div>
 
-          {!isMinimized && (
-            <>
-              <div className="space-y-1.5">
-                <h3 className="text-sm font-bold text-white">{currentStep.title}</h3>
-                <p className="text-emerald-300 font-medium leading-relaxed">
-                  {currentStep.actionInstruction}
-                </p>
-                <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-300 leading-relaxed">
-                  <span className="text-[10px] uppercase font-bold text-zinc-500 block mb-0.5">
-                    Under the hood ({currentStep.deckSync})
-                  </span>
-                  {currentStep.underTheHood}
-                </div>
-              </div>
+          <div className="space-y-1.5">
+            <h3 className="text-sm font-bold text-white">{currentStep.title}</h3>
+            <p className="text-emerald-300 font-medium leading-relaxed">
+              {currentStep.actionInstruction}
+            </p>
+            <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-300 leading-relaxed">
+              <span className="text-[10px] uppercase font-bold text-zinc-500 block mb-0.5">
+                Under the hood ({currentStep.deckSync})
+              </span>
+              {currentStep.underTheHood}
+            </div>
+          </div>
 
-              {stepClicked && (
-                <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Clicked — inspect the live result, then continue.</span>
-                </div>
-              )}
-            </>
+          {stepClicked && (
+            <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>Clicked — inspect the live result, then continue.</span>
+            </div>
           )}
 
           <div className="flex items-center justify-between gap-2 pt-0.5">
@@ -479,7 +563,7 @@ export default function EvaluatorWalkthrough() {
 
       {/* 4. Evaluation Complete Summary Card */}
       {showComplete && (
-        <div className="fixed bottom-4 left-4 z-[45] w-[355px] max-w-[calc(100vw-2rem)] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-4 font-sans text-xs space-y-3">
+        <div className="fixed bottom-4 left-4 z-[55] w-[355px] max-w-[calc(100vw-2rem)] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-4 font-sans text-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-emerald-400 font-bold">
               <ShieldCheck className="w-4 h-4" />

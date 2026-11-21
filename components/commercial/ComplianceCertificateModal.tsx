@@ -128,7 +128,7 @@ export default function ComplianceCertificateModal({
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={onClose} data-overlay-close="true"
               className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
               aria-label="Close"
             >
