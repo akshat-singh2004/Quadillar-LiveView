@@ -66,7 +66,7 @@ export function UnifiedHeader() {
   };
 
   return (
-    <header className="h-14 border-b border-zinc-800 bg-zinc-950/85 backdrop-blur-md px-4 flex items-center justify-between font-mono text-xs select-none sticky top-0 z-20">
+    <header className="h-14 border-b border-zinc-800 bg-zinc-950/85 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between gap-2 font-mono text-xs select-none sticky top-0 z-20">
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -90,7 +90,7 @@ export function UnifiedHeader() {
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 text-zinc-100">
           <Building2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           <span className="text-[10px] font-bold text-zinc-400">{activeProject.code}</span>
-          <span className="font-bold truncate max-w-[180px] sm:max-w-xs">
+          <span className="font-bold truncate max-w-[100px] sm:max-w-xs">
             {activeProject.name}
           </span>
           <span className="hidden lg:inline-block px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-[9.5px] text-zinc-400">

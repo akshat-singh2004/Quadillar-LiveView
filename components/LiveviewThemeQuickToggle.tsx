@@ -7,7 +7,7 @@ export default function LiveviewThemeQuickToggle() {
   const { isLight, toggleTheme } = useLiveviewTheme();
 
   return (
-    <div className="fixed top-3 right-6 z-40 hidden sm:flex items-center">
+    <div className="fixed top-4 right-2.5 sm:top-3.5 sm:right-5 z-40 flex items-center">
       <button
         type="button"
         onClick={toggleTheme}

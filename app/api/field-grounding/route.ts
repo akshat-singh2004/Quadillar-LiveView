@@ -66,9 +66,10 @@ function detectDefectSignal(text: string): boolean {
 
 function normalizeGeminiPayload(raw: any, projectId: string, submitterId: string): GeminiFieldExtraction | null {
   if (!raw || typeof raw !== "object") return null;
-  const zoneId = typeof raw.matched_bim_zone_id === "string" && raw.matched_bim_zone_id.trim()
-    ? raw.matched_bim_zone_id.trim()
-    : "BIT-4-TG03";
+  const zoneId =
+    typeof raw.matched_bim_zone_id === "string" && raw.matched_bim_zone_id.trim()
+      ? raw.matched_bim_zone_id.trim()
+      : "BIT-3-CORE";
   const zMeta = findBimZone(zoneId);
   const transcript = String(raw.transcript_vernacular || raw.transcript || "").trim();
   const summary = String(raw.engineering_summary || raw.summary || "").trim();
@@ -290,15 +291,14 @@ export async function POST(req: NextRequest) {
       manualPinZoneId
         ? `The site engineer explicitly pinned BIM zone ${manualPinZoneId}.`
         : `ZONE & ELEMENT HONESTY RULE: NEVER default unrelated reports onto Transfer Girder TG-03.
-- If the engineer mentions a roof, ceiling, slab, or "chhat", set structural_element to "Roof / Slab Ceiling Inspection (Chhat)" and pick the closest slab/roof zone (BIT-5-WING or BIT-3-CORE), with confidence_score ~0.68 if exact floor/grid was not named.
-- If the engineer mentions a wall, right wall, partition, masonry, plaster, or seepage, set structural_element to "Wall / Masonry Inspection" and pick BIT-4-PODIUM or BIT-3-CORE, with confidence_score ~0.68 if exact floor/grid was not named.
+- If the engineer mentions a roof, ceiling, slab, or "chhat", set structural_element to "Roof / Slab Ceiling Inspection (Chhat)" and pick BIT-5-WING, with confidence_score ~0.68 if exact floor/grid was not named.
+- If the engineer mentions a wall, right wall, partition, masonry, plaster, or seepage, set structural_element to "Wall / Masonry Inspection" and pick BIT-3-CORE, with confidence_score ~0.68 if exact floor/grid was not named.
 - Only assign Transfer Girder TG-03 (BIT-4-TG03) if the report actually discusses a girder, beam, transfer floor, or M50 cube failure.`,
       `Only set escrow_action to FREEZE_MILESTONE if a severe structural failure (e.g. M50 cube fail, girder honeycombing, major structural crack with zone confirmed) is clearly reported.`,
     ]
       .filter(Boolean)
       .join("\n\n");
 
-    // 3-Tier Robust Gemini Cascade (Strict Schema -> Flexible JSON on 2.5 Flash -> Flexible JSON on 2.0 Flash)
     const attempts: Array<{ model: string; useSchema: boolean }> = [
       { model: "gemini-2.5-flash", useSchema: true },
       { model: "gemini-2.5-flash", useSchema: false },
@@ -394,7 +394,7 @@ export async function POST(req: NextRequest) {
         matched_bim_zone_id: zMeta.zoneId,
         structural_element: elementLabel,
         transcript_vernacular:
-          cleanedFallbackText || "Site voice/photo clip sealed (manual transcript confirmation recommended).",
+          cleanedFallbackText || "Site voice/photo clip sealed (pin exact floor/grid in 3D view).",
         engineering_summary: cleanedFallbackText
           ? `Observation logged for ${elementLabel}: "${cleanedFallbackText}". Exact floor/grid can be pinned in 3D Building.`
           : `Audio/photo evidence sealed on ${elementLabel}. Specify floor/grid or ask QUADMAX to escalate sensors.`,

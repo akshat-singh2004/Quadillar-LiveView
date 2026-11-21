@@ -442,7 +442,7 @@ export default function EvaluatorWalkthrough() {
 
       {/* 3. Floating Interactive Guide — Auto-collapses to 1-line pill whenever a modal/drawer is open */}
       {currentStep && compactPillMode && (
-        <div className="fixed bottom-3 left-3 z-[55] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-full shadow-2xl px-3 py-1.5 font-sans text-xs flex items-center gap-2">
+        <div className="fixed bottom-14 sm:bottom-3 left-3 z-[55] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-full shadow-2xl px-3 py-1.5 font-sans text-xs flex items-center gap-2">
           <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px]">
             STEP {currentStep.stepNumber}/{GUIDE_STEPS.length}
           </span>
@@ -482,7 +482,7 @@ export default function EvaluatorWalkthrough() {
       )}
 
       {currentStep && !compactPillMode && (
-        <div className="fixed bottom-4 left-4 z-[55] w-[355px] max-w-[calc(100vw-2rem)] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-3.5 font-sans text-xs space-y-2.5">
+        <div className="fixed bottom-14 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-auto sm:w-[355px] z-[55] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-3.5 font-sans text-xs space-y-2.5">
           <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-2">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px]">
@@ -563,7 +563,7 @@ export default function EvaluatorWalkthrough() {
 
       {/* 4. Evaluation Complete Summary Card */}
       {showComplete && (
-        <div className="fixed bottom-4 left-4 z-[55] w-[355px] max-w-[calc(100vw-2rem)] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-4 font-sans text-xs space-y-3">
+        <div className="fixed bottom-14 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-auto sm:w-[355px] z-[55] bg-zinc-950/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl shadow-2xl p-4 font-sans text-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-emerald-400 font-bold">
               <ShieldCheck className="w-4 h-4" />
