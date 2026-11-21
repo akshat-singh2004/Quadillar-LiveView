@@ -610,7 +610,7 @@ Rules:
     try {
       const res = await withTimeout(
         ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.5-flash-lite",
           contents: [
             {
               role: "user",
@@ -627,7 +627,7 @@ Rules:
             systemInstruction,
             responseMimeType: "application/json",
             responseSchema: PORTFOLIO_RESPONSE_SCHEMA,
-            thinkingConfig: { thinkingBudget: 0 },
+            
           },
         }),
         GEMINI_TIMEOUT_MS

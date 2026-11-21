@@ -22,7 +22,7 @@ export async function GET() {
       (process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 8) : "dev-local"),
     region: process.env.VERCEL_REGION || "asia-south1",
     gcsBucket: process.env.GCS_BUCKET_NAME || "local-hash-vault",
-    geminiModel: "gemini-2.5-flash",
+    geminiModel: "gemini-3.5-flash-lite",
     geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
     supabaseConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
     mcpEndpoint: "/api/mcp",

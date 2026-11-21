@@ -230,7 +230,7 @@ export default function MasterCommandCenterPage() {
       : GOVERNOR_DIRECTORY.filter((g) =>g.id === governorFilter);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 md:p-6 flex flex-col gap-5 font-mono max-w-[1600px] mx-auto">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-3 sm:p-5 md:p-6 flex flex-col gap-4 sm:gap-5 font-mono max-w-[1600px] mx-auto">
       {/* 1. Clean Executive Header Bar */}
       <div className="border-b border-zinc-800/80 pb-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -248,7 +248,7 @@ export default function MasterCommandCenterPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs shrink-0 relative">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 text-xs w-full lg:w-auto shrink-0 relative">
           <button
             type="button"
             data-guide-target="open-evaluator-guide-btn"

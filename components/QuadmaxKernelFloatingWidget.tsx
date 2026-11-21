@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { useLiveviewTheme } from "@/lib/theme/liveviewTheme";
+import { startFieldVoiceCapture, LiveAudioCaptureHandle } from "@/lib/audio/openSourceAudioEngine";
 import { useActiveProject } from "@/context/ProjectContext";
 import {
   AutopilotSettings,
@@ -89,10 +90,10 @@ export default function QuadmaxKernelFloatingWidget() {
   const [newAgentInstruction, setNewAgentInstruction] = useState("");
 
   const [isListening, setIsListening] = useState(false);
-  const [wakeWordArmed, setWakeWordArmed] = useState(false);
   const [voiceSpeakEnabled, setVoiceSpeakEnabled] = useState(false);
   const [voiceStatusNote, setVoiceStatusNote] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const audioHandleRef = useRef<LiveAudioCaptureHandle | null>(null);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const initialAlerts = getAllPortfolioAlerts("UP-LDA-VANGUARD-CAMPUS", "ALL_SCOPES");
@@ -311,10 +312,7 @@ export default function QuadmaxKernelFloatingWidget() {
 
           // Live UI Actuation on explicit voice/text navigation commands
           const lowerCmd = prompt.toLowerCase();
-          if (lowerCmd.includes("summit")) {
-            selectProject("LKO-SUMMIT-TOWER");
-            setSelectedProjectId("LKO-SUMMIT-TOWER");
-          } else if (lowerCmd.includes("vanguard")) {
+          if (lowerCmd.includes("vanguard")) {
             selectProject("UP-LDA-VANGUARD-CAMPUS");
             setSelectedProjectId("UP-LDA-VANGUARD-CAMPUS");
           }
@@ -367,95 +365,56 @@ export default function QuadmaxKernelFloatingWidget() {
     sendRef.current = handleSend;
   }, [handleSend]);
 
-  const startVoiceCapture = useCallback((continuousWake: boolean) => {
-    if (typeof window === "undefined") return;
-    const SpeechRec =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRec) {
-      setVoiceStatusNote("Browser voice recognition unavailable — type commands below.");
+  const toggleUnifiedVoice = useCallback(async () => {
+    // If already listening, stop and transcribe with Gemini 3.5 Flash Lite
+    if (isListening && audioHandleRef.current) {
+      setIsListening(false);
+      setVoiceStatusNote("Transcribing voice command with Gemini...");
+      try {
+        const res = await audioHandleRef.current.stop();
+        audioHandleRef.current = null;
+        if (!res.audioBlob || res.audioBlob.size === 0) {
+          setVoiceStatusNote("No audio captured — tap mic and speak clearly.");
+          setTimeout(() => setVoiceStatusNote(null), 2500);
+          return;
+        }
+        const fd = new FormData();
+        const safeBlob = res.audioBlob.type
+          ? res.audioBlob
+          : new Blob([res.audioBlob], { type: "audio/webm" });
+        const ext = safeBlob.type.includes("mp4") ? "m4a" : "webm";
+        fd.append("audio", safeBlob, `quadmax-cmd-${Date.now()}.${ext}`);
+
+        const trRes = await fetch("/api/transcribe", { method: "POST", body: fd });
+        const trData = await trRes.json();
+        const spoken = String(trData?.transcript || "").trim();
+        if (trRes.ok && spoken) {
+          setVoiceStatusNote(null);
+          setIsOpen(true);
+          await sendRef.current(spoken);
+        } else {
+          setVoiceStatusNote("Could not hear speech clearly — please try again or type below.");
+          setTimeout(() => setVoiceStatusNote(null), 3000);
+        }
+      } catch {
+        setVoiceStatusNote("Voice transcription error — type command below.");
+        setTimeout(() => setVoiceStatusNote(null), 3000);
+      }
       return;
     }
 
+    // Start fresh microphone capture (single unified mic, zero wake-word conflict)
+    setVoiceStatusNote("Listening... tap the red mic button again to send.");
+    setIsListening(true);
     try {
-      recognitionRef.current?.stop();
-    } catch {}
-
-    const rec = new SpeechRec();
-    rec.lang = "en-IN";
-    rec.continuous = continuousWake;
-    rec.interimResults = false;
-
-    rec.onstart = () => {
-      setIsListening(true);
-      setVoiceStatusNote(
-        continuousWake
-          ? 'Wake-word armed: say "Hey Quadmax, give me an overview..."'
-          : "Listening for voice command..."
-      );
-    };
-
-    rec.onresult = (event: any) => {
-      const last = event.results[event.results.length - 1];
-      if (!last || !last.isFinal) return;
-      const transcript = String(last[0].transcript || "").trim();
-      if (!transcript) return;
-
-      if (continuousWake) {
-        const lower = transcript.toLowerCase();
-        if (
-          lower.includes("hey quadmax") ||
-          lower.includes("quadmax") ||
-          lower.includes("hey google")
-        ) {
-          const cleaned = transcript
-            .replace(/^(hey\s+quadmax|quadmax|hey\s+google)[,\s]*/i, "")
-            .trim();
-          setIsOpen(true);
-          setVoiceSpeakEnabled(true);
-          sendRef.current(cleaned || "Give me a complete executive briefing across all 10 projects");
-        }
-      } else {
-        setIsOpen(true);
-        sendRef.current(transcript);
-      }
-    };
-
-    rec.onerror = () => {
+      const handle = await startFieldVoiceCapture({});
+      audioHandleRef.current = handle;
+    } catch {
       setIsListening(false);
-      setWakeWordArmed(false);
-    };
-
-    rec.onend = () => {
-      if (continuousWake) {
-        try {
-          rec.start();
-        } catch {
-          setIsListening(false);
-        }
-      } else {
-        setIsListening(false);
-        setVoiceStatusNote(null);
-      }
-    };
-
-    recognitionRef.current = rec;
-    rec.start();
-  }, []);
-
-  const toggleWakeWord = () => {
-    if (wakeWordArmed) {
-      setWakeWordArmed(false);
-      setIsListening(false);
-      setVoiceStatusNote(null);
-      try {
-        recognitionRef.current?.stop();
-      } catch {}
-    } else {
-      setWakeWordArmed(true);
-      setVoiceSpeakEnabled(true);
-      startVoiceCapture(true);
+      setVoiceStatusNote("Microphone unavailable — check browser permission or type below.");
+      setTimeout(() => setVoiceStatusNote(null), 3000);
     }
-  };
+  }, [isListening]);
 
   const handleCreateCustomAgent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -637,14 +596,18 @@ export default function QuadmaxKernelFloatingWidget() {
         <div
           onPointerDown={(e) =>e.stopPropagation()}
           style={{
-            position: "absolute",
-            ...(openUpward ? { bottom: `${PILL_HEIGHT + 10}px` } : { top: `${PILL_HEIGHT + 10}px` }),
-            ...(alignRight ? { right: 0 } : { left: 0 }),
+            ...(viewportW >= 640
+              ? {
+                  position: "absolute" as const,
+                  ...(openUpward ? { bottom: `${PILL_HEIGHT + 10}px` } : { top: `${PILL_HEIGHT + 10}px` }),
+                  ...(alignRight ? { right: 0 } : { left: 0 }),
+                }
+              : {}),
             ...panelStyle,
           }}
-          className={`${
-            isExpanded ? "w-[560px] h-[620px]" : "w-[440px] h-[500px]"
-          } max-w-[95vw] max-h-[calc(100vh-80px)] rounded-2xl border shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden select-text transition-all duration-150`}
+          className={`fixed inset-x-2.5 bottom-14 h-[66dvh] max-h-[500px] sm:inset-x-auto sm:bottom-auto ${
+            isExpanded ? "sm:w-[540px] sm:h-[600px]" : "sm:w-[420px] sm:h-[480px]"
+          } sm:max-w-[94vw] sm:max-h-[calc(100vh-80px)] rounded-2xl border shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden select-text transition-all duration-150`}
         >
           {/* 1. Clean Top Command Header */}
           <div
@@ -679,16 +642,16 @@ export default function QuadmaxKernelFloatingWidget() {
 
               <button
                 type="button"
-                onClick={toggleWakeWord}
+                onClick={() => setShowMobileFilters((v) => !v)}
                 style={{
-                  backgroundColor: wakeWordArmed ? accentColor : surfaceBg,
+                  backgroundColor: showMobileFilters ? accentColor : surfaceBg,
                   borderColor: borderSubtle,
-                  color: wakeWordArmed ? "#09090B" : mutedText,
+                  color: showMobileFilters ? "#09090B" : mutedText,
                 }}
-                className="px-2 py-0.5 rounded-lg border font-bold flex items-center gap-1"
+                className="sm:hidden px-2 py-1 rounded-lg border font-bold cursor-pointer"
+                title="Show or hide project & agent filters"
               >
-                {wakeWordArmed ? <Mic className="w-2.5 h-2.5" /> : <MicOff className="w-2.5 h-2.5" />}
-                {wakeWordArmed ? "Voice: ON" : "Hey Quadmax"}
+                Filters
               </button>
 
               <button
@@ -717,20 +680,26 @@ export default function QuadmaxKernelFloatingWidget() {
 
               <button
                 type="button"
-                onClick={() =>setIsExpanded((v) => !v)}
+                onClick={() => setIsExpanded((v) => !v)}
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
-                className="px-2 py-0.5 rounded-lg border font-bold"
+                className="hidden sm:inline-flex px-2 py-0.5 rounded-lg border font-bold cursor-pointer"
               >
                 {isExpanded ? "Compact" : "Expand"}
               </button>
 
               <button
                 type="button"
-                onClick={() =>setIsOpen(false)}
-                style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: mutedText }}
-                className="px-2 py-0.5 rounded-lg border font-bold"
+                onClick={() => setIsOpen(false)}
+                style={{
+                  backgroundColor: isLight ? "#1F1E1B" : "#27272A",
+                  borderColor: borderSubtle,
+                  color: "#FAFAFA",
+                }}
+                className="px-2.5 py-1 rounded-lg border font-bold inline-flex items-center gap-1 cursor-pointer"
+                title="Hide QUADMAX panel"
               >
-                ✕
+                <span>Hide</span>
+                <span>✕</span>
               </button>
             </div>
           </div>
@@ -738,7 +707,7 @@ export default function QuadmaxKernelFloatingWidget() {
           {/* 2. Site × Domain Scope × 3-Tier Hierarchical Agent Selector */}
           <div
             style={{ borderColor: borderSubtle, backgroundColor: surfaceBg }}
-            className="px-3 py-2 border-b grid grid-cols-1 sm:grid-cols-3 gap-1.5 shrink-0 text-[10px]"
+            className={`${showMobileFilters ? "grid" : "hidden sm:grid"} px-3 py-2 border-b grid-cols-1 sm:grid-cols-3 gap-1.5 shrink-0 text-[10px]`}
           >
             <div className="flex flex-col gap-0.5">
               <span style={{ color: mutedText }} className="text-[8px] font-bold uppercase">
@@ -1084,14 +1053,14 @@ export default function QuadmaxKernelFloatingWidget() {
           >
             <button
               type="button"
-              onClick={() =>startVoiceCapture(false)}
+              onClick={() => void toggleUnifiedVoice()}
               style={{
                 backgroundColor: isListening ? "#EF4444" : surfaceBg,
                 borderColor: borderSubtle,
                 color: isListening ? "#FFFFFF" : accentColor,
               }}
               className="p-2 rounded-xl border shrink-0"
-              title="Speak command to QUADMAX.AI"
+              title={isListening ? "Tap to stop and send voice command" : "Tap to speak command to QUADMAX.AI"}
             >
               <Mic className="w-3.5 h-3.5" />
             </button>
@@ -1101,7 +1070,7 @@ export default function QuadmaxKernelFloatingWidget() {
               value={input}
               onChange={(e) =>setInput(e.target.value)}
               onKeyDown={handleInputKeyDown}
-              placeholder="Ask QUADMAX across 10 sites or 1mm detail (↑ history)..."
+              placeholder={isListening ? "Listening... tap red mic to send" : "Ask QUADMAX about cracks, sensors, or escrow..."}
               style={{ backgroundColor: surfaceBg, borderColor: borderSubtle }}
               className="flex-1 rounded-xl border px-3 py-2 text-[10.5px] outline-none"
             />

@@ -1,0 +1,17 @@
+=== 1. EXACT INDEX-BASED PATCH ON QuadmaxKernelFloatingWidget.tsx ===
+  [OK] Removed toggleWakeWord button
+  [OK] Applied compact mobile bottom-sheet layout
+  [OK] Upgraded QUADMAX retract button to visible Hide pill
+[PATCHED] components/QuadmaxKernelFloatingWidget.tsx
+
+=== 2. TYPECHECK & PRODUCTION BUILD ===
+
+> liveview@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...
