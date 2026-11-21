@@ -72,9 +72,8 @@ export default function ComplianceCertificateModal({
         ? "https://quadillar-live-view.vercel.app"
         : origin;
 
-      const fullVerifyUrl = `${publicOrigin}/verify/${encodeURIComponent(
-        artifactToken
-      )}?project_id=${encodeURIComponent(projectId)}`;
+      const liveOrigin = publicOrigin.includes("localhost") || publicOrigin.includes("127.0.0.1") ? "[https://quadillar-live-view.vercel.app](https://quadillar-live-view.vercel.app)" : publicOrigin;
+      const fullVerifyUrl = `${liveOrigin}/verify/${encodeURIComponent(ncrId || "NCR-2026-STR-042")}?project_id=${encodeURIComponent(projectId)}`;
       setVerifyUrl(fullVerifyUrl);
 
       try {

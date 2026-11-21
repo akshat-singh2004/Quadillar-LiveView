@@ -14,7 +14,7 @@ export default async function RaBillsPage() {
     .maybeSingle();
 
   const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
-  const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
+  const projectName = "PRJ-01: Project Vanguard Commercial Hub (UP-LDA-VANGUARD-CAMPUS)";
 
   // Fetch real running account bills
   const { data: bills } = await supabase
@@ -41,7 +41,7 @@ export default async function RaBillsPage() {
             Running Account (RA) Bills &amp; Payment Waterfall
           </h1>
           <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
-            {projectName} • 5-tier statutory deductions, Aegis quality liens, and Section 65B notarized interim certificates[cite: 1].
+            {projectName} • 5-tier statutory deductions, Aegis quality liens, and Section 65B notarized interim certificates.
           </p>
         </div>
 
@@ -63,7 +63,7 @@ export default async function RaBillsPage() {
           <div className="text-xl font-bold text-cyan-400 mt-1 tabular-nums">
             ₹{(totalRetainedInr / 100000).toFixed(2)} Lakh
           </div>
-          <span className="text-[10px] text-zinc-500 block mt-0.5">Held under CPWD Cl. 1A Escrow[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500 block mt-0.5">Held under CPWD Cl. 1A Escrow</span>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
@@ -71,7 +71,7 @@ export default async function RaBillsPage() {
           <div className={`text-xl font-bold mt-1 tabular-nums ${totalLiensInr > 0 ? "text-rose-400" : "text-emerald-400"}`}>
             ₹{(totalLiensInr / 100000).toFixed(2)} Lakh
           </div>
-          <span className="text-[10px] text-zinc-500 block mt-0.5">Withheld for active structural NCRs[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500 block mt-0.5">Withheld for active structural NCRs</span>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
@@ -89,13 +89,13 @@ export default async function RaBillsPage() {
           <span className="font-bold text-white uppercase text-xs">
             Certified Running Account Bills ({activeBills.length})
           </span>
-          <span className="text-[10px] text-zinc-500">Section 65B Evidence Act Legal Tender[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500">Section 65B Evidence Act Legal Tender</span>
         </div>
 
         <div className="divide-y divide-zinc-800">
           {activeBills.length === 0 ? (
             <div className="p-12 text-center text-zinc-600 font-sans">
-              Zero certified RA bills. Click &quot;+ Generate RA Bill (IPC)&quot; to certify interim contractor valuations through the Midas waterfall[cite: 1].
+              Zero certified RA bills. Click &quot;+ Generate RA Bill (IPC)&quot; to certify interim contractor valuations through the Midas waterfall.
             </div>
           ) : (
             activeBills.map((bill: any) => (
@@ -113,11 +113,11 @@ export default async function RaBillsPage() {
 
                   <div className="text-zinc-400 text-[11px] font-sans flex flex-wrap gap-x-4 gap-y-1">
                     <span>Gross: <strong className="text-zinc-200 font-mono">₹{Number(bill.gross_amount_inr).toLocaleString("en-IN")}</strong></span>
-                    <span>Retention (5%): <strong className="text-cyan-400 font-mono">-₹{Number(bill.retention_escrow_inr).toLocaleString("en-IN")}</strong>[cite: 1]</span>
-                    <span>BOCW Cess (1%): <strong className="text-zinc-300 font-mono">-₹{Number(bill.bocw_cess_inr).toLocaleString("en-IN")}</strong>[cite: 1]</span>
-                    <span>TDS (GST+IT 4%): <strong className="text-zinc-300 font-mono">-₹{(Number(bill.gst_tds_inr) + Number(bill.it_tds_inr)).toLocaleString("en-IN")}</strong>[cite: 1]</span>
+                    <span>Retention (5%): <strong className="text-cyan-400 font-mono">-₹{Number(bill.retention_escrow_inr).toLocaleString("en-IN")}</strong></span>
+                    <span>BOCW Cess (1%): <strong className="text-zinc-300 font-mono">-₹{Number(bill.bocw_cess_inr).toLocaleString("en-IN")}</strong></span>
+                    <span>TDS (GST+IT 4%): <strong className="text-zinc-300 font-mono">-₹{(Number(bill.gst_tds_inr) + Number(bill.it_tds_inr)).toLocaleString("en-IN")}</strong></span>
                     {Number(bill.aegis_quality_lien_inr) > 0 && (
-                      <span>Aegis Lien: <strong className="text-rose-400 font-mono">-₹{Number(bill.aegis_quality_lien_inr).toLocaleString("en-IN")}</strong>[cite: 1]</span>
+                      <span>Aegis Lien: <strong className="text-rose-400 font-mono">-₹{Number(bill.aegis_quality_lien_inr).toLocaleString("en-IN")}</strong></span>
                     )}
                   </div>
                 </div>

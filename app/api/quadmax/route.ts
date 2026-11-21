@@ -13,6 +13,7 @@ import {
 } from "@/lib/agents/portfolioSentinelMesh";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export interface ChatTurnInput {
   role: "user" | "assistant";
@@ -105,7 +106,7 @@ function getServerSupabase() {
 }
 
 function isFieldIncidentQuery(prompt: string): boolean {
-  return /(site engineer|reported|report|crack|wall|honeycomb|just now|moment ago|whats up|what's up|camera|cam|lidar|drone|verify|investigate|check that)/i.test(
+  return /(site engineer|reported|report|crack|wall|chhat|roof|slab|ceiling|honeycomb|just now|moment ago|whats up|what's up|camera|cam|lidar|drone|verify|investigate|check that)/i.test(
     prompt
   );
 }
@@ -122,7 +123,8 @@ function buildSensorEscalationTrace(recentLogs: any[], prompt: string): SensorEs
   const matchedLog =
     recentLogs.find((log) => {
       const hay = `${log.transcript_vernacular || ""} ${log.structural_element || ""} ${log.engineering_summary || ""}`.toLowerCase();
-      if (q.includes("wall") && hay.includes("wall")) return true;
+      if ((q.includes("wall") || q.includes("deewar")) && hay.includes("wall")) return true;
+      if ((q.includes("chhat") || q.includes("roof") || q.includes("slab") || q.includes("ceiling")) && (hay.includes("chhat") || hay.includes("roof") || hay.includes("slab"))) return true;
       if (q.includes("crack") && hay.includes("crack")) return true;
       if ((q.includes("girder") || q.includes("tg-03")) && (hay.includes("girder") || hay.includes("tg-03"))) return true;
       return false;

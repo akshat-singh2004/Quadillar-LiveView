@@ -134,7 +134,7 @@ export function OptimizeBbsModal({ projectId }: Props) {
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-cyan-300 font-mono text-xs"
                 />
                 <span className="text-[9px] text-zinc-500 block mt-1">
-                  Vulcan runs a Best-Fit Decreasing heuristic to pack pieces into minimum 12m stock billets with salvage calculation[cite: 1].
+                  Vulcan runs a Best-Fit Decreasing heuristic to pack pieces into minimum 12m stock billets with salvage calculation.
                 </span>
               </div>
 

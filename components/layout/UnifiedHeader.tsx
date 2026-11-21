@@ -100,7 +100,7 @@ export function UnifiedHeader() {
       </div>
 
       {/* Right Stage IoT Burst & Site Telemetry Status */}
-      <div className="hidden md:flex items-center gap-2 pr-14 text-[10px] text-zinc-400">
+      <div className="flex items-center gap-1.5 sm:gap-2 pr-12 sm:pr-14 text-[10px] text-zinc-400">
         {burstBanner && (
           <span className="px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold">
             {burstBanner}

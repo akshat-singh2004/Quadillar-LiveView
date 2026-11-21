@@ -188,7 +188,8 @@ export default function WhatsAppFieldCommsDrawer({
         fd.append("image", photoFileToSend);
       }
       if (opts.audioBlob) {
-        fd.append("audio", opts.audioBlob, `site-voice-${Date.now()}.webm`);
+        const safeAudio = opts.audioBlob.type ? opts.audioBlob : new Blob([opts.audioBlob], { type: "audio/webm" });
+        fd.append("audio", safeAudio, `site-voice-${Date.now()}.webm`);
       }
 
       const res = await fetch("/api/field-grounding", { method: "POST", body: fd });

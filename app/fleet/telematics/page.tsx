@@ -14,7 +14,7 @@ export default async function FleetTelematicsPage() {
     .maybeSingle();
 
   const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
-  const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
+  const projectName = "PRJ-01: Project Vanguard Commercial Hub (UP-LDA-VANGUARD-CAMPUS)";
 
   // Fetch telemetry logs & inter-agent synapse events
   const [fleetRes, synapseRes] = await Promise.all([
@@ -43,7 +43,7 @@ export default async function FleetTelematicsPage() {
             Heavy Plant Telematics &amp; Autonomous Council Synapse
           </h1>
           <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
-            {projectName} • Real-time asset OEE, CPWD Form 31 fuel pilferage surveillance, and Argus-to-Ananke wind interlocks[cite: 1].
+            {projectName} • Real-time asset OEE, CPWD Form 31 fuel pilferage surveillance, and Argus-to-Ananke wind interlocks.
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export default async function FleetTelematicsPage() {
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
           <span className="text-[10px] text-zinc-500 uppercase block font-bold">Average Fleet OEE</span>
           <div className="text-xl font-bold text-cyan-400 mt-1 tabular-nums">{avgOee}%</div>
-          <span className="text-[10px] text-zinc-500 block mt-0.5">ISO 22400 benchmark[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500 block mt-0.5">ISO 22400 benchmark</span>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
@@ -76,7 +76,7 @@ export default async function FleetTelematicsPage() {
             {groundedCount} Grounded
           </div>
           <span className="text-[10px] text-zinc-500 block mt-0.5">
-            {groundedCount > 0 ? "High wind or fitness expiry[cite: 1]" : "Zero safety groundings"}
+            {groundedCount > 0 ? "High wind or fitness expiry" : "Zero safety groundings"}
           </span>
         </div>
       </div>
@@ -89,7 +89,7 @@ export default async function FleetTelematicsPage() {
             <span className="font-bold text-white uppercase text-xs">
               Live Fleet Telemetry Register ({fleetLogs.length})
             </span>
-            <span className="text-[10px] text-zinc-500">ISO 22400 OEE Stream[cite: 1]</span>
+            <span className="text-[10px] text-zinc-500">ISO 22400 OEE Stream</span>
           </div>
 
           <div className="divide-y divide-zinc-800 max-h-[500px] overflow-y-auto">
@@ -123,7 +123,7 @@ export default async function FleetTelematicsPage() {
                     </div>
 
                     <div className="flex justify-between text-[11px] text-zinc-400 font-sans">
-                      <span>OEE: <strong className="text-cyan-400 font-mono">{log.oee_pct}%</strong>[cite: 1]</span>
+                      <span>OEE: <strong className="text-cyan-400 font-mono">{log.oee_pct}%</strong></span>
                       <span>Hours: <strong className="text-zinc-200 font-mono">{log.actual_operating_hours}h</strong></span>
                       <span>Fuel Burn: <strong className="text-amber-400 font-mono">{log.fuel_consumed_liters}L</strong></span>
                       <span>Variance: <strong className={isFlagged ? "text-rose-400 font-mono" : "text-emerald-400 font-mono"}>
@@ -149,7 +149,7 @@ export default async function FleetTelematicsPage() {
           <div className="divide-y divide-zinc-800 max-h-[500px] overflow-y-auto">
             {synapseEvents.length === 0 ? (
               <div className="p-8 text-center text-zinc-600 font-sans">
-                Zero inter-agent events logged. Governors communicate reactively when safety, quality, or weather boundaries trip[cite: 1].
+                Zero inter-agent events logged. Governors communicate reactively when safety, quality, or weather boundaries trip.
               </div>
             ) : (
               synapseEvents.map((evt: any) => (

@@ -15,7 +15,7 @@ export default async function HindranceEotPage() {
     .maybeSingle();
 
   const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
-  const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
+  const projectName = "PRJ-01: Project Vanguard Commercial Hub (UP-LDA-VANGUARD-CAMPUS)";
 
   // Fetch hindrances and EOT claim dossiers
   const [hindranceRes, eotRes] = await Promise.all([
@@ -43,7 +43,7 @@ export default async function HindranceEotPage() {
             Site Hindrance Register &amp; Extension of Time (EOT) Claims
           </h1>
           <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
-            {projectName} • Contemporaneous float analysis, 28-day notice time-bar surveillance, and CPWD Cl. 2 liquidated damages defense[cite: 1].
+            {projectName} • Contemporaneous float analysis, 28-day notice time-bar surveillance, and CPWD Cl. 2 liquidated damages defense.
           </p>
         </div>
 
@@ -69,7 +69,7 @@ export default async function HindranceEotPage() {
           <div className="text-xl font-bold text-cyan-400 mt-1 tabular-nums">
             ₹{(totalLdShieldedInr / 100000).toFixed(2)} Lakh
           </div>
-          <span className="text-[10px] text-zinc-500 block mt-0.5">Protected from recovery[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500 block mt-0.5">Protected from recovery</span>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">

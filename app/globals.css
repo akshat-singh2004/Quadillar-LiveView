@@ -511,3 +511,18 @@ html[data-theme="claude-light"] button.bg-purple-600 {
   color: #FDFCF9 !important;
 }
 /* === QUADILLAR CLAUDE MATTE LIGHT THEME END === */
+
+
+/* QUADILLAR-QUIET-LUXURY-HARMONIZE */
+.bg-slate-950, .bg-\[\#020617\], .bg-\[\#060b16\], .bg-\[\#0a0f1c\] {
+  background-color: #09090b !important;
+}
+.bg-slate-900, .bg-slate-900\/80, .bg-slate-900\/90 {
+  background-color: #141417 !important;
+}
+.border-slate-800, .border-cyan-500\/30, .border-cyan-500\/40 {
+  border-color: #27272a !important;
+}
+.text-cyan-400, .text-cyan-300, .text-sky-400 {
+  color: #10b981 !important;
+}

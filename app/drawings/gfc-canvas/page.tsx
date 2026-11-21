@@ -307,7 +307,7 @@ export default function GFCSpatialRedlinePage() {
                         <div className={`text-2xl font-bold mt-1 ${redlines.some((r) => r.status === 'OPEN_UNDER_REVIEW') ? 'text-amber-400' : 'text-emerald-400'}`}>
                             {redlines.filter((r) => r.status === 'OPEN_UNDER_REVIEW').length} Open Pins
                         </div>
-                        <span className="text-[10px] text-zinc-500 mt-1 block">Mapped to structural canvas[cite: 1]</span>
+                        <span className="text-[10px] text-zinc-500 mt-1 block">Mapped to structural canvas</span>
                     </div>
 
                     <div className="bg-zinc-900/60 border border-zinc-800 p-4">
@@ -335,7 +335,7 @@ export default function GFCSpatialRedlinePage() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
                             <div>
                                 <span className="text-white font-bold text-xs uppercase block">
-                                    {selectedDrawing ? `${selectedDrawing.drawing_number} — ${selectedDrawing.sheet_title}` : 'Floor Canvas Viewport'}[cite: 1]
+                                    {selectedDrawing ? `${selectedDrawing.drawing_number} — ${selectedDrawing.sheet_title}` : 'Floor Canvas Viewport'}
                                 </span>
                                 <span className="text-[10px] text-zinc-500">
                                     {selectedDrawing ? `Discipline: ${selectedDrawing.discipline} | Scale: ${selectedDrawing.scale_ratio} | ${selectedDrawing.revision_code}` : 'Select a drawing sheet to view architectural canvas'}
@@ -366,7 +366,7 @@ export default function GFCSpatialRedlinePage() {
                             className={`relative w-full h-[520px] bg-neutral-950 border rounded-lg overflow-hidden select-none transition ${isPinModeActive ? 'cursor-crosshair border-rose-500' : 'cursor-default border-zinc-800'
                                 }`}
                         >
-                            {/* Vector Architectural Floor Blueprint Grid[cite: 1] */}
+                            {/* Vector Architectural Floor Blueprint Grid */}
                             <svg className="absolute inset-0 w-full h-full opacity-40" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
                                     <pattern id="gfcGrid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -381,7 +381,7 @@ export default function GFCSpatialRedlinePage() {
                                 <line x1="40" y1="340" x2="92%" y2="340" stroke="#52525b" strokeWidth="1" strokeDasharray="2 4" />
                                 <line x1="300" y1="40" x2="300" y2="88%" stroke="#52525b" strokeWidth="1" strokeDasharray="2 4" />
                                 <line x1="600" y1="40" x2="600" y2="88%" stroke="#52525b" strokeWidth="1" strokeDasharray="2 4" />
-                                {/* Core Shear Wall / Shaft[cite: 1] */}
+                                {/* Core Shear Wall / Shaft */}
                                 <rect x="420" y="200" width="160" height="120" fill="#18181b" stroke="#06b6d4" strokeWidth="2" />
                                 <text x="460" y="265" fill="#71717a" fontSize="12" fontFamily="monospace">CORE SHAFT</text>
                             </svg>
@@ -392,7 +392,7 @@ export default function GFCSpatialRedlinePage() {
                                     <Compass className="w-10 h-10 text-neutral-600 animate-pulse" />
                                     <div className="font-bold text-neutral-300 uppercase">No GFC Drawings Sanctioned</div>
                                     <p className="text-xs text-neutral-500 max-w-sm">
-                                        The drawing canvas is currently empty[cite: 1]. Upload and sanction an active A1 sheet using the form to establish structural setting out.
+                                        The drawing canvas is currently empty. Upload and sanction an active A1 sheet using the form to establish structural setting out.
                                     </p>
                                 </div>
                             )}

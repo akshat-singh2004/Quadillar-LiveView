@@ -14,7 +14,7 @@ export default async function LaborMusterPage() {
     .maybeSingle();
 
   const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
-  const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
+  const projectName = "PRJ-01: Project Vanguard Commercial Hub (UP-LDA-VANGUARD-CAMPUS)";
 
   // Fetch real muster records
   const { data: musterRolls } = await supabase
@@ -41,7 +41,7 @@ export default async function LaborMusterPage() {
             Biometric Labor Muster &amp; Statutory Wage Ledger
           </h1>
           <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
-            {projectName} • Anti-passback turnstile verification, ghost worker contra-charge debits, and Section 65B notarized muster rolls[cite: 1].
+            {projectName} • Anti-passback turnstile verification, ghost worker contra-charge debits, and Section 65B notarized muster rolls.
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export default async function LaborMusterPage() {
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
           <span className="text-[10px] text-zinc-500 uppercase block font-bold">Biometric Ingress Verified</span>
           <div className="text-xl font-bold text-cyan-400 mt-1 tabular-nums">{totalVerifiedHeadcount} Punched</div>
-          <span className="text-[10px] text-zinc-500 block mt-0.5">Turnstile anti-passback cleared[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500 block mt-0.5">Turnstile anti-passback cleared</span>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
@@ -77,7 +77,7 @@ export default async function LaborMusterPage() {
           <div className={`text-xl font-bold mt-1 tabular-nums ${totalGhostDebitInr > 0 ? "text-rose-400" : "text-emerald-400"}`}>
             ₹{totalGhostDebitInr.toLocaleString("en-IN")}
           </div>
-          <span className="text-[10px] text-zinc-500 block mt-0.5">Debited from contractor IPCs[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500 block mt-0.5">Debited from contractor IPCs</span>
         </div>
       </div>
 
@@ -123,7 +123,7 @@ export default async function LaborMusterPage() {
 
                     {hasGhosts && (
                       <div className="text-rose-400 text-[10px] font-mono pt-0.5">
-                        &bull; Forensic Warning: {muster.ghost_workers_count} unverified ghost worker(s) debited at ₹{muster.ghost_wage_debit_inr} from contractor bill[cite: 1].
+                        &bull; Forensic Warning: {muster.ghost_workers_count} unverified ghost worker(s) debited at ₹{muster.ghost_wage_debit_inr} from contractor bill.
                       </div>
                     )}
                   </div>

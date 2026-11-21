@@ -52,9 +52,9 @@ const HEATMAP_NODES: StructuralDeviationNode[] = [
   },
   {
     id: "SUMMIT-W04",
-    projectId: "LKO-SUMMIT-TOWER",
+    projectId: "UP-LDA-VANGUARD-CAMPUS",
     zoneCode: "12F-GRID-B4-B7",
-    elementName: "12th Floor Perimeter Wall W-04 (Summit Building)",
+    elementName: "Level 3 Podium Perimeter Wall W-04 (Project Vanguard)",
     plannedCoord: "GFC Gridline B4–B7 (X = 24.000 m)",
     asBuiltCoord: "Cast Outward at X = 25.000 m (+1.00 m Off-Grid)",
     deltaMm: 1000.0,
@@ -63,7 +63,7 @@ const HEATMAP_NODES: StructuralDeviationNode[] = [
   },
   {
     id: "SUMMIT-C08",
-    projectId: "LKO-SUMMIT-TOWER",
+    projectId: "UP-LDA-VANGUARD-CAMPUS",
     zoneCode: "12F-CORE-C08",
     elementName: "12th Floor Lift Core Column C-08",
     plannedCoord: "Grid C8 • RL +46.800 m",
@@ -98,7 +98,7 @@ export default function MillimeterHeatmapHud() {
   const scopedNodes = HEATMAP_NODES.filter(
     (n) =>
       n.projectId === activeProject.projectId ||
-      (activeProject.projectId !== "LKO-SUMMIT-TOWER" && n.projectId === "UP-LDA-VANGUARD-CAMPUS")
+      (activeProject.projectId !== "UP-LDA-VANGUARD-CAMPUS" && n.projectId === "UP-LDA-VANGUARD-CAMPUS")
   );
 
   const activeNode =

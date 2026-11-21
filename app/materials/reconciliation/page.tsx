@@ -15,7 +15,7 @@ export default async function MaterialReconciliationPage() {
     .maybeSingle();
 
   const projectId = projectRow?.project_id || "GOMTI-NAGAR-PH1-FITOUT";
-  const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
+  const projectName = "PRJ-01: Project Vanguard Commercial Hub (UP-LDA-VANGUARD-CAMPUS)";
 
   // Fetch material reconciliations & cutting schedules
   const [reconcileRes, bbsRes] = await Promise.all([
@@ -42,7 +42,7 @@ export default async function MaterialReconciliationPage() {
             Material Reconciliation &amp; 1D Rebar Nesting
           </h1>
           <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
-            {projectName} • Clause 42 penal recoveries, 1D billet cutting-stock optimization, and Section 65B notarized material manifests[cite: 1].
+            {projectName} • Clause 42 penal recoveries, 1D billet cutting-stock optimization, and Section 65B notarized material manifests.
           </p>
         </div>
 
@@ -65,13 +65,13 @@ export default async function MaterialReconciliationPage() {
           <div className={`text-xl font-bold mt-1 tabular-nums ${totalPenalDebitInr > 0 ? "text-rose-400" : "text-emerald-400"}`}>
             ₹{(totalPenalDebitInr / 100000).toFixed(2)} Lakh
           </div>
-          <span className="text-[10px] text-zinc-500 block mt-0.5">Assessed at 2x stipulated rate[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500 block mt-0.5">Assessed at 2x stipulated rate</span>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
           <span className="text-[10px] text-zinc-500 uppercase block font-bold">BBS Optimizations</span>
           <div className="text-xl font-bold text-cyan-400 mt-1 tabular-nums">{bbsSchedules.length} Schedules</div>
-          <span className="text-[10px] text-zinc-500 block mt-0.5">{compliantBbsCount} compliant with &le; 3% scrap[cite: 1]</span>
+          <span className="text-[10px] text-zinc-500 block mt-0.5">{compliantBbsCount} compliant with &le; 3% scrap</span>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
@@ -93,7 +93,7 @@ export default async function MaterialReconciliationPage() {
             <span className="font-bold text-white uppercase text-xs">
               CPWD Clause 42 Material Register ({reconciliations.length})
             </span>
-            <span className="text-[10px] text-zinc-500">2x Rate Penal Audit[cite: 1]</span>
+            <span className="text-[10px] text-zinc-500">2x Rate Penal Audit</span>
           </div>
 
           <div className="divide-y divide-zinc-800 max-h-[500px] overflow-y-auto">
@@ -144,7 +144,7 @@ export default async function MaterialReconciliationPage() {
             <span className="font-bold text-white uppercase text-xs">
               Optimized BBS Cutting Schedules ({bbsSchedules.length})
             </span>
-            <span className="text-[10px] text-zinc-500">IS 2502 12m Billet Nesting[cite: 1]</span>
+            <span className="text-[10px] text-zinc-500">IS 2502 12m Billet Nesting</span>
           </div>
 
           <div className="divide-y divide-zinc-800 max-h-[500px] overflow-y-auto">
@@ -165,7 +165,7 @@ export default async function MaterialReconciliationPage() {
                     <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                       bbs.is_compliant ? "bg-emerald-950 border border-emerald-800 text-emerald-300" : "bg-amber-950 border border-amber-800 text-amber-300"
                     }`}>
-                      {bbs.is_compliant ? "Scrap &le; 3% Compliant" : `${bbs.true_scrap_pct}% Scrap (High)`}[cite: 1]
+                      {bbs.is_compliant ? "Scrap &le; 3% Compliant" : `${bbs.true_scrap_pct}% Scrap (High)`}
                     </span>
                   </div>
 

@@ -630,7 +630,7 @@ export default function QuadmaxKernelFloatingWidget() {
 
   return (
     <div
-      style={{ position: "fixed", left: `${pos.x}px`, top: `${pos.y}px`, zIndex: 60 }}
+      style={{ position: "fixed", left: `${pos.x}px`, top: `${pos.y}px`, zIndex: isOpen ? 60 : 35 }}
       className="font-mono"
     >
       {isOpen && (

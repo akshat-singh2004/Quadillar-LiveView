@@ -15,13 +15,23 @@ import { ensureProjectRowExists } from "@/lib/agents/hermes";
 import { resolvePortfolioProject } from "@/lib/agents/portfolioSentinelMesh";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const INGESTED_MEDIA_HASH_CACHE = new Map<string, { id: string; bim_zone_id: string; created_at: string }>();
 const MAX_HASH_CACHE_SIZE = 500;
-const GEMINI_TIMEOUT_MS = 20000;
+const GEMINI_TIMEOUT_MS = 22000;
 
 const ALLOWED_AUDIO_TYPES = new Set([
-  "audio/ogg", "audio/webm", "audio/mp3", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/mp4",
+  "audio/ogg",
+  "audio/webm",
+  "audio/mp3",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/mp4",
+  "audio/m4a",
+  "audio/aac",
+  "audio/x-m4a",
 ]);
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 
@@ -29,8 +39,14 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error("FIELD_GROUNDING_TIMEOUT")), ms);
     promise
-      .then((val) => { clearTimeout(timer); resolve(val); })
-      .catch((err) => { clearTimeout(timer); reject(err); });
+      .then((val) => {
+        clearTimeout(timer);
+        resolve(val);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
   });
 }
 
@@ -43,14 +59,86 @@ function getServerSupabase() {
 
 function detectDefectSignal(text: string): boolean {
   const q = text.toLowerCase();
-  return /(fail|honeycomb|void|crack|spall|segregat|reject|defect|broken|leak|seepage|offset|deviation|hold|bulge|41\.2|<\s*46|low strength|poor|exposed rebar|darar|toot)/i.test(q);
+  return /(fail|honeycomb|void|crack|spall|segregat|reject|defect|broken|leak|seepage|offset|deviation|hold|bulge|41\.2|<\s*46|low strength|poor|exposed rebar|darar|toot|chhat.*crack|ceiling.*crack)/i.test(
+    q
+  );
+}
+
+function normalizeGeminiPayload(raw: any, projectId: string, submitterId: string): GeminiFieldExtraction | null {
+  if (!raw || typeof raw !== "object") return null;
+  const zoneId = typeof raw.matched_bim_zone_id === "string" && raw.matched_bim_zone_id.trim()
+    ? raw.matched_bim_zone_id.trim()
+    : "BIT-4-TG03";
+  const zMeta = findBimZone(zoneId);
+  const transcript = String(raw.transcript_vernacular || raw.transcript || "").trim();
+  const summary = String(raw.engineering_summary || raw.summary || "").trim();
+  if (!transcript && !summary) return null;
+
+  const severityRaw = String(raw.severity || "MODERATE_NCR").toUpperCase();
+  const severity: "CRITICAL_HOLD" | "MODERATE_NCR" | "ROUTINE_DPR" =
+    severityRaw === "CRITICAL_HOLD" || severityRaw === "MODERATE_NCR" || severityRaw === "ROUTINE_DPR"
+      ? severityRaw
+      : "MODERATE_NCR";
+
+  const escrowRaw = String(raw.escrow_action || "NO_CHANGE").toUpperCase();
+  const escrow_action: "FREEZE_MILESTONE" | "NO_CHANGE" =
+    escrowRaw === "FREEZE_MILESTONE" ? "FREEZE_MILESTONE" : "NO_CHANGE";
+
+  const lien = escrow_action === "FREEZE_MILESTONE" ? Number(raw.withholding_amount_inr || zMeta.defaultLienInr) : 0;
+  const isClause = String(raw.is_code_clause || "IS 456:2000 Cl. 17.4.3");
+  const element = String(raw.structural_element || zMeta.structuralElement);
+  const conf = Number.isFinite(Number(raw.confidence_score)) ? Number(raw.confidence_score) : 0.78;
+
+  const gc = raw.governance_council && typeof raw.governance_council === "object" ? raw.governance_council : null;
+
+  return {
+    matched_bim_zone_id: zMeta.zoneId,
+    structural_element: element,
+    transcript_vernacular: transcript || summary,
+    engineering_summary: summary || transcript,
+    confidence_score: Math.max(0.1, Math.min(1, conf)),
+    severity,
+    is_code_clause: isClause,
+    escrow_action,
+    withholding_amount_inr: lien,
+    governance_council: {
+      structural_qa_agent: {
+        verdict:
+          gc?.structural_qa_agent?.verdict ||
+          `Field inspection analyzed on ${element} (${isClause}).`,
+        is_456_clause: gc?.structural_qa_agent?.is_456_clause || isClause,
+        hold_status:
+          gc?.structural_qa_agent?.hold_status ||
+          (escrow_action === "FREEZE_MILESTONE" ? "HOLD_ENFORCED" : "ADVISORY_NCR"),
+      },
+      commercial_escrow_agent: {
+        verdict:
+          gc?.commercial_escrow_agent?.verdict ||
+          (escrow_action === "FREEZE_MILESTONE"
+            ? `Escrow hold of INR ${lien.toLocaleString("en-IN")} enforced pending verification.`
+            : "No automatic escrow hold triggered."),
+        withholding_lien_inr: lien,
+        milestone_lock: escrow_action === "FREEZE_MILESTONE" ? "LOCKED" : "UNLOCKED",
+      },
+      section_65b_vault_agent: {
+        verdict:
+          gc?.section_65b_vault_agent?.verdict ||
+          "Canonical SHA-256 record sealed under BSA 2023 Sec. 63 / Sec. 65B.",
+        attestation_scope:
+          gc?.section_65b_vault_agent?.attestation_scope || `${projectId} / ${zMeta.zoneId} / ${submitterId}`,
+      },
+    },
+  };
 }
 
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "GEMINI_API_KEY is missing in environment configuration.", code: "MISSING_GEMINI_KEY" }, { status: 500 });
+      return NextResponse.json(
+        { error: "GEMINI_API_KEY is missing in environment configuration.", code: "MISSING_GEMINI_KEY" },
+        { status: 500 }
+      );
     }
 
     const formData = await req.formData();
@@ -63,9 +151,8 @@ export async function POST(req: NextRequest) {
       formData.get("transcript_override") || formData.get("transcriptOverride") || formData.get("transcript") || ""
     ).trim();
     const browserSttHint = String(formData.get("browser_stt_hint") || "").trim();
-    const forceLowConfidence = String(
-      formData.get("force_low_confidence") || formData.get("forceLowConfidence") || ""
-    ) === "true";
+    const forceLowConfidence =
+      String(formData.get("force_low_confidence") || formData.get("forceLowConfidence") || "") === "true";
 
     const requestedProjectId = String(
       formData.get("project_id") || formData.get("projectId") || VANGUARD_GENOME.projectId
@@ -88,22 +175,29 @@ export async function POST(req: NextRequest) {
     const provenanceSources: string[] = [];
 
     if (hasAudio && audioFile) {
-      const baseMime = audioFile.type.split(";")[0].trim().toLowerCase();
-      if (!ALLOWED_AUDIO_TYPES.has(baseMime)) {
-        return NextResponse.json({ error: `Unsupported audio MIME type: ${audioFile.type}`, code: "INVALID_AUDIO_MIME" }, { status: 400 });
-      }
+      const rawMime = (audioFile.type || "audio/webm").split(";")[0].trim().toLowerCase();
+      const baseMime = ALLOWED_AUDIO_TYPES.has(rawMime) ? rawMime : "audio/webm";
+      const geminiAudioMime =
+        baseMime === "audio/mp3"
+          ? "audio/mpeg"
+          : baseMime === "audio/m4a" || baseMime === "audio/x-m4a"
+          ? "audio/mp4"
+          : baseMime;
       const audioBuf = Buffer.from(await audioFile.arrayBuffer());
       buffers.push(audioBuf);
       mediaParts.push({
-        inlineData: { data: audioBuf.toString("base64"), mimeType: baseMime === "audio/mp3" ? "audio/mpeg" : baseMime },
+        inlineData: { data: audioBuf.toString("base64"), mimeType: geminiAudioMime },
       });
       provenanceSources.push("Gemini Verified Audio");
     }
 
     if (hasImage && imageFile) {
-      const baseMime = imageFile.type.split(";")[0].trim().toLowerCase();
+      const baseMime = (imageFile.type || "image/jpeg").split(";")[0].trim().toLowerCase();
       if (!ALLOWED_IMAGE_TYPES.has(baseMime)) {
-        return NextResponse.json({ error: `Unsupported image MIME type: ${imageFile.type}`, code: "INVALID_IMAGE_MIME" }, { status: 400 });
+        return NextResponse.json(
+          { error: `Unsupported image MIME type: ${imageFile.type}`, code: "INVALID_IMAGE_MIME" },
+          { status: 400 }
+        );
       }
       const imgBuf = Buffer.from(await imageFile.arrayBuffer());
       buffers.push(imgBuf);
@@ -130,7 +224,6 @@ export async function POST(req: NextRequest) {
 
     const supabase = getServerSupabase();
 
-    // Fetch live project escrow state to ground Gemini directly on real software context (MCP-style state grounding)
     let liveProjectContext = "";
     if (supabase) {
       try {
@@ -140,12 +233,11 @@ export async function POST(req: NextRequest) {
           .eq("project_id", projectMeta.projectId)
           .limit(5);
         if (liveGates && liveGates.length > 0) {
-          liveProjectContext = `LIVE PROJECT ESCROW CONTEXT (from Supabase /api/mcp): ${JSON.stringify(liveGates)}`;
+          liveProjectContext = `LIVE PROJECT ESCROW CONTEXT (Supabase /api/mcp): ${JSON.stringify(liveGates)}`;
         }
       } catch {}
     }
 
-    // Enforce anti-replay deduplication strictly on binary media (photos/audio)
     if (hasBinaryMedia) {
       const cachedDup = INGESTED_MEDIA_HASH_CACHE.get(mediaSha256);
       if (cachedDup) {
@@ -161,15 +253,12 @@ export async function POST(req: NextRequest) {
       }
 
       if (supabase) {
-        const { data: existing, error: dupErr } = await supabase
+        const { data: existing } = await supabase
           .from("field_grounding_logs")
           .select("id, created_at, bim_zone_id")
           .eq("media_sha256", mediaSha256)
           .maybeSingle();
 
-        if (dupErr) {
-          console.warn("[field-grounding] Dedup lookup warning:", dupErr.message);
-        }
         if (existing) {
           return NextResponse.json(
             {
@@ -186,53 +275,77 @@ export async function POST(req: NextRequest) {
 
     let parsed: GeminiFieldExtraction | null = null;
     const ai = new GoogleGenAI({ apiKey });
-    const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
 
     const groundingDirectives = [
-      `Analyze this field report captured at ${capturedAt} by ${submitterId} on ${projectMeta.name} (${projectMeta.projectId}).`,
+      `Analyze this construction field report captured at ${capturedAt} by ${submitterId} on ${projectMeta.name} (${projectMeta.projectId}).`,
       liveProjectContext,
       hasAudio
-        ? `AUDIO TRANSCRIPTION RULE: Listen directly to the attached audio clip and transcribe what the site engineer actually said in English/Hindi/Hinglish using construction domain vocabulary (wall, right wall, left wall, partition, column, beam, slab, transfer girder, rebar, honeycombing, shuttering, plaster, seepage, crack, curing, concrete cube, M50). Ignore any noisy phonetic mistakes.`
+        ? `CRITICAL AUDIO TRANSCRIPTION RULE: Listen directly to the attached audio clip and transcribe EXACTLY what the speaker said in English, Hindi, or Hinglish using construction domain vocabulary (wall, right wall, chhat/roof/slab/ceiling, column, beam, transfer girder, rebar, honeycombing, shuttering, plaster, seepage, crack, darar, curing, concrete cube, M50). Put the exact heard speech in transcript_vernacular.`
         : "",
       transcriptOverride
         ? `Explicit typed engineer note: "${transcriptOverride}".`
         : browserSttHint && !hasAudio
-        ? `Noisy browser speech hint (correct obvious construction homophones like "right ball" -> "right wall"): "${browserSttHint}".`
+        ? `Browser speech transcript (correct obvious construction homophones like "right ball" -> "right wall"): "${browserSttHint}".`
         : "",
       manualPinZoneId
         ? `The site engineer explicitly pinned BIM zone ${manualPinZoneId}.`
-        : `ZONE & ELEMENT HONESTY RULE: Only assign Transfer Girder TG-03 (BIT-4-TG03) if the report actually discusses a girder, beam, transfer floor, or M50 structural cube failure. If the engineer mentions a wall (e.g., right wall, partition wall, plaster, seepage) or another element, clearly name that exact element in structural_element and engineering_summary, pick the closest zone ID from the registry, and set confidence_score below 0.72 if the exact floor/grid was not stated so an engineer can pin it. Never blindly force unrelated reports onto Transfer Girder TG-03.`,
-      `Only set escrow_action to FREEZE_MILESTONE if a genuine structural defect, strength failure, or critical non-conformance is clearly described.`,
+        : `ZONE & ELEMENT HONESTY RULE: NEVER default unrelated reports onto Transfer Girder TG-03.
+- If the engineer mentions a roof, ceiling, slab, or "chhat", set structural_element to "Roof / Slab Ceiling Inspection (Chhat)" and pick the closest slab/roof zone (BIT-5-WING or BIT-3-CORE), with confidence_score ~0.68 if exact floor/grid was not named.
+- If the engineer mentions a wall, right wall, partition, masonry, plaster, or seepage, set structural_element to "Wall / Masonry Inspection" and pick BIT-4-PODIUM or BIT-3-CORE, with confidence_score ~0.68 if exact floor/grid was not named.
+- Only assign Transfer Girder TG-03 (BIT-4-TG03) if the report actually discusses a girder, beam, transfer floor, or M50 cube failure.`,
+      `Only set escrow_action to FREEZE_MILESTONE if a severe structural failure (e.g. M50 cube fail, girder honeycombing, major structural crack with zone confirmed) is clearly reported.`,
     ]
       .filter(Boolean)
       .join("\n\n");
 
-    for (const modelName of candidateModels) {
+    // 3-Tier Robust Gemini Cascade (Strict Schema -> Flexible JSON on 2.5 Flash -> Flexible JSON on 2.0 Flash)
+    const attempts: Array<{ model: string; useSchema: boolean }> = [
+      { model: "gemini-2.5-flash", useSchema: true },
+      { model: "gemini-2.5-flash", useSchema: false },
+      { model: "gemini-2.0-flash", useSchema: false },
+    ];
+
+    for (const attempt of attempts) {
       try {
+        const promptText = attempt.useSchema
+          ? groundingDirectives
+          : `${groundingDirectives}\n\nReturn ONLY valid JSON with keys: transcript_vernacular, engineering_summary, matched_bim_zone_id (one of BIT-4-TG03, BIT-1-ARCH, BIT-2-DOME, BIT-3-CORE, BIT-5-WING), structural_element, confidence_score (0.0-1.0), severity (CRITICAL_HOLD|MODERATE_NCR|ROUTINE_DPR), is_code_clause, escrow_action (FREEZE_MILESTONE|NO_CHANGE), withholding_amount_inr.`;
+
+        const config: any = {
+          systemInstruction: buildBimSystemInstruction(),
+          responseMimeType: "application/json",
+        };
+        if (attempt.useSchema) {
+          config.responseSchema = FIELD_GROUNDING_RESPONSE_SCHEMA;
+        }
+
         const response = await withTimeout(
           ai.models.generateContent({
-            model: modelName,
-            contents: [
-              {
-                role: "user",
-                parts: [...mediaParts, { text: groundingDirectives }],
-              },
-            ],
-            config: {
-              systemInstruction: buildBimSystemInstruction(),
-              responseMimeType: "application/json",
-              responseSchema: FIELD_GROUNDING_RESPONSE_SCHEMA,
-              thinkingConfig: { thinkingBudget: 0 },
-            },
+            model: attempt.model,
+            contents: [{ role: "user", parts: [...mediaParts, { text: promptText }] }],
+            config,
           }),
           GEMINI_TIMEOUT_MS
         );
+
         if (response.text) {
-          parsed = JSON.parse(response.text) as GeminiFieldExtraction;
-          break;
+          const cleanedJson = response.text
+            .trim()
+            .replace(/^```json\s*/i, "")
+            .replace(/^```\s*/i, "")
+            .replace(/\s*```$/i, "");
+          const rawObj = JSON.parse(cleanedJson);
+          const normalized = normalizeGeminiPayload(rawObj, projectMeta.projectId, submitterId);
+          if (normalized) {
+            parsed = normalized;
+            break;
+          }
         }
       } catch (err: any) {
-        console.warn(`[field-grounding] Model ${modelName} fallback triggered:`, err?.message || err);
+        console.warn(
+          `[field-grounding] Attempt ${attempt.model} (schema=${attempt.useSchema}) failed:`,
+          err?.message || err
+        );
       }
     }
 
@@ -241,49 +354,67 @@ export async function POST(req: NextRequest) {
       const cleanedFallbackText = rawText.replace(/\bright ball\b/gi, "right wall");
       const hint = (cleanedFallbackText + " " + manualPinZoneId).toLowerCase();
 
-      const mentionsWall = /\b(wall|plaster|brick|masonry|partition|seepage|paint)\b/i.test(hint);
+      const mentionsRoof = /\b(chhat|chat|roof|ceiling|slab|terrace|soffit)\b/i.test(hint);
+      const mentionsWall = /\b(wall|deewar|plaster|brick|masonry|partition|seepage|paint)\b/i.test(hint);
+      const mentionsColumn = /\b(column|pillar|stambh)\b/i.test(hint);
+      const mentionsGirder = /\b(girder|tg-03|beam|41\.2|honeycomb|m50)\b/i.test(hint);
+
       const inferredZone = hint.includes("dome") || hint.includes("bit-2")
         ? "BIT-2-DOME"
-        : hint.includes("podium") || hint.includes("c2") || mentionsWall
-        ? "BIT-4-PODIUM"
-        : "BIT-4-TG03";
+        : mentionsRoof
+        ? "BIT-5-WING"
+        : mentionsWall || mentionsColumn
+        ? "BIT-3-CORE"
+        : mentionsGirder
+        ? "BIT-4-TG03"
+        : "BIT-3-CORE";
+
       const zMeta = findBimZone(inferredZone);
-      const hasDefect = cleanedFallbackText
-        ? detectDefectSignal(cleanedFallbackText)
-        : false;
-      const isCritical = hasDefect && inferredZone === "BIT-4-TG03" && !mentionsWall;
+      const hasDefect = cleanedFallbackText ? detectDefectSignal(cleanedFallbackText) : false;
+      const isCritical = hasDefect && mentionsGirder;
       const lienAmt = isCritical ? zMeta.defaultLienInr : 0;
 
-      const elementLabel = mentionsWall
+      const elementLabel = mentionsRoof
+        ? `${projectMeta.name} — Roof / Slab Ceiling Inspection (Chhat)`
+        : mentionsWall
         ? `${projectMeta.name} — Wall / Masonry Inspection`
-        : zMeta.structuralElement;
+        : mentionsColumn
+        ? `${projectMeta.name} — RCC Column Inspection`
+        : mentionsGirder
+        ? zMeta.structuralElement
+        : `${projectMeta.name} — Site Field Observation (Pin Zone Required)`;
+
+      const isClause = mentionsRoof
+        ? "IS 456:2000 Cl. 24 (Slabs & Roof Cracking)"
+        : mentionsWall
+        ? "IS 2212 / IS 1661 (Masonry & Plaster)"
+        : "IS 456:2000 Cl. 17.4.3";
 
       parsed = {
         matched_bim_zone_id: zMeta.zoneId,
         structural_element: elementLabel,
-        transcript_vernacular: cleanedFallbackText || "Field voice/photo observation captured.",
+        transcript_vernacular:
+          cleanedFallbackText || "Site voice/photo clip sealed (manual transcript confirmation recommended).",
         engineering_summary: cleanedFallbackText
-          ? `Observation logged for ${elementLabel}: "${cleanedFallbackText}". ${
-              mentionsWall ? "Please specify exact floor/grid or attach a photo if a structural NCR hold is required." : ""
-            }`.trim()
-          : `Field observation captured on ${elementLabel}.`,
-        confidence_score: forceLowConfidence || mentionsWall ? 0.68 : 0.91,
+          ? `Observation logged for ${elementLabel}: "${cleanedFallbackText}". Exact floor/grid can be pinned in 3D Building.`
+          : `Audio/photo evidence sealed on ${elementLabel}. Specify floor/grid or ask QUADMAX to escalate sensors.`,
+        confidence_score: forceLowConfidence || !mentionsGirder ? 0.68 : 0.91,
         severity: isCritical ? "CRITICAL_HOLD" : hasDefect ? "MODERATE_NCR" : "ROUTINE_DPR",
-        is_code_clause: mentionsWall ? "IS 2212 / IS 1661 Masonry & Plaster" : "IS 456:2000 Cl. 17.4.3",
+        is_code_clause: isClause,
         escrow_action: isCritical ? "FREEZE_MILESTONE" : "NO_CHANGE",
         withholding_amount_inr: lienAmt,
         governance_council: {
           structural_qa_agent: {
             verdict: isCritical
-              ? `Structural defect flagged on ${elementLabel} under IS 456:2000 Cl. 17.4.3.`
-              : `Field note logged for ${elementLabel}; no automatic structural hold triggered.`,
-            is_456_clause: mentionsWall ? "IS 2212 / IS 1661" : "IS 456:2000 Cl. 17.4.3",
+              ? `Structural defect flagged on ${elementLabel} under ${isClause}.`
+              : `Field report logged for ${elementLabel}; flagged for engineer verification.`,
+            is_456_clause: isClause,
             hold_status: isCritical ? "HOLD_ENFORCED" : hasDefect ? "ADVISORY_NCR" : "CLEARED",
           },
           commercial_escrow_agent: {
             verdict: isCritical
               ? `INR ${lienAmt.toLocaleString("en-IN")} RA milestone escrow hold enforced pending core verification.`
-              : "No escrow freeze required.",
+              : "No automatic escrow hold triggered.",
             withholding_lien_inr: lienAmt,
             milestone_lock: isCritical ? "LOCKED" : "UNLOCKED",
           },
@@ -317,7 +448,9 @@ export async function POST(req: NextRequest) {
       : projectMeta.projectId;
 
     const linkedNcrId =
-      zoneMeta.linkedNcrId && resolvedProjectId === VANGUARD_GENOME.projectId && extraction.escrow_action === "FREEZE_MILESTONE"
+      zoneMeta.linkedNcrId &&
+      resolvedProjectId === VANGUARD_GENOME.projectId &&
+      extraction.escrow_action === "FREEZE_MILESTONE"
         ? zoneMeta.linkedNcrId
         : `NCR-${projectMeta.code}-${Date.now().toString().slice(-4)}`;
 
@@ -380,7 +513,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (!needsPin && record.escrow_action === "FREEZE_MILESTONE") {
-        const { error: gateErr } = await supabase.from("ncr_escrow_gates").upsert(
+        await supabase.from("ncr_escrow_gates").upsert(
           {
             ncr_id: record.linked_ncr_id,
             project_id: record.project_id,
@@ -396,12 +529,9 @@ export async function POST(req: NextRequest) {
           },
           { onConflict: "ncr_id" }
         );
-        if (gateErr) {
-          console.error("[field-grounding] ncr_escrow_gates upsert failed:", gateErr.message);
-        }
       }
 
-      const { error: ledgerErr } = await supabase.from("section_65b_audit_ledger").insert({
+      await supabase.from("section_65b_audit_ledger").insert({
         project_id: record.project_id,
         primary_governor: "QUADMAX-GEMINI-2.5",
         synthesis_report: `[${record.linked_ncr_id}] ${record.zone_label} - ${record.engineering_summary} (BSA Sec. 63 / Sec. 65B)`,
@@ -409,9 +539,6 @@ export async function POST(req: NextRequest) {
         timestamp: ingestedAt,
         notarized_by: "HERMES-CORE-V2",
       });
-      if (ledgerErr) {
-        console.error("[field-grounding] section_65b_audit_ledger insert failed:", ledgerErr.message);
-      }
     }
 
     if (hasBinaryMedia) {
