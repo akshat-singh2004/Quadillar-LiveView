@@ -437,7 +437,7 @@ function buildPortfolioDeterministicSynthesis(params: {
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
   let prompt = "";
-  let projectId = "ALL_10";
+  let projectId = VANGUARD_GENOME.projectId;
   let scope: ScopeDomainId = "ALL_SCOPES";
   let agentId = "AUTO";
   let customAgent: CustomAgentSpec | null = null;
@@ -454,7 +454,7 @@ export async function POST(req: NextRequest) {
       .trim()
       .slice(0, 1200);
 
-    if (body.projectId) projectId = String(body.projectId).slice(0, 64);
+    if (body.projectId && String(body.projectId) !== "ALL_10") projectId = String(body.projectId).slice(0, 64);
     if (body.scope) scope = body.scope as ScopeDomainId;
     if (body.agentId) agentId = String(body.agentId).slice(0, 64);
     if (body.customAgent && typeof body.customAgent === "object") {

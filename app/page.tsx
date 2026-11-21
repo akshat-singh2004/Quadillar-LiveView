@@ -104,7 +104,7 @@ const GOVERNOR_DIRECTORY: GovernorCardSpec[] = [
       { label: "Section 65B / BSA Evidence Vault", href: "/site/audit-ledger", metric: "Block #18402" },
       { label: "Hindrance & SCL EOT Register", href: "/site/hindrance-eot", metric: "₹0 LD Risk" },
       { label: "NCR & Defect Lien Register", href: "/site/ncr-defect-liens", metric: "1 Active Hold" },
-      { label: "Studio Workspace & Project Tokens", href: "/workspace", metric: "10 Sites" },
+      { label: "Studio Workspace & Project Tokens", href: "/workspace", metric: "PRJ-01" },
     ],
   },
 ];

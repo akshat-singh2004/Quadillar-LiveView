@@ -24,7 +24,7 @@ export default function FullBimSimulationEngine() {
   const [opsData, setOpsData] = useState({ occupancy: 1215, powerMw: 2.15, hvacLoad: 68 });
 
   const defaultEntity: SelectedEntity = {
-    id: "ENTIRE_JPNIC", name: "VANGUARD • Architectural & MEP Digital Twin", type: "LEVEL", discipline: "MULTI-DISCIPLINARY",
+    id: "ENTIRE_JPNIC", name: "PRJ-01 VANGUARD • Architectural & MEP Digital Twin", type: "LEVEL", discipline: "MULTI-DISCIPLINARY",
     parentLevel: "ALL", parentZone: "ALL_ZONES", 
     subComponents: [
       { id: "SYS-1", name: "HVAC: 800-Ton Chiller Plant & Risers", type: "MECHANICAL", status: "OPERATIONAL", weightOrVolume: "24,500 CFM" },

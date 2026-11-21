@@ -72,7 +72,7 @@ export default function QuadmaxKernelFloatingWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL_10");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("UP-LDA-VANGUARD-CAMPUS");
   const [selectedScope, setSelectedScope] = useState<ScopeDomainId>("ALL_SCOPES");
   const [selectedAgentId, setSelectedAgentId] = useState<string>("AUTO");
 
@@ -95,7 +95,7 @@ export default function QuadmaxKernelFloatingWidget() {
   const recognitionRef = useRef<any>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const initialAlerts = getAllPortfolioAlerts("ALL_10", "ALL_SCOPES");
+    const initialAlerts = getAllPortfolioAlerts("UP-LDA-VANGUARD-CAMPUS", "ALL_SCOPES");
     const greeting = getIstGreeting();
 
     return [
@@ -103,32 +103,28 @@ export default function QuadmaxKernelFloatingWidget() {
         id: "quadmax-boot-brief-v6",
         role: "assistant",
         timestamp: "LIVE",
-        activeAgentChain: ["PRIME-COMMAND", "MINERVA-ARCH", "ARGUS-SPATIAL", "μ-GRIDLINE-DELTA"],
+        activeAgentChain: ["PRIME-COMMAND", "MINERVA-ARCH", "ARGUS-SPATIAL", "GRIDLINE-DELTA"],
         scopeLabel: "All Domains (360°)",
-        siteLabel: "All 10 Sites",
+        siteLabel: "PRJ-01: Project Vanguard Commercial Hub",
         standardRef: "ISO 19650-2 • IS 456:2000",
         content:
-          `${greeting}, Principal Architect. Portfolio Sentinel is monitoring all 10 active Lucknow sites (₹4,576.50 Cr EPC value, ±1.3–2.0 mm LiDAR RMS). ${initialAlerts.length} critical/watch exceptions flagged:\n\n` +
+          `${greeting}, Principal Architect. QUADMAX Kernel is locked onto Project Vanguard Commercial Hub (UP-LDA-VANGUARD-CAMPUS • INR 864.50 Cr EPC Baseline • +/-1.8 mm LiDAR RMS). ${initialAlerts.length} active governance item(s) tracked:\n\n` +
           initialAlerts
-            .map(
-              (a) =>
-                `• [${a.projectName} — ${a.floorOrZone}]: ${a.headline} (${a.deviationMetric}).`
-            )
+            .map((a) => `• [${a.floorOrZone}]: ${a.headline} (${a.deviationMetric}).`)
             .join("\n"),
         metrics: [
-          { label: "Active Sites", value: "10 Projects", tone: "nominal" },
-          { label: "Summit 12F", value: "+1,000 mm Offset", tone: "critical" },
-          { label: "Vanguard TG-03", value: "₹4.50L Hold", tone: "critical" },
-          { label: "LiDAR RMS", value: "±1.3–2.0 mm", tone: "nominal" },
+          { label: "Active Site", value: "PRJ-01 Vanguard", tone: "nominal" },
+          { label: "EPC Baseline", value: "INR 864.50 Cr", tone: "nominal" },
+          { label: "Transfer Girder", value: "TG-03 Monitored", tone: "watch" },
+          { label: "LiDAR RMS", value: "+/-1.8 mm", tone: "nominal" },
         ],
         citations: [
           { label: "Focus TG-03 in 3D BIM", href: "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042", tag: "3D BIM" },
           { label: "Section 65B Vault", href: "/site/audit-ledger", tag: "65B VAULT" },
         ],
         followUps: [
-          "Inspect Summit Building 12th floor 1.00 m wall offset",
-          "Focus strictly on Project Vanguard Commercial Hub",
-          "Check millimeter spatial deviations across all 10 sites",
+          "What did the site engineer report a moment ago?",
+          "Check Transfer Girder TG-03 IS 456 core gate status",
         ],
       },
     ];
@@ -559,7 +555,7 @@ export default function QuadmaxKernelFloatingWidget() {
 
   const latestAssistant = [...messages].reverse().find((m) =>m.role === "assistant");
   const activeFollowUps = latestAssistant?.followUps || [];
-  const totalPortfolioAlerts = getAllPortfolioAlerts("ALL_10", "ALL_SCOPES").length;
+  const totalPortfolioAlerts = getAllPortfolioAlerts("UP-LDA-VANGUARD-CAMPUS", "ALL_SCOPES").length;
 
   const panelStyle: React.CSSProperties = isLight
     ? { backgroundColor: "rgba(253, 252, 249, 0.98)", borderColor: "#D6CFC2", color: "#1F1E1B" }
@@ -662,7 +658,7 @@ export default function QuadmaxKernelFloatingWidget() {
                 style={{ backgroundColor: surfaceBg, borderColor: borderSubtle, color: accentColor }}
                 className="px-1.5 py-0.5 rounded border text-[9px] font-bold"
               >
-                PORTFOLIO OS • 10 SITES
+                PRJ-01 • VANGUARD KERNEL
               </span>
             </div>
 
@@ -748,29 +744,17 @@ export default function QuadmaxKernelFloatingWidget() {
               <span style={{ color: mutedText }} className="text-[8px] font-bold uppercase">
                 BUILDING / SITE
               </span>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setSelectedProjectId(val);
-                  if (val !== "ALL_10" && val !== activeProjectId) {
-                    selectProject(val);
-                  }
-                }}
+              <div
                 style={{
                   backgroundColor: isLight ? "#FDFCF9" : "#09090B",
                   borderColor: borderSubtle,
                   color: isLight ? "#1F1E1B" : "#FAFAFA",
                 }}
-                className="rounded-lg border px-2 py-1 font-bold outline-none"
+                className="rounded-lg border px-2 py-1 font-bold truncate"
+                title="UP-LDA-VANGUARD-CAMPUS"
               >
-                <option value="ALL_10">All 10 Sites (Portfolio)</option>
-                {PORTFOLIO_10_PROJECTS.map((p) => (
-                  <option key={p.projectId} value={p.projectId}>
-                    {p.code}: {p.name}
-                  </option>
-                ))}
-              </select>
+                PRJ-01: Vanguard Hub
+              </div>
             </div>
 
             <div className="flex flex-col gap-0.5">
