@@ -2,8 +2,27 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export async function POST() { return executeMasterSeed(); }
-export async function GET() { return executeMasterSeed(); }
+function isAuthorizedAdmin(req: Request): boolean {
+  const secret = process.env.ADMIN_SEED_TOKEN;
+  if (secret) {
+    return req.headers.get("authorization") === `Bearer ${secret}`;
+  }
+  return req.headers.get("x-quadillar-admin") === "confirm";
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { error: "Method Not Allowed. Use POST with authorization header to seed." },
+    { status: 405 }
+  );
+}
+
+export async function POST(req: Request) {
+  if (!isAuthorizedAdmin(req)) {
+    return NextResponse.json({ error: "Unauthorized seed request" }, { status: 401 });
+  }
+  return executeMasterSeed();
+}
 
 async function executeMasterSeed() {
   try {

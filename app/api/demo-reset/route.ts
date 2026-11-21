@@ -11,7 +11,14 @@ function getServerSupabase() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-export async function POST() {
+export async function POST(req: Request) {
+  const secret = process.env.ADMIN_SEED_TOKEN;
+  const authorized = secret
+    ? req.headers.get("authorization") === `Bearer ${secret}`
+    : req.headers.get("x-quadillar-reset") === "confirm";
+  if (!authorized) {
+    return NextResponse.json({ error: "Unauthorized demo reset request" }, { status: 401 });
+  }
   const now = new Date().toISOString();
   const supabase = getServerSupabase();
 

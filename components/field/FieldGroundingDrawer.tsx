@@ -259,7 +259,7 @@ export default function FieldGroundingDrawer({
               onClick={async () => {
                 await Promise.all([
                   fetch("/api/field-grounding", { method: "DELETE" }),
-                  fetch("/api/demo-reset", { method: "POST" }),
+                  fetch("/api/demo-reset", { method: "POST", headers: { "x-quadillar-reset": "confirm" } }),
                 ]);
                 setActiveRecord(null);
                 setErrorBanner(null);

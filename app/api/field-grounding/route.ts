@@ -160,6 +160,13 @@ export async function POST(req: NextRequest) {
     ).trim();
     const projectMeta = resolvePortfolioProject(requestedProjectId);
 
+    const MAX_MEDIA_BYTES = 15 * 1024 * 1024;
+    if ((audioFile && audioFile.size > MAX_MEDIA_BYTES) || (imageFile && imageFile.size > MAX_MEDIA_BYTES)) {
+      return NextResponse.json(
+        { error: "Media file exceeds 15 MB safety limit.", code: "PAYLOAD_TOO_LARGE" },
+        { status: 413 }
+      );
+    }
     const hasAudio = Boolean(audioFile && audioFile.size > 0);
     const hasImage = Boolean(imageFile && imageFile.size > 0);
     const hasBinaryMedia = hasAudio || hasImage;
@@ -300,9 +307,9 @@ export async function POST(req: NextRequest) {
       .join("\n\n");
 
     const attempts: Array<{ model: string; useSchema: boolean }> = [
-      { model: "gemini-2.5-flash", useSchema: true },
-      { model: "gemini-2.5-flash", useSchema: false },
-      { model: "gemini-2.0-flash", useSchema: false },
+      { model: "gemini-3.5-flash-lite", useSchema: true },
+      { model: "gemini-3.5-flash-lite", useSchema: false },
+      { model: "gemini-3.8-flash", useSchema: false },
     ];
 
     for (const attempt of attempts) {
@@ -572,7 +579,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
+  const secret = process.env.ADMIN_SEED_TOKEN;
+  const authorized = secret
+    ? req.headers.get("authorization") === `Bearer ${secret}`
+    : req.headers.get("x-quadillar-reset") === "confirm";
+  if (!authorized) {
+    return NextResponse.json({ error: "Unauthorized cache clear" }, { status: 401 });
+  }
   INGESTED_MEDIA_HASH_CACHE.clear();
   return NextResponse.json({ ok: true, cleared: true });
 }

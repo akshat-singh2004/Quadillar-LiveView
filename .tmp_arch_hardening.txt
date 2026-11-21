@@ -1,0 +1,22 @@
+=== 1. HARDEN /api/seed, /api/demo-reset, /api/field-grounding, /api/transcribe & /api/quadmax ===
+[HARDENED] app/api/seed/route.ts (Blocked GET mutation + enforced admin header on POST)
+[HARDENED] app/api/demo-reset/route.ts (Enforced reset authorization header)
+[UPDATED CALLER] components\field\FieldGroundingDrawer.tsx
+[HARDENED] app/api/field-grounding/route.ts (15MB media cap + guarded DELETE + live Gemini models)
+[HARDENED] app/api/transcribe/route.ts (15MB audio size cap)
+[HARDENED] app/api/quadmax/route.ts (4,000-char prompt bound)
+[SYNCED] app/page.tsx (Added live Supabase Realtime ledger stream)
+[SYNCED] app/page.tsx (Field Report -> Audit Stream + Zone-aware 3D Building link)
+[SYNCED] app/site/digital-twin/page.tsx (Project-isolated Escrow Gate fetch & Realtime filter)
+
+=== 2. TYPECHECK & PRODUCTION BUILD ===
+
+> liveview@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...

@@ -199,7 +199,7 @@ export default function DigitalTwinBimPage() {
   useEffect(() => {
     const fetchGate = async () => {
       try {
-        const res = await fetch("/api/escrow-gate", { cache: "no-store" });
+        const res = await fetch("/api/escrow-gate?project_id=UP-LDA-VANGUARD-CAMPUS", { cache: "no-store" });
         const data = await res.json();
         if (data?.ok && data.gate) {
           setEscrowLocked(data.gate.gate_status === "LOCKED");
@@ -214,7 +214,7 @@ export default function DigitalTwinBimPage() {
       .channel("bim-twin-escrow-sync")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "ncr_escrow_gates" },
+        { event: "*", schema: "public", table: "ncr_escrow_gates", filter: "project_id=eq.UP-LDA-VANGUARD-CAMPUS" },
         (payload) => {
           const row = payload.new as any;
           if (row) {

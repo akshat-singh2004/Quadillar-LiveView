@@ -16,6 +16,9 @@ export async function POST(req: NextRequest) {
     if (!audioFile || audioFile.size === 0) {
       return NextResponse.json({ error: "No audio clip provided" }, { status: 400 });
     }
+    if (audioFile.size > 15 * 1024 * 1024) {
+      return NextResponse.json({ error: "Audio clip exceeds 15 MB limit" }, { status: 413 });
+    }
 
     const rawMime = (audioFile.type || "audio/webm").split(";")[0].trim().toLowerCase();
     const mimeType =

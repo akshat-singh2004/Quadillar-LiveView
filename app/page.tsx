@@ -210,7 +210,46 @@ export default function MasterCommandCenterPage() {
       );
     };
     window.addEventListener("quadillar-telemetry-burst", onBurst);
-    return () => window.removeEventListener("quadillar-telemetry-burst", onBurst);
+
+    const ledgerChannel = supabase
+      .channel(`command-center-live-${activeProject.projectId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "section_65b_audit_ledger",
+          filter: `project_id=eq.${activeProject.projectId}`,
+        },
+        (payload) => {
+          const row = payload.new as any;
+          if (!row) return;
+          setIotTimestampIso(new Date().toISOString());
+          setAuditEntries((prev) => {
+            if (row.merkle_root_hash && prev.some((e) => e.hash === row.merkle_root_hash)) {
+              return prev;
+            }
+            return [
+              {
+                id: `LIVE-${Date.now().toString().slice(-5)}`,
+                timeStr: new Date(row.timestamp || Date.now()).toTimeString().slice(0, 8),
+                governor: row.primary_governor || "HERMES-65B",
+                provenance: "Live Supabase 65B Stream",
+                title: (row.synthesis_report || "").split("•")[0] || "Section 65B Telemetry Attestation",
+                detail: row.synthesis_report || "",
+                hash: row.merkle_root_hash || "",
+              },
+              ...prev,
+            ].slice(0, 6);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("quadillar-telemetry-burst", onBurst);
+      supabase.removeChannel(ledgerChannel);
+    };
   }, [activeProject.projectId]);
 
   const handleSimulateBreach = () => {
@@ -801,7 +840,25 @@ export default function MasterCommandCenterPage() {
       <WhatsAppFieldCommsDrawer
         isOpen={isWhatsAppOpen}
         onClose={() =>setIsWhatsAppOpen(false)}
-        onRecordCommitted={(rec) =>setLatestFieldRecord(rec)}
+        onRecordCommitted={(rec) => {
+          setLatestFieldRecord(rec);
+          setIotTimestampIso(new Date().toISOString());
+          setAuditEntries((prev) => {
+            if (prev.some((e) => e.hash === rec.canonical_65b_sha256)) return prev;
+            return [
+              {
+                id: rec.linked_ncr_id || `FLD-${Date.now().toString().slice(-4)}`,
+                timeStr: new Date().toTimeString().slice(0, 8),
+                governor: "QUADMAX-GEMINI-3.5",
+                provenance: "Field Voice / Photo Seal",
+                title: `[${rec.matched_bim_zone_id}] ${rec.zone_label}`,
+                detail: rec.engineering_summary,
+                hash: rec.canonical_65b_sha256,
+              },
+              ...prev,
+            ].slice(0, 6);
+          });
+        }}
       />
 
       <FieldGroundingDrawer
