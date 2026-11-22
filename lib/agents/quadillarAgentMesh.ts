@@ -181,7 +181,7 @@ export const QUADMAX_FUNCTION_REGISTRY: QuadmaxFunctionDefinition[] = [
     governor: "MINERVA",
     commandLabel: "Executive EPC Pulse & Burn Audit",
     shortLabel: "EPC Pulse",
-    description: "Synthesize ₹864.50 Cr baseline, CPI/SPI health, workforce & 6-Bit readiness.",
+    description: "Synthesize ₹864.50 Cr baseline, CPI/SPI health, workforce & 6-Zone readiness.",
     standardRef: "ISO 21508 & UP-LDA EPC Charter",
     keywords: ["overview", "pulse", "vanguard", "ceo", "director", "status", "campus"],
     deepLink: { label: "Master Command Center", href: "/" },

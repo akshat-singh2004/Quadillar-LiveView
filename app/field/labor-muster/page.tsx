@@ -297,7 +297,7 @@ export default function JpnicLaborMusterPage() {
 
       {/* Main Grid: Trade Groups & Live Gate Turnstile Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Left: Trade Breakdown & 6-Bit Location Allocation */}
+        {/* Left: Trade Breakdown & 6-Zone Location Allocation */}
         <div className="lg:col-span-7 bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2">
             <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">

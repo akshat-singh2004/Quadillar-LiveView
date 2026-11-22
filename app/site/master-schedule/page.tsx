@@ -29,7 +29,7 @@ export default function MasterCpmAndEvmPage() {
             MASTER CPM NETWORK & EARNED VALUE S-CURVE
           </h1>
           <p className="text-xs text-slate-400">
-            {VANGUARD_GENOME.projectName} • Topological Critical Path & 6-Bit Financial Earned Value Baseline
+            {VANGUARD_GENOME.projectName} • Topological Critical Path & 6-Zone Financial Earned Value Baseline
           </p>
         </div>
 

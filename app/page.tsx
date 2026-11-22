@@ -82,7 +82,7 @@ const GOVERNOR_DIRECTORY: GovernorCardSpec[] = [
     status: "NOMINAL",
     summary: "Zero spatial clashes between 4-car lift bank & 14th-fl HVAC risers; Node #14B tracked.",
     defaultHref: "/site/digital-twin",
-    defaultMetric: "6 Bits Verified",
+    defaultMetric: "6 Zones Verified",
     terminals: [
       { label: "Federated 3D BIM & Multi-Ray Twin", href: "/site/digital-twin", metric: "LOD-400" },
       { label: "Master CPM Schedule & Gantt", href: "/schedule/gantt", metric: "0d Float" },
@@ -395,7 +395,7 @@ export default function MasterCommandCenterPage() {
             <ProvenancePill source="LOD-400 BIM Sync" />
           </div>
           <div className="text-2xl font-bold text-white tracking-tight tabular-nums">
-            {isVanguard ? "6 Bits" : `±${activeProject.lidarRmsMm.toFixed(1)} mm`}
+            {isVanguard ? "6 Zones" : `±${activeProject.lidarRmsMm.toFixed(1)} mm`}
           </div>
           <div className="text-[10px] text-zinc-400 flex items-center justify-between">
             <span>{isVanguard ? "LOD-400 Federated" : "LiDAR RMS Verified"}</span>

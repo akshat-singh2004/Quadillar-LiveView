@@ -45,7 +45,7 @@ export default function SiteGisAndCraneRadarPage() {
             SITE GIS CADASTRAL TWIN & CRANE RADAR — {VANGUARD_GENOME.projectName.toUpperCase()}
           </h1>
           <p className="text-xs text-slate-400">
-            Gomti Nagar Extension, Lucknow • Real-Time {VANGUARD_GENOME.craneTelemetry.model} Slewing Envelope & 6-Bit Spatial Footprints
+            Gomti Nagar Extension, Lucknow • Real-Time {VANGUARD_GENOME.craneTelemetry.model} Slewing Envelope & 6-Zone Spatial Footprints
           </p>
         </div>
 

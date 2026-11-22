@@ -254,7 +254,7 @@ export const VANGUARD_GENOME = {
       role: "3D BIM & Spatial LOD400",
       status: "NOMINAL",
       summary: "Zero spatial clashes between 4-car lift bank and 14th fl HVAC risers; Node #14B tracked.",
-      metric: "6 Bits Verified",
+      metric: "6 Zones Verified",
     },
     {
       id: "HERMES",

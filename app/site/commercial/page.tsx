@@ -112,7 +112,7 @@ export default function CommercialBillingAndReconciliationPage() {
         </div>
       </div>
 
-      {/* 6-Bit Contract Allocation Table */}
+      {/* 6-Zone Contract Allocation Table */}
       <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
         <div className="text-xs font-bold text-white uppercase border-b border-slate-800 pb-2">
           6 ARCHITECTURAL BITS — CONTRACT VALUE & BILLING BREAKDOWN (₹{fin.epcBaselineCr.toFixed(2)} Cr)

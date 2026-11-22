@@ -76,9 +76,9 @@ const DOMAIN_GOVERNORS: Governor[] = [
   { id: "DAEDALUS", name: "DAEDALUS", role: "Hydration & Maturity", status: "STANDBY", message: "Thermocouple logs active on 38m Helipad Core & Bridge Arch.", color: "text-amber-400", border: "border-amber-500/30", bg: "bg-amber-500/10", expertise: "ASTM C1074 thermal hydration curves for massive cantilevers, early formwork de-shuttering" },
   { id: "PLUTUS", name: "PLUTUS", role: "Finance & Escrow", status: "STANDBY", message: "UP-LDA institutional grant tranches locked pending DPR notarization.", color: "text-amber-400", border: "border-amber-500/30", bg: "bg-amber-500/10", expertise: "State treasury funds, statutory mobilization advances, bank guarantee validity" },
   { id: "ANANKE", name: "ANANKE", role: "Plant & Machinery", status: "STANDBY", message: "Liebherr Tower Crane & 800-Ton chiller telemetry online via GSM edge.", color: "text-amber-400", border: "border-amber-500/30", bg: "bg-amber-500/10", expertise: "Heavy plant telematics, tower crane load moments, mechanical plant health" },
-  { id: "CHRONOS", name: "CHRONOS", role: "Master Schedule CPM", status: "NOMINAL", message: "Critical path float positive (0d). Silver Dome standing seam on schedule.", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10", expertise: "6-Bit architectural milestones, CPM sequencing, dome & prow completion critical paths" },
+  { id: "CHRONOS", name: "CHRONOS", role: "Master Schedule CPM", status: "NOMINAL", message: "Critical path float positive (0d). Silver Dome standing seam on schedule.", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10", expertise: "6-Zone architectural milestones, CPM sequencing, dome & prow completion critical paths" },
   { id: "THEMIS", name: "THEMIS", role: "Contracts & Claims", status: "NOMINAL", message: "CPWD contract variations for East Prow terracotta facade tracked.", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10", expertise: "Public arbitration defense, delay notices under FIDIC/CPWD, EOT statutory substantiation" },
-  { id: "MINERVA", name: "MINERVA", role: "3D BIM & Spatial LOD400", status: "NOMINAL", message: "Zero spatial clashes between 4-car lift bank and 14th fl HVAC risers.", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10", expertise: "True Archohm 6-Bit geometry validation, MEP riser coordination, 3D volume verification" },
+  { id: "MINERVA", name: "MINERVA", role: "3D BIM & Spatial LOD400", status: "NOMINAL", message: "Zero spatial clashes between 4-car lift bank and 14th fl HVAC risers.", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10", expertise: "True Archohm 6-Zone geometry validation, MEP riser coordination, 3D volume verification" },
   { id: "HERMES", name: "HERMES", role: "Notarization Core", status: "NOMINAL", message: "Section 65B tamper-evident Merkle hash log sealed for Gomti Nagar site.", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10", expertise: "Indian Evidence Act Section 65B forensic verification, cryptographic immutable custody" }
 ];
 
@@ -208,7 +208,7 @@ export default function MasterCommandCenter() {
       const hash = await generateSHA256(rawPayload);
 
       handleAppendAuditRecord({
-        title: "Autonomous Council Consensus: VANGUARD 6-Bit Architecture Approved",
+        title: "Autonomous Council Consensus: VANGUARD 6-Zone Architecture Approved",
         subtext: "Terracotta Ribs, Dome, Prow, Tower & Helipad cleared • Statutory Health: 99.1%",
         hash,
         timestamp: blockTime,
@@ -633,7 +633,7 @@ export default function MasterCommandCenter() {
           {activeOpsTab === "CPM_GANTT" && (
             <div className="flex flex-col gap-3 text-xs">
               <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
-                <span className="font-bold text-white">VANGUARD 6-Bit Architectural Sequencing</span>
+                <span className="font-bold text-white">VANGUARD 6-Zone Architectural Sequencing</span>
                 <span className="text-emerald-400">Master Float: 0 Days (Critical Path Intact)</span>
               </div>
               <div className="flex flex-col gap-2">
