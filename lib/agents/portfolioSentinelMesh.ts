@@ -148,7 +148,7 @@ export const PORTFOLIO_10_PROJECTS: PortfolioProjectNode[] = [
     projectId: VANGUARD_GENOME.projectId,
     code: "PRJ-01",
     name: "Project Vanguard Commercial Hub",
-    subtitle: "Gomti Nagar, Lucknow • 6-Bit Parametric Digital Twin & Institutional EPC",
+    subtitle: "Gomti Nagar, Lucknow • 6-Zone Parametric Digital Twin & Institutional EPC",
     location: "Gomti Nagar Extension, Lucknow",
     architectLead: "Principal Architect Studio",
     contractValueCr: 864.5,

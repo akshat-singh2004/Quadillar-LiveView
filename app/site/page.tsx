@@ -270,7 +270,7 @@ export default function MasterCommandCenter() {
               Project Vanguard Commercial Hub
             </h1>
             <p className="text-xs text-slate-400">
-              Gomti Nagar, Lucknow • 6-Bit Parametric Digital Twin & Institutional EPC • Baseline: <span className="text-slate-200 font-bold">₹864.50 Cr</span>
+              Gomti Nagar, Lucknow • 6-Zone Parametric Digital Twin & Institutional EPC • Baseline: <span className="text-slate-200 font-bold">₹864.50 Cr</span>
             </p>
           </div>
           <div className="flex items-center gap-3">

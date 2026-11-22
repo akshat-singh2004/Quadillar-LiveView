@@ -49,7 +49,7 @@ export interface SpatialTelemetryPin {
 export const VANGUARD_GENOME = {
   projectId: "UP-LDA-VANGUARD-CAMPUS",
   projectName: "Project Vanguard Commercial Hub",
-  subtitle: "Gomti Nagar, Lucknow • 6-Bit Parametric Digital Twin & Institutional EPC",
+  subtitle: "Gomti Nagar, Lucknow • 6-Zone Parametric Digital Twin & Institutional EPC",
   coordinates: { lat: 26.8467, lng: 80.9462, datumRlM: 112.4 },
 
   financials: {
