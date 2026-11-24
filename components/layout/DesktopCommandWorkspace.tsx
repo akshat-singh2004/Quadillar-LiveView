@@ -30,6 +30,7 @@ const CLUSTERS: NavCluster[] = [
     title: "Field & Safety",
     items: [
       { label: "Site Report (DPR)", href: "/site/dpr" },
+      { label: "Zone QR Stickers", href: "/site/qr-anchors" },
       { label: "Gate & Weighbridge", href: "/site/gate-inward" },
       { label: "Biometric Labor", href: "/site/labor" },
       { label: "Permit to Work (PTW)", href: "/safety/ptw" },
