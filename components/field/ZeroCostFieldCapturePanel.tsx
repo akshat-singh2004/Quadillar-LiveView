@@ -1,30 +1,16 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useGovernor } from "@/context/GovernorContext";
-
-interface CapturedPacket {
-  id: string;
-  recordedAtUtc: string;
-  zoneId: string;
-  bimGlobalId: string;
-  qrPayload: string | null;
-  noteText: string;
-  voiceDurationSec: number;
-  sha256: string;
-  lat: number | null;
-  lon: number | null;
-  gpsAccuracyM: number | null;
-  yawDeg: number | null;
-  pitchDeg: number | null;
-  rollDeg: number | null;
-  plumbDeviationDeg: number | null;
-  plumbPass: boolean | null;
-  weatherWindMs: number | null;
-  surfacePressureHpa: number | null;
-  thumbDataUrl: string;
-  synced: boolean;
-}
+import {
+  idbClearPackets,
+  idbEstimateStorageMb,
+  idbListPackets,
+  idbPutPacket,
+  type BandwidthProfile,
+  type FieldEvidencePacket,
+} from "@/lib/offline/fieldVaultIdb";
 
 interface LiveWeatherState {
   windSpeedMs: number;
@@ -35,11 +21,17 @@ interface LiveWeatherState {
   fetchedAt: string;
 }
 
+interface NetworkInformationLike {
+  effectiveType?: "slow-2g" | "2g" | "3g" | "4g";
+  downlink?: number;
+  saveData?: boolean;
+  addEventListener?: (type: string, cb: () => void) => void;
+  removeEventListener?: (type: string, cb: () => void) => void;
+}
+
 interface BrowserBarcodeDetector {
   detect(source: CanvasImageSource): Promise<Array<{ rawValue: string; format: string }>>;
 }
-
-const QUEUE_KEY = "quadillar_offline_field_queue_v1";
 
 const ZONE_ANCHORS = [
   { zoneId: "ZONE-1", bimGlobalId: "SLAB-Z1", label: "Zone 1 — Foundation / Slab" },
@@ -112,8 +104,24 @@ async function computeSha256(bytes: Uint8Array): Promise<string> {
   return sha256BytesPure(bytes);
 }
 
+function detectNetworkTier(): {
+  effectiveType: string;
+  saveData: boolean;
+  resolvedProfile: Exclude<BandwidthProfile, "auto">;
+} {
+  if (typeof navigator === "undefined") {
+    return { effectiveType: "4g", saveData: false, resolvedProfile: "standard" };
+  }
+  const conn = (navigator as Navigator & { connection?: NetworkInformationLike }).connection;
+  const eff = conn?.effectiveType || "4g";
+  const saveData = Boolean(conn?.saveData);
+  if (saveData || eff === "slow-2g") return { effectiveType: eff, saveData, resolvedProfile: "manifest-only" };
+  if (eff === "2g" || eff === "3g") return { effectiveType: eff, saveData, resolvedProfile: "ultra-lite" };
+  return { effectiveType: eff, saveData, resolvedProfile: "standard" };
+}
+
 export function ZeroCostFieldCapturePanel() {
-  const { patchInput } = useGovernor();
+  const { input, patchInput } = useGovernor();
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -128,6 +136,14 @@ export function ZeroCostFieldCapturePanel() {
   const [noteText, setNoteText] = useState("");
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
+
+  // Offline / Bandwidth Controls
+  const [isOnline, setIsOnline] = useState(true);
+  const [simulateOffline, setSimulateOffline] = useState(false);
+  const [bandwidthMode, setBandwidthMode] = useState<BandwidthProfile>("auto");
+  const [netTier, setNetTier] = useState("4g");
+  const [storageMb, setStorageMb] = useState<{ usedMb: number; quotaMb: number } | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   // 6-DoF Pose + GPS
   const [gps, setGps] = useState<{ lat: number; lon: number; acc: number } | null>(null);
@@ -146,40 +162,136 @@ export function ZeroCostFieldCapturePanel() {
   const [weather, setWeather] = useState<LiveWeatherState | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
 
-  // Offline Queue
-  const [packets, setPackets] = useState<CapturedPacket[]>([]);
-  const [isOnline, setIsOnline] = useState(true);
+  // IndexedDB Evidence Queue
+  const [packets, setPackets] = useState<FieldEvidencePacket[]>([]);
+
+  const effectiveOnline = isOnline && !simulateOffline;
+  const resolvedProfile: Exclude<BandwidthProfile, "auto"> =
+    bandwidthMode === "auto" ? detectNetworkTier().resolvedProfile : bandwidthMode;
+
+  const refreshVault = useCallback(async () => {
+    const [rows, est] = await Promise.all([idbListPackets(), idbEstimateStorageMb()]);
+    setPackets(rows);
+    setStorageMb(est);
+  }, []);
+
+  const syncSinglePacket = useCallback(
+    async (pkt: FieldEvidencePacket): Promise<FieldEvidencePacket> => {
+      const sendMedia = pkt.bandwidthProfile !== "manifest-only";
+      const res = await fetch("/api/field-captures/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...pkt,
+          thumbDataUrl: sendMedia ? pkt.thumbDataUrl : null,
+          mediaUploaded: sendMedia,
+        }),
+      });
+
+      if (res.status === 409) {
+        const updated: FieldEvidencePacket = {
+          ...pkt,
+          synced: false,
+          rejectedDuplicate: true,
+          syncError: "HTTP 409 DUPLICATE SHA-256",
+        };
+        await idbPutPacket(updated);
+        return updated;
+      }
+
+      if (!res.ok) {
+        const updated: FieldEvidencePacket = {
+          ...pkt,
+          synced: false,
+          syncError: `HTTP ${res.status}`,
+        };
+        await idbPutPacket(updated);
+        return updated;
+      }
+
+      const data = (await res.json()) as { storageMode?: "supabase" | "edge_ledger_fallback"; mediaUploaded?: boolean };
+      const updated: FieldEvidencePacket = {
+        ...pkt,
+        synced: true,
+        rejectedDuplicate: false,
+        syncError: null,
+        mediaUploaded: Boolean(data.mediaUploaded),
+        storageMode: data.storageMode,
+      };
+      await idbPutPacket(updated);
+      return updated;
+    },
+    []
+  );
+
+  const flushPendingQueue = useCallback(async () => {
+    if (!effectiveOnline) {
+      setStatusMsg("Offline mode active — packets stay safely queued in IndexedDB.");
+      return;
+    }
+    const current = await idbListPackets();
+    const pending = current.filter((p) => !p.synced && !p.rejectedDuplicate);
+    if (pending.length === 0) {
+      setStatusMsg("All IndexedDB evidence packets are already synced.");
+      return;
+    }
+
+    setSyncing(true);
+    let okCount = 0;
+    let dupCount = 0;
+    let failCount = 0;
+
+    for (const pkt of pending) {
+      try {
+        const resPkt = await syncSinglePacket(pkt);
+        if (resPkt.synced) okCount++;
+        else if (resPkt.rejectedDuplicate) dupCount++;
+        else failCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    await refreshVault();
+    setSyncing(false);
+    setStatusMsg(
+      `Queue Flush Done: ${okCount} synced${dupCount > 0 ? `, ${dupCount} blocked (HTTP 409)` : ""}${failCount > 0 ? `, ${failCount} retrying later` : ""}.`
+    );
+  }, [effectiveOnline, refreshVault, syncSinglePacket]);
 
   useEffect(() => {
     setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
-    const onUp = () => setIsOnline(true);
+    setNetTier(detectNetworkTier().effectiveType);
+    refreshVault();
+
+    const onUp = () => {
+      setIsOnline(true);
+      setNetTier(detectNetworkTier().effectiveType);
+    };
     const onDown = () => setIsOnline(false);
+
     window.addEventListener("online", onUp);
     window.addEventListener("offline", onDown);
 
-    try {
-      const saved = localStorage.getItem(QUEUE_KEY);
-      if (saved) setPackets(JSON.parse(saved) as CapturedPacket[]);
-    } catch {
-      // Ignore storage errors
-    }
+    const conn = (navigator as Navigator & { connection?: NetworkInformationLike }).connection;
+    const onConnChange = () => setNetTier(detectNetworkTier().effectiveType);
+    conn?.addEventListener?.("change", onConnChange);
 
     return () => {
       window.removeEventListener("online", onUp);
       window.removeEventListener("offline", onDown);
+      conn?.removeEventListener?.("change", onConnChange);
       if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
       if (voiceTimerRef.current) clearInterval(voiceTimerRef.current);
     };
-  }, []);
+  }, [refreshVault]);
 
-  const persistPackets = useCallback((next: CapturedPacket[]) => {
-    setPackets(next);
-    try {
-      localStorage.setItem(QUEUE_KEY, JSON.stringify(next.slice(0, 20)));
-    } catch {
-      // Ignore quota exceeded
+  // Auto-flush IndexedDB queue whenever connectivity returns
+  useEffect(() => {
+    if (effectiveOnline && packets.some((p) => !p.synced && !p.rejectedDuplicate)) {
+      flushPendingQueue();
     }
-  }, []);
+  }, [effectiveOnline, flushPendingQueue, packets]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -192,7 +304,7 @@ export function ZeroCostFieldCapturePanel() {
   const startCamera = useCallback(async () => {
     setCameraError(null);
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Camera API unavailable in this browser context. Use 'Capture Test Frame' on PC.");
+      setCameraError("Camera API unavailable in this browser context. Use 'Test Frame' on PC.");
       return;
     }
     try {
@@ -208,7 +320,7 @@ export function ZeroCostFieldCapturePanel() {
       setCameraActive(true);
     } catch (err) {
       setCameraError(
-        err instanceof Error ? `${err.message} — Use 'Capture Test Frame' for PC testing.` : "Camera blocked."
+        err instanceof Error ? `${err.message} — Use 'Test Frame' for PC testing.` : "Camera blocked."
       );
     }
   }, []);
@@ -224,17 +336,13 @@ export function ZeroCostFieldCapturePanel() {
             acc: Math.round(pos.coords.accuracy),
           });
         },
-        () => {
-          // Default to FOAP / Gomti Nagar Lucknow coordinates if denied on desktop
-          setGps({ lat: 26.8467, lon: 80.9462, acc: 12 });
-        },
+        () => setGps({ lat: 26.8467, lon: 80.9462, acc: 12 }),
         { enableHighAccuracy: true, timeout: 6000 }
       );
     } else {
       setGps({ lat: 26.8467, lon: 80.9462, acc: 12 });
     }
 
-    // iOS 13+ permission gate
     const DOE = window.DeviceOrientationEvent as unknown as {
       requestPermission?: () => Promise<"granted" | "denied">;
     };
@@ -242,7 +350,7 @@ export function ZeroCostFieldCapturePanel() {
       try {
         await DOE.requestPermission();
       } catch {
-        // Continue with GPS even if orientation permission denied
+        // Continue with GPS
       }
     }
 
@@ -258,6 +366,16 @@ export function ZeroCostFieldCapturePanel() {
     setStatusMsg("GPS + 6-DoF Plumb Sensors Active");
   }, []);
 
+  const applyQrCode = useCallback((raw: string) => {
+    setQrPayload(raw);
+    const upper = raw.toUpperCase();
+    const matched = ZONE_ANCHORS.find(
+      (z) => upper.includes(z.zoneId) || upper.includes(z.bimGlobalId)
+    );
+    if (matched) setSelectedAnchor(matched);
+    setStatusMsg(`QR Anchor Locked: ${raw}${matched ? ` → ${matched.zoneId} (${matched.bimGlobalId})` : ""}`);
+  }, []);
+
   const scanQrFromCamera = useCallback(async () => {
     const DetectorCtor = (
       window as unknown as {
@@ -266,27 +384,18 @@ export function ZeroCostFieldCapturePanel() {
     ).BarcodeDetector;
 
     if (!DetectorCtor || !videoRef.current || !cameraActive) {
-      setStatusMsg("Native QR scanner unavailable — paste GST e-Way / NABL ULR / Zone QR code below.");
+      setStatusMsg("Native QR scanner unavailable — paste Zone QR / GST e-Way / NABL ULR below.");
       return;
     }
     try {
       const detector = new DetectorCtor({ formats: ["qr_code", "code_128"] });
       const codes = await detector.detect(videoRef.current);
-      if (codes.length > 0) {
-        const raw = codes[0].rawValue;
-        setQrPayload(raw);
-        const matched = ZONE_ANCHORS.find(
-          (z) => raw.toUpperCase().includes(z.zoneId) || raw.toUpperCase().includes(z.bimGlobalId)
-        );
-        if (matched) setSelectedAnchor(matched);
-        setStatusMsg(`QR Locked: ${raw}`);
-      } else {
-        setStatusMsg("No QR code detected in frame — hold steady and tap Scan QR again.");
-      }
+      if (codes.length > 0) applyQrCode(codes[0].rawValue);
+      else setStatusMsg("No QR code detected in frame — hold steady and tap Scan QR again.");
     } catch {
       setStatusMsg("QR scan failed — enter Zone/ULR/e-Way code manually.");
     }
-  }, [cameraActive]);
+  }, [applyQrCode, cameraActive]);
 
   const toggleVoiceMemo = useCallback(async () => {
     if (recordingVoice) {
@@ -316,6 +425,10 @@ export function ZeroCostFieldCapturePanel() {
   }, [recordingVoice, voiceSec]);
 
   const pullLiveWeather = useCallback(async () => {
+    if (!effectiveOnline) {
+      setStatusMsg("Offline — Open-Meteo sync deferred until signal returns.");
+      return;
+    }
     setWeatherLoading(true);
     const lat = gps?.lat ?? 26.8467;
     const lon = gps?.lon ?? 80.9462;
@@ -336,44 +449,49 @@ export function ZeroCostFieldCapturePanel() {
       };
       setWeather(next);
       patchInput({ windSpeedMs: next.windSpeedMs });
-      setStatusMsg(`Live Open-Meteo synced (${next.windSpeedKmh} km/h, ${next.pressureHpa} hPa) → Governor updated.`);
+      setStatusMsg(`Open-Meteo synced (${next.windSpeedKmh} km/h, ${next.pressureHpa} hPa) → Governor updated.`);
     } catch {
-      setStatusMsg("Open-Meteo unreachable (offline) — using cached telemetry.");
+      setStatusMsg("Open-Meteo unreachable — continuing in offline mode.");
     } finally {
       setWeatherLoading(false);
     }
-  }, [gps, patchInput]);
+  }, [effectiveOnline, gps, patchInput]);
 
   const captureEvidence = useCallback(
     async (simulateFrame = false) => {
       setDuplicateAlert(null);
       const canvas = canvasRef.current;
       if (!canvas) return;
-      canvas.width = 640;
-      canvas.height = 360;
+
+      // Adaptive resolution & JPEG quality based on bandwidth tier
+      const isLite = resolvedProfile === "ultra-lite" || resolvedProfile === "manifest-only";
+      canvas.width = isLite ? 480 : 800;
+      canvas.height = isLite ? 270 : 450;
+      const jpegQuality = isLite ? 0.48 : 0.78;
+
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
       if (!simulateFrame && cameraActive && videoRef.current) {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       } else {
-        // Deterministic-timestamped PC test frame for verifying SHA-256 + BSA Sec 63 pipeline without webcam
         ctx.fillStyle = "#09090b";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = "#38bdf8";
         ctx.lineWidth = 2;
-        ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+        ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
         ctx.fillStyle = "#e4e4e7";
-        ctx.font = "bold 20px monospace";
-        ctx.fillText(`QUADILLAR FIELD SHUTTER • ${selectedAnchor.zoneId} (${selectedAnchor.bimGlobalId})`, 32, 72);
-        ctx.font = "14px monospace";
+        ctx.font = "bold 16px monospace";
+        ctx.fillText(`QUADILLAR FIELD • ${selectedAnchor.zoneId} (${selectedAnchor.bimGlobalId})`, 24, 54);
+        ctx.font = "12px monospace";
         ctx.fillStyle = "#a1a1aa";
-        ctx.fillText(`UTC: ${new Date().toISOString()}`, 32, 110);
-        ctx.fillText(`QR: ${qrPayload || "NO_QR_ATTACHED"}`, 32, 140);
-        ctx.fillText(`NOTE: ${noteText || "Visual inspection capture"}`, 32, 170);
+        ctx.fillText(`UTC: ${new Date().toISOString()}`, 24, 88);
+        ctx.fillText(`PROFILE: ${resolvedProfile.toUpperCase()}`, 24, 114);
+        ctx.fillText(`QR: ${qrPayload || "NO_QR"}`, 24, 140);
+        ctx.fillText(`NOTE: ${noteText || "Visual inspection capture"}`, 24, 166);
       }
 
-      const thumbDataUrl = canvas.toDataURL("image/jpeg", 0.78);
+      const thumbDataUrl = canvas.toDataURL("image/jpeg", jpegQuality);
       const base64 = thumbDataUrl.split(",")[1] || "";
       const rawBin = atob(base64);
       const bytes = new Uint8Array(rawBin.length);
@@ -381,15 +499,15 @@ export function ZeroCostFieldCapturePanel() {
 
       const sha256 = await computeSha256(bytes);
 
-      // HTTP 409 anti-fraud duplicate byte hash check
       if (packets.some((p) => p.sha256 === sha256)) {
-        setDuplicateAlert(`HTTP 409 DUPLICATE REJECTED — Image hash ${sha256.slice(0, 14)} already exists in vault.`);
+        setDuplicateAlert(`HTTP 409 DUPLICATE REJECTED — Hash ${sha256.slice(0, 14)} already exists in IndexedDB vault.`);
         return;
       }
 
       const plumbDev = pose.pitch !== null ? Math.round(Math.abs(90 - Math.abs(pose.pitch)) * 10) / 10 : null;
-      const packet: CapturedPacket = {
+      const packet: FieldEvidencePacket = {
         id: `CAP-${Date.now().toString(36).toUpperCase()}`,
+        projectId: input.projectId,
         recordedAtUtc: new Date().toISOString(),
         zoneId: selectedAnchor.zoneId,
         bimGlobalId: selectedAnchor.bimGlobalId,
@@ -407,22 +525,59 @@ export function ZeroCostFieldCapturePanel() {
         plumbPass: plumbDev !== null ? plumbDev <= 0.5 : null,
         weatherWindMs: weather?.windSpeedMs ?? null,
         surfacePressureHpa: weather?.pressureHpa ?? null,
+        bandwidthProfile: resolvedProfile,
+        payloadBytes: resolvedProfile === "manifest-only" ? 1400 : bytes.length,
         thumbDataUrl,
-        synced: isOnline,
+        mediaUploaded: false,
+        synced: false,
       };
 
-      persistPackets([packet, ...packets]);
+      // Always write to IndexedDB FIRST (zero data loss even if tab closes immediately)
+      await idbPutPacket(packet);
+
+      if (effectiveOnline) {
+        try {
+          const syncedPkt = await syncSinglePacket(packet);
+          if (syncedPkt.rejectedDuplicate) {
+            setDuplicateAlert(`HTTP 409 SERVER REJECTED — Duplicate SHA-256 ${sha256.slice(0, 14)}.`);
+          } else if (syncedPkt.synced) {
+            const kb = Math.round(syncedPkt.payloadBytes / 1024);
+            setStatusMsg(
+              `Sealed & Synced ${syncedPkt.id} (${kb} KB • ${syncedPkt.bandwidthProfile}) → ${syncedPkt.storageMode}`
+            );
+          } else {
+            setStatusMsg(`Saved to IndexedDB (${packet.id}) — sync retry queued.`);
+          }
+        } catch {
+          setStatusMsg(`Network dropped — ${packet.id} safely queued in IndexedDB.`);
+        }
+      } else {
+        setStatusMsg(`OFFLINE VAULTED ${packet.id} (${Math.round(bytes.length / 1024)} KB) — auto-syncs on signal.`);
+      }
+
+      await refreshVault();
       setVoiceSec(0);
       setNoteText("");
-      setStatusMsg(`Sealed ${packet.id} • SHA-256 ${sha256.slice(0, 12)}… (${isOnline ? "SYNCED" : "QUEUED OFFLINE"})`);
     },
-    [cameraActive, gps, isOnline, noteText, packets, persistPackets, pose, qrPayload, selectedAnchor, voiceSec, weather]
+    [
+      cameraActive,
+      effectiveOnline,
+      gps,
+      input.projectId,
+      noteText,
+      packets,
+      pose,
+      qrPayload,
+      refreshVault,
+      resolvedProfile,
+      selectedAnchor,
+      syncSinglePacket,
+      voiceSec,
+      weather,
+    ]
   );
 
-  const flagDeviationToGovernor = (mm: number) => {
-    patchInput({ lidarDeviationMm: mm });
-    setStatusMsg(`Injected ${mm}mm field defect on ${selectedAnchor.bimGlobalId} → Governor updated across all modules.`);
-  };
+  const pendingCount = packets.filter((p) => !p.synced && !p.rejectedDuplicate).length;
 
   return (
     <section className="mb-5 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100 space-y-4">
@@ -430,24 +585,81 @@ export function ZeroCostFieldCapturePanel() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-bold uppercase text-emerald-300">
-              ₹0 PHONE FIELD INSTRUMENT
+              ₹0 OFFLINE-FIRST FIELD INSTRUMENT
             </span>
             <span className="text-[11px] font-mono text-zinc-400">
-              LIVE CAMERA-ONLY • ON-DEVICE SHA-256 • 6-DOF POSE • OPEN-METEO
+              INDEXEDDB VAULT • 2G COMPRESSION • HTTP 409 DEDUP • BSA SEC 63
             </span>
           </div>
-          <h2 className="mt-1 text-base font-bold text-white">Zero-Cost Evidence Capture & QR Grounding</h2>
+          <h2 className="mt-1 text-base font-bold text-white">Zero-Cost Evidence Capture & Low-Bandwidth Queue</h2>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
           <span
             className={`rounded-full px-2.5 py-0.5 font-bold ${
-              isOnline ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+              effectiveOnline
+                ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
+                : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
             }`}
           >
-            {isOnline ? "ONLINE" : "OFFLINE QUEUE"}
+            {effectiveOnline ? `ONLINE (${netTier.toUpperCase()})` : "OFFLINE VAULT MODE"}
           </span>
-          <span className="text-zinc-400">{packets.length} SEALED</span>
+          <button
+            type="button"
+            onClick={() => setSimulateOffline((s) => !s)}
+            className="rounded border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[11px] text-zinc-300 hover:text-white"
+          >
+            {simulateOffline ? "Go Back Online" : "Test Offline"}
+          </button>
+          <Link
+            href="/site/qr-anchors"
+            className="rounded border border-sky-500/40 bg-sky-950/50 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300 hover:bg-sky-900/50"
+          >
+            Print ₹5 Zone QRs →
+          </Link>
+        </div>
+      </div>
+
+      {/* Bandwidth & Offline Queue Control Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs font-mono">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-zinc-400">BANDWIDTH:</span>
+          {(["auto", "standard", "ultra-lite", "manifest-only"] as BandwidthProfile[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setBandwidthMode(m)}
+              className={`rounded px-2 py-1 text-[11px] font-semibold ${
+                bandwidthMode === m
+                  ? "bg-sky-600 text-white"
+                  : "bg-zinc-950 text-zinc-400 border border-zinc-800 hover:text-white"
+              }`}
+            >
+              {m === "auto"
+                ? `Auto (${resolvedProfile})`
+                : m === "standard"
+                ? "4G (~90KB)"
+                : m === "ultra-lite"
+                ? "2G Lite (~22KB)"
+                : "Hash Only (~1.5KB)"}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {storageMb && (
+            <span className="hidden sm:inline text-[11px] text-zinc-500">
+              IDB {storageMb.usedMb} MB used
+            </span>
+          )}
+          <button
+            type="button"
+            disabled={syncing || pendingCount === 0 || !effectiveOnline}
+            onClick={flushPendingQueue}
+            className="min-h-[34px] rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-500 px-3 text-[11px] font-bold text-white"
+          >
+            {syncing ? "Flushing…" : `Sync Pending (${pendingCount})`}
+          </button>
         </div>
       </div>
 
@@ -477,7 +689,7 @@ export function ZeroCostFieldCapturePanel() {
             type="text"
             value={qrPayload}
             onChange={(e) => setQrPayload(e.target.value)}
-            placeholder="Scan QR or enter ULR / e-Way Bill No."
+            placeholder="QUADILLAR|ZONE-4|TG-03 or ULR / e-Way No."
             className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-xs font-mono text-white placeholder:text-zinc-500"
           />
         </div>
@@ -494,7 +706,7 @@ export function ZeroCostFieldCapturePanel() {
         </div>
       </div>
 
-      {/* Camera Viewport + Controls */}
+      {/* Camera Viewport + Telemetry */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-xl border border-zinc-800 bg-black overflow-hidden">
           <div className="relative aspect-video bg-zinc-950 flex items-center justify-center">
@@ -503,7 +715,7 @@ export function ZeroCostFieldCapturePanel() {
               <div className="p-4 text-center space-y-2">
                 <div className="text-xs font-mono text-zinc-400">GALLERY UPLOAD BLOCKED (ANTI-SPOOF)</div>
                 <div className="text-[11px] text-zinc-500">
-                  {cameraError || "Start live rear camera or use Capture Test Frame on PC."}
+                  {cameraError || "Start live rear camera or use Test Frame on PC."}
                 </div>
               </div>
             )}
@@ -544,7 +756,6 @@ export function ZeroCostFieldCapturePanel() {
           </div>
         </div>
 
-        {/* Live Telemetry & Zero-Cost Weather Feed */}
         <div className="flex flex-col justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3.5 text-xs font-mono">
           <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-lg bg-zinc-950 p-2.5 border border-zinc-800">
@@ -596,11 +807,14 @@ export function ZeroCostFieldCapturePanel() {
               onClick={pullLiveWeather}
               className="min-h-[44px] rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-semibold"
             >
-              {weatherLoading ? "Syncing…" : "Sync Live Weather"}
+              {weatherLoading ? "Syncing…" : "Sync Weather"}
             </button>
             <button
               type="button"
-              onClick={() => flagDeviationToGovernor(28)}
+              onClick={() => {
+                patchInput({ lidarDeviationMm: 28 });
+                setStatusMsg(`Injected 28mm defect on ${selectedAnchor.bimGlobalId} → Governor updated.`);
+              }}
               className="min-h-[44px] rounded-lg bg-red-600/90 hover:bg-red-500 text-white font-semibold"
             >
               Flag 28mm Defect
@@ -620,33 +834,54 @@ export function ZeroCostFieldCapturePanel() {
         </div>
       )}
 
-      {/* Sealed Evidence Strip */}
+      {/* IndexedDB Evidence Strip */}
       {packets.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
-            <span>RECENT BSA SEC 63 SEALED FIELD CAPTURES ({packets.length})</span>
+            <span>
+              INDEXEDDB EVIDENCE VAULT ({packets.length} TOTAL • {pendingCount} PENDING SYNC)
+            </span>
             <button
               type="button"
-              onClick={() => persistPackets([])}
+              onClick={async () => {
+                await idbClearPackets();
+                await refreshVault();
+                setStatusMsg("IndexedDB vault cleared.");
+              }}
               className="text-zinc-500 hover:text-zinc-200 underline"
             >
-              Clear Local Cache
+              Clear Vault
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {packets.slice(0, 6).map((p) => (
-              <div key={p.id} className="flex gap-2.5 rounded-lg border border-zinc-800 bg-zinc-900/70 p-2.5 text-[11px] font-mono">
-                <img src={p.thumbDataUrl} alt={p.id} className="h-14 w-20 shrink-0 rounded object-cover border border-zinc-800" />
+              <div
+                key={p.id}
+                className={`flex gap-2.5 rounded-lg border p-2.5 text-[11px] font-mono ${
+                  p.rejectedDuplicate
+                    ? "border-red-500/60 bg-red-950/30"
+                    : p.synced
+                    ? "border-emerald-500/30 bg-zinc-900/70"
+                    : "border-amber-500/40 bg-amber-950/20"
+                }`}
+              >
+                <img
+                  src={p.thumbDataUrl}
+                  alt={p.id}
+                  className="h-14 w-20 shrink-0 rounded object-cover border border-zinc-800"
+                />
                 <div className="min-w-0 space-y-0.5">
                   <div className="font-bold text-white truncate">
                     {p.id} • {p.zoneId} ({p.bimGlobalId})
                   </div>
                   <div className="text-zinc-300 truncate">{p.noteText}</div>
-                  <div className="text-emerald-400 truncate">SHA256: {p.sha256.slice(0, 16)}…</div>
-                  <div className="text-zinc-500 truncate">
-                    {p.qrPayload ? `QR:${p.qrPayload} • ` : ""}
-                    {p.voiceDurationSec > 0 ? `Mic:${p.voiceDurationSec}s • ` : ""}
-                    {p.synced ? "SYNCED" : "QUEUED"}
+                  <div className="text-emerald-400 truncate">SHA256: {p.sha256.slice(0, 14)}…</div>
+                  <div className="text-zinc-400 truncate">
+                    {p.rejectedDuplicate
+                      ? "BLOCKED 409"
+                      : p.synced
+                      ? `SYNCED (${p.mediaUploaded ? `${Math.round(p.payloadBytes / 1024)}KB` : "MANIFEST 1.5KB"})`
+                      : "QUEUED OFFLINE"}
                   </div>
                 </div>
               </div>

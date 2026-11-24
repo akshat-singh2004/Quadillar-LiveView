@@ -1,86 +1,70 @@
-// public/sw.js
-// QUADILLAR LIVEVIEW.OS - PROGRESSIVE WEB APP & OFFLINE MUTATION WORKER
-
-const CACHE_NAME = 'quadillar-cache-v1';
-const STATIC_ASSETS = [
-    '/',
-    '/quality/pour-cards',
-    '/drawings/redlines',
-    '/site/dpr',
-    '/manifest.json',
-    '/favicon.ico',
+const CACHE_NAME = "quadillar-field-shell-v1";
+const PRECACHE_URLS = [
+  "/manifest.webmanifest",
+  "/site/dpr",
+  "/site/gate-inward",
+  "/site/qr-anchors",
+  "/finance/ra-bills",
 ];
 
-// Install: Cache critical navigation shells
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS);
-        })
-    );
-    self.skipWaiting();
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(PRECACHE_URLS.map((u) => cache.add(u)))
+    )
+  );
+  self.skipWaiting();
 });
 
-// Activate: Clean up legacy caches
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-            );
-        })
-    );
-    self.clients.claim();
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
 });
 
-// Fetch: Stale-while-revalidate for static assets, network-first for telemetry
-self.addEventListener('fetch', (event) => {
-    const requestUrl = new URL(event.request.url);
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/api/") || url.pathname.includes("webpack-hmr")) return;
 
-    // Bypass API routes and streaming video protocols
-    if (
-        requestUrl.pathname.startsWith('/api') ||
-        requestUrl.pathname.includes('/whep') ||
-        requestUrl.pathname.includes('m3u8')
-    ) {
-        return;
-    }
-
+  // Navigation requests: Network-First with offline cache fallback
+  if (req.mode === "navigate") {
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                // Return cached and refresh in background
-                fetch(event.request)
-                    .then((networkResponse) => {
-                        if (networkResponse && networkResponse.status === 200) {
-                            caches.open(CACHE_NAME).then((cache) => {
-                                cache.put(event.request, networkResponse);
-                            });
-                        }
-                    })
-                    .catch(() => { });
-                return cachedResponse;
-            }
-
-            return fetch(event.request).catch(() => {
-                // Fallback to root shell on complete network outage
-                if (event.request.mode === 'navigate') {
-                    return caches.match('/');
-                }
-            });
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+          }
+          return res;
         })
+        .catch(() =>
+          caches.match(req).then((cached) => cached || caches.match("/site/dpr"))
+        )
     );
-});
+    return;
+  }
 
-// Background Sync: Flush offline IndexedDB queue when network connectivity restores
-self.addEventListener('sync', (event) => {
-    if (event.tag === 'sync-mutations') {
-        event.waitUntil(
-            self.clients.matchAll().then((clients) => {
-                clients.forEach((client) => {
-                    client.postMessage({ type: 'TRIGGER_OFFLINE_SYNC' });
-                });
-            })
-        );
-    }
+  // Next.js immutable static chunks: Stale-While-Revalidate
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        const netFetch = fetch(req)
+          .then((res) => {
+            if (res.ok) {
+              const copy = res.clone();
+              caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+            }
+            return res;
+          })
+          .catch(() => cached);
+        return cached || netFetch;
+      })
+    );
+  }
 });

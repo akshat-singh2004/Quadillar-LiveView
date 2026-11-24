@@ -1,0 +1,10 @@
+{
+  "name": "Quadillar LiveView — Field OS",
+  "short_name": "LiveView Field",
+  "description": "Offline-capable construction governance, 6-DoF field capture, and BSA Sec 63 audit ledger",
+  "start_url": "/site/dpr",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait-primary"
+}
