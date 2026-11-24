@@ -501,6 +501,16 @@ export function ZeroCostFieldCapturePanel() {
 
       if (packets.some((p) => p.sha256 === sha256)) {
         setDuplicateAlert(`HTTP 409 DUPLICATE REJECTED — Hash ${sha256.slice(0, 14)} already exists in IndexedDB vault.`);
+        window.dispatchEvent(new CustomEvent("quadillar:field-event", {
+          detail: {
+            id: `dup-409-${sha256.slice(0, 10)}`,
+            trigger: "offlineSyncAndDup409",
+            severity: "HIGH",
+            title: "HTTP 409 Duplicate Evidence Blocked",
+            body: `Recycled photo hash ${sha256.slice(0, 12)} rejected on ${selectedAnchor.zoneId} (${selectedAnchor.bimGlobalId}).`,
+            url: "/site/dpr",
+          },
+        }));
         return;
       }
 
@@ -540,6 +550,16 @@ export function ZeroCostFieldCapturePanel() {
           const syncedPkt = await syncSinglePacket(packet);
           if (syncedPkt.rejectedDuplicate) {
             setDuplicateAlert(`HTTP 409 SERVER REJECTED — Duplicate SHA-256 ${sha256.slice(0, 14)}.`);
+            window.dispatchEvent(new CustomEvent("quadillar:field-event", {
+              detail: {
+                id: `dup-409-srv-${sha256.slice(0, 10)}`,
+                trigger: "offlineSyncAndDup409",
+                severity: "HIGH",
+                title: "HTTP 409 Server Duplicate Blocked",
+                body: `Supabase ledger rejected duplicate SHA-256 ${sha256.slice(0, 12)} on ${selectedAnchor.bimGlobalId}.`,
+                url: "/site/dpr",
+              },
+            }));
           } else if (syncedPkt.synced) {
             const kb = Math.round(syncedPkt.payloadBytes / 1024);
             setStatusMsg(

@@ -10,6 +10,7 @@ import { RoleProvider } from "@/context/RoleContext";
 import { AppShell } from "@/components/layout/AppShell";
 import { GovernorProvider } from "@/context/GovernorContext";
 import { SwRegistrar } from "@/components/offline/SwRegistrar";
+import { GovernorAlertListener } from "@/components/governor/GovernorAlertListener";
 import { GovernorGlobalBar } from "@/components/governor/GovernorGlobalBar";
 import MobileFieldDock from "@/components/layout/MobileFieldDock";
 
@@ -32,6 +33,7 @@ export default function RootLayout({
         <RoleProvider>
           <GovernorProvider>
           <SwRegistrar />
+          <GovernorAlertListener />
           <GovernorGlobalBar />
           <div className="pb-16 lg:pb-0">
           <AppShell>
