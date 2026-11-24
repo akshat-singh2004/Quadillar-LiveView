@@ -89,7 +89,7 @@ export default function NcrQualityDebitLiensPage() {
           <a href="/site/digital-twin?bit=BIT-4" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 rounded-lg transition">
             🏛️ COLUMN C2 IN 3D BIM
           </a>
-          <a href="/site/commercial" className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 rounded-lg transition">
+          <a href="/finance/ra-bills" className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 rounded-lg transition">
             💼 COMMERCIAL LIENS
           </a>
         </div>

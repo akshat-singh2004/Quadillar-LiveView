@@ -91,7 +91,7 @@ export async function reconcileMaterialConsumption(payload: ReconcileMaterialPay
       .eq("id", data.id);
 
     revalidatePath("/materials/reconciliation");
-    revalidatePath("/commercial/ra-bills");
+    revalidatePath("/finance/ra-bills");
     revalidatePath("/");
 
     return { success: true, data, evaluation, sealHash: seal.blockHash };

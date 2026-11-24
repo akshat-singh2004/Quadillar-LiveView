@@ -149,7 +149,7 @@ export async function compileDailyGovernanceDossier(payload: CompileDprPayload) 
         .eq("id", data.id);
     }
 
-    revalidatePath("/governance/dpr");
+    revalidatePath("/site/dpr");
     revalidatePath("/site/dpr");
     revalidatePath("/");
 
@@ -227,7 +227,7 @@ export async function submitDPRRecord(arg1: any, arg2?: any): Promise<{
       throw new Error(compileRes.error || "Failed to compile DPR record.");
     }
 
-    revalidatePath("/governance/dpr");
+    revalidatePath("/site/dpr");
     revalidatePath("/site/dpr");
     revalidatePath("/");
 
@@ -306,7 +306,7 @@ export async function registerSiteHindrance(arg1: any, arg2?: any): Promise<{
       severity: "warning",
     });
 
-    revalidatePath("/governance/dpr");
+    revalidatePath("/site/dpr");
     revalidatePath("/commercial/hindrance-eot");
     revalidatePath("/site/dpr");
     revalidatePath("/");
@@ -404,7 +404,7 @@ export async function sealAndSignDpr(arg1: any, arg2?: any, arg3?: any): Promise
         .eq("id", dprId);
     }
 
-    revalidatePath("/governance/dpr");
+    revalidatePath("/site/dpr");
     revalidatePath("/site/dpr");
     revalidatePath("/");
 

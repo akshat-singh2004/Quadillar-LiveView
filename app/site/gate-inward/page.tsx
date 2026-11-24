@@ -1,4 +1,5 @@
 "use client";
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -212,7 +213,7 @@ export default function VanguardWeighbridgePage() {
           <a href="/" className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg transition">← COMMAND CENTER</a>
           <a href="/site/digital-twin" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 text-xs rounded-lg transition">🏛️ 3D BIM TWIN</a>
           <a href="/site/dpr" className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-purple-300 text-xs rounded-lg transition">📋 DPR #084</a>
-          <a href="/site/ptw" className="px-3 py-1.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 text-amber-300 text-xs rounded-lg transition">⚠️ PTW SAFETY</a>
+          <a href="/safety/ptw" className="px-3 py-1.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 text-amber-300 text-xs rounded-lg transition">⚠️ PTW SAFETY</a>
         </div>
       </div>
 
@@ -281,6 +282,7 @@ export default function VanguardWeighbridgePage() {
                       : "bg-slate-950/60 border-slate-800 hover:border-slate-700"
                   }`}
                 >
+      <GovernorInterlockBanner module="MATERIAL_RECON" />
                   <div className="flex justify-between items-center text-[10px]">
                     <span className="font-bold text-cyan-400">{ticket.ticketNo}</span>
                     <span className={`px-1.5 py-0.2 rounded font-bold ${

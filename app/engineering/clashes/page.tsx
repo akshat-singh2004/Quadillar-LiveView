@@ -286,7 +286,7 @@ export default function CanonicalBimClashesPage() {
     </div>
   </div>
 
-  <table>
+  <div className="w-full overflow-x-auto"><table>
     <thead>
       <tr>
         <th>Clash Ref</th>
@@ -309,7 +309,7 @@ export default function CanonicalBimClashesPage() {
         </tr>
       `).join("")}
     </tbody>
-  </table>
+  </table></div>
 
   <div class="footer">
     <div>

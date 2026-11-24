@@ -176,7 +176,7 @@ export async function issuePermitToWork(payload: CreatePermitPayload) {
       .eq("id", data.id);
 
     revalidatePath("/safety/ptw");
-    revalidatePath("/site/permits");
+    revalidatePath("/safety/ptw");
     revalidatePath("/");
 
     return { success: true, data, permitNumber, sealHash: seal.blockHash };
@@ -295,7 +295,7 @@ export async function togglePTWSuspension(
     });
 
     revalidatePath("/safety/ptw");
-    revalidatePath("/site/permits");
+    revalidatePath("/safety/ptw");
     revalidatePath("/");
 
     return { success: true, data, status: nextStatus };
@@ -351,7 +351,7 @@ export async function logAtmosphericGasTest(payload: LogAtmosphericTestPayload) 
     }
 
     revalidatePath("/safety/ptw");
-    revalidatePath("/site/permits");
+    revalidatePath("/safety/ptw");
     revalidatePath("/");
 
     return { success: true, data, isAtmosphereSafe };
@@ -392,7 +392,7 @@ export async function closePermitToWork(permitId: string, projectId: string, rem
     });
 
     revalidatePath("/safety/ptw");
-    revalidatePath("/site/permits");
+    revalidatePath("/safety/ptw");
     revalidatePath("/");
 
     return { success: true };

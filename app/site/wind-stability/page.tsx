@@ -1,5 +1,6 @@
 // @refresh reset
 "use client";
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useState, useMemo } from "react";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
@@ -11,6 +12,7 @@ export default function WindStabilityPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 flex flex-col gap-5 font-mono">
+      <GovernorInterlockBanner module="WIND_STABILITY" />
       <div className="border-b border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -18,7 +20,7 @@ export default function WindStabilityPage() {
               IS 875 (PART 3): 2015 / IS 456 CL. 20.5
             </span>
             <span className="px-2 py-0.5 text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded">
-              BIT-3 HOTEL CORE (+54.00M RL) • {VANGUARD_GENOME.projectId}
+              ZONE-3 HOTEL CORE (+54.00M RL) • {VANGUARD_GENOME.projectId}
             </span>
           </div>
           <h1 className="text-xl font-bold text-white mt-1">
@@ -33,8 +35,8 @@ export default function WindStabilityPage() {
           <a href="/" className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg transition">
             ← COMMAND CENTER
           </a>
-          <a href="/site/digital-twin?bit=BIT-3" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 rounded-lg transition">
-            🏛️ INSPECT BIT-3 IN 3D BIM
+          <a href="/site/digital-twin?bit=ZONE-3" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 rounded-lg transition">
+            🏛️ INSPECT ZONE-3 IN 3D BIM
           </a>
         </div>
       </div>
@@ -74,7 +76,7 @@ export default function WindStabilityPage() {
       <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3 text-xs">
           <span className="font-bold text-white uppercase">
-            ELEVATION-ZONED WIND PROFILE — BIT-3 DIAGRID TOWER (+54.00M RL)
+            ELEVATION-ZONED WIND PROFILE — ZONE-3 DIAGRID TOWER (+54.00M RL)
           </span>
           <div className="flex items-center gap-3">
             <span className="text-slate-400">GUST VELOCITY SIMULATOR:</span>

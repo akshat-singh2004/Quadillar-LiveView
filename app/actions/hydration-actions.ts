@@ -86,7 +86,7 @@ export async function logHydrationReading(payload: LogHydrationReadingPayload) {
       });
     }
 
-    revalidatePath("/quality/thermal-hydration");
+    revalidatePath("/engineering/concrete-maturity");
     revalidatePath("/");
 
     return { success: true, data, evalResult };
@@ -162,7 +162,7 @@ export async function authorizeFormworkStripping(payload: AuthorizeStrippingPayl
 
     if (error) throw error;
 
-    revalidatePath("/quality/thermal-hydration");
+    revalidatePath("/engineering/concrete-maturity");
     revalidatePath("/quality/pour-cards");
     revalidatePath("/");
 

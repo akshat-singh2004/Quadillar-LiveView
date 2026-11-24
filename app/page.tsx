@@ -55,8 +55,8 @@ const GOVERNOR_DIRECTORY: GovernorCardSpec[] = [
       { label: "360° LiDAR Reality Tour (BIT-2)", href: "/site/360-tour?zone=BIT-2", metric: "28,500 Pts" },
       { label: "Crane & Wind Stability Envelope", href: "/site/wind-stability", metric: "47 m/s Safe" },
       { label: "Structural NDT & SonReb Register", href: "/site/ndt", metric: "32.8 MPa" },
-      { label: "Permit-to-Work (PTW) & HSE", href: "/site/ptw", metric: "9 Active PTWs" },
-      { label: "Weighbridge & Gate Inward", href: "/site/weighbridge", metric: "±0.35% Var" },
+      { label: "Permit-to-Work (PTW) & HSE", href: "/safety/ptw", metric: "9 Active PTWs" },
+      { label: "Weighbridge & Gate Inward", href: "/site/gate-inward", metric: "±0.35% Var" },
     ],
   },
   {
@@ -65,11 +65,11 @@ const GOVERNOR_DIRECTORY: GovernorCardSpec[] = [
     domain: "Commercial, BOQ & Escrow Billing",
     status: "NOMINAL",
     summary: "CPWD 5% statutory retention (₹43.22 Cr) & tensile/cladding ledger reconciled.",
-    defaultHref: "/site/commercial",
+    defaultHref: "/finance/ra-bills",
     defaultMetric: "CPI 1.014",
     terminals: [
-      { label: "Commercial & RA Billing Ledger", href: "/site/commercial", metric: "₹534.26 Cr" },
-      { label: "CPWD Clause 42 Material Recon", href: "/site/material-recon", metric: "1.82% Rebar" },
+      { label: "Commercial & RA Billing Ledger", href: "/finance/ra-bills", metric: "₹534.26 Cr" },
+      { label: "CPWD Clause 42 Material Recon", href: "/materials/reconciliation", metric: "1.82% Rebar" },
       { label: "Clause 10CA / 10CC Escalation", href: "/finance/price-escalation", metric: "+₹4.86 Cr" },
       { label: "UP-LDA Statutory Escrow Gates", href: "/system/commercial-gates", metric: "Active" },
       { label: "Executive EVM S-Curve", href: "/executive/evm-scurve", metric: "CPI 1.014" },
@@ -97,12 +97,12 @@ const GOVERNOR_DIRECTORY: GovernorCardSpec[] = [
     domain: "BSA Sec. 63 / Sec. 65B Notarization",
     status: "NOMINAL",
     summary: "Section 65B tamper-evident hash chain sealed for Gomti Nagar campus.",
-    defaultHref: "/site/audit-ledger",
+    defaultHref: "/closeout/audit-vault",
     defaultMetric: "Block #18402",
     terminals: [
-      { label: "Section 65B / BSA Evidence Vault", href: "/site/audit-ledger", metric: "Block #18402" },
-      { label: "Hindrance & SCL EOT Register", href: "/site/hindrance-eot", metric: "₹0 LD Risk" },
-      { label: "NCR & Defect Lien Register", href: "/site/ncr-defect-liens", metric: "1 Active Hold" },
+      { label: "Section 65B / BSA Evidence Vault", href: "/closeout/audit-vault", metric: "Block #18402" },
+      { label: "Hindrance & SCL EOT Register", href: "/commercial/hindrance-eot", metric: "₹0 LD Risk" },
+      { label: "NCR & Defect Lien Register", href: "/quality/ncr", metric: "1 Active Hold" },
       { label: "Studio Workspace & Project Tokens", href: "/workspace", metric: "PRJ-01" },
     ],
   },
@@ -132,9 +132,9 @@ export default function MasterCommandCenterPage() {
   const [governorFilter, setGovernorFilter] = useState<string>("ALL");
   const [selectedTerminals, setSelectedTerminals] = useState<Record<string, string>>({
     ARGUS: "/site/360-tour?zone=BIT-2",
-    MIDAS: "/site/commercial",
+    MIDAS: "/finance/ra-bills",
     MINERVA: "/site/digital-twin",
-    HERMES: "/site/audit-ledger",
+    HERMES: "/closeout/audit-vault",
   });
 
   const effectiveTelemetryIso = simulateStaleFeed

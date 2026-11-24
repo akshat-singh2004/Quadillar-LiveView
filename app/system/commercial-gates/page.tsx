@@ -1,4 +1,5 @@
 "use client";
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
@@ -263,18 +264,18 @@ export default function CanonicalCommercialGatesPage() {
     <span class="badge secure">SYSTEM INTERLOCKS ACTIVE</span>
   </div>
 
-  <table>
+  <div className="w-full overflow-x-auto"><table>
     <tr><th>Active Payment Freezes</th><td><strong>${summary.activePaymentHolds} Active Freeze(s)</strong></td><th>Total Automated Debits</th><td><strong>₹${summary.totalDebitsDeducted.toLocaleString("en-IN")}</strong></td></tr>
     <tr><th>Quality Circuit Breaker (IS 516)</th><td>100% Armed</td><th>Clause 19D Wage Arrears Gate</th><td>Active Enforcement</td></tr>
     <tr><th>Clause 14 Backcharge Auto-Debit</th><td>Active Enforcement</td><th>Clause 42 Double-Rate Penal Gate</th><td>Active Enforcement</td></tr>
-  </table>
+  </table></div>
 
   <div class="box">
     <div style="font-weight: bold; text-transform: uppercase; font-size: 10px; color: #475569; margin-bottom: 4px;">Commercial Integrity Architectural Determination</div>
     <div>All interim contractor payment disbursements are governed by cryptographic database-level triggers. No running account bill can be sanctioned or certified while active structural defects, unpaid wage arrears, or unrecovered material wastage debits persist.</div>
   </div>
 
-  <table>
+  <div className="w-full overflow-x-auto"><table>
     <thead>
       <tr>
         <th>Timestamp</th>
@@ -301,7 +302,7 @@ export default function CanonicalCommercialGatesPage() {
         </tr>
       `).join("")}
     </tbody>
-  </table>
+  </table></div>
 
   <div class="footer">
     <div>
@@ -338,6 +339,7 @@ export default function CanonicalCommercialGatesPage() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 px-4 py-8 sm:px-6 lg:px-8">
+      <GovernorInterlockBanner module="RA_BILLS" />
       <div className="mx-auto max-w-[1600px] space-y-6">
         
         {/* TOP TITLE BAR */}

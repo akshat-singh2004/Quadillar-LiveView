@@ -32,7 +32,7 @@ export default async function GeotechnicalPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 font-mono text-xs select-none space-y-6">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-3 sm:p-4 md:p-6 font-mono text-xs select-none space-y-6">
       <header className="border-b border-zinc-800 pb-4">
         <div className="flex items-center gap-2 text-[10px] text-cyan-400 uppercase tracking-widest font-bold">
           <Activity className="w-3.5 h-3.5" />

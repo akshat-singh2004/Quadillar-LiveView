@@ -190,9 +190,9 @@ export default function DigitalPourCardPage() {
         <div className="flex items-center gap-2">
           <a href="/" className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg transition">← COMMAND CENTER</a>
           <a href="/site/digital-twin?bit=BIT-4" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 text-xs rounded-lg transition">🏛️ BIT-4 IN 3D BIM</a>
-          <a href="/site/concrete-maturity" className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-purple-300 text-xs rounded-lg transition">🌡️ CONCRETE MATURITY</a>
+          <a href="/engineering/concrete-maturity" className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-purple-300 text-xs rounded-lg transition">🌡️ CONCRETE MATURITY</a>
           <a href="/site/ndt" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 text-xs rounded-lg transition">🔬 NDT INTEGRITY</a>
-          <a href="/site/material-recon" className="px-3 py-1.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 text-amber-300 text-xs rounded-lg transition">⚖️ CL. 42 RECON</a>
+          <a href="/materials/reconciliation" className="px-3 py-1.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 text-amber-300 text-xs rounded-lg transition">⚖️ CL. 42 RECON</a>
         </div>
       </div>
 

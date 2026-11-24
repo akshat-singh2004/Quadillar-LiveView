@@ -182,7 +182,7 @@ export async function commitVerifiedProject(payload: VerificationPayload) {
     }
 
     revalidatePath("/");
-    revalidatePath("/dashboard");
+    revalidatePath("/");
     revalidatePath("/onboarding");
 
     return { success: true, projectId: finalProjectId };

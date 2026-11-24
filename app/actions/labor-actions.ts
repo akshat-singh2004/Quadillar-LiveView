@@ -137,8 +137,8 @@ export async function auditAndLogMusterRoll(payload: AuditMusterPayload) {
       .update({ seor_signoff_hash: seal.blockHash })
       .eq("id", data.id);
 
-    revalidatePath("/labor/muster");
-    revalidatePath("/commercial/ra-bills");
+    revalidatePath("/site/labor");
+    revalidatePath("/finance/ra-bills");
     revalidatePath("/");
 
     return { success: true, data, reconciliation, isWageCompliant, sealHash: seal.blockHash };
@@ -203,7 +203,7 @@ export async function registerBocwWorker(arg1: any, arg2?: any): Promise<{
       severity: "verified",
     });
 
-    revalidatePath("/labor/muster");
+    revalidatePath("/site/labor");
     revalidatePath("/site/labor");
     revalidatePath("/");
 
@@ -273,7 +273,7 @@ export async function recordTurnstilePunch(
       console.warn("[recordTurnstilePunch warning]:", error.message);
     }
 
-    revalidatePath("/labor/muster");
+    revalidatePath("/site/labor");
     revalidatePath("/site/labor");
     revalidatePath("/");
 
@@ -330,7 +330,7 @@ export async function addLaborRosterEntry(arg1: any, arg2?: any): Promise<{
       console.warn("[addLaborRosterEntry warning]:", error.message);
     }
 
-    revalidatePath("/labor/muster");
+    revalidatePath("/site/labor");
     revalidatePath("/site/labor");
     revalidatePath("/");
 
@@ -382,7 +382,7 @@ export async function syncRosterEntriesToDPR(arg1?: any, arg2?: any): Promise<{
       severity: "verified",
     });
 
-    revalidatePath("/labor/muster");
+    revalidatePath("/site/labor");
     revalidatePath("/site/dpr");
     revalidatePath("/site/labor");
     revalidatePath("/");
