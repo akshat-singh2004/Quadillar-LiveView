@@ -1,5 +1,6 @@
 'use client';
 import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
+import { SyncedEvidenceInbox } from "@/components/field/SyncedEvidenceInbox";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/app/lib/supabase';
@@ -285,6 +286,7 @@ export default function Section65BAuditVaultPage() {
                         }`}
                     >
       <GovernorInterlockBanner module="AUDIT_VAULT" />
+      <SyncedEvidenceInbox />
                       <div className="flex justify-between items-center font-bold">
                         <span>{d.dossier_code}</span>
                         <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-900 border border-neutral-700 text-emerald-400">
