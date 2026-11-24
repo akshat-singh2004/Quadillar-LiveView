@@ -1,4 +1,5 @@
 'use client';
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/app/lib/supabase';
@@ -283,6 +284,7 @@ export default function Section65BAuditVaultPage() {
                           : 'bg-zinc-950 border-zinc-850 hover:border-zinc-700 text-zinc-300'
                         }`}
                     >
+      <GovernorInterlockBanner module="AUDIT_VAULT" />
                       <div className="flex justify-between items-center font-bold">
                         <span>{d.dossier_code}</span>
                         <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-900 border border-neutral-700 text-emerald-400">

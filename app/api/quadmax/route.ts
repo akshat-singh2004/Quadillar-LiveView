@@ -392,7 +392,7 @@ function buildPortfolioDeterministicSynthesis(params: {
       ],
       citations: [
         { label: "Open 3D BIM Twin (TG-03)", href: "/site/digital-twin?zone=BIT-4-TG03&autoEscalate=1", tag: "3D AGENT" },
-        { label: "Open Section 65B Evidence Vault", href: "/site/audit-ledger", tag: "65B VAULT" },
+        { label: "Open Section 65B Evidence Vault", href: "/closeout/audit-vault", tag: "65B VAULT" },
       ],
       followUps: [
         "Investigate the latest site engineer report with sensor escalation",
@@ -424,7 +424,7 @@ function buildPortfolioDeterministicSynthesis(params: {
     ],
     citations: [
       { label: "Launch 3D BIM Twin", href: "/site/digital-twin", tag: "3D BIM" },
-      { label: "Audit Ledger (BSA Sec. 63)", href: "/site/audit-ledger", tag: "LEDGER" },
+      { label: "Audit Ledger (BSA Sec. 63)", href: "/closeout/audit-vault", tag: "LEDGER" },
     ],
     followUps: [
       "What did the site engineer report a moment ago?",

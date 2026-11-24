@@ -1,4 +1,5 @@
 "use client";
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useState, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -318,6 +319,7 @@ export default function PermitToWorkPage() {
                       : "bg-slate-950/60 border-slate-800 hover:border-slate-700"
                   }`}
                 >
+      <GovernorInterlockBanner module="PTW_SAFETY" />
                   <div className="flex justify-between items-center text-[10px]">
                     <span className="font-bold text-amber-400 font-mono">{permit.permitNumber}</span>
                     <span className={`px-1.5 py-0.2 rounded font-bold ${

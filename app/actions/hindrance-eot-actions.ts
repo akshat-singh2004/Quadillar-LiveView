@@ -177,7 +177,7 @@ export async function adjudicateEotClaim(payload: AdjudicateEotPayload) {
       .eq("id", data.id);
 
     revalidatePath("/commercial/hindrance-eot");
-    revalidatePath("/commercial/ra-bills");
+    revalidatePath("/finance/ra-bills");
     revalidatePath("/");
 
     return { success: true, data, isNoticeTimeBarred, ldShield, sealHash: seal.blockHash };

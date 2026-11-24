@@ -1,4 +1,5 @@
 "use client";
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useEffect, useState, useCallback } from "react";
 import {
@@ -97,7 +98,8 @@ export default function PaymentApplicationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 font-mono text-xs select-none space-y-6">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-3 sm:p-4 md:p-6 font-mono text-xs select-none space-y-6">
+      <GovernorInterlockBanner module="RA_BILLS" />
       <header className="border-b border-zinc-800 pb-4">
         <div className="flex items-center gap-2 text-[10px] text-cyan-400 uppercase tracking-widest font-bold">
           <span>COMMERCIAL VALUATION • CPWD CLAUSE 10CC / FIDIC CL. 14 • {projectId}</span>

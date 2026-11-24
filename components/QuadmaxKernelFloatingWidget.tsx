@@ -121,7 +121,7 @@ export default function QuadmaxKernelFloatingWidget() {
         ],
         citations: [
           { label: "Focus TG-03 in 3D BIM", href: "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042", tag: "3D BIM" },
-          { label: "Section 65B Vault", href: "/site/audit-ledger", tag: "65B VAULT" },
+          { label: "Section 65B Vault", href: "/closeout/audit-vault", tag: "65B VAULT" },
         ],
         followUps: [
           "What did the site engineer report a moment ago?",

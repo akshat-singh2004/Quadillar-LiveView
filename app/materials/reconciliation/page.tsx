@@ -1,3 +1,4 @@
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 import React from "react";
 import { ReconcileMaterialModal } from "@/components/materials/ReconcileMaterialModal";
 import { OptimizeBbsModal } from "@/components/materials/OptimizeBbsModal";
@@ -106,6 +107,7 @@ export default async function MaterialReconciliationPage() {
                 const hasExcess = Number(rec.excess_consumption_qty) > 0;
                 return (
                   <div key={rec.id} className="p-4 space-y-1.5 hover:bg-zinc-850/50 transition">
+      <GovernorInterlockBanner module="MATERIAL_RECON" />
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 rounded bg-amber-950 border border-amber-800 text-amber-300 font-bold text-[10px]">

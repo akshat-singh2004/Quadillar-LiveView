@@ -1,3 +1,4 @@
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 import React from "react";
 import { PairThermocoupleNodeModal } from "@/components/engineering/PairThermocoupleNodeModal";
 import { LogHydrationReadingModal } from "@/components/engineering/LogHydrationReadingModal";
@@ -121,6 +122,7 @@ export default async function ConcreteMaturityPage() {
 
               return (
                 <div key={node.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 hover:bg-zinc-850/50 transition">
+      <GovernorInterlockBanner module="CONCRETE_MATURITY" />
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold text-[10px]">

@@ -1,5 +1,6 @@
 // @refresh reset
 "use client";
+import { ZeroCostFieldCapturePanel } from "@/components/field/ZeroCostFieldCapturePanel";
 
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -74,6 +75,7 @@ export default function DailyProgressReportPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 flex flex-col gap-5 font-mono">
+      <ZeroCostFieldCapturePanel />
       <div className="border-b border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -99,7 +101,7 @@ export default function DailyProgressReportPage() {
           <a href="/site/digital-twin" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 rounded-lg transition">
             🏛️ 3D BIM TWIN
           </a>
-          <a href="/site/master-schedule" className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-purple-300 rounded-lg transition">
+          <a href="/schedule/gantt" className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-purple-300 rounded-lg transition">
             📊 CPM & EVM
           </a>
         </div>

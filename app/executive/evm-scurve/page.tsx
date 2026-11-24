@@ -1,5 +1,6 @@
 // @refresh reset
 "use client";
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -117,7 +118,7 @@ export default function CanonicalEvmScurvePage() {
           <a href="/schedule/gantt" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 rounded-lg transition">
             📊 MASTER CPM GANTT
           </a>
-          <a href="/site/commercial" className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 rounded-lg transition">
+          <a href="/finance/ra-bills" className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 rounded-lg transition">
             💼 RA BILLING LEDGER
           </a>
         </div>
@@ -229,6 +230,7 @@ export default function CanonicalEvmScurvePage() {
                     onClick={() => setSelectedMonthIndex(idx)}
                     className="cursor-pointer"
                   >
+      <GovernorInterlockBanner module="EVM_SCURVE" />
                     <circle
                       cx={cx}
                       cy={cy}
@@ -269,7 +271,7 @@ export default function CanonicalEvmScurvePage() {
             MONTHLY RA BILLING & ESCROW RETENTION SCHEDULE
           </div>
           <div className="overflow-y-auto max-h-64">
-            <table className="w-full text-left text-xs">
+            <div className="w-full overflow-x-auto"><table className="w-full text-left text-xs">
               <thead className="bg-slate-950/80 text-[10px] text-slate-500 uppercase border-b border-slate-800">
                 <tr>
                   <th className="py-2 px-2">PERIOD</th>
@@ -296,7 +298,7 @@ export default function CanonicalEvmScurvePage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 'use client';
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/supabase';
@@ -96,6 +97,7 @@ export default function RunningAccountBillsPage() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 p-6 sm:p-8 font-mono">
+      <GovernorInterlockBanner module="RA_BILLS" />
       <div className="max-w-[1650px] mx-auto space-y-6">
 
         {/* HEADER BAR */}

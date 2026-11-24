@@ -118,7 +118,7 @@ export async function logAssetTelemetry(payload: LogAssetTelemetryPayload) {
       .update({ seor_signoff_hash: seal.blockHash })
       .eq("id", data.id);
 
-    revalidatePath("/fleet/telematics");
+    revalidatePath("/operations/plant-machinery");
     revalidatePath("/");
 
     return { success: true, data, evalResult, finalStatus, sealHash: seal.blockHash };

@@ -1,5 +1,6 @@
 // @refresh reset
 "use client";
+import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
 import React, { useMemo } from "react";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
@@ -109,6 +110,7 @@ export default function MasterCpmAndEvmPage() {
                 const widthPct = Math.max(4, (t.durationDays / maxDays) * 100);
                 return (
                   <tr key={t.wbsId} className="hover:bg-slate-900/40">
+      <GovernorInterlockBanner module="GANTT_EVM" />
                     <td className="py-2.5 px-2 font-bold text-cyan-400">{t.wbsId}</td>
                     <td className="py-2.5 px-2">
                       <a

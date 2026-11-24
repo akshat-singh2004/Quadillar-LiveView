@@ -57,7 +57,7 @@ export default async function RERAPage() {
       : [];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 font-mono text-xs select-none">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-3 sm:p-4 md:p-6 font-mono text-xs select-none">
       <RERAReportGenerator
         approvals={approvals}
         projectName={projectName}

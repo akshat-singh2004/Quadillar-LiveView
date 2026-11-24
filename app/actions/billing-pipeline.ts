@@ -309,8 +309,8 @@ export async function generateRABillFromMB(
         // 15. Invalidate Stale Client Views
         revalidatePath("/finance/ra-bills");
         revalidatePath("/finance/measurement-book");
-        revalidatePath("/finance/ipc");
-        revalidatePath("/reports/audit");
+        revalidatePath("/finance/payment-applications");
+        revalidatePath("/closeout/audit-vault");
         revalidatePath("/");
 
         return {
