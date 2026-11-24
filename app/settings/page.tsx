@@ -1,4 +1,5 @@
 "use client";
+import { NotificationChannelsPanel } from "@/components/settings/NotificationChannelsPanel";
 
 import React, { useState, useEffect, useTransition } from "react";
 import {
@@ -258,6 +259,7 @@ export default function SystemSettingsConsole() {
                   : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
               }`}
             >
+      <NotificationChannelsPanel />
               <Icon className="h-3.5 w-3.5" />
               <span>{tab.label}</span>
             </button>

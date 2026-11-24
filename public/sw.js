@@ -1,10 +1,11 @@
-const CACHE_NAME = "quadillar-field-shell-v1";
+const CACHE_NAME = "quadillar-field-shell-v2";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
   "/site/dpr",
   "/site/gate-inward",
   "/site/qr-anchors",
   "/finance/ra-bills",
+  "/settings",
 ];
 
 self.addEventListener("install", (event) => {
@@ -25,6 +26,22 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/finance/ra-bills";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -32,7 +49,6 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/") || url.pathname.includes("webpack-hmr")) return;
 
-  // Navigation requests: Network-First with offline cache fallback
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
@@ -50,7 +66,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Next.js immutable static chunks: Stale-While-Revalidate
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
       caches.match(req).then((cached) => {
