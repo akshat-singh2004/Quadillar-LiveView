@@ -66,14 +66,22 @@ export function UnifiedHeader() {
   };
 
   return (
-    <header className="h-14 border-b border-zinc-800 bg-zinc-950/85 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between gap-2 font-mono text-xs select-none sticky top-0 z-20">
-      <div className="flex items-center gap-2">
+    <header className="h-14 border-b border-zinc-800 bg-zinc-950/85 backdrop-blur-md px-2 sm:px-4 flex items-center justify-between gap-1.5 sm:gap-2 font-mono text-xs select-none sticky top-0 z-20 max-w-full overflow-x-hidden">
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            toggleSidebar();
+            if (typeof window !== "undefined" && window.innerWidth < 1024) {
+              window.dispatchEvent(new Event("quadillar:toggle-mobile-sidebar"));
+            } else {
+              if (typeof window !== "undefined" && window.innerWidth < 1024) {
+              window.dispatchEvent(new Event("quadillar:toggle-mobile-sidebar"));
+            } else {
+              toggleSidebar();
+            }
+            }
           }}
           className="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer shrink-0 mr-1"
           title={isExpanded ? "Withdraw Sidebar" : "Draw Sidebar"}
@@ -87,7 +95,7 @@ export function UnifiedHeader() {
         </button>
 
         {/* Single-Project Identity Pill */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 text-zinc-100">
+        <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 text-zinc-100 min-w-0 max-w-[180px] sm:max-w-none overflow-hidden">
           <Building2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           <span className="text-[10px] font-bold text-zinc-400">{activeProject.code}</span>
           <span className="font-bold truncate max-w-[100px] sm:max-w-xs">

@@ -244,7 +244,7 @@ export default function SystemSettingsConsole() {
           { id: "statutory_hse", label: "1. HSE & Engineering Bounds", icon: Shield },
           { id: "commercial_baseline", label: "2. Commercial & Baseline", icon: DollarSign },
           { id: "agent_daemons", label: "3. Agent Governors", icon: Cpu },
-          { id: "evidentiary_65b", label: "4. Section 65B Vault", icon: FileCheck },
+          { id: "evidentiary_65b", label: "4. BSA Section 63 Vault", icon: FileCheck },
           { id: "rera_profile", label: "5. RERA & Municipal", icon: Building2 },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -259,7 +259,6 @@ export default function SystemSettingsConsole() {
                   : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
               }`}
             >
-      <NotificationChannelsPanel />
               <Icon className="h-3.5 w-3.5" />
               <span>{tab.label}</span>
             </button>
@@ -268,6 +267,13 @@ export default function SystemSettingsConsole() {
       </nav>
 
       {/* TAB CONTENT PANELS */}
+      <div className="w-full">
+      </div>
+
+      <div className="w-full">
+        <NotificationChannelsPanel />
+      </div>
+
       <main className="space-y-6">
         {/* DOMAIN 1: HSE & ENGINEERING BOUNDARIES */}
         {activeTab === "statutory_hse" && (

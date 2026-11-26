@@ -198,7 +198,7 @@ export function NotificationChannelsPanel() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded bg-sky-500/20 border border-sky-500/30 px-2 py-0.5 text-[10px] font-mono font-bold uppercase text-sky-300">
+            <span className="rounded bg-sky-600 px-2 py-0.5 text-[10px] font-mono font-bold uppercase text-white">
               NOTIFICATION DISPATCH ROUTER
             </span>
             <span className="text-[11px] font-mono text-zinc-400">
@@ -286,7 +286,7 @@ export function NotificationChannelsPanel() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-white">Email Notifications</h3>
-                <span className="rounded bg-emerald-600/20 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-300">
+                <span className="rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-mono font-bold text-white">
                   RESEND READY
                 </span>
               </div>
@@ -327,7 +327,7 @@ export function NotificationChannelsPanel() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-white">Mobile Messages (SMS)</h3>
-                <span className="rounded bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300">
+                <span className="rounded bg-amber-600 px-2 py-0.5 text-[10px] font-mono font-bold text-white">
                   LOW-SIGNAL / DLT
                 </span>
               </div>
@@ -368,7 +368,7 @@ export function NotificationChannelsPanel() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-white">WhatsApp Updates</h3>
-                <span className="rounded bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-300">
+                <span className="rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-mono font-bold text-white">
                   WHATSAPP BOT READY
                 </span>
               </div>
