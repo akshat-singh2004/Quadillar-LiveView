@@ -160,6 +160,9 @@ export default function ExecutiveWarRoomPage() {
   const [simLoading, setSimLoading] = useState(false);
 
   const [actorName, setActorName] = useState("Director — Quadillar ConTech");
+  const [directorPin, setDirectorPin] = useState("4220");
+  const [pinMode, setPinMode] = useState<"production_env" | "demo_default">("demo_default");
+  const [actionError, setActionError] = useState<string | null>(null);
   const [executing, setExecuting] = useState<string | null>(null);
   const [lastReceipt, setLastReceipt] = useState<ActionReceipt | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,16 +170,23 @@ export default function ExecutiveWarRoomPage() {
   const loadAll = useCallback(async (preset: "fraud" | "clean" = triPreset) => {
     setLoading(true);
     try {
-      const [ontRes, wRes, triRes, chRes] = await Promise.all([
+      const [ontRes, wRes, triRes, chRes, actMeta] = await Promise.all([
         fetch("/api/ontology/graph", { cache: "no-store" }).then((r) => r.json()),
         fetch("/api/weather/live", { cache: "no-store" }).then((r) => r.json()),
         fetch(`/api/triangulation/correlate?preset=${preset}`, { cache: "no-store" }).then((r) => r.json()),
         fetch("/api/audit/verify-chain", { cache: "no-store" }).then((r) => r.json()),
+        fetch("/api/actions/execute", { cache: "no-store" }).then((r) => r.json()),
       ]);
       setOntology(ontRes);
       setWeather(wRes);
       setTriangulation(triRes);
       setChain(chRes);
+      if (actMeta?.pinMode) {
+        setPinMode(actMeta.pinMode);
+        if (actMeta.pinMode === "production_env") {
+          setDirectorPin((prev) => (prev === "4220" ? "" : prev));
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -421,6 +431,15 @@ export default function ExecutiveWarRoomPage() {
                 Clear for RTGS Release (200)
               </button>
             </div>
+
+            {actionError && (
+              <div className="rounded-xl border border-rose-500/50 bg-rose-950/30 p-3 text-xs font-mono text-rose-200 flex items-center justify-between gap-2">
+                <span>AUTH / RATE GUARD: {actionError}</span>
+                {pinMode === "demo_default" && (
+                  <span className="text-[10px] text-amber-300 shrink-0">Demo PIN: 4220</span>
+                )}
+              </div>
+            )}
 
             {lastReceipt && (
               <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/20 p-3.5 text-xs font-mono space-y-1.5">

@@ -1,3 +1,4 @@
+import { checkRateLimit, extractClientIp, rateLimitExceededResponse } from "@/lib/server/securityGuard";
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { getGovernorState } from "@/lib/repositories/governorRepo";
@@ -440,6 +441,9 @@ function buildPortfolioDeterministicSynthesis(params: {
 }
 
 export async function POST(req: NextRequest) {
+  const __rl = await checkRateLimit(extractClientIp(req), { bucket: "quadmax_ai", limit: 20, windowSec: 60 });
+  if (!__rl.allowed) return rateLimitExceededResponse(__rl);
+
   const startTime = Date.now();
   let prompt = "";
   let projectId = VANGUARD_GENOME.projectId;

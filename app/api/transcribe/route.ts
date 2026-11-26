@@ -1,3 +1,4 @@
+import { checkRateLimit, extractClientIp, rateLimitExceededResponse } from "@/lib/server/securityGuard";
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
@@ -5,6 +6,9 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  const __rl = await checkRateLimit(extractClientIp(req), { bucket: "transcribe_asr", limit: 15, windowSec: 60 });
+  if (!__rl.allowed) return rateLimitExceededResponse(__rl);
+
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {

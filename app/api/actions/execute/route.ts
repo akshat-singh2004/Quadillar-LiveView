@@ -4,6 +4,14 @@ import { getGovernorState, saveGovernorState } from "@/lib/repositories/governor
 import { appendGovernorEvent } from "@/lib/repositories/eventLedgerRepo";
 import { getNotificationPrefs } from "@/lib/repositories/notificationRepo";
 import {
+  buildRateLimitHeaders,
+  checkRateLimit,
+  extractClientIp,
+  getDirectorPinStatus,
+  rateLimitExceededResponse,
+  verifyDirectorPin,
+} from "@/lib/server/securityGuard";
+import {
   COMPLIANT_TG03_FIXTURE,
   EXTREME_TG03_FIXTURE,
   type MolecularInput,
@@ -26,15 +34,57 @@ const VALID_ACTIONS = new Set<KineticActionType>([
   "CLEAR_FOR_RTGS",
 ]);
 
+const KINETIC_RATE_POLICY = {
+  bucket: "kinetic_actions",
+  limit: 15,
+  windowSec: 60,
+};
+
+export async function GET() {
+  return jsonOk({
+    ok: true,
+    ...getDirectorPinStatus(),
+    rateLimitPolicy: KINETIC_RATE_POLICY,
+    allowedActions: Array.from(VALID_ACTIONS),
+  });
+}
+
 export async function POST(req: NextRequest) {
+  const clientIp = extractClientIp(req);
+  const rl = await checkRateLimit(clientIp, KINETIC_RATE_POLICY);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(rl);
+  }
+  const rlHeaders = buildRateLimitHeaders(rl);
+
   const body = await readJsonBody<{
     actionType?: KineticActionType;
     projectId?: string;
     actor?: string;
     rationale?: string;
+    directorPin?: string;
   }>(req);
 
-  if (!body || !body.actionType || !VALID_ACTIONS.has(body.actionType)) {
+  if (!body) {
+    return jsonError("Invalid JSON request body.", 400);
+  }
+
+  const suppliedPin = req.headers.get("x-director-pin") || body.directorPin;
+  const auth = verifyDirectorPin(suppliedPin);
+  if (!auth.authorized) {
+    return jsonOk(
+      {
+        ok: false,
+        error: auth.reason || "Director authorization PIN required.",
+        pinRequired: true,
+        pinMode: auth.pinMode,
+      },
+      401,
+      rlHeaders
+    );
+  }
+
+  if (!body.actionType || !VALID_ACTIONS.has(body.actionType)) {
     return jsonError(
       "Invalid or missing actionType. Allowed: FREEZE_RA_BILL_422, REVOKE_CRANE_PTW, REVOKE_STRIPPING_PTW, ISSUE_CLAUSE42_RECOVERY, CLEAR_FOR_RTGS",
       400
@@ -84,6 +134,7 @@ export async function POST(req: NextRequest) {
     diffJson: {
       actionType: body.actionType,
       rationale,
+      pinMode: auth.pinMode,
       previousHttpStatus: live.snapshot.escrow.httpStatus,
       newHttpStatus: saved.snapshot.escrow.httpStatus,
       frozenInr: saved.snapshot.escrow.frozenInr,
@@ -105,6 +156,7 @@ export async function POST(req: NextRequest) {
       executedAction: body.actionType,
       actor,
       rationale,
+      pinMode: auth.pinMode,
       storageMode: saved.storageMode,
       state: {
         projectId: saved.projectId,
@@ -125,6 +177,9 @@ export async function POST(req: NextRequest) {
       },
     },
     200,
-    { "X-BSA-Sec63-Hash": saved.snapshot.bsaSec63Ledger.rowHash }
+    {
+      ...rlHeaders,
+      "X-BSA-Sec63-Hash": saved.snapshot.bsaSec63Ledger.rowHash,
+    }
   );
 }

@@ -1,3 +1,4 @@
+import { checkRateLimit, extractClientIp, rateLimitExceededResponse } from "@/lib/server/securityGuard";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { getGovernorState } from "@/lib/repositories/governorRepo";
@@ -462,6 +463,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const __rl = await checkRateLimit(extractClientIp(req), { bucket: "mcp_rpc", limit: 60, windowSec: 60 });
+  if (!__rl.allowed) return rateLimitExceededResponse(__rl);
+
   let body: any = null;
   try {
     body = await req.json();
