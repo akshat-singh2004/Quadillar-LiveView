@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const prompt =
       "Transcribe this construction site voice command verbatim in English/Hinglish. Use accurate construction vocabulary (wall, right wall, chhat, roof, slab, transfer girder, TG-03, crack, honeycombing, M50, escrow, QUADMAX, Project Vanguard). Return ONLY the plain spoken transcript with no quotes, markdown, or extra commentary. If no speech is audible, return an empty string.";
 
-    for (const model of ["gemini-3.5-flash-lite", "gemini-3.8-flash"]) {
+    for (const model of [process.env.GEMINI_FAST_MODEL || "gemini-4-hydrogen", "gemini-3.5-flash-lite", "gemini-3.8-flash"]) {
       try {
         const res = await ai.models.generateContent({
           model,
