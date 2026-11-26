@@ -1,0 +1,27 @@
+name: Quadillar LiveView Verification Gate
+
+on:
+  push:
+    branches: [staging, finale-stable]
+  pull_request:
+    branches: [staging, finale-stable]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run Deterministic Governor, Notification & Ontology Suites
+        run: |
+          npx --yes tsx scripts/verify-molecular-governor.ts
+          npx --yes tsx scripts/verify-notification-dispatcher.ts
+          npx --yes tsx scripts/verify-ontology-machine.ts
+      - name: Next Typegen & TypeScript Strict Check
+        run: |
+          npx next typegen
+          npx tsc --noEmit

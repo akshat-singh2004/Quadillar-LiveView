@@ -83,13 +83,13 @@ function getOpenAiCompatChain(tier: AiTaskTier): OpenAiCompatProvider[] {
           id: "nvidia",
           baseUrl,
           apiKey,
-          model: process.env.NVIDIA_TOOL_MODEL || "deepseek-ai/deepseek-v4.1-flash",
+          model: process.env.NVIDIA_TOOL_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b",
         },
         {
           id: "nvidia",
           baseUrl,
           apiKey,
-          model: process.env.NVIDIA_FAST_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b",
+          model: process.env.NVIDIA_FAST_MODEL || "nvidia/nemotron-3.5-bolt-e4b",
         }
       );
     }
