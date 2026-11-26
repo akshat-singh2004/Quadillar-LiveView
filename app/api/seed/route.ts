@@ -1,13 +1,10 @@
 // app/api/seed/route.ts
 import { NextResponse } from "next/server";
+import { verifyServerSecret } from "@/lib/server/security";
 import { createClient } from "@supabase/supabase-js";
 
 function isAuthorizedAdmin(req: Request): boolean {
-  const secret = process.env.ADMIN_SEED_TOKEN;
-  if (secret) {
-    return req.headers.get("authorization") === `Bearer ${secret}`;
-  }
-  return req.headers.get("x-quadillar-admin") === "confirm";
+  return verifyServerSecret(req, "ADMIN_API_SECRET").allowed;
 }
 
 export async function GET() {

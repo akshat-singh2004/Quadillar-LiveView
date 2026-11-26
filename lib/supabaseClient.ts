@@ -1,6 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://enjspjigocmjvfhlapku.supabase.co";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_55fOO3PWBG1GZZdgrcfTaw_giYdAl2a";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
+
+export const supabase = createClient(
+  supabaseUrl ?? "http://localhost:54321",
+  supabaseAnonKey ?? "local-anon-key",
+  {
+    auth: {
+      persistSession: hasSupabaseConfig,
+      autoRefreshToken: hasSupabaseConfig,
+      detectSessionInUrl: hasSupabaseConfig,
+    },
+  }
+);
+
+export default supabase;

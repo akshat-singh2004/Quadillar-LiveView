@@ -1,23 +1,16 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { verifyServerSecret } from "@/lib/server/security";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
 
 export const runtime = "nodejs";
 
-function getServerSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+const getServerSupabase = getSupabaseAdmin;
 
 export async function POST(req: Request) {
-  const secret = process.env.ADMIN_SEED_TOKEN;
-  const authorized = secret
-    ? req.headers.get("authorization") === `Bearer ${secret}`
-    : req.headers.get("x-quadillar-reset") === "confirm";
-  if (!authorized) {
-    return NextResponse.json({ error: "Unauthorized demo reset request" }, { status: 401 });
+  const auth = verifyServerSecret(req, "ADMIN_API_SECRET", { allowPublicDemoResetHeader: true });
+  if (!auth.allowed) {
+    return NextResponse.json({ error: auth.reason || "Unauthorized demo reset request" }, { status: 401 });
   }
   const now = new Date().toISOString();
   const supabase = getServerSupabase();
