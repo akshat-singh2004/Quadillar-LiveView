@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
+import { verifyServerSecret } from "@/lib/server/security";
 import { SynapseDaemon } from "@/lib/agents/synapse-daemon";
 import { compileDailyGovernanceDossier } from "@/app/actions/dpr-actions";
 import { HermesAgent } from "@/lib/agents/hermes";
 
 export async function POST(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    // Verify bearer secret if configured
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    const auth = verifyServerSecret(req, "CRON_SECRET");
+    if (!auth.allowed) {
+      return NextResponse.json({ success: false, error: auth.reason || "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
