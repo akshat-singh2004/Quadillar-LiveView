@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useLiveviewTheme } from "@/lib/theme/liveviewTheme";
 import { startFieldVoiceCapture, LiveAudioCaptureHandle } from "@/lib/audio/openSourceAudioEngine";
+import { useGovernor } from "@/context/GovernorContext";
 import { useActiveProject } from "@/context/ProjectContext";
 import {
   AutopilotSettings,
@@ -71,6 +72,7 @@ export default function QuadmaxKernelFloatingWidget() {
   const { activeProjectId, selectProject } = useActiveProject();
 
   const [isOpen, setIsOpen] = useState(false);
+  const { snapshot: govSnap } = useGovernor();
   const [isExpanded, setIsExpanded] = useState(true);
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>("UP-LDA-VANGUARD-CAMPUS");
@@ -589,8 +591,8 @@ export default function QuadmaxKernelFloatingWidget() {
 
   return (
     <div
-      style={{ position: "fixed", left: `${pos.x}px`, top: `${pos.y}px`, zIndex: isOpen ? 60 : 35 }}
-      className="font-mono"
+      style={{ position: "fixed", left: `${pos.x}px`, top: `${pos.y}px`, zIndex: isOpen ? 70 : 40 }}
+      className="font-mono max-sm:!left-auto max-sm:!top-auto max-sm:right-3 max-sm:bottom-20"
     >
       {isOpen && (
         <div
@@ -605,10 +607,23 @@ export default function QuadmaxKernelFloatingWidget() {
               : {}),
             ...panelStyle,
           }}
-          className={`fixed inset-x-2.5 bottom-14 h-[66dvh] max-h-[500px] sm:inset-x-auto sm:bottom-auto ${
+          className={`fixed inset-x-2.5 bottom-20 h-[64dvh] max-h-[520px] sm:inset-x-auto sm:bottom-auto ${
             isExpanded ? "sm:w-[540px] sm:h-[600px]" : "sm:w-[420px] sm:h-[480px]"
           } sm:max-w-[94vw] sm:max-h-[calc(100vh-80px)] rounded-2xl border shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden select-text transition-all duration-150`}
         >
+          <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-[10px] font-mono border-b border-zinc-800/30 bg-zinc-900 text-zinc-100 shrink-0">
+            <span className="truncate font-bold">
+              LIVE GOVERNOR SYNC: {govSnap.escrow.httpStatus === 200 ? "HTTP 200 COMPLIANT • 0 HOLDS" : `HTTP 422 HOLD • ${govSnap.violations.length} FAULTS`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="shrink-0 rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-0.5 text-[10px] font-bold text-white"
+              aria-label="Close QUADMAX.AI"
+            >
+              ✕ Close
+            </button>
+          </div>
           {/* 1. Clean Top Command Header */}
           <div
             style={{ borderColor: borderSubtle }}

@@ -633,7 +633,7 @@ export function ZeroCostFieldCapturePanel() {
           </button>
           <Link
             href="/site/qr-anchors"
-            className="rounded border border-sky-500/40 bg-sky-950/50 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300 hover:bg-sky-900/50"
+            className="rounded bg-sky-600 hover:bg-sky-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs"
           >
             Print ₹5 Zone QRs →
           </Link>

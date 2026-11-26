@@ -193,7 +193,7 @@ export default function VanguardWeighbridgePage() {
       {/* Top Header */}
       <div className="border-b border-slate-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-2 py-0.5 text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded">
               GATE INWARD & WEIGHBRIDGE TELEMETRY
             </span>
@@ -209,7 +209,7 @@ export default function VanguardWeighbridgePage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <a href="/" className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg transition">← COMMAND CENTER</a>
           <a href="/site/digital-twin" className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 text-xs rounded-lg transition">🏛️ 3D BIM TWIN</a>
           <a href="/site/dpr" className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-purple-300 text-xs rounded-lg transition">📋 DPR #084</a>
@@ -246,7 +246,7 @@ export default function VanguardWeighbridgePage() {
         </div>
 
         <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider">SECTION 65B EVIDENCE</div>
+          <div className="text-[10px] text-slate-400 uppercase tracking-wider">BSA SECTION 63 EVIDENCE</div>
           <div className="text-sm font-bold text-purple-400 mt-1.5">CRYPTOGRAPHICALLY SEALED</div>
           <div className="text-[10px] text-slate-500 mt-0.5">Weigh Slip SHA-256 Valid</div>
         </div>
@@ -325,7 +325,7 @@ export default function VanguardWeighbridgePage() {
         {/* Right: Detailed Weighbridge Slip & QA Inspection Sheet */}
         <div className="lg:col-span-7 bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
           <div className="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex justify-between items-center text-xs">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <ScaleIcon className="w-4 h-4 text-cyan-400" />
               <span className="font-bold text-white uppercase tracking-wider">
                 WEIGH SLIP DOSSIER: {selectedTicket.ticketNo}
@@ -338,7 +338,7 @@ export default function VanguardWeighbridgePage() {
             {/* ANPR Camera Snapshot & Vehicle Particulars */}
             <div className="bg-black/70 border border-slate-800 p-3.5 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <CameraIcon className="w-3.5 h-3.5 text-cyan-400" />
                   <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
                     ANPR OPTICAL LICENSE CAPTURE
@@ -398,7 +398,7 @@ export default function VanguardWeighbridgePage() {
                 ? "bg-red-950/40 border-red-500/40 text-red-300"
                 : "bg-slate-900/40 border-slate-800 text-slate-300"
             }`}>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {selectedTicket.varianceKg < -100 ? (
                   <AlertTriangleIcon className="w-4 h-4 text-red-400 shrink-0" />
                 ) : (
@@ -447,9 +447,9 @@ export default function VanguardWeighbridgePage() {
         </div>
       </div>
 
-      {/* Section 65B Commercial Notarization Strip */}
+      {/* BSA Section 63 Commercial Notarization Strip */}
       <div className="bg-slate-900/70 border border-purple-500/40 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-[0_0_20px_rgba(168,85,247,0.12)]">
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <ShieldCheckIcon className="w-4 h-4 text-purple-400" />
           <span className="font-bold text-white">SEC 65B MATERIAL INWARD HASH:</span>
           <span className="text-slate-300 select-all font-mono text-[10px]">{merkleRootHash}</span>

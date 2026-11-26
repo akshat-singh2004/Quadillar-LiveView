@@ -37,17 +37,16 @@ export default function RootLayout({
           <GovernorAlertListener />
           <CommandPalette />
           <GovernorGlobalBar />
-          <div className="pb-16 lg:pb-0">
+          <div className="pb-24 lg:pb-0">
           <AppShell>
             {children}
           </AppShell>
           </div>
           <MobileFieldDock />
+          <QuadmaxAutonomousOperator />
+          <QuadmaxKernelFloatingWidget />
         </GovernorProvider>
-        </RoleProvider>
-        
-      <QuadmaxAutonomousOperator />
-            <QuadmaxKernelFloatingWidget /></LiveviewThemeProvider></body>
+        </RoleProvider></LiveviewThemeProvider></body>
     </html>
   );
 }
