@@ -52,6 +52,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
     title: "1. Executive & Spatial CDE",
     items: [
       { label: "Master Command Center", href: "/", icon: Activity },
+      { label: "Executive War Room", href: "/executive/war-room", icon: ShieldAlert },
       { label: "3D BIM Digital Twin", href: "/site/digital-twin", icon: Box },
       { label: "Site GIS & Crane Radar", href: "/site/gis", icon: Compass },
       { label: "360° Reality Tour", href: "/site/360-tour", icon: Camera },
