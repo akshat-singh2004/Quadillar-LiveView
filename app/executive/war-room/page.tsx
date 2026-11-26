@@ -5,8 +5,8 @@ import Link from "next/link";
 import {
   Activity,
   AlertTriangle,
+  Building2,
   CheckCircle2,
-  Wind,
   FileCheck2,
   GitBranch,
   Lock,
@@ -14,8 +14,23 @@ import {
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
+  Users,
+  Wind,
   Zap,
 } from "lucide-react";
+
+type OperatorRole = "DIRECTOR" | "SITE_ENGINEER" | "AUDITOR";
+
+interface PortfolioProjectSummary {
+  projectId: string;
+  code: string;
+  name: string;
+  location: string;
+  contractValueCr: number;
+  status: "HOLD_ACTIVE" | "DEVIATION_FLAGGED" | "NOMINAL";
+  activeAlertCount: number;
+  defaultZoneId: string;
+}
 
 interface OntologyNode {
   id: string;
@@ -23,14 +38,6 @@ interface OntologyNode {
   label: string;
   status: "NOMINAL" | "WARNING" | "CRITICAL_LOCKED";
   metrics: Record<string, string | number | boolean>;
-}
-
-interface OntologyEdge {
-  from: string;
-  to: string;
-  relation: string;
-  weight: string;
-  rationale: string;
 }
 
 interface ProposedAction {
@@ -46,6 +53,14 @@ interface ProposedAction {
 interface OntologyResponse {
   storageMode: string;
   mode: string;
+  project?: {
+    projectId: string;
+    code: string;
+    name: string;
+    location: string;
+    contractValueCr: number;
+    status: string;
+  };
   graph: {
     projectId: string;
     rowHash: string;
@@ -58,7 +73,6 @@ interface OntologyResponse {
       httpStatus: number;
     };
     nodes: OntologyNode[];
-    edges: OntologyEdge[];
     proposedActions: ProposedAction[];
   };
   blastRadius: {
@@ -126,6 +140,7 @@ interface VerifyChainResponse {
   simulatedTamperDemo: boolean;
   verification: {
     valid: boolean;
+    projectId: string;
     checkedEvents: number;
     headSeq: number;
     headHash: string;
@@ -134,9 +149,18 @@ interface VerifyChainResponse {
   };
 }
 
+interface RoleConfigMeta {
+  pinMode: "production_env" | "demo_default";
+  customPinConfigured: boolean;
+  demoHint: string | null;
+  allowedActions: string[];
+}
+
 interface ActionReceipt {
   executedAction: string;
+  role: OperatorRole;
   actor: string;
+  state: { projectId: string; projectName?: string; httpStatus: number };
   receipt: {
     seq: number;
     chainHash: string;
@@ -148,7 +172,22 @@ interface ActionReceipt {
 
 const fmtInr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
+const ROLE_LABELS: Record<OperatorRole, string> = {
+  DIRECTOR: "Director (Full Escrow + PTW)",
+  SITE_ENGINEER: "Site Engineer (Safety PTWs Only)",
+  AUDITOR: "External Auditor (Read-Only)",
+};
+
+const DEFAULT_DEMO_PINS: Record<OperatorRole, string> = {
+  DIRECTOR: "4220",
+  SITE_ENGINEER: "3110",
+  AUDITOR: "1000",
+};
+
 export default function ExecutiveWarRoomPage() {
+  const [projects, setProjects] = useState<PortfolioProjectSummary[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("VANGUARD-LKO-01");
+
   const [ontology, setOntology] = useState<OntologyResponse | null>(null);
   const [weather, setWeather] = useState<WeatherResponse | null>(null);
   const [triangulation, setTriangulation] = useState<TriangulationResponse | null>(null);
@@ -159,42 +198,72 @@ export default function ExecutiveWarRoomPage() {
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
   const [simLoading, setSimLoading] = useState(false);
 
+  const [operatorRole, setOperatorRole] = useState<OperatorRole>("DIRECTOR");
   const [actorName, setActorName] = useState("Director — Quadillar ConTech");
-  const [directorPin, setDirectorPin] = useState("4220");
-  const [pinMode, setPinMode] = useState<"production_env" | "demo_default">("demo_default");
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [operatorPin, setOperatorPin] = useState("4220");
+  const [rbacMeta, setRbacMeta] = useState<Record<OperatorRole, RoleConfigMeta> | null>(null);
+  const [actionError, setActionError] = useState<{ status: number; message: string } | null>(null);
+
   const [executing, setExecuting] = useState<string | null>(null);
   const [lastReceipt, setLastReceipt] = useState<ActionReceipt | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadAll = useCallback(async (preset: "fraud" | "clean" = triPreset) => {
-    setLoading(true);
-    try {
-      const [ontRes, wRes, triRes, chRes, actMeta] = await Promise.all([
-        fetch("/api/ontology/graph", { cache: "no-store" }).then((r) => r.json()),
-        fetch("/api/weather/live", { cache: "no-store" }).then((r) => r.json()),
-        fetch(`/api/triangulation/correlate?preset=${preset}`, { cache: "no-store" }).then((r) => r.json()),
-        fetch("/api/audit/verify-chain", { cache: "no-store" }).then((r) => r.json()),
-        fetch("/api/actions/execute", { cache: "no-store" }).then((r) => r.json()),
-      ]);
-      setOntology(ontRes);
-      setWeather(wRes);
-      setTriangulation(triRes);
-      setChain(chRes);
-      if (actMeta?.pinMode) {
-        setPinMode(actMeta.pinMode);
-        if (actMeta.pinMode === "production_env") {
-          setDirectorPin((prev) => (prev === "4220" ? "" : prev));
+  const loadSiteData = useCallback(
+    async (projectId: string, preset: "fraud" | "clean" = triPreset) => {
+      setLoading(true);
+      try {
+        const q = encodeURIComponent(projectId);
+        const [projRes, ontRes, wRes, triRes, chRes, actMeta] = await Promise.all([
+          fetch("/api/portfolio/projects", { cache: "no-store" }).then((r) => r.json()),
+          fetch(`/api/ontology/graph?projectId=${q}`, { cache: "no-store" }).then((r) => r.json()),
+          fetch("/api/weather/live", { cache: "no-store" }).then((r) => r.json()),
+          fetch(`/api/triangulation/correlate?preset=${preset}`, { cache: "no-store" }).then((r) => r.json()),
+          fetch(`/api/audit/verify-chain?projectId=${q}`, { cache: "no-store" }).then((r) => r.json()),
+          fetch("/api/actions/execute", { cache: "no-store" }).then((r) => r.json()),
+        ]);
+        if (Array.isArray(projRes?.projects)) setProjects(projRes.projects);
+        setOntology(ontRes);
+        setWeather(wRes);
+        setTriangulation(triRes);
+        setChain(chRes);
+        if (actMeta?.rbac?.roles) {
+          setRbacMeta(actMeta.rbac.roles);
         }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [triPreset]);
+    },
+    [triPreset]
+  );
 
   useEffect(() => {
-    loadAll("fraud");
-  }, [loadAll]);
+    loadSiteData(selectedProjectId, "fraud");
+  }, [selectedProjectId, loadSiteData]);
+
+  const handleProjectSwitch = (nextId: string) => {
+    setSelectedProjectId(nextId);
+    setSimResult(null);
+    setLastReceipt(null);
+    setActionError(null);
+  };
+
+  const handleRoleSwitch = (nextRole: OperatorRole) => {
+    setOperatorRole(nextRole);
+    setActionError(null);
+    setActorName(
+      nextRole === "DIRECTOR"
+        ? "Director — Quadillar ConTech"
+        : nextRole === "SITE_ENGINEER"
+        ? "Site Engineer — Field HSE"
+        : "External Auditor — BSA Review"
+    );
+    const roleCfg = rbacMeta?.[nextRole];
+    if (roleCfg?.pinMode === "production_env") {
+      setOperatorPin("");
+    } else {
+      setOperatorPin(roleCfg?.demoHint || DEFAULT_DEMO_PINS[nextRole]);
+    }
+  };
 
   const runSimulation = async (windMs: number, name: string) => {
     setSimLoading(true);
@@ -203,6 +272,7 @@ export default function ExecutiveWarRoomPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          projectId: selectedProjectId,
           scenarioName: name,
           overrides: { windSpeedMs: windMs },
         }),
@@ -216,32 +286,48 @@ export default function ExecutiveWarRoomPage() {
 
   const executeKineticAction = async (actionType: string, rationale: string) => {
     setExecuting(actionType);
+    setActionError(null);
     try {
       const res = await fetch("/api/actions/execute", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-operator-role": operatorRole,
+          "x-operator-pin": operatorPin,
+        },
         body: JSON.stringify({
+          projectId: selectedProjectId,
+          role: operatorRole,
           actionType,
           actor: actorName,
           rationale,
+          pin: operatorPin,
         }),
       });
       const data = await res.json();
-      if (data?.ok) {
+      if (res.ok && data?.ok) {
         setLastReceipt(data);
-        await loadAll(triPreset);
+        await loadSiteData(selectedProjectId, triPreset);
+      } else {
+        setActionError({
+          status: res.status,
+          message: data?.error || `Action blocked (HTTP ${res.status})`,
+        });
       }
+    } catch {
+      setActionError({ status: 0, message: "Network error while signing kinetic action." });
     } finally {
       setExecuting(null);
     }
   };
 
   const runChainCheck = async (simulateTamper: boolean) => {
-    const res = await fetch(`/api/audit/verify-chain${simulateTamper ? "?simulateTamper=1" : ""}`, {
-      cache: "no-store",
-    });
-    const data = await res.json();
-    setChain(data);
+    const q = encodeURIComponent(selectedProjectId);
+    const res = await fetch(
+      `/api/audit/verify-chain?projectId=${q}${simulateTamper ? "&simulateTamper=1" : ""}`,
+      { cache: "no-store" }
+    );
+    setChain(await res.json());
   };
 
   const switchTriangulation = async (preset: "fraud" | "clean") => {
@@ -252,38 +338,66 @@ export default function ExecutiveWarRoomPage() {
 
   const summary = ontology?.graph?.summary;
   const isLocked = summary?.httpStatus === 422;
+  const activeRoleCfg = rbacMeta?.[operatorRole];
+  const allowedForActiveRole = activeRoleCfg?.allowedActions ?? [];
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 sm:p-6 space-y-6 font-sans">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
+      {/* Header + Portfolio Project Switcher */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
         <div>
           <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-cyan-400">
             <Network className="w-3.5 h-3.5" />
-            <span>Palantir Core • Causal Ontology & Kinetic Execution</span>
+            <span>Palantir Core • Multi-Project Portfolio & 3-Tier RBAC</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white mt-1">
             Executive War Room
           </h1>
+          {ontology?.project && (
+            <p className="text-xs font-mono text-zinc-400 mt-0.5">
+              {ontology.project.name} • {ontology.project.location} • ₹{ontology.project.contractValueCr} Cr
+            </p>
+          )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Multi-Project Switcher */}
+          <div className="flex items-center gap-2 rounded-lg border border-cyan-500/40 bg-zinc-900 px-2.5 py-1.5">
+            <Building2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <select
+              aria-label="Select Portfolio Project"
+              value={selectedProjectId}
+              onChange={(e) => handleProjectSwitch(e.target.value)}
+              className="bg-zinc-900 text-xs font-mono text-zinc-100 focus:outline-none cursor-pointer max-w-[230px]"
+            >
+              {projects.length === 0 ? (
+                <option value={selectedProjectId}>{selectedProjectId}</option>
+              ) : (
+                projects.map((p) => (
+                  <option key={p.projectId} value={p.projectId}>
+                    {p.code} — {p.name} ({p.status})
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
           <span
-            className={`px-2.5 py-1 rounded text-xs font-mono font-bold ${
-              isLocked
-                ? "bg-rose-600 text-white"
-                : "bg-emerald-600 text-white"
+            className={`px-2.5 py-1.5 rounded text-xs font-mono font-bold ${
+              isLocked ? "bg-rose-600 text-white" : "bg-emerald-600 text-white"
             }`}
           >
             {isLocked ? "HTTP 422 ESCROW LOCKED" : "HTTP 200 COMPLIANT"}
           </span>
+
           <button
             type="button"
-            onClick={() => loadAll(triPreset)}
+            onClick={() => loadSiteData(selectedProjectId, triPreset)}
             disabled={loading}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-mono text-zinc-200 transition cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>Refresh Live State</span>
+            <span>Sync Site</span>
           </button>
         </div>
       </div>
@@ -318,7 +432,7 @@ export default function ExecutiveWarRoomPage() {
 
       {/* Main 2-Column Operational Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT: Causal Ontology Blast-Radius + Signed Kinetic Action Executor */}
+        {/* LEFT: Causal Ontology Blast-Radius + RBAC Signed Kinetic Action Executor */}
         <div className="lg:col-span-7 space-y-6">
           {/* Ontology Graph Panel */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
@@ -326,7 +440,7 @@ export default function ExecutiveWarRoomPage() {
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-cyan-400" />
                 <h2 className="text-sm font-bold uppercase tracking-wider font-mono text-white">
-                  1. Live Causal Ontology & Blast Radius
+                  1. Live Causal Ontology ({selectedProjectId})
                 </h2>
               </div>
               <span className="text-[10px] font-mono text-zinc-400">
@@ -365,47 +479,102 @@ export default function ExecutiveWarRoomPage() {
             </div>
           </section>
 
-          {/* Signed Kinetic Action Executor */}
+          {/* Signed Kinetic Action Executor with 3-Tier RBAC */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-400" />
-                <h2 className="text-sm font-bold uppercase tracking-wider font-mono text-white">
-                  2. Signed Kinetic Action Executor
-                </h2>
+            <div className="flex flex-col gap-3 border-b border-zinc-800 pb-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <h2 className="text-sm font-bold uppercase tracking-wider font-mono text-white">
+                    2. Signed Kinetic Action Executor (RBAC)
+                  </h2>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-amber-300">
+                  {operatorRole}
+                </span>
               </div>
-              <input
-                type="text"
-                value={actorName}
-                onChange={(e) => setActorName(e.target.value)}
-                aria-label="Signing Director Name"
-                className="rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1 text-xs font-mono text-zinc-100 w-full sm:w-56"
-              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1">
+                  <Users className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <select
+                    aria-label="Operator RBAC Role"
+                    value={operatorRole}
+                    onChange={(e) => handleRoleSwitch(e.target.value as OperatorRole)}
+                    className="bg-zinc-950 text-xs font-mono text-zinc-100 w-full focus:outline-none cursor-pointer"
+                  >
+                    {(Object.keys(ROLE_LABELS) as OperatorRole[]).map((r) => (
+                      <option key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <input
+                  type="text"
+                  value={actorName}
+                  onChange={(e) => setActorName(e.target.value)}
+                  aria-label="Signing Operator Name"
+                  className="rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1 text-xs font-mono text-zinc-100"
+                />
+
+                <input
+                  type="password"
+                  value={operatorPin}
+                  onChange={(e) => setOperatorPin(e.target.value)}
+                  placeholder={
+                    activeRoleCfg?.pinMode === "production_env"
+                      ? `${operatorRole} PIN`
+                      : `Demo PIN: ${activeRoleCfg?.demoHint || DEFAULT_DEMO_PINS[operatorRole]}`
+                  }
+                  aria-label="Operator Authorization PIN"
+                  className="rounded-lg border border-amber-500/40 bg-zinc-950 px-2.5 py-1 text-xs font-mono text-amber-200"
+                />
+              </div>
+
+              <div className="text-[11px] font-mono text-zinc-400">
+                Permitted for <strong className="text-zinc-200">{operatorRole}</strong>:{" "}
+                {allowedForActiveRole.length > 0 ? allowedForActiveRole.join(", ") : "NONE (Read-Only Auditor)"}
+              </div>
             </div>
 
             <div className="space-y-2.5">
-              {(ontology?.graph.proposedActions || []).map((act) => (
-                <div
-                  key={act.actionId}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5"
-                >
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold text-white">{act.title}</div>
-                    <div className="text-[11px] font-mono text-zinc-400 mt-0.5">
-                      {act.standardRef} • Target: {act.targetNodeId}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={executing !== null}
-                    onClick={() => executeKineticAction(act.actionType, act.title)}
-                    className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-3 py-1.5 text-xs font-mono font-bold text-white transition cursor-pointer"
+              {(ontology?.graph.proposedActions || []).map((act) => {
+                const permitted = allowedForActiveRole.length === 0 ? false : allowedForActiveRole.includes(act.actionType);
+                return (
+                  <div
+                    key={act.actionId}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5"
                   >
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>{executing === act.actionType ? "Signing..." : "Sign & Execute"}</span>
-                  </button>
-                </div>
-              ))}
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-white">{act.title}</div>
+                      <div className="text-[11px] font-mono text-zinc-400 mt-0.5">
+                        {act.standardRef} • Target: {act.targetNodeId}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={executing !== null}
+                      onClick={() => executeKineticAction(act.actionType, act.title)}
+                      className={`shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-white transition cursor-pointer disabled:opacity-50 ${
+                        permitted
+                          ? "bg-cyan-600 hover:bg-cyan-500"
+                          : "bg-zinc-800 hover:bg-rose-900/70 border border-rose-500/40 text-rose-200"
+                      }`}
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>
+                        {executing === act.actionType
+                          ? "Signing..."
+                          : permitted
+                          ? "Sign & Execute"
+                          : "Test RBAC (403)"}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Quick State Toggle Actions */}
@@ -414,29 +583,44 @@ export default function ExecutiveWarRoomPage() {
                 type="button"
                 disabled={executing !== null}
                 onClick={() =>
-                  executeKineticAction("FREEZE_RA_BILL_422", "Executive override: Enforce TG-03 HTTP 422 Lock")
+                  executeKineticAction("REVOKE_CRANE_PTW", "Field HSE: Revoke Crane PTW on high wind")
                 }
-                className="rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/50 px-3 py-1.5 text-xs font-mono font-semibold text-rose-200 cursor-pointer"
+                className="rounded-lg border border-amber-500/40 bg-amber-950/40 hover:bg-amber-900/50 px-3 py-1.5 text-xs font-mono font-semibold text-amber-200 cursor-pointer"
               >
-                Enforce TG-03 Stress Lock (422)
+                Revoke Crane PTW (HSE)
               </button>
               <button
                 type="button"
                 disabled={executing !== null}
                 onClick={() =>
-                  executeKineticAction("CLEAR_FOR_RTGS", "Executive sign-off: Rectified TG-03 Clear for RTGS")
+                  executeKineticAction("FREEZE_RA_BILL_422", "Executive override: Enforce HTTP 422 Lock")
+                }
+                className="rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/50 px-3 py-1.5 text-xs font-mono font-semibold text-rose-200 cursor-pointer"
+              >
+                Enforce Stress Lock (422)
+              </button>
+              <button
+                type="button"
+                disabled={executing !== null}
+                onClick={() =>
+                  executeKineticAction("CLEAR_FOR_RTGS", "Director sign-off: Clear for RTGS release")
                 }
                 className="rounded-lg border border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/50 px-3 py-1.5 text-xs font-mono font-semibold text-emerald-200 cursor-pointer"
               >
-                Clear for RTGS Release (200)
+                Clear for RTGS (Director)
               </button>
             </div>
 
             {actionError && (
               <div className="rounded-xl border border-rose-500/50 bg-rose-950/30 p-3 text-xs font-mono text-rose-200 flex items-center justify-between gap-2">
-                <span>AUTH / RATE GUARD: {actionError}</span>
-                {pinMode === "demo_default" && (
-                  <span className="text-[10px] text-amber-300 shrink-0">Demo PIN: 4220</span>
+                <span>
+                  {actionError.status === 403 ? "HTTP 403 RBAC DENIED" : `HTTP ${actionError.status} GUARD`}:{" "}
+                  {actionError.message}
+                </span>
+                {activeRoleCfg?.demoHint && (
+                  <span className="text-[10px] text-amber-300 shrink-0">
+                    {operatorRole} Demo PIN: {activeRoleCfg.demoHint}
+                  </span>
                 )}
               </div>
             )}
@@ -446,7 +630,7 @@ export default function ExecutiveWarRoomPage() {
                 <div className="flex items-center justify-between gap-2 text-emerald-300 font-bold">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4" />
-                    SEALED TO HASH-CHAIN (SEQ #{lastReceipt.receipt.seq})
+                    SEALED TO {lastReceipt.state.projectId} CHAIN (SEQ #{lastReceipt.receipt.seq} • {lastReceipt.role})
                   </span>
                   <Link
                     href={lastReceipt.receipt.certificateUrl}
@@ -470,7 +654,7 @@ export default function ExecutiveWarRoomPage() {
           </section>
         </div>
 
-        {/* RIGHT: What-If Crisis Fork + 5-Way Lie Detector + Hash-Chain Tamper Test */}
+        {/* RIGHT: What-If Crisis Fork + 5-Way Lie Detector + Isolated Hash-Chain Tamper Test */}
         <div className="lg:col-span-5 space-y-6">
           {/* What-If Crisis Fork + Live Weather */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
@@ -526,7 +710,7 @@ export default function ExecutiveWarRoomPage() {
                 onClick={() => runSimulation(windOverride, `Cyclone Gust ${windOverride} m/s Fork`)}
                 className="w-full rounded-lg bg-violet-600 hover:bg-violet-500 py-2 text-xs font-mono font-bold text-white transition cursor-pointer"
               >
-                {simLoading ? "Forking State..." : "Run Zero-Mutation What-If Fork"}
+                {simLoading ? "Forking Site State..." : `Run What-If Fork on ${selectedProjectId}`}
               </button>
             </div>
 
@@ -616,7 +800,7 @@ export default function ExecutiveWarRoomPage() {
             )}
           </section>
 
-          {/* Immutable Hash-Chain Tamper Detector */}
+          {/* Isolated Per-Project Hash-Chain Verifier */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-3">
             <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
@@ -626,7 +810,7 @@ export default function ExecutiveWarRoomPage() {
                   <ShieldAlert className="w-4 h-4 text-rose-400" />
                 )}
                 <h2 className="text-sm font-bold uppercase tracking-wider font-mono text-white">
-                  5. BSA Sec 63 Hash-Chain Verifier
+                  5. Isolated Hash-Chain ({selectedProjectId})
                 </h2>
               </div>
             </div>
@@ -641,7 +825,7 @@ export default function ExecutiveWarRoomPage() {
               >
                 <div className="font-bold">
                   {chain.verification.valid
-                    ? `CHAIN INTACT (${chain.verification.checkedEvents} EVENTS)`
+                    ? `CHAIN INTACT (${chain.verification.checkedEvents} EVENTS • ${chain.storageMode})`
                     : `TAMPER CAUGHT AT SEQ #${chain.verification.tamperedSeq}`}
                 </div>
                 <div className="text-[11px] opacity-90">{chain.verification.reason}</div>
@@ -654,7 +838,7 @@ export default function ExecutiveWarRoomPage() {
                 onClick={() => runChainCheck(false)}
                 className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 py-1.5 text-xs font-mono font-semibold text-zinc-100 cursor-pointer"
               >
-                Verify Intact Chain
+                Verify Site Chain
               </button>
               <button
                 type="button"
