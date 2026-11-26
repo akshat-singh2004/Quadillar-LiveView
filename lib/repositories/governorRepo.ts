@@ -1,4 +1,5 @@
 import { getSupabaseAdmin, type StorageMode } from "@/lib/server/supabaseAdmin";
+import { appendGovernorEvent } from "@/lib/repositories/eventLedgerRepo";
 import {
   EXTREME_TG03_FIXTURE,
   evaluateMolecularGovernor,
@@ -94,6 +95,30 @@ export async function saveGovernorState(params: {
   const updatedAtUtc = new Date().toISOString();
 
   memCache.set(projectId, { projectId, mode, revision, input: mergedInput, updatedAtUtc });
+
+  try {
+    await appendGovernorEvent({
+      projectId,
+      eventType: "STATE_MUTATION",
+      actor: "governor-operator",
+      source: "governorRepo.saveGovernorState",
+      mode,
+      httpStatus: snapshot.escrow.httpStatus,
+      frozenInr: snapshot.escrow.frozenInr,
+      netReleaseInr: snapshot.escrow.netCertifiedReleaseInr,
+      violationCount: snapshot.violations.length,
+      diffJson: {
+        revision,
+        zoneId: mergedInput.zoneId,
+        windSpeedMs: mergedInput.windSpeedMs,
+        violationCodes: snapshot.violations.map((v) => v.code),
+      },
+      snapshotHash: snapshot.bsaSec63Ledger.rowHash,
+      recordedAtUtc: updatedAtUtc,
+    });
+  } catch {
+    // Non-blocking audit mirror
+  }
 
   const supabase = getSupabaseAdmin();
   if (supabase) {

@@ -3,6 +3,8 @@ import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { getGovernorState } from "@/lib/repositories/governorRepo";
 import { buildSiteOntologyGraph, simulateScenarioFork, traceBlastRadius } from "@/lib/domain/ontologyEngine";
 import { fetchLiveSiteWeather } from "@/lib/mcp/outboundConnectors";
+import { getAndVerifyProjectChain } from "@/lib/repositories/eventLedgerRepo";
+import { VANGUARD_CLEAN_POUR_FIXTURE, VANGUARD_FRAUD_FIXTURE, evaluateFiveWayTriangulation, type TriangulationInput } from "@/lib/domain/triangulationEngine";
 import type { MolecularInput } from "@/lib/engines/molecularGovernor";
 import {
   parseConcreteGradeMpa,
@@ -17,7 +19,7 @@ export const runtime = "nodejs";
 const MCP_PROTOCOL_VERSION = "2025-03-26";
 const SERVER_INFO = {
   name: "quadillar-liveview-mcp",
-  version: "3.0.0",
+  version: "3.1.0",
   title: "Quadillar LiveView Construction Operating Kernel MCP",
 };
 
@@ -184,6 +186,30 @@ const MCP_TOOLS = [
         latitude: { type: "number", description: "Site latitude (default 26.8467 Lucknow)." },
         longitude: { type: "number", description: "Site longitude (default 80.9462 Lucknow)." },
         location_label: { type: "string", description: "Site name." },
+      },
+    },
+  },
+  {
+    name: "verify_audit_hash_chain",
+    description:
+      "Cryptographically re-hash and verify the append-only BSA Section 63 governor_events chain from genesis to head, detecting any byte-level tampering or deleted sequence numbers.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string", description: "Project ID (optional)." },
+        simulate_tamper: { type: "boolean", description: "If true, runs a read-only ₹1 tamper simulation in memory to demonstrate detection." },
+      },
+    },
+  },
+  {
+    name: "run_triangulation_audit",
+    description:
+      "Run the 5-way Cross-Signal Triangulation Lie Detector (Paper Challan vs. Gate Weighbridge ANPR vs. Batching PLC vs. Revit BIM Quantity vs. In-Situ Curing Maturity) to detect ghost billing, grade dilution, and CPWD Clause 42 cement shortages.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        preset: { type: "string", enum: ["fraud", "clean"], description: "Fixture baseline (defaults to Vanguard TG-03 fraud scenario)." },
+        overrides: { type: "object", description: "Optional partial TriangulationInput fields to override." },
       },
     },
   },
@@ -384,6 +410,21 @@ async function executeTool(name: string, args: Record<string, any>) {
           resolved_codes: preview.deltas.resolvedCodes,
         },
       };
+    }
+
+    case "verify_audit_hash_chain": {
+      const projectId = args.project_id ? String(args.project_id).trim() : undefined;
+      const simulateTamper = Boolean(args.simulate_tamper);
+      return await getAndVerifyProjectChain(projectId, simulateTamper);
+    }
+
+    case "run_triangulation_audit": {
+      const base = args.preset === "clean" ? VANGUARD_CLEAN_POUR_FIXTURE : VANGUARD_FRAUD_FIXTURE;
+      const overrides =
+        args.overrides && typeof args.overrides === "object"
+          ? (args.overrides as Partial<TriangulationInput>)
+          : {};
+      return evaluateFiveWayTriangulation({ ...base, ...overrides });
     }
 
     default:
