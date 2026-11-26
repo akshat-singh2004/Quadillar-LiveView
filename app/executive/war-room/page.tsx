@@ -7,10 +7,13 @@ import {
   AlertTriangle,
   Building2,
   CheckCircle2,
+  Clock,
   FileCheck2,
   GitBranch,
+  Layers,
   Lock,
   Network,
+  Radio,
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
@@ -30,6 +33,28 @@ interface PortfolioProjectSummary {
   status: "HOLD_ACTIVE" | "DEVIATION_FLAGGED" | "NOMINAL";
   activeAlertCount: number;
   defaultZoneId: string;
+}
+
+interface PortfolioRollupResponse {
+  rollup: {
+    totalSites: number;
+    totalContractValueCr: number;
+    totalFrozenInr: number;
+    totalClause42PenaltyInr: number;
+    totalNetCertifiedReleaseInr: number;
+    lockedEscrowSites: number;
+    ptwWarningSites: number;
+    nominalSites: number;
+    sites: Array<{
+      projectId: string;
+      code: string;
+      name: string;
+      httpStatus: number;
+      frozenInr: number;
+      violationCount: number;
+      hasCraneWindLockout: boolean;
+    }>;
+  };
 }
 
 interface OntologyNode {
@@ -149,6 +174,41 @@ interface VerifyChainResponse {
   };
 }
 
+interface LedgerEventItem {
+  seq: number;
+  eventType: string;
+  actor: string;
+  source: string;
+  httpStatus: number;
+  frozenInr: number;
+  violationCount: number;
+  chainHash: string;
+  prevHash: string;
+  recordedAtUtc: string;
+}
+
+interface HardwareProbeMeta {
+  probeType: string;
+  label: string;
+  category: string;
+  deviceId: string;
+  expectedOutcome: string;
+  severity: "CRITICAL" | "NOMINAL";
+}
+
+interface ProbeExecutionReceipt {
+  probeType: string;
+  projectId: string;
+  operatorRole: OperatorRole;
+  hmacPrefix: string;
+  ingress?: {
+    interlockTripped?: boolean;
+    governorRouted?: string;
+    ledgerReceipt?: { seq: number; chainHash: string };
+    triangulationReport?: { trustScorePct: number; httpStatus: number };
+  };
+}
+
 interface RoleConfigMeta {
   pinMode: "production_env" | "demo_default";
   customPinConfigured: boolean;
@@ -174,7 +234,7 @@ const fmtInr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
 const ROLE_LABELS: Record<OperatorRole, string> = {
   DIRECTOR: "Director (Full Escrow + PTW)",
-  SITE_ENGINEER: "Site Engineer (Safety PTWs Only)",
+  SITE_ENGINEER: "Site Engineer (Safety PTWs + Probes)",
   AUDITOR: "External Auditor (Read-Only)",
 };
 
@@ -186,6 +246,7 @@ const DEFAULT_DEMO_PINS: Record<OperatorRole, string> = {
 
 export default function ExecutiveWarRoomPage() {
   const [projects, setProjects] = useState<PortfolioProjectSummary[]>([]);
+  const [rollup, setRollup] = useState<PortfolioRollupResponse["rollup"] | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("VANGUARD-LKO-01");
 
   const [ontology, setOntology] = useState<OntologyResponse | null>(null);
@@ -193,6 +254,8 @@ export default function ExecutiveWarRoomPage() {
   const [triangulation, setTriangulation] = useState<TriangulationResponse | null>(null);
   const [triPreset, setTriPreset] = useState<"fraud" | "clean">("fraud");
   const [chain, setChain] = useState<VerifyChainResponse | null>(null);
+  const [timelineEvents, setTimelineEvents] = useState<LedgerEventItem[]>([]);
+  const [probes, setProbes] = useState<HardwareProbeMeta[]>([]);
 
   const [windOverride, setWindOverride] = useState<number>(22.5);
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
@@ -205,7 +268,9 @@ export default function ExecutiveWarRoomPage() {
   const [actionError, setActionError] = useState<{ status: number; message: string } | null>(null);
 
   const [executing, setExecuting] = useState<string | null>(null);
+  const [probing, setProbing] = useState<string | null>(null);
   const [lastReceipt, setLastReceipt] = useState<ActionReceipt | null>(null);
+  const [lastProbeReceipt, setLastProbeReceipt] = useState<ProbeExecutionReceipt | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadSiteData = useCallback(
@@ -213,22 +278,29 @@ export default function ExecutiveWarRoomPage() {
       setLoading(true);
       try {
         const q = encodeURIComponent(projectId);
-        const [projRes, ontRes, wRes, triRes, chRes, actMeta] = await Promise.all([
-          fetch("/api/portfolio/projects", { cache: "no-store" }).then((r) => r.json()),
-          fetch(`/api/ontology/graph?projectId=${q}`, { cache: "no-store" }).then((r) => r.json()),
-          fetch("/api/weather/live", { cache: "no-store" }).then((r) => r.json()),
-          fetch(`/api/triangulation/correlate?preset=${preset}`, { cache: "no-store" }).then((r) => r.json()),
-          fetch(`/api/audit/verify-chain?projectId=${q}`, { cache: "no-store" }).then((r) => r.json()),
-          fetch("/api/actions/execute", { cache: "no-store" }).then((r) => r.json()),
-        ]);
+        const [projRes, rollRes, ontRes, wRes, triRes, chRes, evRes, actMeta, probeMeta] =
+          await Promise.all([
+            fetch("/api/portfolio/projects", { cache: "no-store" }).then((r) => r.json()),
+            fetch("/api/portfolio/rollup", { cache: "no-store" }).then((r) => r.json()),
+            fetch(`/api/ontology/graph?projectId=${q}`, { cache: "no-store" }).then((r) => r.json()),
+            fetch("/api/weather/live", { cache: "no-store" }).then((r) => r.json()),
+            fetch(`/api/triangulation/correlate?preset=${preset}`, { cache: "no-store" }).then((r) =>
+              r.json()
+            ),
+            fetch(`/api/audit/verify-chain?projectId=${q}`, { cache: "no-store" }).then((r) => r.json()),
+            fetch(`/api/audit/events?projectId=${q}`, { cache: "no-store" }).then((r) => r.json()),
+            fetch("/api/actions/execute", { cache: "no-store" }).then((r) => r.json()),
+            fetch("/api/telemetry/probe", { cache: "no-store" }).then((r) => r.json()),
+          ]);
         if (Array.isArray(projRes?.projects)) setProjects(projRes.projects);
+        if (rollRes?.rollup) setRollup(rollRes.rollup);
         setOntology(ontRes);
         setWeather(wRes);
         setTriangulation(triRes);
         setChain(chRes);
-        if (actMeta?.rbac?.roles) {
-          setRbacMeta(actMeta.rbac.roles);
-        }
+        setTimelineEvents(Array.isArray(evRes?.events) ? evRes.events : []);
+        if (actMeta?.rbac?.roles) setRbacMeta(actMeta.rbac.roles);
+        if (Array.isArray(probeMeta?.probes)) setProbes(probeMeta.probes);
       } finally {
         setLoading(false);
       }
@@ -244,6 +316,7 @@ export default function ExecutiveWarRoomPage() {
     setSelectedProjectId(nextId);
     setSimResult(null);
     setLastReceipt(null);
+    setLastProbeReceipt(null);
     setActionError(null);
   };
 
@@ -321,6 +394,41 @@ export default function ExecutiveWarRoomPage() {
     }
   };
 
+  const fireHardwareProbe = async (probeType: string) => {
+    setProbing(probeType);
+    setActionError(null);
+    try {
+      const res = await fetch("/api/telemetry/probe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-operator-role": operatorRole,
+          "x-operator-pin": operatorPin,
+        },
+        body: JSON.stringify({
+          probeType,
+          projectId: selectedProjectId,
+          role: operatorRole,
+          pin: operatorPin,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.ok) {
+        setLastProbeReceipt(data);
+        await loadSiteData(selectedProjectId, triPreset);
+      } else {
+        setActionError({
+          status: res.status,
+          message: data?.error || `Hardware probe blocked (HTTP ${res.status})`,
+        });
+      }
+    } catch {
+      setActionError({ status: 0, message: "Network error while firing hardware probe." });
+    } finally {
+      setProbing(null);
+    }
+  };
+
   const runChainCheck = async (simulateTamper: boolean) => {
     const q = encodeURIComponent(selectedProjectId);
     const res = await fetch(
@@ -348,7 +456,7 @@ export default function ExecutiveWarRoomPage() {
         <div>
           <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-cyan-400">
             <Network className="w-3.5 h-3.5" />
-            <span>Palantir Core • Multi-Project Portfolio & 3-Tier RBAC</span>
+            <span>Palantir Core • 10-Site Portfolio Rollup, RBAC & Live IoT Probes</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white mt-1">
             Executive War Room
@@ -361,14 +469,13 @@ export default function ExecutiveWarRoomPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Multi-Project Switcher */}
           <div className="flex items-center gap-2 rounded-lg border border-cyan-500/40 bg-zinc-900 px-2.5 py-1.5">
             <Building2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             <select
               aria-label="Select Portfolio Project"
               value={selectedProjectId}
               onChange={(e) => handleProjectSwitch(e.target.value)}
-              className="bg-zinc-900 text-xs font-mono text-zinc-100 focus:outline-none cursor-pointer max-w-[230px]"
+              className="bg-zinc-900 text-xs font-mono text-zinc-100 focus:outline-none cursor-pointer max-w-[240px]"
             >
               {projects.length === 0 ? (
                 <option value={selectedProjectId}>{selectedProjectId}</option>
@@ -397,15 +504,66 @@ export default function ExecutiveWarRoomPage() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-mono text-zinc-200 transition cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>Sync Site</span>
+            <span>Sync Fleet</span>
           </button>
         </div>
       </div>
 
-      {/* Top KPI Strip */}
+      {/* 10-Site Portfolio Exposure Rollup Strip */}
+      {rollup && (
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+            <div className="flex items-center gap-2 text-cyan-300 font-bold uppercase tracking-wider">
+              <Layers className="w-4 h-4" />
+              <span>Portfolio Fleet Rollup ({rollup.totalSites} Active Sites • ₹{rollup.totalContractValueCr} Cr)</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-[11px]">
+              <span className="text-rose-400 font-bold">
+                Fleet Frozen: {fmtInr(rollup.totalFrozenInr)}
+              </span>
+              <span className="text-rose-300">{rollup.lockedEscrowSites} Escrow 422</span>
+              <span className="text-amber-300">{rollup.ptwWarningSites} PTW Alert</span>
+              <span className="text-emerald-400">{rollup.nominalSites} Nominal</span>
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {rollup.sites.map((site) => {
+              const active = site.projectId === selectedProjectId;
+              const pillColor =
+                site.httpStatus === 422
+                  ? "border-rose-500/40 text-rose-200"
+                  : site.violationCount > 0
+                  ? "border-amber-500/40 text-amber-200"
+                  : "border-emerald-500/40 text-emerald-200";
+              return (
+                <button
+                  key={site.projectId}
+                  type="button"
+                  onClick={() => handleProjectSwitch(site.projectId)}
+                  className={`shrink-0 rounded-lg border px-2.5 py-1.5 text-left text-[11px] font-mono transition cursor-pointer ${
+                    active ? "bg-cyan-950/60 border-cyan-400 text-white" : `bg-zinc-950/80 hover:bg-zinc-900 ${pillColor}`
+                  }`}
+                >
+                  <div className="font-bold">{site.code}</div>
+                  <div className="text-[10px] opacity-80">
+                    {site.httpStatus === 422
+                      ? `422 • ${fmtInr(site.frozenInr)}`
+                      : site.hasCraneWindLockout
+                      ? "200 • WIND PTW"
+                      : "200 • NOMINAL"}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Selected Site KPI Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
-          <div className="text-[11px] font-mono uppercase text-zinc-400">Frozen Escrow</div>
+          <div className="text-[11px] font-mono uppercase text-zinc-400">Site Frozen Escrow</div>
           <div className="text-lg sm:text-xl font-bold font-mono tabular-nums text-rose-400 mt-1">
             {summary ? fmtInr(summary.frozenInr) : "—"}
           </div>
@@ -432,9 +590,9 @@ export default function ExecutiveWarRoomPage() {
 
       {/* Main 2-Column Operational Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT: Causal Ontology Blast-Radius + RBAC Signed Kinetic Action Executor */}
+        {/* LEFT COLUMN */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Ontology Graph Panel */}
+          {/* 1. Live Causal Ontology */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
             <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
@@ -448,7 +606,7 @@ export default function ExecutiveWarRoomPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
               {(ontology?.graph.nodes || []).map((node) => {
                 const locked = node.status === "CRITICAL_LOCKED";
                 return (
@@ -479,7 +637,7 @@ export default function ExecutiveWarRoomPage() {
             </div>
           </section>
 
-          {/* Signed Kinetic Action Executor with 3-Tier RBAC */}
+          {/* 2. Signed Kinetic Action Executor (3-Tier RBAC) */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
             <div className="flex flex-col gap-3 border-b border-zinc-800 pb-3">
               <div className="flex items-center justify-between gap-2">
@@ -541,7 +699,7 @@ export default function ExecutiveWarRoomPage() {
 
             <div className="space-y-2.5">
               {(ontology?.graph.proposedActions || []).map((act) => {
-                const permitted = allowedForActiveRole.length === 0 ? false : allowedForActiveRole.includes(act.actionType);
+                const permitted = allowedForActiveRole.includes(act.actionType);
                 return (
                   <div
                     key={act.actionId}
@@ -577,7 +735,6 @@ export default function ExecutiveWarRoomPage() {
               })}
             </div>
 
-            {/* Quick State Toggle Actions */}
             <div className="flex flex-wrap gap-2 pt-1">
               <button
                 type="button"
@@ -643,20 +800,80 @@ export default function ExecutiveWarRoomPage() {
                 <div className="text-zinc-300 break-all">
                   Chain Hash: {lastReceipt.receipt.chainHash.slice(0, 32)}...
                 </div>
-                <div className="text-zinc-400">
-                  Armed Alert Channels:{" "}
-                  {lastReceipt.receipt.armedAlertChannels.length > 0
-                    ? lastReceipt.receipt.armedAlertChannels.join(", ")
-                    : "None enabled in /settings"}
+              </div>
+            )}
+          </section>
+
+          {/* 6. Live Hardware Telemetry Probe Deck (Server-Signed HMAC) */}
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
+            <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Radio className="w-4 h-4 text-emerald-400" />
+                <h2 className="text-sm font-bold uppercase tracking-wider font-mono text-white">
+                  6. Live Hardware Probe Deck (Server-Signed HMAC)
+                </h2>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-300">
+                → /api/telemetry/ingress
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {probes.map((probe) => (
+                <div
+                  key={probe.probeType}
+                  className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3 flex flex-col justify-between gap-2.5"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono text-cyan-400">{probe.category}</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${
+                          probe.severity === "CRITICAL"
+                            ? "bg-rose-600/80 text-white"
+                            : "bg-emerald-700 text-white"
+                        }`}
+                      >
+                        {probe.severity}
+                      </span>
+                    </div>
+                    <div className="text-xs font-semibold text-white mt-1">{probe.label}</div>
+                    <div className="text-[11px] text-zinc-400 mt-0.5">{probe.expectedOutcome}</div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={probing !== null}
+                    onClick={() => fireHardwareProbe(probe.probeType)}
+                    className="w-full rounded-lg border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/50 disabled:opacity-50 py-1.5 text-xs font-mono font-bold text-cyan-200 cursor-pointer"
+                  >
+                    {probing === probe.probeType ? "Signing HMAC & Firing..." : "Fire Signed Probe"}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {lastProbeReceipt && (
+              <div className="rounded-xl border border-cyan-500/40 bg-cyan-950/20 p-3 text-xs font-mono space-y-1">
+                <div className="text-cyan-300 font-bold">
+                  HMAC PROBE DELIVERED: {lastProbeReceipt.probeType} ({lastProbeReceipt.projectId})
+                </div>
+                <div className="text-zinc-300">
+                  Server HMAC: sha256={lastProbeReceipt.hmacPrefix}... | Interlock Tripped:{" "}
+                  <strong className={lastProbeReceipt.ingress?.interlockTripped ? "text-rose-400" : "text-emerald-400"}>
+                    {String(Boolean(lastProbeReceipt.ingress?.interlockTripped))}
+                  </strong>
+                  {lastProbeReceipt.ingress?.ledgerReceipt && (
+                    <> | Sealed Seq #{lastProbeReceipt.ingress.ledgerReceipt.seq}</>
+                  )}
                 </div>
               </div>
             )}
           </section>
         </div>
 
-        {/* RIGHT: What-If Crisis Fork + 5-Way Lie Detector + Isolated Hash-Chain Tamper Test */}
+        {/* RIGHT COLUMN */}
         <div className="lg:col-span-5 space-y-6">
-          {/* What-If Crisis Fork + Live Weather */}
+          {/* 3. What-If Crisis Fork + Live Weather */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
             <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
@@ -729,16 +946,11 @@ export default function ExecutiveWarRoomPage() {
                     + New Faults: {simResult.deltas.newlyTriggeredCodes.join(", ")}
                   </div>
                 )}
-                {simResult.deltas.resolvedCodes.length > 0 && (
-                  <div className="text-emerald-300">
-                    - Resolved: {simResult.deltas.resolvedCodes.join(", ")}
-                  </div>
-                )}
               </div>
             )}
           </section>
 
-          {/* 5-Way Triangulation Lie Detector */}
+          {/* 4. 5-Way Triangulation Lie Detector */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-3.5">
             <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
@@ -785,14 +997,21 @@ export default function ExecutiveWarRoomPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div className="rounded-lg bg-zinc-950 p-2 border border-zinc-800">
-                    Ghost Volume: <strong className="text-white">{triangulation.report.derivedMetrics.ghostVolumeM3} m³</strong>
+                    Ghost Volume:{" "}
+                    <strong className="text-white">{triangulation.report.derivedMetrics.ghostVolumeM3} m³</strong>
                   </div>
                   <div className="rounded-lg bg-zinc-950 p-2 border border-zinc-800">
-                    Missing Cement: <strong className="text-white">{triangulation.report.derivedMetrics.missingCementBags} bags</strong>
+                    Missing Cement:{" "}
+                    <strong className="text-white">
+                      {triangulation.report.derivedMetrics.missingCementBags} bags
+                    </strong>
                   </div>
                 </div>
                 {triangulation.report.discrepancies.slice(0, 3).map((d) => (
-                  <div key={d.code} className="rounded-lg border border-rose-500/30 bg-rose-950/20 p-2 text-[11px] text-rose-200">
+                  <div
+                    key={d.code}
+                    className="rounded-lg border border-rose-500/30 bg-rose-950/20 p-2 text-[11px] text-rose-200"
+                  >
                     <strong>{d.code}:</strong> {d.explanation}
                   </div>
                 ))}
@@ -800,7 +1019,7 @@ export default function ExecutiveWarRoomPage() {
             )}
           </section>
 
-          {/* Isolated Per-Project Hash-Chain Verifier */}
+          {/* 5. Isolated Hash-Chain Verifier */}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-3">
             <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
@@ -847,6 +1066,53 @@ export default function ExecutiveWarRoomPage() {
               >
                 Simulate ₹1 DB Tamper
               </button>
+            </div>
+          </section>
+
+          {/* 7. Live BSA Section 63 Event Timeline */}
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-3">
+            <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-cyan-400" />
+                <h2 className="text-sm font-bold uppercase tracking-wider font-mono text-white">
+                  7. Live BSA Sec 63 Ledger Timeline
+                </h2>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-400">
+                {timelineEvents.length} sealed
+              </span>
+            </div>
+
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {timelineEvents.length === 0 ? (
+                <div className="text-xs font-mono text-zinc-500">No ledger events loaded yet.</div>
+              ) : (
+                [...timelineEvents].reverse().slice(0, 12).map((ev) => (
+                  <div
+                    key={`${ev.seq}-${ev.chainHash}`}
+                    className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-2.5 text-[11px] font-mono space-y-1"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-cyan-300">
+                        #{ev.seq} • {ev.eventType}
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                          ev.httpStatus === 422 ? "bg-rose-600 text-white" : "bg-emerald-700 text-white"
+                        }`}
+                      >
+                        HTTP {ev.httpStatus}
+                      </span>
+                    </div>
+                    <div className="text-zinc-300 truncate">
+                      {ev.actor} • Frozen: {fmtInr(ev.frozenInr)}
+                    </div>
+                    <div className="text-[10px] text-zinc-500 truncate">
+                      {ev.prevHash.slice(0, 10)} → {ev.chainHash.slice(0, 16)}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </section>
         </div>

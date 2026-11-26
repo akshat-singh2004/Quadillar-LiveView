@@ -9,6 +9,8 @@ import {
   type MolecularInput,
 } from "@/lib/engines/molecularGovernor";
 
+export type GovernorSnapshot = ReturnType<typeof evaluateMolecularGovernor>;
+
 export interface PortfolioProjectSummary {
   projectId: string;
   code: string;
@@ -32,11 +34,52 @@ export interface PortfolioBaseline {
   input: MolecularInput;
 }
 
+export interface PortfolioSiteRollupItem {
+  projectId: string;
+  code: string;
+  name: string;
+  location: string;
+  contractValueCr: number;
+  httpStatus: number;
+  frozenInr: number;
+  clause42PenaltyInr: number;
+  netCertifiedReleaseInr: number;
+  violationCount: number;
+  hasCraneWindLockout: boolean;
+  storageMode: string;
+}
+
+export interface PortfolioRollupSummary {
+  totalSites: number;
+  totalContractValueCr: number;
+  totalFrozenInr: number;
+  totalClause42PenaltyInr: number;
+  totalNetCertifiedReleaseInr: number;
+  lockedEscrowSites: number;
+  ptwWarningSites: number;
+  nominalSites: number;
+  sites: PortfolioSiteRollupItem[];
+}
+
 export function resolvePortfolioProject(projectId?: string | null): PortfolioProjectNode {
   const raw = (projectId || "").trim();
-  if (!raw || raw.toUpperCase() === "GOMTI-NAGAR-PH1-FITOUT") {
-    return PORTFOLIO_10_PROJECTS[0];
+  const upper = raw.toUpperCase();
+  const primary = PORTFOLIO_10_PROJECTS[0];
+
+  // Canonical Vanguard alias normalization (eliminates ad-hoc fallback for VANGUARD-LKO-01)
+  if (
+    !raw ||
+    upper === "GOMTI-NAGAR-PH1-FITOUT" ||
+    upper === EXTREME_TG03_FIXTURE.projectId.toUpperCase() ||
+    upper === primary.projectId.toUpperCase() ||
+    upper === primary.code.toUpperCase()
+  ) {
+    return {
+      ...primary,
+      projectId: EXTREME_TG03_FIXTURE.projectId,
+    };
   }
+
   const match = PORTFOLIO_10_PROJECTS.find(
     (p) =>
       p.projectId.toLowerCase() === raw.toLowerCase() ||
@@ -44,9 +87,9 @@ export function resolvePortfolioProject(projectId?: string | null): PortfolioPro
   );
   if (match) return match;
 
-  // Custom / ad-hoc project ID fallback (preserves isolated test/tenant IDs)
+  // Isolated ad-hoc / multi-tenant project fallback
   return {
-    ...PORTFOLIO_10_PROJECTS[0],
+    ...primary,
     projectId: raw,
     code: raw.slice(0, 12).toUpperCase(),
     name: `Site ${raw}`,
@@ -105,7 +148,7 @@ export function getPortfolioProjectBaseline(projectId?: string | null): Portfoli
         projectId: project.projectId,
         zoneId: `${safeCode}-L12`,
         raBillNo: `RA-11/${safeCode}`,
-        windSpeedMs: 19.2, // Triggers IS 875 crane wind lockout distinct from full TG-03 cascade
+        windSpeedMs: 19.2,
       },
     };
   }
@@ -123,10 +166,11 @@ export function getPortfolioProjectBaseline(projectId?: string | null): Portfoli
 }
 
 export function listPortfolioProjects(): PortfolioProjectSummary[] {
-  return PORTFOLIO_10_PROJECTS.map((p) => {
-    const baseline = getPortfolioProjectBaseline(p.projectId);
+  return PORTFOLIO_10_PROJECTS.map((p, idx) => {
+    const normalizedId = idx === 0 ? EXTREME_TG03_FIXTURE.projectId : p.projectId;
+    const baseline = getPortfolioProjectBaseline(normalizedId);
     return {
-      projectId: p.projectId,
+      projectId: normalizedId,
       code: p.code,
       name: p.name,
       subtitle: p.subtitle,
@@ -144,16 +188,12 @@ export function listPortfolioProjects(): PortfolioProjectSummary[] {
   });
 }
 
-/**
- * Ensures non-Vanguard portfolio sites hydrate with their authentic baseline
- * before their first explicit DB write, while immediately honoring persisted overrides.
- */
 export function hydratePortfolioGovernorState<
   T extends {
     projectId: string;
     mode: "stress-test" | "compliant" | "custom";
     input: MolecularInput;
-    snapshot: ReturnType<typeof evaluateMolecularGovernor>;
+    snapshot: GovernorSnapshot;
   }
 >(requestedProjectId: string | undefined, repoState: T): T & { project: PortfolioProjectNode } {
   const baseline = getPortfolioProjectBaseline(requestedProjectId || repoState.projectId);
@@ -165,7 +205,7 @@ export function hydratePortfolioGovernorState<
     repoState.mode === "stress-test";
 
   if (!stillHasDefaultVanguardSeed) {
-    return { ...repoState, project: baseline.project };
+    return { ...repoState, projectId: baseline.project.projectId, project: baseline.project };
   }
 
   return {
@@ -175,5 +215,67 @@ export function hydratePortfolioGovernorState<
     input: baseline.input,
     snapshot: evaluateMolecularGovernor(baseline.input),
     project: baseline.project,
+  };
+}
+
+export function computePortfolioRollup(
+  entries: Array<{
+    project: PortfolioProjectNode;
+    snapshot: GovernorSnapshot;
+    storageMode: string;
+  }>
+): PortfolioRollupSummary {
+  let totalContractValueCr = 0;
+  let totalFrozenInr = 0;
+  let totalClause42PenaltyInr = 0;
+  let totalNetCertifiedReleaseInr = 0;
+  let lockedEscrowSites = 0;
+  let ptwWarningSites = 0;
+  let nominalSites = 0;
+
+  const sites: PortfolioSiteRollupItem[] = entries.map(({ project, snapshot, storageMode }) => {
+    const httpStatus = snapshot.escrow.httpStatus;
+    const violationCount = snapshot.violations.length;
+    const hasCraneWindLockout = snapshot.violations.some((v) => v.code === "CRANE_WIND_LOCKOUT");
+
+    totalContractValueCr += project.contractValueCr;
+    totalFrozenInr += snapshot.escrow.frozenInr;
+    totalClause42PenaltyInr += snapshot.escrow.clause42PenaltyInr;
+    totalNetCertifiedReleaseInr += snapshot.escrow.netCertifiedReleaseInr;
+
+    if (httpStatus === 422) {
+      lockedEscrowSites++;
+    } else if (violationCount > 0) {
+      ptwWarningSites++;
+    } else {
+      nominalSites++;
+    }
+
+    return {
+      projectId: project.projectId,
+      code: project.code,
+      name: project.name,
+      location: project.location,
+      contractValueCr: project.contractValueCr,
+      httpStatus,
+      frozenInr: snapshot.escrow.frozenInr,
+      clause42PenaltyInr: snapshot.escrow.clause42PenaltyInr,
+      netCertifiedReleaseInr: snapshot.escrow.netCertifiedReleaseInr,
+      violationCount,
+      hasCraneWindLockout,
+      storageMode,
+    };
+  });
+
+  return {
+    totalSites: sites.length,
+    totalContractValueCr: Math.round(totalContractValueCr * 100) / 100,
+    totalFrozenInr: Math.round(totalFrozenInr),
+    totalClause42PenaltyInr: Math.round(totalClause42PenaltyInr),
+    totalNetCertifiedReleaseInr: Math.round(totalNetCertifiedReleaseInr),
+    lockedEscrowSites,
+    ptwWarningSites,
+    nominalSites,
+    sites,
   };
 }

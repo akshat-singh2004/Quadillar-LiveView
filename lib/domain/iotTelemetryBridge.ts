@@ -321,3 +321,121 @@ export function extractWindMsFromWeatherPayload(payload: Record<string, unknown>
   const kmh = numOr(payload.windSpeedKmh, 0);
   return Math.round((kmh / 3.6) * 100) / 100;
 }
+
+// ---------------------------------------------------------------------------
+// Sprint 15B: Server-Signed Hardware Probe Presets (for War Room BFF)
+// ---------------------------------------------------------------------------
+export type HardwareProbeType =
+  | "CRANE_GUST_22MS"
+  | "WEIGHBRIDGE_FRAUD_POUR"
+  | "BATCHING_PLC_CEMENT_SHORTAGE"
+  | "CRANE_NOMINAL_HEARTBEAT";
+
+export interface HardwareProbePresetMeta {
+  probeType: HardwareProbeType;
+  label: string;
+  category: IotTelemetryCategory;
+  deviceId: string;
+  expectedOutcome: string;
+  severity: "CRITICAL" | "NOMINAL";
+}
+
+export const HARDWARE_PROBE_CATALOG: HardwareProbePresetMeta[] = [
+  {
+    probeType: "CRANE_GUST_22MS",
+    label: "Crane LMI Cyclone Gust (22.5 m/s)",
+    category: "CRANE_LMI",
+    deviceId: "TC-LMI-WARROOM-01",
+    expectedOutcome: "Trips IS 875 Crane Wind Lockout + seals IOT_INTERLOCK to hash-chain",
+    severity: "CRITICAL",
+  },
+  {
+    probeType: "WEIGHBRIDGE_FRAUD_POUR",
+    label: "Weighbridge ANPR Ghost Volume Pour",
+    category: "WEIGHBRIDGE_ANPR",
+    deviceId: "WB-ANPR-GATE-02",
+    expectedOutcome: "Catches 4.2 m³ ghost billing + grade dilution (HTTP 422) + seals TRIANGULATION_ALERT",
+    severity: "CRITICAL",
+  },
+  {
+    probeType: "BATCHING_PLC_CEMENT_SHORTAGE",
+    label: "Batching PLC Clause 42 Cement Shortage",
+    category: "BATCHING_PLANT_PLC",
+    deviceId: "PLC-BATCH-UNIT-01",
+    expectedOutcome: "Flags missing cement bags & high w/c ratio (HTTP 422) + Clause 42 recovery",
+    severity: "CRITICAL",
+  },
+  {
+    probeType: "CRANE_NOMINAL_HEARTBEAT",
+    label: "Crane LMI Nominal Heartbeat (4.5 m/s)",
+    category: "CRANE_LMI",
+    deviceId: "TC-LMI-WARROOM-01",
+    expectedOutcome: "Verifies signed HMAC ingress with zero interlock trip (HTTP 200)",
+    severity: "NOMINAL",
+  },
+];
+
+export function isValidHardwareProbeType(val: string | undefined | null): val is HardwareProbeType {
+  return HARDWARE_PROBE_CATALOG.some((p) => p.probeType === val);
+}
+
+export function buildHardwareProbePayload(
+  probeType: HardwareProbeType,
+  projectId: string,
+  applyToGovernor = true
+): Record<string, unknown> {
+  const stamp = Date.now().toString().slice(-5);
+  switch (probeType) {
+    case "CRANE_GUST_22MS":
+      return {
+        projectId,
+        deviceId: "TC-LMI-WARROOM-01",
+        protocol: "MQTT_BRIDGE",
+        category: "CRANE_LMI",
+        applyToGovernor,
+        data: { windSpeedMs: 22.5, swlLoadPct: 78, boomRadiusM: 32 },
+      };
+    case "WEIGHBRIDGE_FRAUD_POUR":
+      return {
+        projectId,
+        deviceId: "WB-ANPR-GATE-02",
+        protocol: "MODBUS_TCP",
+        category: "WEIGHBRIDGE_ANPR",
+        applyToGovernor,
+        data: {
+          challanNo: `CHLN-WB-${stamp}`,
+          vehiclePlate: "UP32-KT-4220",
+          vendorName: "Avadh RMC Logistics",
+          challanVolumeM3: 42.0,
+          weighbridgeNetKg: 90720,
+          inSituEstimatedMpa: 36.4,
+        },
+      };
+    case "BATCHING_PLC_CEMENT_SHORTAGE":
+      return {
+        projectId,
+        deviceId: "PLC-BATCH-UNIT-01",
+        protocol: "OPC_UA",
+        category: "BATCHING_PLANT_PLC",
+        applyToGovernor,
+        data: {
+          challanNo: `PLC-BATCH-${stamp}`,
+          challanVolumeM3: 40.0,
+          plcBatchVolumeM3: 40.0,
+          claimedCementBags: 340,
+          plcCementKg: 13800,
+          plcWaterCementRatio: 0.56,
+          inSituEstimatedMpa: 41.0,
+        },
+      };
+    case "CRANE_NOMINAL_HEARTBEAT":
+      return {
+        projectId,
+        deviceId: "TC-LMI-WARROOM-01",
+        protocol: "MQTT_BRIDGE",
+        category: "CRANE_LMI",
+        applyToGovernor: false,
+        data: { windSpeedMs: 4.5, swlLoadPct: 44, boomRadiusM: 22 },
+      };
+  }
+}
