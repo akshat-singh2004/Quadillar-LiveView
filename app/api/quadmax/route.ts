@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, Type, Schema } from "@google/genai";
+import { getGovernorState } from "@/lib/repositories/governorRepo";
+import { buildSiteOntologyGraph, traceBlastRadius } from "@/lib/domain/ontologyEngine";
+import { getAiRouterDiagnostics } from "@/lib/ai/modelRouter";
 import { createClient } from "@supabase/supabase-js";
 import { VANGUARD_GENOME } from "@/lib/project/vanguardGenome";
 import { evaluateCampusMultiRayFusion } from "@/lib/spatial/multiRayFusionEngine";
@@ -540,6 +543,30 @@ export async function POST(req: NextRequest) {
       }));
 
     const now = new Date().toISOString();
+    const liveGovRecord = await getGovernorState();
+    const liveOntology = buildSiteOntologyGraph(liveGovRecord.input, liveGovRecord.snapshot);
+    const liveBlast = traceBlastRadius(liveOntology, `ASSET:${liveGovRecord.input.zoneId}`);
+    const liveMolecularGovernor = {
+      projectId: liveGovRecord.projectId,
+      mode: liveGovRecord.mode,
+      storageMode: liveGovRecord.storageMode,
+      httpStatus: liveGovRecord.snapshot.escrow.httpStatus,
+      decision: liveGovRecord.snapshot.escrow.decision,
+      frozenInr: liveGovRecord.snapshot.escrow.frozenInr,
+      clause42PenaltyInr: liveGovRecord.snapshot.escrow.clause42PenaltyInr,
+      netCertifiedReleaseInr: liveGovRecord.snapshot.escrow.netCertifiedReleaseInr,
+      violationCount: liveGovRecord.snapshot.violations.length,
+      violations: liveGovRecord.snapshot.violations.map((v) => ({
+        code: v.code,
+        standardRef: v.standardRef,
+        message: v.message,
+      })),
+      bsaSec63Hash: liveGovRecord.snapshot.bsaSec63Ledger.rowHash,
+      blastRadiusExposureInr: liveBlast.financialExposureInr,
+      blockedPermits: liveBlast.blockedPermits,
+      proposedActions: liveOntology.proposedActions,
+      aiRouterProviders: getAiRouterDiagnostics().configuredProviders,
+    };
     const sha256Seal = computeCanonical65BDigest({
       rawMediaSha256: `QUADMAX:${projectId}:${scope}:${prompt}`,
       vernacularTranscript: prompt,
@@ -587,6 +614,7 @@ export async function POST(req: NextRequest) {
       scopeFilter: scopeMeta.label,
       agentNode: customAgent || HIERARCHICAL_AGENT_MESH.find((a) => a.id === agentId) || "AUTO_3_TIER",
       sites: compactPortfolio,
+      liveMolecularGovernor,
       vanguardEscrowGate: escrowGate,
       recentFieldLogs,
       progressiveSensorEscalationTrace: escalationTrace,
@@ -610,7 +638,7 @@ Rules:
     try {
       const res = await withTimeout(
         ai.models.generateContent({
-          model: "gemini-3.5-flash-lite",
+          model: process.env.GEMINI_FAST_MODEL || "gemini-4-hydrogen",
           contents: [
             {
               role: "user",

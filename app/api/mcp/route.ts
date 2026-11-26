@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { getGovernorState } from "@/lib/repositories/governorRepo";
+import { buildSiteOntologyGraph, simulateScenarioFork, traceBlastRadius } from "@/lib/domain/ontologyEngine";
+import { fetchLiveSiteWeather } from "@/lib/mcp/outboundConnectors";
+import type { MolecularInput } from "@/lib/engines/molecularGovernor";
 import {
   parseConcreteGradeMpa,
   validateIs456CoreTest,
@@ -13,7 +17,7 @@ export const runtime = "nodejs";
 const MCP_PROTOCOL_VERSION = "2025-03-26";
 const SERVER_INFO = {
   name: "quadillar-liveview-mcp",
-  version: "2.0.0",
+  version: "3.0.0",
   title: "Quadillar LiveView Construction Operating Kernel MCP",
 };
 
@@ -121,16 +125,71 @@ const MCP_TOOLS = [
       required: ["bim_zone_id"],
     },
   },
+  {
+    name: "get_live_governor_state",
+    description:
+      "Read the authoritative live Molecular Governor state from Supabase, including HTTP 200/422 gate status, active IS 456/IS 875/CPWD Clause 42 violations, frozen INR, net certified RTGS, and BSA Section 63 SHA-256 hash.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: {
+          type: "string",
+          description: "Project ID (defaults to active VANGUARD-LKO-01).",
+        },
+      },
+    },
+  },
+  {
+    name: "trace_causal_blast_radius",
+    description:
+      "Build the live Site Ontology Graph (Project -> Zone -> Sensor -> Rules -> Permits -> Escrow -> BSA Ledger) and trace downstream blocked permits, rupee exposure, and structured Kinetic Action Proposals.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: {
+          type: "string",
+          description: "Project ID (optional).",
+        },
+        focus_node_id: {
+          type: "string",
+          description: "Optional node ID to trace from (defaults to active ASSET:<zoneId>).",
+        },
+      },
+    },
+  },
+  {
+    name: "simulate_governor_shock",
+    description:
+      "Fork live Molecular Governor state in memory (zero DB mutation) to simulate compound site shocks (e.g., wind gust, concrete core failure, LiDAR deviation) and return exact rupee, permit, and violation deltas.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string", description: "Project ID (optional)." },
+        scenario_name: { type: "string", description: "Label for this what-if fork." },
+        wind_speed_ms: { type: "number", description: "Simulated wind speed in m/s (IS 875 crane lockout >= 15 m/s)." },
+        overrides: {
+          type: "object",
+          description: "Optional partial MolecularInput field overrides.",
+        },
+      },
+    },
+  },
+  {
+    name: "get_live_site_weather",
+    description:
+      "Fetch live hyperlocal GPS weather telemetry (wind speed, gusts, temperature, rain) via Open-Meteo and evaluate live IS 875 crane lockout and hot-weather curing interlocks.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        latitude: { type: "number", description: "Site latitude (default 26.8467 Lucknow)." },
+        longitude: { type: "number", description: "Site longitude (default 80.9462 Lucknow)." },
+        location_label: { type: "string", description: "Site name." },
+      },
+    },
+  },
 ];
 
-function getServerSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+const getServerSupabase = getSupabaseAdmin;
 
 async function executeTool(name: string, args: Record<string, any>) {
   switch (name) {
@@ -220,7 +279,23 @@ async function executeTool(name: string, args: Record<string, any>) {
         .order("created_at", { ascending: false })
         .limit(5);
 
-      const totalMatches = (ledgerRows?.length || 0) + (fieldRows?.length || 0);
+      const { data: govRows } = await supabase
+        .from("governor_snapshots")
+        .select("project_id, mode, row_hash, http_status, frozen_inr, updated_at")
+        .ilike("row_hash", `${prefix}%`)
+        .limit(5);
+
+      const { data: packetRows } = await supabase
+        .from("field_evidence_packets")
+        .select("id, project_id, zone_id, bim_global_id, sha256, recorded_at_utc")
+        .ilike("sha256", `${prefix}%`)
+        .limit(5);
+
+      const totalMatches =
+        (ledgerRows?.length || 0) +
+        (fieldRows?.length || 0) +
+        (govRows?.length || 0) +
+        (packetRows?.length || 0);
       return {
         verified: totalMatches > 0,
         statutory_basis: "Bharatiya Sakshya Adhiniyam 2023 Sec. 63 / Indian Evidence Act Sec. 65B",
@@ -228,6 +303,8 @@ async function executeTool(name: string, args: Record<string, any>) {
         match_count: totalMatches,
         ledger_matches: ledgerRows || [],
         field_record_matches: fieldRows || [],
+        governor_snapshot_matches: govRows || [],
+        field_evidence_packet_matches: packetRows || [],
       };
     }
 
@@ -237,6 +314,75 @@ async function executeTool(name: string, args: Record<string, any>) {
       return {
         requested_zone: zoneId,
         zone: meta,
+      };
+    }
+
+    case "get_live_governor_state": {
+      const projectId = args.project_id ? String(args.project_id).trim() : undefined;
+      const state = await getGovernorState(projectId);
+      return {
+        storage_mode: state.storageMode,
+        project_id: state.projectId,
+        mode: state.mode,
+        revision: state.revision,
+        updated_at_utc: state.updatedAtUtc,
+        http_status: state.snapshot.escrow.httpStatus,
+        decision: state.snapshot.escrow.decision,
+        frozen_inr: state.snapshot.escrow.frozenInr,
+        clause42_penalty_inr: state.snapshot.escrow.clause42PenaltyInr,
+        net_certified_release_inr: state.snapshot.escrow.netCertifiedReleaseInr,
+        violations: state.snapshot.violations,
+        bsa_sec63_hash: state.snapshot.bsaSec63Ledger.rowHash,
+      };
+    }
+
+    case "trace_causal_blast_radius": {
+      const projectId = args.project_id ? String(args.project_id).trim() : undefined;
+      const state = await getGovernorState(projectId);
+      const graph = buildSiteOntologyGraph(state.input, state.snapshot);
+      const focusNodeId = args.focus_node_id ? String(args.focus_node_id).trim() : `ASSET:${state.input.zoneId}`;
+      const blast = traceBlastRadius(graph, focusNodeId);
+      return {
+        project_id: state.projectId,
+        summary: graph.summary,
+        blast_radius: blast,
+        proposed_actions: graph.proposedActions,
+      };
+    }
+
+    case "simulate_governor_shock": {
+      const projectId = args.project_id ? String(args.project_id).trim() : undefined;
+      const state = await getGovernorState(projectId);
+      const overrides: Partial<MolecularInput> = {
+        ...(args.overrides && typeof args.overrides === "object" ? (args.overrides as Partial<MolecularInput>) : {}),
+      };
+      if (typeof args.wind_speed_ms === "number" && Number.isFinite(args.wind_speed_ms)) {
+        overrides.windSpeedMs = args.wind_speed_ms;
+      }
+      const scenarioName = args.scenario_name ? String(args.scenario_name) : "MCP Agent What-If Fork";
+      return simulateScenarioFork(state.input, overrides, scenarioName);
+    }
+
+    case "get_live_site_weather": {
+      const lat = typeof args.latitude === "number" ? args.latitude : 26.8467;
+      const lon = typeof args.longitude === "number" ? args.longitude : 80.9462;
+      const label = args.location_label ? String(args.location_label) : "Gomti Nagar Extension, Lucknow";
+      const [weather, liveState] = await Promise.all([
+        fetchLiveSiteWeather(lat, lon, label),
+        getGovernorState(),
+      ]);
+      const preview = simulateScenarioFork(
+        liveState.input,
+        { windSpeedMs: weather.interlocks.effectiveWindForGovernorMs },
+        "Live GPS Weather Interlock Check"
+      );
+      return {
+        weather,
+        governor_impact_preview: {
+          simulated_http_status: preview.simulated.httpStatus,
+          newly_triggered_codes: preview.deltas.newlyTriggeredCodes,
+          resolved_codes: preview.deltas.resolvedCodes,
+        },
       };
     }
 
