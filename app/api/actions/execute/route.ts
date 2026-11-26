@@ -3,13 +3,16 @@ import { jsonError, jsonOk, readJsonBody } from "@/lib/server/http";
 import { getGovernorState, saveGovernorState } from "@/lib/repositories/governorRepo";
 import { appendGovernorEvent } from "@/lib/repositories/eventLedgerRepo";
 import { getNotificationPrefs } from "@/lib/repositories/notificationRepo";
+import { hydratePortfolioGovernorState } from "@/lib/domain/portfolioRegistry";
 import {
+  authorizeOperatorAction,
   buildRateLimitHeaders,
   checkRateLimit,
   extractClientIp,
   getDirectorPinStatus,
+  getRbacStatus,
   rateLimitExceededResponse,
-  verifyDirectorPin,
+  type KineticActionType,
 } from "@/lib/server/securityGuard";
 import {
   COMPLIANT_TG03_FIXTURE,
@@ -18,13 +21,6 @@ import {
 } from "@/lib/engines/molecularGovernor";
 
 export const dynamic = "force-dynamic";
-
-type KineticActionType =
-  | "FREEZE_RA_BILL_422"
-  | "REVOKE_CRANE_PTW"
-  | "REVOKE_STRIPPING_PTW"
-  | "ISSUE_CLAUSE42_RECOVERY"
-  | "CLEAR_FOR_RTGS";
 
 const VALID_ACTIONS = new Set<KineticActionType>([
   "FREEZE_RA_BILL_422",
@@ -44,6 +40,7 @@ export async function GET() {
   return jsonOk({
     ok: true,
     ...getDirectorPinStatus(),
+    rbac: getRbacStatus(),
     rateLimitPolicy: KINETIC_RATE_POLICY,
     allowedActions: Array.from(VALID_ACTIONS),
   });
@@ -60,26 +57,41 @@ export async function POST(req: NextRequest) {
   const body = await readJsonBody<{
     actionType?: KineticActionType;
     projectId?: string;
+    role?: string;
     actor?: string;
     rationale?: string;
     directorPin?: string;
+    pin?: string;
   }>(req);
 
   if (!body) {
     return jsonError("Invalid JSON request body.", 400);
   }
 
-  const suppliedPin = req.headers.get("x-director-pin") || body.directorPin;
-  const auth = verifyDirectorPin(suppliedPin);
-  if (!auth.authorized) {
+  const suppliedRole = req.headers.get("x-operator-role") || body.role || "DIRECTOR";
+  const suppliedPin =
+    req.headers.get("x-operator-pin") ||
+    req.headers.get("x-director-pin") ||
+    body.pin ||
+    body.directorPin;
+
+  // Step 1: Authenticate credentials first (401 on missing/wrong PIN, 400 on unknown role)
+  const authN = authorizeOperatorAction({
+    role: suppliedRole,
+    suppliedPin,
+    actionType: null,
+  });
+
+  if (!authN.authorized) {
     return jsonOk(
       {
         ok: false,
-        error: auth.reason || "Director authorization PIN required.",
-        pinRequired: true,
-        pinMode: auth.pinMode,
+        error: authN.reason || "Operator authorization PIN required.",
+        pinRequired: authN.httpStatus === 401,
+        role: authN.role,
+        pinMode: authN.pinMode,
       },
-      401,
+      authN.httpStatus,
       rlHeaders
     );
   }
@@ -91,9 +103,34 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const actor = (body.actor || "Director (Executive War Room)").trim().slice(0, 100);
-  const rationale = (body.rationale || `Signed execution of ${body.actionType}`).trim().slice(0, 300);
-  const live = await getGovernorState(body.projectId);
+  // Step 2: Authorize role against actionType (403 FORBIDDEN on privilege escalation)
+  const authZ = authorizeOperatorAction({
+    role: suppliedRole,
+    suppliedPin,
+    actionType: body.actionType,
+  });
+
+  if (!authZ.authorized) {
+    return jsonOk(
+      {
+        ok: false,
+        error: authZ.reason || "Role is not permitted to execute this kinetic action.",
+        rbacDenied: true,
+        role: authZ.role,
+        actionType: body.actionType,
+        allowedActionsForRole: authZ.allowedActionsForRole,
+      },
+      authZ.httpStatus,
+      rlHeaders
+    );
+  }
+
+  const operatorRole = authZ.role!;
+  const actor = (body.actor || `${operatorRole} (Executive War Room)`).trim().slice(0, 100);
+  const rationale = (body.rationale || `Signed ${operatorRole} execution of ${body.actionType}`).trim().slice(0, 300);
+
+  const rawLive = await getGovernorState(body.projectId);
+  const live = hydratePortfolioGovernorState(body.projectId, rawLive);
 
   let nextInput: Partial<MolecularInput> = { ...live.input };
   let nextMode: "stress-test" | "compliant" | "custom" = live.mode;
@@ -102,15 +139,29 @@ export async function POST(req: NextRequest) {
     case "FREEZE_RA_BILL_422":
     case "REVOKE_STRIPPING_PTW":
     case "ISSUE_CLAUSE42_RECOVERY":
-      nextInput = { ...EXTREME_TG03_FIXTURE, projectId: live.projectId };
+      nextInput = {
+        ...EXTREME_TG03_FIXTURE,
+        projectId: live.projectId,
+        zoneId: live.input.zoneId,
+        raBillNo: live.input.raBillNo,
+      };
       nextMode = "stress-test";
       break;
     case "REVOKE_CRANE_PTW":
-      nextInput = { ...live.input, windSpeedMs: Math.max(22.5, live.input.windSpeedMs) };
+      nextInput = {
+        ...live.input,
+        projectId: live.projectId,
+        windSpeedMs: Math.max(22.5, live.input.windSpeedMs),
+      };
       nextMode = "custom";
       break;
     case "CLEAR_FOR_RTGS":
-      nextInput = { ...COMPLIANT_TG03_FIXTURE, projectId: live.projectId };
+      nextInput = {
+        ...COMPLIANT_TG03_FIXTURE,
+        projectId: live.projectId,
+        zoneId: live.input.zoneId,
+        raBillNo: live.input.raBillNo,
+      };
       nextMode = "compliant";
       break;
   }
@@ -124,7 +175,7 @@ export async function POST(req: NextRequest) {
   const ledger = await appendGovernorEvent({
     projectId: saved.projectId,
     eventType: "KINETIC_ACTION",
-    actor,
+    actor: `${actor} [${operatorRole}]`,
     source: "/api/actions/execute",
     mode: saved.mode,
     httpStatus: saved.snapshot.escrow.httpStatus,
@@ -133,8 +184,10 @@ export async function POST(req: NextRequest) {
     violationCount: saved.snapshot.violations.length,
     diffJson: {
       actionType: body.actionType,
+      operatorRole,
       rationale,
-      pinMode: auth.pinMode,
+      pinMode: authZ.pinMode,
+      zoneId: saved.input.zoneId,
       previousHttpStatus: live.snapshot.escrow.httpStatus,
       newHttpStatus: saved.snapshot.escrow.httpStatus,
       frozenInr: saved.snapshot.escrow.frozenInr,
@@ -154,12 +207,15 @@ export async function POST(req: NextRequest) {
     {
       ok: true,
       executedAction: body.actionType,
+      role: operatorRole,
       actor,
       rationale,
-      pinMode: auth.pinMode,
+      pinMode: authZ.pinMode,
       storageMode: saved.storageMode,
       state: {
         projectId: saved.projectId,
+        projectName: live.project.name,
+        zoneId: saved.input.zoneId,
         mode: saved.mode,
         httpStatus: saved.snapshot.escrow.httpStatus,
         frozenInr: saved.snapshot.escrow.frozenInr,
