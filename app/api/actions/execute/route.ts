@@ -5,6 +5,11 @@ import { appendGovernorEvent } from "@/lib/repositories/eventLedgerRepo";
 import { getNotificationPrefs } from "@/lib/repositories/notificationRepo";
 import { hydratePortfolioGovernorState } from "@/lib/domain/portfolioRegistry";
 import {
+  formatStampedActor,
+  getAuthPolicySummary,
+  resolveOperatorIdentity,
+} from "@/lib/server/authSession";
+import {
   authorizeOperatorAction,
   buildRateLimitHeaders,
   checkRateLimit,
@@ -40,6 +45,7 @@ export async function GET() {
   return jsonOk({
     ok: true,
     ...getDirectorPinStatus(),
+    authPolicy: getAuthPolicySummary(),
     rbac: getRbacStatus(),
     rateLimitPolicy: KINETIC_RATE_POLICY,
     allowedActions: Array.from(VALID_ACTIONS),
@@ -68,16 +74,31 @@ export async function POST(req: NextRequest) {
     return jsonError("Invalid JSON request body.", 400);
   }
 
-  const suppliedRole = req.headers.get("x-operator-role") || body.role || "DIRECTOR";
+  const fallbackRole = req.headers.get("x-operator-role") || body.role || "DIRECTOR";
   const suppliedPin =
     req.headers.get("x-operator-pin") ||
     req.headers.get("x-director-pin") ||
     body.pin ||
     body.directorPin;
 
-  // Step 1: Authenticate credentials first (401 on missing/wrong PIN, 400 on unknown role)
+  // Step 1: Verify Supabase Auth JWT (if provided or strictly required) — blocks forged tokens & role spoofing
+  const identity = await resolveOperatorIdentity(req, fallbackRole);
+  if (!identity.ok) {
+    return jsonOk(
+      {
+        ok: false,
+        code: identity.code,
+        error: identity.error,
+        strictAuthRequired: identity.strictAuthRequired,
+      },
+      identity.httpStatus,
+      rlHeaders
+    );
+  }
+
+  // Step 2: Step-up PIN 2FA authentication against resolved role (401 on missing/wrong PIN)
   const authN = authorizeOperatorAction({
-    role: suppliedRole,
+    role: identity.role,
     suppliedPin,
     actionType: null,
   });
@@ -88,7 +109,8 @@ export async function POST(req: NextRequest) {
         ok: false,
         error: authN.reason || "Operator authorization PIN required.",
         pinRequired: authN.httpStatus === 401,
-        role: authN.role,
+        role: identity.role,
+        authSource: identity.authSource,
         pinMode: authN.pinMode,
       },
       authN.httpStatus,
@@ -103,9 +125,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Step 2: Authorize role against actionType (403 FORBIDDEN on privilege escalation)
+  // Step 3: Role-Based Authorization against actionType (403 FORBIDDEN on privilege escalation)
   const authZ = authorizeOperatorAction({
-    role: suppliedRole,
+    role: identity.role,
     suppliedPin,
     actionType: body.actionType,
   });
@@ -116,7 +138,8 @@ export async function POST(req: NextRequest) {
         ok: false,
         error: authZ.reason || "Role is not permitted to execute this kinetic action.",
         rbacDenied: true,
-        role: authZ.role,
+        role: identity.role,
+        authSource: identity.authSource,
         actionType: body.actionType,
         allowedActionsForRole: authZ.allowedActionsForRole,
       },
@@ -125,9 +148,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const operatorRole = authZ.role!;
-  const actor = (body.actor || `${operatorRole} (Executive War Room)`).trim().slice(0, 100);
-  const rationale = (body.rationale || `Signed ${operatorRole} execution of ${body.actionType}`).trim().slice(0, 300);
+  const operatorRole = identity.role;
+  const stampedActor = formatStampedActor(identity, body.actor, "Executive War Room");
+  const rationale = (body.rationale || `Signed ${operatorRole} execution of ${body.actionType}`)
+    .trim()
+    .slice(0, 300);
 
   const rawLive = await getGovernorState(body.projectId);
   const live = hydratePortfolioGovernorState(body.projectId, rawLive);
@@ -175,7 +200,7 @@ export async function POST(req: NextRequest) {
   const ledger = await appendGovernorEvent({
     projectId: saved.projectId,
     eventType: "KINETIC_ACTION",
-    actor: `${actor} [${operatorRole}]`,
+    actor: stampedActor,
     source: "/api/actions/execute",
     mode: saved.mode,
     httpStatus: saved.snapshot.escrow.httpStatus,
@@ -185,6 +210,10 @@ export async function POST(req: NextRequest) {
     diffJson: {
       actionType: body.actionType,
       operatorRole,
+      authSource: identity.authSource,
+      roleSource: identity.roleSource,
+      userId: identity.userId,
+      userEmail: identity.email,
       rationale,
       pinMode: authZ.pinMode,
       zoneId: saved.input.zoneId,
@@ -208,7 +237,9 @@ export async function POST(req: NextRequest) {
       ok: true,
       executedAction: body.actionType,
       role: operatorRole,
-      actor,
+      authSource: identity.authSource,
+      userEmail: identity.email,
+      actor: stampedActor,
       rationale,
       pinMode: authZ.pinMode,
       storageMode: saved.storageMode,

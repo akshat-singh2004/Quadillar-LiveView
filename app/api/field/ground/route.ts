@@ -9,6 +9,12 @@ import {
   rateLimitExceededResponse,
 } from "@/lib/server/securityGuard";
 import {
+  formatStampedActor,
+  getAuthPolicySummary,
+  resolveOperatorIdentity,
+  type ResolvedOperatorIdentity,
+} from "@/lib/server/authSession";
+import {
   VERNACULAR_FIELD_PRESETS,
   evaluateVernacularGrounding,
 } from "@/lib/domain/vernacularGroundingEngine";
@@ -35,6 +41,7 @@ export async function GET() {
   return jsonOk({
     ok: true,
     service: "quadillar-vernacular-to-bim-grounding",
+    authPolicy: getAuthPolicySummary(),
     ...getVernacularExtractorStatus(),
     rateLimitPolicy: GROUNDING_RATE_POLICY,
     presets: VERNACULAR_FIELD_PRESETS,
@@ -77,40 +84,57 @@ export async function POST(req: NextRequest) {
   }
 
   const commitToLedger = body.commitToLedger === true;
+  let resolvedIdentity: ResolvedOperatorIdentity | null = null;
   let operatorRole: string = "PREVIEW_MODE";
 
   if (commitToLedger) {
-    const suppliedRole = req.headers.get("x-operator-role") || body.role || "SITE_ENGINEER";
+    const fallbackRole = req.headers.get("x-operator-role") || body.role || "SITE_ENGINEER";
     const suppliedPin =
       req.headers.get("x-operator-pin") ||
       req.headers.get("x-director-pin") ||
       body.pin;
 
+    const identity = await resolveOperatorIdentity(req, fallbackRole);
+    if (!identity.ok) {
+      return jsonOk(
+        { ok: false, code: identity.code, error: identity.error },
+        identity.httpStatus,
+        rlHeaders
+      );
+    }
+
     const authN = authorizeOperatorAction({
-      role: suppliedRole,
+      role: identity.role,
       suppliedPin,
       actionType: null,
     });
     if (!authN.authorized) {
       return jsonOk(
-        { ok: false, error: authN.reason || "Operator PIN required to seal field grounding.", role: authN.role },
+        {
+          ok: false,
+          error: authN.reason || "Operator PIN required to seal field grounding.",
+          role: identity.role,
+          authSource: identity.authSource,
+        },
         authN.httpStatus,
         rlHeaders
       );
     }
-    if (authN.role === "AUDITOR") {
+    if (identity.role === "AUDITOR") {
       return jsonOk(
         {
           ok: false,
           rbacDenied: true,
           role: "AUDITOR",
+          authSource: identity.authSource,
           error: "RBAC FORBIDDEN: Role AUDITOR is read-only and cannot commit vernacular records to the ledger.",
         },
         403,
         rlHeaders
       );
     }
-    operatorRole = authN.role!;
+    resolvedIdentity = identity;
+    operatorRole = identity.role;
   }
 
   const project = resolvePortfolioProject(body.projectId);
@@ -147,7 +171,7 @@ export async function POST(req: NextRequest) {
     eventType: string;
   } | null = null;
 
-  if (commitToLedger) {
+  if (commitToLedger && resolvedIdentity) {
     const nowIso = new Date().toISOString();
     const evidenceHash = crypto
       .createHash("sha256")
@@ -163,7 +187,6 @@ export async function POST(req: NextRequest) {
       )
       .digest("hex");
 
-    // 1. Persist binary challan photo (if attached) via Sprint 13B Storage Vault
     if (body.challanImageDataUrl) {
       const stored = await ingestFieldEvidencePacket({
         id: `VERN-${Date.now()}`,
@@ -185,12 +208,11 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // 2. Seal grounded IFC record + 5-Way verdict into site's BSA Sec 63 hash-chain
-    const actor = (body.actor || `${operatorRole} (Field Grounding)`).trim().slice(0, 100);
+    const stampedActor = formatStampedActor(resolvedIdentity, body.actor, "Field Grounding");
     const appended = await appendGovernorEvent({
       projectId: project.projectId,
       eventType: "VERNACULAR_GROUNDING",
-      actor: `${actor} [${operatorRole}]`,
+      actor: stampedActor,
       source: "/api/field/ground",
       mode: grounded.ifcRecord.complianceStatus,
       httpStatus: grounded.triangulation.httpStatus,
@@ -198,6 +220,10 @@ export async function POST(req: NextRequest) {
       netReleaseInr: 0,
       violationCount: grounded.triangulation.discrepancies.length,
       diffJson: {
+        authSource: resolvedIdentity.authSource,
+        roleSource: resolvedIdentity.roleSource,
+        userId: resolvedIdentity.userId,
+        userEmail: resolvedIdentity.email,
         detectedLanguage: grounded.extraction.detectedLanguage,
         extractorMode: grounded.extractorMode,
         modelUsed: grounded.modelUsed,
@@ -225,6 +251,8 @@ export async function POST(req: NextRequest) {
       ok: true,
       committed: commitToLedger,
       operatorRole,
+      authSource: resolvedIdentity?.authSource ?? "preview_unauthenticated",
+      userEmail: resolvedIdentity?.email ?? null,
       projectName: project.name,
       grounded,
       evidenceReceipt,

@@ -8,6 +8,10 @@ import {
   rateLimitExceededResponse,
 } from "@/lib/server/securityGuard";
 import {
+  getAuthPolicySummary,
+  resolveOperatorIdentity,
+} from "@/lib/server/authSession";
+import {
   DEMO_DEFAULT_IOT_SECRET,
   HARDWARE_PROBE_CATALOG,
   buildHardwareProbePayload,
@@ -29,6 +33,7 @@ export async function GET() {
   return jsonOk({
     ok: true,
     signingMode: "server_side_hmac_sha256",
+    authPolicy: getAuthPolicySummary(),
     permittedRoles: ["DIRECTOR", "SITE_ENGINEER"],
     rateLimitPolicy: PROBE_RATE_POLICY,
     probes: HARDWARE_PROBE_CATALOG,
@@ -54,16 +59,26 @@ export async function POST(req: NextRequest) {
     return jsonError("Invalid JSON request body.", 400);
   }
 
-  const suppliedRole = req.headers.get("x-operator-role") || body.role || "DIRECTOR";
+  const fallbackRole = req.headers.get("x-operator-role") || body.role || "DIRECTOR";
   const suppliedPin =
     req.headers.get("x-operator-pin") ||
     req.headers.get("x-director-pin") ||
     body.pin ||
     body.directorPin;
 
-  // Step 1: Authenticate operator (401/400)
+  // Step 1: Verify JWT identity first (fail-closed 401 on invalid/forged token)
+  const identity = await resolveOperatorIdentity(req, fallbackRole);
+  if (!identity.ok) {
+    return jsonOk(
+      { ok: false, code: identity.code, error: identity.error },
+      identity.httpStatus,
+      rlHeaders
+    );
+  }
+
+  // Step 2: Step-up PIN 2FA check against resolved role
   const authN = authorizeOperatorAction({
-    role: suppliedRole,
+    role: identity.role,
     suppliedPin,
     actionType: null,
   });
@@ -72,20 +87,22 @@ export async function POST(req: NextRequest) {
       {
         ok: false,
         error: authN.reason || "Operator authorization PIN required.",
-        role: authN.role,
+        role: identity.role,
+        authSource: identity.authSource,
       },
       authN.httpStatus,
       rlHeaders
     );
   }
 
-  // Step 2: RBAC check — AUDITOR is strictly read-only (403)
-  if (authN.role === "AUDITOR") {
+  // Step 3: RBAC check — AUDITOR is strictly read-only (403)
+  if (identity.role === "AUDITOR") {
     return jsonOk(
       {
         ok: false,
         rbacDenied: true,
         role: "AUDITOR",
+        authSource: identity.authSource,
         error: "RBAC FORBIDDEN: Role AUDITOR is strictly read-only and cannot trigger hardware probes.",
       },
       403,
@@ -111,7 +128,6 @@ export async function POST(req: NextRequest) {
   const secret = process.env.IOT_INGRESS_SECRET?.trim() || DEMO_DEFAULT_IOT_SECRET;
   const sig = signIotPayload(rawBody, nowSec, secret);
 
-  // Execute the real HMAC-authenticated /api/telemetry/ingress pipeline in-process
   const internalReq = new Request("https://internal.quadillar.local/api/telemetry/ingress", {
     method: "POST",
     headers: {
@@ -132,7 +148,9 @@ export async function POST(req: NextRequest) {
       probeType: body.probeType,
       projectId: project.projectId,
       projectName: project.name,
-      operatorRole: authN.role,
+      operatorRole: identity.role,
+      authSource: identity.authSource,
+      userEmail: identity.email,
       signedOnServer: true,
       hmacPrefix: sig.slice(0, 16),
       ingressStatus: ingressRes.status,
