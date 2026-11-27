@@ -192,7 +192,7 @@ export function evaluateMolecularGovernor(input: MolecularInput): GovernorSnapsh
   const reqCementMt = (input.designVolumeM3 * input.cementFactorKgPerM3) / 1000;
   const batchedCementMt = input.mixers.reduce((s, m) => s + m.cementKg, 0) / 1000;
   const cementVariancePct = ((batchedCementMt - reqCementMt) / reqCementMt) * 100;
-  const maxBatchWcRatio = Math.max(...input.mixers.map((m) => m.waterKg / m.cementKg));
+  const maxBatchWcRatio = input.mixers.length > 0 ? Math.max(...input.mixers.map((m) => (m.cementKg > 0 ? m.waterKg / m.cementKg : 9.99))) : 0;
 
   if (maxBatchWcRatio > input.maxWcRatio) {
     violations.push({
@@ -295,15 +295,38 @@ export function evaluateMolecularGovernor(input: MolecularInput): GovernorSnapsh
     });
   }
 
-  const windSpeedKmh = input.windSpeedMs * 3.6;
-  const pressurePa = 0.6 * input.windSpeedMs * input.windSpeedMs;
+  const windValid =
+    typeof input.windSpeedMs === "number" &&
+    Number.isFinite(input.windSpeedMs) &&
+    input.windSpeedMs >= 0 &&
+    input.windSpeedMs <= 120;
+
+  if (!windValid) {
+    violations.push({
+      code: "TELEMETRY_SENSOR_QUARANTINE",
+      loop: "LOOP_3_WIND_EOT",
+      severity: "CRITICAL",
+      standardRef: "Quadillar Fail-Closed Telemetry Quarantine (0-120 m/s)",
+      message: `Contaminated wind telemetry (${String(input.windSpeedMs)} m/s) quarantined — crane & payout locked fail-closed`,
+      blocksPayout: true,
+      blocksStrippingPtw: true,
+      blocksCranePtw: true,
+    });
+  }
+
+  const safeWindMs = windValid ? input.windSpeedMs : 0;
+  const windSpeedKmh = safeWindMs * 3.6;
+  const pressurePa = 0.6 * safeWindMs * safeWindMs;
   const windForceKn = (pressurePa * input.craneDragCoeff * input.craneSailAreaM2) / 1000;
   const windMomentKnm = windForceKn * input.craneWindLeverArmM;
   const totalOverturningKnm = windMomentKnm + input.craneLoadMomentKnm;
-  const factorOfSafety = input.craneResistingMomentKnm / totalOverturningKnm;
-  const craneLockout = factorOfSafety < 1.5 || windSpeedKmh >= 54.0;
+  const factorOfSafety =
+    totalOverturningKnm > 0 && Number.isFinite(totalOverturningKnm)
+      ? input.craneResistingMomentKnm / totalOverturningKnm
+      : 0;
+  const craneLockout = !windValid || factorOfSafety < 1.5 || windSpeedKmh >= 54.0;
 
-  if (craneLockout) {
+  if (windValid && craneLockout) {
     violations.push({
       code: "CRANE_WIND_LOCKOUT",
       loop: "LOOP_3_WIND_EOT",

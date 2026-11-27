@@ -43,6 +43,21 @@ export async function GET() {
   });
 }
 
+function applyMonotonicWindLatch(
+  currentWindMs: number,
+  currentHasLockout: boolean,
+  incomingWindMs: number
+): { nextWindMs: number; latchPreserved: boolean } {
+  const safeCurrent = Number.isFinite(currentWindMs) && currentWindMs >= 0 ? currentWindMs : 0;
+  const safeIncoming = Number.isFinite(incomingWindMs) && incomingWindMs >= 0 ? incomingWindMs : 0;
+  // Once a crane safety lockout is active (>=15 m/s), automated low-wind noise cannot silently clear it.
+  // Explicit Director/Site Engineer clearance via /api/actions/execute is required to unlatch.
+  if ((currentHasLockout || safeCurrent >= 15.0) && safeIncoming < safeCurrent) {
+    return { nextWindMs: safeCurrent, latchPreserved: true };
+  }
+  return { nextWindMs: safeIncoming, latchPreserved: false };
+}
+
 export async function POST(req: Request) {
   const rl = await checkRateLimit(extractClientIp(req), IOT_RATE_POLICY);
   if (!rl.allowed) return rateLimitExceededResponse(rl);
@@ -104,10 +119,13 @@ export async function POST(req: Request) {
 
     let routingTarget = "HERMES";
     let interlockTripped = false;
+    let sensorFaultQuarantined = false;
+    let faultReasons: string[] = [];
     let governorResult: unknown = null;
     let triangulationReport: unknown = null;
     let governorEscalation: {
       applied: boolean;
+      latchPreserved?: boolean;
       httpStatus: number;
       frozenInr: number;
       violationCount: number;
@@ -115,31 +133,59 @@ export async function POST(req: Request) {
     } | null = null;
     let ledgerReceipt: { seq: number; chainHash: string; storageMode: string } | null = null;
 
-    // 1. Check the 4 Sprint 14A Autonomous Palantir Hardware Bridges first
+    // 1. Check the 4 Autonomous Palantir Hardware Bridges first
     const bridge = evaluateHardwareBridge(category, projectId, deviceId, payload);
     if (bridge) {
       routingTarget = bridge.routingTarget;
       interlockTripped = bridge.interlockTripped;
+      sensorFaultQuarantined = Boolean(bridge.sensorFaultQuarantined);
+      faultReasons = bridge.faultReasons || [];
       governorResult = {
         summary: bridge.summary,
         metrics: bridge.metrics,
       };
       triangulationReport = bridge.triangulationReport;
 
-      if (applyToGovernor && bridge.governorPatch) {
+      if (applyToGovernor && bridge.governorPatch && !sensorFaultQuarantined) {
         const current = await getGovernorState(projectId);
-        const saved = await saveGovernorState({
-          projectId,
-          mode: "custom",
-          input: { ...current.input, ...bridge.governorPatch },
-        });
-        governorEscalation = {
-          applied: true,
-          httpStatus: saved.snapshot.escrow.httpStatus,
-          frozenInr: saved.snapshot.escrow.frozenInr,
-          violationCount: saved.snapshot.violations.length,
-          storageMode: saved.storageMode,
-        };
+        const nextInput = { ...current.input, ...bridge.governorPatch };
+        let latchPreserved = false;
+
+        if (typeof bridge.governorPatch.windSpeedMs === "number") {
+          const hasLock = current.snapshot.violations.some((v) => v.code === "CRANE_WIND_LOCKOUT");
+          const latched = applyMonotonicWindLatch(
+            current.input.windSpeedMs,
+            hasLock,
+            bridge.governorPatch.windSpeedMs
+          );
+          nextInput.windSpeedMs = latched.nextWindMs;
+          latchPreserved = latched.latchPreserved;
+        }
+
+        if (!latchPreserved) {
+          const saved = await saveGovernorState({
+            projectId,
+            mode: "custom",
+            input: nextInput,
+          });
+          governorEscalation = {
+            applied: true,
+            latchPreserved: false,
+            httpStatus: saved.snapshot.escrow.httpStatus,
+            frozenInr: saved.snapshot.escrow.frozenInr,
+            violationCount: saved.snapshot.violations.length,
+            storageMode: saved.storageMode,
+          };
+        } else {
+          governorEscalation = {
+            applied: false,
+            latchPreserved: true,
+            httpStatus: current.snapshot.escrow.httpStatus,
+            frozenInr: current.snapshot.escrow.frozenInr,
+            violationCount: current.snapshot.violations.length,
+            storageMode: current.storageMode,
+          };
+        }
       }
     } else {
       // 2. Preserve all 7 Legacy Hardware Streams cleanly
@@ -179,8 +225,31 @@ export async function POST(req: Request) {
         case "WEATHER_ANEMOMETER": {
           routingTarget = "Argus";
           const windSpeedMs = extractWindMsFromWeatherPayload(payload);
-          const windSpeedKmh = Math.round(windSpeedMs * 3.6 * 10) / 10;
-          const rainRate = Number(payload.rainfallRateMmh || 0);
+          const windSpeedKmh = Number.isFinite(windSpeedMs)
+            ? Math.round(windSpeedMs * 3.6 * 10) / 10
+            : 0;
+          const rainRate = Number(payload.rainfallRateMmh ?? 0);
+
+          if (
+            !Number.isFinite(windSpeedMs) ||
+            windSpeedMs < 0 ||
+            windSpeedMs > 120 ||
+            !Number.isFinite(rainRate) ||
+            rainRate < 0 ||
+            rainRate > 500
+          ) {
+            sensorFaultQuarantined = true;
+            interlockTripped = true;
+            faultReasons = [
+              `WEATHER_ANEMOMETER reading out of physical bounds (wind=${String(windSpeedMs)} m/s, rain=${String(rainRate)} mm/h)`,
+            ];
+            governorResult = {
+              quarantined: true,
+              faultReasons,
+              safe: false,
+            };
+            break;
+          }
 
           if (windSpeedMs >= 15.0 || windSpeedKmh > 38.0 || rainRate > 5.0) {
             interlockTripped = true;
@@ -201,21 +270,42 @@ export async function POST(req: Request) {
 
           if (applyToGovernor && windSpeedMs > 0) {
             const current = await getGovernorState(projectId);
-            const saved = await saveGovernorState({
-              projectId,
-              mode: "custom",
-              input: { ...current.input, windSpeedMs },
-            });
-            governorEscalation = {
-              applied: true,
-              httpStatus: saved.snapshot.escrow.httpStatus,
-              frozenInr: saved.snapshot.escrow.frozenInr,
-              violationCount: saved.snapshot.violations.length,
-              storageMode: saved.storageMode,
-            };
+            const hasLock = current.snapshot.violations.some((v) => v.code === "CRANE_WIND_LOCKOUT");
+            const latched = applyMonotonicWindLatch(current.input.windSpeedMs, hasLock, windSpeedMs);
+
+            if (!latched.latchPreserved) {
+              const saved = await saveGovernorState({
+                projectId,
+                mode: "custom",
+                input: { ...current.input, windSpeedMs: latched.nextWindMs },
+              });
+              governorEscalation = {
+                applied: true,
+                latchPreserved: false,
+                httpStatus: saved.snapshot.escrow.httpStatus,
+                frozenInr: saved.snapshot.escrow.frozenInr,
+                violationCount: saved.snapshot.violations.length,
+                storageMode: saved.storageMode,
+              };
+            } else {
+              governorEscalation = {
+                applied: false,
+                latchPreserved: true,
+                httpStatus: current.snapshot.escrow.httpStatus,
+                frozenInr: current.snapshot.escrow.frozenInr,
+                violationCount: current.snapshot.violations.length,
+                storageMode: current.storageMode,
+              };
+            }
           }
 
-          governorResult = { windSpeedMs, windSpeedKmh, rainfallRateMmh: rainRate, safe: !interlockTripped };
+          governorResult = {
+            windSpeedMs,
+            windSpeedKmh,
+            rainfallRateMmh: rainRate,
+            latchPreserved: Boolean(governorEscalation?.latchPreserved),
+            safe: !interlockTripped && !governorEscalation?.latchPreserved,
+          };
           break;
         }
 
@@ -311,7 +401,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Seal tripped hardware interlocks into append-only BSA Sec 63 hash-chain
+    // 3. Seal tripped hardware interlocks & sensor quarantines into append-only BSA Sec 63 hash-chain
     if (interlockTripped) {
       const tri = bridge?.triangulationReport;
       const appended = await appendGovernorEvent({
@@ -319,7 +409,7 @@ export async function POST(req: Request) {
         eventType: tri ? "TRIANGULATION_ALERT" : "IOT_INTERLOCK",
         actor: `iot-device:${deviceId}`,
         source: `/api/telemetry/ingress:${category}`,
-        mode: interlockTripped ? "interlock_422" : "nominal",
+        mode: sensorFaultQuarantined ? "sensor_quarantine_422" : "interlock_422",
         httpStatus: 422,
         frozenInr: tri?.recommendedEscrowHoldInr ?? governorEscalation?.frozenInr ?? 0,
         netReleaseInr: 0,
@@ -331,6 +421,8 @@ export async function POST(req: Request) {
           authScheme: auth.authScheme,
           routingTarget,
           interlockTripped,
+          sensorFaultQuarantined,
+          ...(faultReasons.length > 0 ? { faultReasons } : {}),
           discrepancyCodes: tri?.discrepancies.map((d) => d.code) ?? [],
         },
         snapshotHash: `IOT:${deviceId}:${category}:${Date.now()}`,
@@ -350,7 +442,14 @@ export async function POST(req: Request) {
         actionTitle: `IoT Ingress Processed: ${deviceId} [${category}]`,
         actionCategory: "IOT_TELEMETRY_INGRESS",
         moduleRef: deviceId,
-        details: { deviceId, protocol, category, payload, interlockTripped } as unknown as Record<string, unknown>,
+        details: {
+          deviceId,
+          protocol,
+          category,
+          payload,
+          interlockTripped,
+          sensorFaultQuarantined,
+        } as unknown as Record<string, unknown>,
         signatoryName: `Hardware Agent (${deviceId})`,
         signatoryRole: "Autonomous Telemetry Probe",
         severity: interlockTripped ? "critical" : "verified",
@@ -369,7 +468,7 @@ export async function POST(req: Request) {
           telemetry_category: category,
           raw_payload: payload,
           governor_routed: routingTarget,
-          processed_success: true,
+          processed_success: !sensorFaultQuarantined,
           interlock_tripped: interlockTripped,
           seor_signoff_hash: merkleSealHash,
         });
@@ -380,8 +479,10 @@ export async function POST(req: Request) {
 
     return jsonOk(
       {
-        success: true,
-        ok: true,
+        success: !sensorFaultQuarantined,
+        ok: !sensorFaultQuarantined,
+        quarantined: sensorFaultQuarantined,
+        ...(faultReasons.length > 0 ? { faultReasons } : {}),
         timestamp: new Date().toISOString(),
         projectId,
         deviceId,
@@ -395,7 +496,7 @@ export async function POST(req: Request) {
         ledgerReceipt,
         merkleSealHash,
       },
-      200,
+      sensorFaultQuarantined ? 422 : 200,
       {
         ...rlHeaders,
         ...(ledgerReceipt ? { "X-BSA-Sec63-Hash": ledgerReceipt.chainHash } : {}),

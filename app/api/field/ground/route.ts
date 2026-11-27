@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { NextRequest } from "next/server";
 import { jsonError, jsonOk, readJsonBody } from "@/lib/server/http";
+import { PHYSICAL_BOUNDS } from "@/lib/domain/signalTriage";
 import {
   authorizeOperatorAction,
   buildRateLimitHeaders,
@@ -80,6 +81,18 @@ export async function POST(req: NextRequest) {
     return jsonError(
       "Provide a Hindi/Hinglish/English 'transcript', 'presetId', 'challanImageDataUrl', or 'audioDataUrl'.",
       400
+    );
+  }
+
+  if (effectiveTranscript.length > PHYSICAL_BOUNDS.MAX_TRANSCRIPT_CHARS) {
+    return jsonOk(
+      {
+        ok: false,
+        quarantined: true,
+        error: `Transcript exceeds maximum ${PHYSICAL_BOUNDS.MAX_TRANSCRIPT_CHARS} character limit (${effectiveTranscript.length} chars received).`,
+      },
+      413,
+      rlHeaders
     );
   }
 

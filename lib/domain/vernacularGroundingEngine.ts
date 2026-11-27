@@ -1,3 +1,4 @@
+import { stripAdversarialTextNoise } from "@/lib/domain/signalTriage";
 import {
   VANGUARD_CLEAN_POUR_FIXTURE,
   evaluateFiveWayTriangulation,
@@ -32,6 +33,8 @@ export interface GroundedFieldExtraction {
   bimDesignVolumeM3: number;
   inSituEstimatedMpa: number;
   extractionSignals: string[];
+  hasRequiredConstructionSignal: boolean;
+  droppedNoiseHints: string[];
 }
 
 export interface VernacularGroundingResult {
@@ -147,7 +150,7 @@ export function extractGroundTruthDeterministic(
   transcript: string,
   options?: { projectId?: string; defaultZoneId?: string }
 ): GroundedFieldExtraction {
-  const text = (transcript || "").trim();
+  const { cleaned: text, droppedNoiseHints } = stripAdversarialTextNoise(transcript || "");
   const signals: string[] = [];
   const detectedLanguage = detectVernacularLanguage(text);
   const bimBinding = resolveBimZoneBinding(text, options?.defaultZoneId || "BIT-4-TG03");
@@ -162,9 +165,9 @@ export function extractGroundTruthDeterministic(
   if (plateMatch) signals.push(`Plate=${vehiclePlate}`);
 
   // 2. Concrete Grade (M20..M60)
-  const gradeMatches = Array.from(text.matchAll(/\bM\s*-?\s*(20|25|30|35|40|45|50|55|60)\b/gi)).map(
-    (m) => Number(m[1])
-  );
+  const gradeMatches: number[] = Array.from(
+    text.matchAll(/\bM\s*-?\s*(20|25|30|35|40|45|50|55|60)\b/gi)
+  ).map((m: RegExpMatchArray) => Number(m[1]));
   const claimedGradeMpa = gradeMatches[0] ?? 50;
   if (gradeMatches.length > 0) signals.push(`Grade=M${claimedGradeMpa}`);
 
@@ -262,6 +265,8 @@ export function extractGroundTruthDeterministic(
     bimDesignVolumeM3: challanVolumeM3,
     inSituEstimatedMpa,
     extractionSignals: signals,
+    hasRequiredConstructionSignal: signals.length >= 2,
+    droppedNoiseHints,
   };
 }
 
@@ -272,6 +277,63 @@ export function evaluateVernacularGrounding(params: {
   modelUsed: string;
 }): VernacularGroundingResult {
   const e = params.extraction;
+
+  if (!e.hasRequiredConstructionSignal) {
+    const quarantineReport: TriangulationReport = {
+      projectId: params.projectId,
+      zoneId: e.bimBinding.zoneId,
+      challanNo: e.challanNo,
+      vendorName: e.vendorName,
+      verdict: "FRAUD_OR_DILUTION_LOCK_422",
+      httpStatus: 422,
+      trustScorePct: 0,
+      derivedMetrics: {
+        weighbridgeDerivedM3: 0,
+        plcDerivedCementBags: 0,
+        effectiveDeliveredM3: 0,
+        ghostVolumeM3: 0,
+        missingCementBags: 0,
+        strengthRatioPct: 0,
+      },
+      discrepancies: [
+        {
+          code: "INSUFFICIENT_FIELD_SIGNAL",
+          severity: "CRITICAL",
+          signalsCompared: ["Vernacular Field Input", "Required Concrete Governance Schema"],
+          expected: "At least 2 structured site metrics (volume, grade, weighbridge, cement, w/c, or MPa)",
+          observed: `Only ${e.extractionSignals.length} construction signal(s) detected — irrelevant chatter or incomplete noise`,
+          variancePct: 100,
+          financialRiskInr: 0,
+          standardRef: "Quadillar Signal Triage Gate (No Fabricated Defaults)",
+          explanation:
+            "Input lacks sufficient construction telemetry to certify a pour; quarantined fail-closed (HTTP 422) instead of substituting default clean fixtures.",
+        },
+      ],
+      recommendedEscrowHoldInr: 0,
+      recommendedClause42PenaltyInr: 0,
+      totalFinancialExposureInr: 0,
+      summary: `Quarantined non-construction or incomplete input (${e.extractionSignals.length} signals detected); clean pour fabrication blocked.`,
+    };
+
+    return {
+      projectId: params.projectId,
+      extractorMode: params.extractorMode,
+      modelUsed: params.modelUsed,
+      extraction: e,
+      triangulation: quarantineReport,
+      ifcRecord: {
+        schema: "IFC4X3_ADD2",
+        globalId: e.bimBinding.bimGlobalId,
+        ifcClass: e.bimBinding.ifcClass,
+        zoneId: e.bimBinding.zoneId,
+        elementLabel: e.bimBinding.elementLabel,
+        complianceStatus: "HOLD_422",
+        trustScorePct: 0,
+        discrepancyCodes: ["INSUFFICIENT_FIELD_SIGNAL"],
+      },
+    };
+  }
+
   const triInput: TriangulationInput = {
     ...VANGUARD_CLEAN_POUR_FIXTURE,
     projectId: params.projectId,

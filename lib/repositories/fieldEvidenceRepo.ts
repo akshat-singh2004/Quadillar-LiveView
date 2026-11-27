@@ -3,6 +3,8 @@ import { getSupabaseAdmin, type StorageMode } from "@/lib/server/supabaseAdmin";
 export const DEFAULT_EVIDENCE_BUCKET =
   process.env.SUPABASE_EVIDENCE_BUCKET?.trim() || "field-evidence";
 export const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4 MB decoded binary cap
+export const MAX_INLINE_IMAGE_CHARS = 512 * 1024; // 512 KB cap for DB inline fallback
+export const MAX_MEM_EVIDENCE_ENTRIES = 500;
 
 export interface FieldEvidenceSyncPayload {
   id: string;
@@ -43,6 +45,7 @@ export interface StoredEvidenceResult {
   ok: boolean;
   duplicate?: boolean;
   id: string;
+  projectId?: string;
   sha256: string;
   mediaUploaded: boolean;
   mediaStorageMode: MediaStorageMode;
@@ -67,6 +70,22 @@ const g = globalThis as typeof globalThis & {
 };
 const memLedger = (g.__quadillarCaptureLedger ??= new Map());
 
+function setBoundedMemLedger(
+  key: string,
+  val: FieldEvidenceSyncPayload & {
+    receivedAtUtc: string;
+    mediaUrl?: string | null;
+    storageObjectPath?: string | null;
+    mediaStorageMode?: MediaStorageMode;
+  }
+) {
+  if (memLedger.size >= MAX_MEM_EVIDENCE_ENTRIES && !memLedger.has(key)) {
+    const oldestKey = memLedger.keys().next().value;
+    if (oldestKey) memLedger.delete(oldestKey);
+  }
+  memLedger.set(key, val);
+}
+
 export function sanitizeProjectSlug(projectId?: string): string {
   const cleaned = (projectId || "VANGUARD-LKO-01")
     .trim()
@@ -85,6 +104,41 @@ export function buildEvidenceObjectPath(
   return `${sanitizeProjectSlug(projectId)}/${sha256.toLowerCase()}.${ext}`;
 }
 
+export function hasValidImageMagicBytes(
+  mimeType: ParsedImageDataUrl["mimeType"],
+  buffer: Buffer
+): boolean {
+  if (mimeType === "image/png") {
+    return (
+      buffer.length >= 8 &&
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47 &&
+      buffer[4] === 0x0d &&
+      buffer[5] === 0x0a &&
+      buffer[6] === 0x1a &&
+      buffer[7] === 0x0a
+    );
+  }
+  if (mimeType === "image/jpeg") {
+    return (
+      buffer.length >= 3 &&
+      buffer[0] === 0xff &&
+      buffer[1] === 0xd8 &&
+      buffer[2] === 0xff
+    );
+  }
+  if (mimeType === "image/webp") {
+    return (
+      buffer.length >= 12 &&
+      buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+      buffer.subarray(8, 12).toString("ascii") === "WEBP"
+    );
+  }
+  return false;
+}
+
 export function parseImageDataUrl(
   dataUrl: string | null | undefined,
   maxBytes = MAX_IMAGE_BYTES
@@ -94,9 +148,20 @@ export function parseImageDataUrl(
   }
 
   const trimmed = dataUrl.trim();
+  const maxRawChars = Math.ceil((maxBytes * 4) / 3) + 128;
+  if (trimmed.length > maxRawChars) {
+    return {
+      ok: false,
+      error: `Image exceeds max ${Math.round(maxBytes / (1024 * 1024))} MB binary limit`,
+    };
+  }
+
   const match = trimmed.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,([A-Za-z0-9+/=\r\n]+)$/i);
   if (!match) {
-    return { ok: false, error: "Unsupported data URL format (allowed: image/jpeg, image/png, image/webp)" };
+    return {
+      ok: false,
+      error: "Unsupported data URL format (allowed: image/jpeg, image/png, image/webp)",
+    };
   }
 
   const rawMime = match[1].toLowerCase();
@@ -108,7 +173,10 @@ export function parseImageDataUrl(
   const base64Body = match[2].replace(/\s+/g, "");
   const estimatedBytes = Math.floor((base64Body.length * 3) / 4);
   if (estimatedBytes > maxBytes) {
-    return { ok: false, error: `Image exceeds max ${Math.round(maxBytes / (1024 * 1024))} MB binary limit` };
+    return {
+      ok: false,
+      error: `Image exceeds max ${Math.round(maxBytes / (1024 * 1024))} MB binary limit`,
+    };
   }
 
   const buffer = Buffer.from(base64Body, "base64");
@@ -116,7 +184,17 @@ export function parseImageDataUrl(
     return { ok: false, error: "Decoded image buffer is empty" };
   }
   if (buffer.length > maxBytes) {
-    return { ok: false, error: `Image exceeds max ${Math.round(maxBytes / (1024 * 1024))} MB binary limit` };
+    return {
+      ok: false,
+      error: `Image exceeds max ${Math.round(maxBytes / (1024 * 1024))} MB binary limit`,
+    };
+  }
+
+  if (!hasValidImageMagicBytes(mimeType, buffer)) {
+    return {
+      ok: false,
+      error: `Binary magic-byte mismatch: decoded payload is not a valid ${mimeType} image`,
+    };
   }
 
   return {
@@ -184,15 +262,15 @@ export async function listFieldEvidencePackets(limit = 30): Promise<{
 export async function ingestFieldEvidencePacket(
   body: FieldEvidenceSyncPayload
 ): Promise<StoredEvidenceResult> {
-  const normalizedHash = body.sha256.toLowerCase();
-  const projectId = body.projectId || "VANGUARD-LKO-01";
+  const normalizedHash = (body.sha256 || "").trim().toLowerCase();
+  const projectId = sanitizeProjectSlug(body.projectId);
 
-  // Fast deterministic in-process duplicate guard
   if (memLedger.has(normalizedHash)) {
     return {
       ok: false,
       duplicate: true,
       id: body.id,
+      projectId,
       sha256: normalizedHash,
       mediaUploaded: false,
       mediaStorageMode: "none",
@@ -212,60 +290,93 @@ export async function ingestFieldEvidencePacket(
   let storageObjectPath: string | null = null;
   let mediaBytes = 0;
   let savedPostgresBytes = 0;
-  let storedThumbValue: string | null = body.thumbDataUrl ?? null;
+  let storedThumbValue: string | null = null;
 
-  // Attempt binary upload to Supabase Storage if caller supplied a base64 image data URL
   if (body.thumbDataUrl) {
-    if (/^https?:\/\//i.test(body.thumbDataUrl.trim())) {
+    const trimmedMedia = body.thumbDataUrl.trim();
+    if (/^https?:\/\/\S+$/i.test(trimmedMedia) && trimmedMedia.length <= 2048) {
       mediaStorageMode = "supabase_storage";
-      mediaUrl = body.thumbDataUrl.trim();
+      mediaUrl = trimmedMedia;
       storedThumbValue = mediaUrl;
     } else {
-      const parsed = parseImageDataUrl(body.thumbDataUrl);
-      if (parsed.ok) {
-        mediaBytes = parsed.image.byteLength;
-        const candidatePath = buildEvidenceObjectPath(projectId, normalizedHash, parsed.image.ext);
+      const parsed = parseImageDataUrl(trimmedMedia);
+      if (!parsed.ok) {
+        // Hard fail-closed rejection: never write spoofed or oversized junk to Postgres
+        return {
+          ok: false,
+          id: body.id,
+          projectId,
+          sha256: normalizedHash,
+          mediaUploaded: false,
+          mediaStorageMode: "none",
+          mediaUrl: null,
+          storageObjectPath: null,
+          mediaBytes: 0,
+          savedPostgresBytes: 0,
+          storageMode: supabase ? "supabase" : "edge_ledger_fallback",
+          detail: `QUARANTINED_MEDIA: ${parsed.error}`,
+        };
+      }
 
-        if (supabase) {
-          try {
-            const { error: uploadErr } = await supabase.storage
+      mediaBytes = parsed.image.byteLength;
+      const candidatePath = buildEvidenceObjectPath(projectId, normalizedHash, parsed.image.ext);
+
+      if (supabase) {
+        try {
+          const { error: uploadErr } = await supabase.storage
+            .from(DEFAULT_EVIDENCE_BUCKET)
+            .upload(candidatePath, parsed.image.buffer, {
+              contentType: parsed.image.mimeType,
+              upsert: false,
+              cacheControl: "31536000",
+            });
+
+          const alreadyExists =
+            uploadErr && /already exists|duplicate|409/i.test(uploadErr.message || "");
+
+          if (!uploadErr || alreadyExists) {
+            const { data: pub } = supabase.storage
               .from(DEFAULT_EVIDENCE_BUCKET)
-              .upload(candidatePath, parsed.image.buffer, {
-                contentType: parsed.image.mimeType,
-                upsert: false,
-                cacheControl: "31536000",
-              });
-
-            const alreadyExists =
-              uploadErr && /already exists|duplicate|409/i.test(uploadErr.message || "");
-
-            if (!uploadErr || alreadyExists) {
-              const { data: pub } = supabase.storage
-                .from(DEFAULT_EVIDENCE_BUCKET)
-                .getPublicUrl(candidatePath);
-              if (pub?.publicUrl) {
-                mediaStorageMode = "supabase_storage";
-                mediaUrl = pub.publicUrl;
-                storageObjectPath = candidatePath;
-                storedThumbValue = pub.publicUrl;
-                savedPostgresBytes = Math.max(0, parsed.image.rawChars - pub.publicUrl.length);
-              }
+              .getPublicUrl(candidatePath);
+            if (pub?.publicUrl) {
+              mediaStorageMode = "supabase_storage";
+              mediaUrl = pub.publicUrl;
+              storageObjectPath = candidatePath;
+              storedThumbValue = pub.publicUrl;
+              savedPostgresBytes = Math.max(0, parsed.image.rawChars - pub.publicUrl.length);
             }
-          } catch {
-            // Storage bucket not yet created or offline -> fall back cleanly
           }
+        } catch {
+          // Fall through to bounded inline fallback for valid images only
         }
+      }
 
-        if (mediaStorageMode === "none") {
-          mediaStorageMode = "inline_fallback";
+      if (mediaStorageMode === "none") {
+        if (parsed.image.rawChars > MAX_INLINE_IMAGE_CHARS) {
+          return {
+            ok: false,
+            id: body.id,
+            projectId,
+            sha256: normalizedHash,
+            mediaUploaded: false,
+            mediaStorageMode: "none",
+            mediaUrl: null,
+            storageObjectPath: null,
+            mediaBytes,
+            savedPostgresBytes: 0,
+            storageMode: "edge_ledger_fallback",
+            detail: `QUARANTINED_MEDIA: Storage unavailable and image exceeds ${Math.round(
+              MAX_INLINE_IMAGE_CHARS / 1024
+            )} KB inline fallback cap.`,
+          };
         }
-      } else {
-        // Non-image string passed; keep inline fallback without crashing capture sync
         mediaStorageMode = "inline_fallback";
+        storedThumbValue = trimmedMedia;
       }
     }
   }
 
+  const safeNote = (body.noteText || "Field evidence capture").slice(0, 4000);
   const coreRow = {
     id: body.id,
     project_id: projectId,
@@ -274,7 +385,7 @@ export async function ingestFieldEvidencePacket(
     sha256: normalizedHash,
     recorded_at_utc: body.recordedAtUtc || new Date().toISOString(),
     qr_payload: body.qrPayload ?? null,
-    note_text: body.noteText || "Field evidence capture",
+    note_text: safeNote,
     voice_duration_sec: body.voiceDurationSec ?? 0,
     lat: body.lat ?? null,
     lon: body.lon ?? null,
@@ -302,7 +413,6 @@ export async function ingestFieldEvidencePacket(
 
       let insertErr = (await supabase.from("field_evidence_packets").insert(richRow)).error;
 
-      // Zero-downtime fallback if optional Sprint 13B metadata columns aren't migrated yet
       if (
         insertErr &&
         (insertErr.code === "PGRST204" ||
@@ -313,8 +423,10 @@ export async function ingestFieldEvidencePacket(
       }
 
       if (!insertErr) {
-        memLedger.set(normalizedHash, {
+        setBoundedMemLedger(normalizedHash, {
           ...body,
+          projectId,
+          noteText: safeNote,
           sha256: normalizedHash,
           thumbDataUrl: storedThumbValue,
           mediaUrl,
@@ -326,6 +438,7 @@ export async function ingestFieldEvidencePacket(
         return {
           ok: true,
           id: body.id,
+          projectId,
           sha256: normalizedHash,
           mediaUploaded: Boolean(storedThumbValue),
           mediaStorageMode,
@@ -337,18 +450,18 @@ export async function ingestFieldEvidencePacket(
         };
       }
 
-      // Postgres unique constraint violation (23505) => hard HTTP 409
       if (insertErr.code === "23505") {
         return {
           ok: false,
           duplicate: true,
           id: body.id,
+          projectId,
           sha256: normalizedHash,
           mediaUploaded: false,
-          mediaStorageMode,
-          mediaUrl,
-          storageObjectPath,
-          mediaBytes,
+          mediaStorageMode: "none",
+          mediaUrl: null,
+          storageObjectPath: null,
+          mediaBytes: 0,
           savedPostgresBytes: 0,
           storageMode: "supabase",
           detail: `SHA-256 ${normalizedHash.slice(0, 16)} already exists in Supabase ledger.`,
@@ -359,8 +472,10 @@ export async function ingestFieldEvidencePacket(
     }
   }
 
-  memLedger.set(normalizedHash, {
+  setBoundedMemLedger(normalizedHash, {
     ...body,
+    projectId,
+    noteText: safeNote,
     sha256: normalizedHash,
     thumbDataUrl: storedThumbValue,
     mediaUrl,
@@ -372,6 +487,7 @@ export async function ingestFieldEvidencePacket(
   return {
     ok: true,
     id: body.id,
+    projectId,
     sha256: normalizedHash,
     mediaUploaded: Boolean(storedThumbValue),
     mediaStorageMode,

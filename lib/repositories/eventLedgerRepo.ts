@@ -4,6 +4,7 @@ import {
   EXTREME_TG03_FIXTURE,
   evaluateMolecularGovernor,
 } from "@/lib/engines/molecularGovernor";
+import { getPortfolioProjectBaseline } from "@/lib/domain/portfolioRegistry";
 
 export type LedgerEventType =
   | "GENESIS"
@@ -44,11 +45,8 @@ export interface ChainVerificationResult {
 }
 
 export const GENESIS_PREV_HASH = "0".repeat(64);
+const MAX_MEM_LEDGER_PROJECTS = 100;
 
-/**
- * Deterministic canonical JSON serializer so Postgres JSONB key reordering
- * never causes false tamper alarms when recomputing SHA-256 chain hashes.
- */
 export function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);
@@ -189,8 +187,42 @@ export function verifyEventChain(
 
 const g = globalThis as typeof globalThis & {
   __quadillarEventLedger?: Map<string, GovernorLedgerEvent[]>;
+  __quadillarLedgerLocks?: Map<string, Promise<void>>;
 };
 const memLedger = (g.__quadillarEventLedger ??= new Map());
+const projectLocks = (g.__quadillarLedgerLocks ??= new Map());
+
+function setBoundedProjectEvents(projectId: string, events: GovernorLedgerEvent[]) {
+  if (memLedger.size >= MAX_MEM_LEDGER_PROJECTS && !memLedger.has(projectId)) {
+    const oldest = memLedger.keys().next().value;
+    if (oldest) memLedger.delete(oldest);
+  }
+  memLedger.set(projectId, events);
+}
+
+/**
+ * Per-project async mutex: strictly serializes read-head -> hash -> append
+ * for the same projectId while permitting full concurrency across different sites.
+ */
+async function withProjectLedgerLock<T>(projectId: string, task: () => Promise<T>): Promise<T> {
+  const prev = projectLocks.get(projectId) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const tail = prev.then(() => gate);
+  projectLocks.set(projectId, tail);
+
+  await prev;
+  try {
+    return await task();
+  } finally {
+    release();
+    if (projectLocks.get(projectId) === tail) {
+      projectLocks.delete(projectId);
+    }
+  }
+}
 
 function rowToEvent(row: Record<string, unknown>): GovernorLedgerEvent {
   return {
@@ -213,33 +245,53 @@ function rowToEvent(row: Record<string, unknown>): GovernorLedgerEvent {
 }
 
 function buildGenesisEvent(projectId: string): GovernorLedgerEvent {
-  const snap = evaluateMolecularGovernor(EXTREME_TG03_FIXTURE);
+  const baseline = getPortfolioProjectBaseline(projectId);
+  const snap = evaluateMolecularGovernor(baseline.input);
   const base: Omit<GovernorLedgerEvent, "chainHash"> = {
     projectId,
     seq: 1,
     eventType: "GENESIS",
     actor: "molecular-governor-kernel",
     source: "bootstrap",
-    mode: "stress-test",
+    mode: baseline.mode,
     httpStatus: snap.escrow.httpStatus,
     frozenInr: snap.escrow.frozenInr,
     netReleaseInr: snap.escrow.netCertifiedReleaseInr,
     violationCount: snap.violations.length,
     diffJson: {
-      zoneId: EXTREME_TG03_FIXTURE.zoneId,
-      raBillNo: EXTREME_TG03_FIXTURE.raBillNo,
+      zoneId: baseline.input.zoneId,
+      raBillNo: baseline.input.raBillNo,
       note: "Genesis evidentiary anchor sealed under BSA Section 63",
     },
     snapshotHash: snap.bsaSec63Ledger.rowHash,
     prevHash: GENESIS_PREV_HASH,
-    recordedAtUtc: EXTREME_TG03_FIXTURE.recordedAtUtc,
+    recordedAtUtc: baseline.input.recordedAtUtc,
   };
   return { ...base, chainHash: computeLedgerChainHash(base) };
 }
 
-export async function listGovernorEvents(
-  projectId = EXTREME_TG03_FIXTURE.projectId,
-  limit = 50
+function eventToRow(event: GovernorLedgerEvent) {
+  return {
+    project_id: event.projectId,
+    seq: event.seq,
+    event_type: event.eventType,
+    actor: event.actor,
+    source: event.source,
+    mode: event.mode,
+    http_status: event.httpStatus,
+    frozen_inr: event.frozenInr,
+    net_release_inr: event.netReleaseInr,
+    violation_count: event.violationCount,
+    diff_json: event.diffJson,
+    snapshot_hash: event.snapshotHash,
+    prev_hash: event.prevHash,
+    chain_hash: event.chainHash,
+    recorded_at_utc: event.recordedAtUtc,
+  };
+}
+
+async function fetchFullProjectEvents(
+  projectId: string
 ): Promise<{ storageMode: StorageMode; events: GovernorLedgerEvent[] }> {
   const supabase = getSupabaseAdmin();
   if (supabase) {
@@ -249,29 +301,13 @@ export async function listGovernorEvents(
         .select("*")
         .eq("project_id", projectId)
         .order("seq", { ascending: true })
-        .limit(limit);
+        .limit(2000);
 
       if (!error) {
         const rows = (data || []).map((r) => rowToEvent(r as Record<string, unknown>));
         if (rows.length === 0) {
           const genesis = buildGenesisEvent(projectId);
-          await supabase.from("governor_events").insert({
-            project_id: genesis.projectId,
-            seq: genesis.seq,
-            event_type: genesis.eventType,
-            actor: genesis.actor,
-            source: genesis.source,
-            mode: genesis.mode,
-            http_status: genesis.httpStatus,
-            frozen_inr: genesis.frozenInr,
-            net_release_inr: genesis.netReleaseInr,
-            violation_count: genesis.violationCount,
-            diff_json: genesis.diffJson,
-            snapshot_hash: genesis.snapshotHash,
-            prev_hash: genesis.prevHash,
-            chain_hash: genesis.chainHash,
-            recorded_at_utc: genesis.recordedAtUtc,
-          });
+          await supabase.from("governor_events").insert(eventToRow(genesis));
           return { storageMode: "supabase", events: [genesis] };
         }
         return { storageMode: "supabase", events: rows };
@@ -284,9 +320,17 @@ export async function listGovernorEvents(
   let list = memLedger.get(projectId);
   if (!list || list.length === 0) {
     list = [buildGenesisEvent(projectId)];
-    memLedger.set(projectId, list);
+    setBoundedProjectEvents(projectId, list);
   }
-  return { storageMode: "edge_fallback", events: list.slice(-limit) };
+  return { storageMode: "edge_fallback", events: list };
+}
+
+export async function listGovernorEvents(
+  projectId = EXTREME_TG03_FIXTURE.projectId,
+  limit = 50
+): Promise<{ storageMode: StorageMode; events: GovernorLedgerEvent[] }> {
+  const { storageMode, events } = await fetchFullProjectEvents(projectId);
+  return { storageMode, events: events.slice(-limit) };
 }
 
 export async function appendGovernorEvent(params: {
@@ -303,66 +347,65 @@ export async function appendGovernorEvent(params: {
   snapshotHash: string;
   recordedAtUtc?: string;
 }): Promise<{ storageMode: StorageMode; event: GovernorLedgerEvent }> {
-  const { storageMode: currentMode, events } = await listGovernorEvents(params.projectId, 200);
-  const last = events[events.length - 1];
-  const nextSeq = last ? last.seq + 1 : 1;
-  const prevHash = last ? last.chainHash : GENESIS_PREV_HASH;
+  return withProjectLedgerLock(params.projectId, async () => {
+    const supabase = getSupabaseAdmin();
+    const maxAttempts = supabase ? 4 : 1;
 
-  const base: Omit<GovernorLedgerEvent, "chainHash"> = {
-    projectId: params.projectId,
-    seq: nextSeq,
-    eventType: params.eventType,
-    actor: params.actor || "operator",
-    source: params.source || "governor-api",
-    mode: params.mode,
-    httpStatus: params.httpStatus,
-    frozenInr: params.frozenInr,
-    netReleaseInr: params.netReleaseInr,
-    violationCount: params.violationCount,
-    diffJson: params.diffJson,
-    snapshotHash: params.snapshotHash,
-    prevHash,
-    recordedAtUtc: params.recordedAtUtc || new Date().toISOString(),
-  };
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const { storageMode: currentMode, events } = await fetchFullProjectEvents(params.projectId);
+      const last = events[events.length - 1];
+      const nextSeq = last ? last.seq + 1 : 1;
+      const prevHash = last ? last.chainHash : GENESIS_PREV_HASH;
 
-  const event: GovernorLedgerEvent = {
-    ...base,
-    chainHash: computeLedgerChainHash(base),
-  };
+      const base: Omit<GovernorLedgerEvent, "chainHash"> = {
+        projectId: params.projectId,
+        seq: nextSeq,
+        eventType: params.eventType,
+        actor: params.actor || "operator",
+        source: params.source || "governor-api",
+        mode: params.mode,
+        httpStatus: Number.isFinite(params.httpStatus) ? params.httpStatus : 422,
+        frozenInr: Number.isFinite(params.frozenInr) ? Math.max(0, params.frozenInr) : 0,
+        netReleaseInr: Number.isFinite(params.netReleaseInr) ? Math.max(0, params.netReleaseInr) : 0,
+        violationCount: Number.isFinite(params.violationCount) ? Math.max(0, params.violationCount) : 0,
+        diffJson: params.diffJson,
+        snapshotHash: params.snapshotHash,
+        prevHash,
+        recordedAtUtc: params.recordedAtUtc || new Date().toISOString(),
+      };
 
-  // Always update in-memory mirror
-  const existing = memLedger.get(params.projectId) || events;
-  memLedger.set(params.projectId, [...existing, event]);
+      const event: GovernorLedgerEvent = {
+        ...base,
+        chainHash: computeLedgerChainHash(base),
+      };
 
-  const supabase = getSupabaseAdmin();
-  if (supabase && currentMode === "supabase") {
-    try {
-      const { error } = await supabase.from("governor_events").insert({
-        project_id: event.projectId,
-        seq: event.seq,
-        event_type: event.eventType,
-        actor: event.actor,
-        source: event.source,
-        mode: event.mode,
-        http_status: event.httpStatus,
-        frozen_inr: event.frozenInr,
-        net_release_inr: event.netReleaseInr,
-        violation_count: event.violationCount,
-        diff_json: event.diffJson,
-        snapshot_hash: event.snapshotHash,
-        prev_hash: event.prevHash,
-        chain_hash: event.chainHash,
-        recorded_at_utc: event.recordedAtUtc,
-      });
-      if (!error) {
-        return { storageMode: "supabase", event };
+      if (supabase && currentMode === "supabase") {
+        try {
+          const { error } = await supabase.from("governor_events").insert(eventToRow(event));
+          if (!error) {
+            setBoundedProjectEvents(params.projectId, [...events, event]);
+            return { storageMode: "supabase", event };
+          }
+          // Cross-instance serverless race on unique (project_id, seq) -> retry with fresh head
+          if (error.code === "23505" && attempt < maxAttempts - 1) {
+            await new Promise((r) => setTimeout(r, 15 + attempt * 20));
+            continue;
+          }
+        } catch {
+          // Fall through cleanly to edge_fallback
+        }
       }
-    } catch {
-      // Fall through to edge_fallback
-    }
-  }
 
-  return { storageMode: "edge_fallback", event };
+      const updated = [...events, event];
+      setBoundedProjectEvents(params.projectId, updated);
+      return { storageMode: "edge_fallback", event };
+    }
+
+    // Fallback safety return
+    const { events } = await fetchFullProjectEvents(params.projectId);
+    const last = events[events.length - 1];
+    return { storageMode: "edge_fallback", event: last };
+  });
 }
 
 export async function getAndVerifyProjectChain(
@@ -373,11 +416,10 @@ export async function getAndVerifyProjectChain(
   simulatedTamperDemo: boolean;
   verification: ChainVerificationResult;
 }> {
-  const { storageMode, events } = await listGovernorEvents(projectId, 200);
+  const { storageMode, events } = await fetchFullProjectEvents(projectId);
   const working = events.map((e) => ({ ...e, diffJson: { ...e.diffJson } }));
 
   if (simulateTamper && working.length > 0) {
-    // Read-only in-memory simulation: mutate ₹1 in the latest event without touching DB
     const targetIdx = working.length - 1;
     working[targetIdx].frozenInr = Number(working[targetIdx].frozenInr) + 1;
   }

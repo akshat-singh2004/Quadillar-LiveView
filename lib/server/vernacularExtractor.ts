@@ -204,6 +204,8 @@ export async function extractVernacularFieldReport(params: {
           bimDesignVolumeM3: challanVolumeM3,
           inSituEstimatedMpa: posNum(parsed.inSituEstimatedMpa, baseline.inSituEstimatedMpa),
           extractionSignals: [...baseline.extractionSignals, `AI=${model}`],
+          hasRequiredConstructionSignal: true,
+          droppedNoiseHints: baseline.droppedNoiseHints,
         },
       };
     } catch {
