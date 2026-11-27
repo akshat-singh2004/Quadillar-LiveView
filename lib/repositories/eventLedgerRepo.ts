@@ -10,7 +10,8 @@ export type LedgerEventType =
   | "STATE_MUTATION"
   | "TRIANGULATION_ALERT"
   | "KINETIC_ACTION"
-  | "IOT_INTERLOCK";
+  | "IOT_INTERLOCK"
+  | "VERNACULAR_GROUNDING";
 
 export interface GovernorLedgerEvent {
   projectId: string;

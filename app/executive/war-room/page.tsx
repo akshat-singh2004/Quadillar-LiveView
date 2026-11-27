@@ -12,6 +12,7 @@ import {
   GitBranch,
   Layers,
   Lock,
+  Mic,
   Network,
   Radio,
   RefreshCw,
@@ -271,6 +272,64 @@ export default function ExecutiveWarRoomPage() {
   const [probing, setProbing] = useState<string | null>(null);
   const [lastReceipt, setLastReceipt] = useState<ActionReceipt | null>(null);
   const [lastProbeReceipt, setLastProbeReceipt] = useState<ProbeExecutionReceipt | null>(null);
+  const [vernacularNote, setVernacularNote] = useState<string>(
+    "Sir TG-03 Transfer Girder pour mein CHLN-HINGLISH-422 aaya hai UP32-KT-4220 se. Challan mein 42 cum M50 aur 355 bori cement likha hai, par kanta weighbridge pe weight 90720 kg aaya aur PLC mein sirf 13800 kg cement aur paani zyada mila diya w/c 0.56. Rebound test 36.4 MPa aa raha hai."
+  );
+  const [groundingBusy, setGroundingBusy] = useState(false);
+  const [groundingResult, setGroundingResult] = useState<{
+    committed: boolean;
+    grounded: {
+      extractorMode: string;
+      modelUsed: string;
+      extraction: { detectedLanguage: string; englishSummary: string; challanNo: string };
+      ifcRecord: { ifcClass: string; globalId: string; zoneId: string; complianceStatus: string };
+      triangulation: {
+        httpStatus: number;
+        trustScorePct: number;
+        recommendedEscrowHoldInr: number;
+        recommendedClause42PenaltyInr: number;
+        discrepancies: Array<{ code: string; explanation: string }>;
+      };
+    };
+    ledgerReceipt?: { seq: number; chainHash: string } | null;
+  } | null>(null);
+
+  const runVernacularGrounding = async (commitToLedger: boolean) => {
+    setGroundingBusy(true);
+    setActionError(null);
+    try {
+      const res = await fetch("/api/field/ground", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-operator-role": operatorRole,
+          "x-operator-pin": operatorPin,
+        },
+        body: JSON.stringify({
+          projectId: selectedProjectId,
+          transcript: vernacularNote,
+          commitToLedger,
+          role: operatorRole,
+          pin: operatorPin,
+          actor: actorName,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.ok) {
+        setGroundingResult(data);
+        if (commitToLedger) await loadSiteData(selectedProjectId, triPreset);
+      } else {
+        setActionError({
+          status: res.status,
+          message: data?.error || ("Grounding blocked (HTTP " + res.status + ")"),
+        });
+      }
+    } catch {
+      setActionError({ status: 0, message: "Network error during vernacular BIM grounding." });
+    } finally {
+      setGroundingBusy(false);
+    }
+  };
   const [loading, setLoading] = useState(true);
 
   const loadSiteData = useCallback(
@@ -866,6 +925,115 @@ export default function ExecutiveWarRoomPage() {
                     <> | Sealed Seq #{lastProbeReceipt.ingress.ledgerReceipt.seq}</>
                   )}
                 </div>
+              </div>
+            )}
+          </section>
+
+          {/* 8. Vernacular Voice & Challan-to-BIM Grounding */}
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
+            <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Mic className="w-4 h-4 text-fuchsia-400" />
+                <h2 className="text-sm font-bold uppercase tracking-wider font-mono text-white">
+                  8. Vernacular Voice & Challan-to-BIM Grounding
+                </h2>
+              </div>
+              <span className="text-[10px] font-mono text-fuchsia-300">
+                hi-IN / Hinglish → IFC4X3
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  setVernacularNote(
+                    "Sir TG-03 Transfer Girder pour mein CHLN-HINGLISH-422 aaya hai UP32-KT-4220 se. Challan mein 42 cum M50 aur 355 bori cement likha hai, par kanta weighbridge pe weight 90720 kg aaya aur PLC mein sirf 13800 kg cement aur paani zyada mila diya w/c 0.56. Rebound test 36.4 MPa aa raha hai."
+                  )
+                }
+                className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-mono text-zinc-200 cursor-pointer"
+              >
+                Hinglish Fraud (TG-03)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setVernacularNote(
+                    "साहब राफ्ट फाउंडेशन पर चालान 40 घन मीटर M40 का है और 340 बोरी सीमेंट बोला गया, लेकिन प्लांट में सिर्फ 13500 kg सीमेंट डाला और पानी ज्यादा मिला दिया है।"
+                  )
+                }
+                className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-mono text-zinc-200 cursor-pointer"
+              >
+                Hindi Devanagari (Raft)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setVernacularNote(
+                    "Tower Slab pour complete on CHLN-CLEAN-108 vehicle UP32-AB-1102. Challan 38 m3 M50 with 320 bags cement. Weighbridge weight 91200 kg, PLC actual 16000 kg cement, w/c 0.40, rebound strength 52.4 MPa."
+                  )
+                }
+                className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-mono text-zinc-200 cursor-pointer"
+              >
+                Clean Slab Pour (200)
+              </button>
+            </div>
+
+            <textarea
+              rows={3}
+              value={vernacularNote}
+              onChange={(e) => setVernacularNote(e.target.value)}
+              aria-label="Vernacular Site Voice Transcript or Challan Text"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-xs font-mono text-zinc-100 focus:outline-none focus:border-fuchsia-400"
+            />
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={groundingBusy}
+                onClick={() => runVernacularGrounding(false)}
+                className="flex-1 rounded-lg border border-fuchsia-500/40 bg-fuchsia-950/40 hover:bg-fuchsia-900/50 disabled:opacity-50 py-2 text-xs font-mono font-bold text-fuchsia-200 cursor-pointer"
+              >
+                {groundingBusy ? "Grounding to IFC..." : "Preview IFC + Triangulate"}
+              </button>
+              <button
+                type="button"
+                disabled={groundingBusy}
+                onClick={() => runVernacularGrounding(true)}
+                className="flex-1 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 py-2 text-xs font-mono font-bold text-white cursor-pointer"
+              >
+                {groundingBusy ? "Sealing..." : "Ground & Seal to Ledger (RBAC)"}
+              </button>
+            </div>
+
+            {groundingResult && (
+              <div className="rounded-xl border border-fuchsia-500/40 bg-fuchsia-950/20 p-3 text-xs font-mono space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-fuchsia-200">
+                    {groundingResult.grounded.ifcRecord.ifcClass} • {groundingResult.grounded.ifcRecord.zoneId} ({groundingResult.grounded.extraction.detectedLanguage})
+                  </span>
+                  <span
+                    className={
+                      groundingResult.grounded.triangulation.httpStatus === 422
+                        ? "text-rose-400 font-bold"
+                        : "text-emerald-400 font-bold"
+                    }
+                  >
+                    HTTP {groundingResult.grounded.triangulation.httpStatus} (TRUST {groundingResult.grounded.triangulation.trustScorePct}%)
+                  </span>
+                </div>
+                <div className="text-[11px] text-zinc-300">
+                  IFC GlobalId: {groundingResult.grounded.ifcRecord.globalId} | Engine: {groundingResult.grounded.modelUsed}
+                </div>
+                <div className="text-[11px] text-zinc-200">
+                  Hold: {fmtInr(groundingResult.grounded.triangulation.recommendedEscrowHoldInr)} | Clause 42:{" "}
+                  {fmtInr(groundingResult.grounded.triangulation.recommendedClause42PenaltyInr)}
+                </div>
+                {groundingResult.ledgerReceipt && (
+                  <div className="text-[11px] text-emerald-300 font-bold">
+                    SEALED TO HASH-CHAIN SEQ #{groundingResult.ledgerReceipt.seq} ({groundingResult.ledgerReceipt.chainHash.slice(0, 18)}...)
+                  </div>
+                )}
               </div>
             )}
           </section>
