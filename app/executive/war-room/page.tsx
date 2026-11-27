@@ -644,6 +644,14 @@ export default function ExecutiveWarRoomPage() {
             {isLocked ? "HTTP 422 ESCROW LOCKED" : "HTTP 200 COMPLIANT"}
           </span>
 
+          <Link
+            href={"/closeout/bsa-certificate?projectId=" + encodeURIComponent(selectedProjectId)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/50 text-xs font-mono font-bold text-emerald-200 transition"
+          >
+            <FileCheck2 className="w-3.5 h-3.5" />
+            <span>Forensic Dossier</span>
+          </Link>
+
           <button
             type="button"
             onClick={() => loadSiteData(selectedProjectId, triPreset)}
@@ -937,7 +945,7 @@ export default function ExecutiveWarRoomPage() {
                     SEALED TO {lastReceipt.state.projectId} CHAIN (SEQ #{lastReceipt.receipt.seq} • {lastReceipt.role})
                   </span>
                   <Link
-                    href={lastReceipt.receipt.certificateUrl}
+                    href={lastReceipt.receipt.certificateUrl + "?projectId=" + encodeURIComponent(lastReceipt.state.projectId)}
                     className="underline text-cyan-300 hover:text-white inline-flex items-center gap-1"
                   >
                     <FileCheck2 className="w-3.5 h-3.5" />
