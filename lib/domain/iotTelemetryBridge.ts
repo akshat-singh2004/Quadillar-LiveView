@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { PHYSICAL_BOUNDS, validateNumericBounds } from "@/lib/domain/signalTriage";
 import type { MolecularInput } from "@/lib/engines/molecularGovernor";
 import {
   VANGUARD_CLEAN_POUR_FIXTURE,
@@ -38,6 +39,8 @@ export interface DeviceAuthResult {
 export interface HardwareEvaluationBridge {
   routingTarget: string;
   interlockTripped: boolean;
+  sensorFaultQuarantined?: boolean;
+  faultReasons?: string[];
   governorPatch: Partial<MolecularInput> | null;
   triangulationReport: TriangulationReport | null;
   summary: string;
@@ -240,11 +243,44 @@ export function evaluateHardwareBridge(
     }
 
     case "CRANE_LMI": {
-      const windSpeedMs = numOr(
-        payload.windSpeedMs,
-        payload.windSpeedKmh !== undefined ? Number(payload.windSpeedKmh) / 3.6 : 6.0
-      );
-      const swlLoadPct = numOr(payload.swlLoadPct ?? payload.loadPct, 62);
+      const rawWindMs =
+        payload.windSpeedMs !== undefined
+          ? Number(payload.windSpeedMs)
+          : payload.windSpeedKmh !== undefined
+          ? Number(payload.windSpeedKmh) / 3.6
+          : 6.0;
+      const rawSwlPct =
+        payload.swlLoadPct !== undefined
+          ? Number(payload.swlLoadPct)
+          : payload.loadPct !== undefined
+          ? Number(payload.loadPct)
+          : 62;
+      const rawBoomM = payload.boomRadiusM !== undefined ? Number(payload.boomRadiusM) : 28;
+
+      const boundsCheck = validateNumericBounds([
+        { field: "windSpeedMs", value: rawWindMs, ...PHYSICAL_BOUNDS.WIND_SPEED_MS, unit: "m/s" },
+        { field: "swlLoadPct", value: rawSwlPct, ...PHYSICAL_BOUNDS.SWL_LOAD_PCT, unit: "%" },
+        { field: "boomRadiusM", value: rawBoomM, ...PHYSICAL_BOUNDS.BOOM_RADIUS_M, unit: "m" },
+      ]);
+
+      if (!boundsCheck.valid) {
+        return {
+          routingTarget: "Argus / Ananke (Crane LMI Quarantine)",
+          interlockTripped: true,
+          sensorFaultQuarantined: true,
+          faultReasons: boundsCheck.reasons,
+          governorPatch: null, // Never overwrite live Governor state with corrupted sensor fault
+          triangulationReport: null,
+          summary: `QUARANTINED CRANE_LMI SENSOR FAULT on ${deviceId}: ${boundsCheck.reasons.join("; ")}`,
+          metrics: {
+            quarantinedFields: boundsCheck.quarantinedFields,
+            faultReasons: boundsCheck.reasons,
+          },
+        };
+      }
+
+      const windSpeedMs = rawWindMs;
+      const swlLoadPct = rawSwlPct;
       const windLockout = windSpeedMs >= 15.0; // IS 875 crane safety threshold
       const overloadLockout = swlLoadPct > 95.0;
       const tripped = windLockout || overloadLockout;
@@ -266,7 +302,7 @@ export function evaluateHardwareBridge(
           swlLoadPct,
           windLockout,
           overloadLockout,
-          boomRadiusM: numOr(payload.boomRadiusM, 28),
+          boomRadiusM: rawBoomM,
         },
       };
     }

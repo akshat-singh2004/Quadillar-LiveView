@@ -90,6 +90,7 @@ const g = globalThis as typeof globalThis & {
   __quadillarRateBuckets?: Map<string, number[]>;
 };
 const memBuckets = (g.__quadillarRateBuckets ??= new Map<string, number[]>());
+const MAX_RATE_BUCKETS = 5000;
 
 function checkMemoryRateLimit(key: string, policy: RateLimitPolicy, clientIp: string, nowMs = Date.now()): RateLimitDecision {
   const windowMs = policy.windowSec * 1000;
