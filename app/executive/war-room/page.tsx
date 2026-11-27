@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Activity,
   AlertTriangle,
@@ -12,6 +13,8 @@ import {
   GitBranch,
   Layers,
   Lock,
+  LogOut,
+  KeyRound,
   Mic,
   Network,
   Radio,
@@ -265,6 +268,63 @@ export default function ExecutiveWarRoomPage() {
   const [operatorRole, setOperatorRole] = useState<OperatorRole>("DIRECTOR");
   const [actorName, setActorName] = useState("Director — Quadillar ConTech");
   const [operatorPin, setOperatorPin] = useState("4220");
+  const [jwtSessionToken, setJwtSessionToken] = useState<string | null>(null);
+  const [jwtUser, setJwtUser] = useState<{
+    email: string | null;
+    role: OperatorRole;
+    roleSource: string;
+  } | null>(null);
+  const [strictAuthRequired, setStrictAuthRequired] = useState(false);
+
+  const syncJwtSession = useCallback(async (accessToken: string | null) => {
+    setJwtSessionToken(accessToken);
+    try {
+      const headers: Record<string, string> = {};
+      if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
+      const res = await fetch("/api/auth/session", { headers, cache: "no-store" });
+      const data = await res.json();
+      setStrictAuthRequired(Boolean(data?.strictAuthRequired));
+      if (res.ok && data?.authenticated && data?.user) {
+        setJwtUser({
+          email: data.user.email || null,
+          role: data.user.role as OperatorRole,
+          roleSource: data.user.roleSource || "jwt",
+        });
+        setOperatorRole(data.user.role as OperatorRole);
+        if (data.user.email) setActorName(data.user.email);
+      } else {
+        setJwtUser(null);
+      }
+    } catch {
+      setJwtUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (active) syncJwtSession(data?.session?.access_token ?? null);
+      })
+      .catch(() => {
+        if (active) syncJwtSession(null);
+      });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) syncJwtSession(session?.access_token ?? null);
+    });
+    return () => {
+      active = false;
+      sub?.subscription?.unsubscribe();
+    };
+  }, [syncJwtSession]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut().catch(() => {});
+    setJwtSessionToken(null);
+    setJwtUser(null);
+  };
   const [rbacMeta, setRbacMeta] = useState<Record<OperatorRole, RoleConfigMeta> | null>(null);
   const [actionError, setActionError] = useState<{ status: number; message: string } | null>(null);
 
@@ -304,6 +364,7 @@ export default function ExecutiveWarRoomPage() {
           "Content-Type": "application/json",
           "x-operator-role": operatorRole,
           "x-operator-pin": operatorPin,
+          ...(jwtSessionToken ? { Authorization: "Bearer " + jwtSessionToken } : {}),
         },
         body: JSON.stringify({
           projectId: selectedProjectId,
@@ -426,6 +487,7 @@ export default function ExecutiveWarRoomPage() {
           "Content-Type": "application/json",
           "x-operator-role": operatorRole,
           "x-operator-pin": operatorPin,
+          ...(jwtSessionToken ? { Authorization: "Bearer " + jwtSessionToken } : {}),
         },
         body: JSON.stringify({
           projectId: selectedProjectId,
@@ -463,6 +525,7 @@ export default function ExecutiveWarRoomPage() {
           "Content-Type": "application/json",
           "x-operator-role": operatorRole,
           "x-operator-pin": operatorPin,
+          ...(jwtSessionToken ? { Authorization: "Bearer " + jwtSessionToken } : {}),
         },
         body: JSON.stringify({
           probeType,
@@ -547,6 +610,31 @@ export default function ExecutiveWarRoomPage() {
               )}
             </select>
           </div>
+
+          {jwtUser ? (
+            <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-1.5 text-xs font-mono text-emerald-200">
+              <KeyRound className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="truncate max-w-[180px]" title={jwtUser.email || ""}>
+                JWT: {jwtUser.email || jwtUser.role} ({jwtUser.role})
+              </span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                title="Sign out of Supabase Auth session"
+                className="text-zinc-300 hover:text-white cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/auth"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-950/30 hover:bg-amber-900/40 px-2.5 py-1.5 text-xs font-mono text-amber-200 transition"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+              <span>{strictAuthRequired ? "Sign In Required (/auth)" : "Hybrid Demo • Sign In"}</span>
+            </Link>
+          )}
 
           <span
             className={`px-2.5 py-1.5 rounded text-xs font-mono font-bold ${
