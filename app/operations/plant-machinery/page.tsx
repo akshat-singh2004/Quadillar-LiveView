@@ -1,3 +1,4 @@
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import React from "react";
 import { RegisterPlantAssetModal } from "@/components/equipment/RegisterPlantAssetModal";
 import { LogEquipmentShiftModal } from "@/components/equipment/LogEquipmentShiftModal";

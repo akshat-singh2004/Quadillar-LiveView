@@ -1,4 +1,5 @@
 'use client';
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 import { SyncedEvidenceInbox } from "@/components/field/SyncedEvidenceInbox";
 

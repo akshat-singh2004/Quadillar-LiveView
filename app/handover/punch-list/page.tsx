@@ -1,5 +1,6 @@
 "use client";
 
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/app/lib/supabase";
 import { useActiveRole } from "@/context/RoleContext";

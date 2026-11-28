@@ -1,3 +1,4 @@
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import React from "react";
 import { RegisterWorkerModal } from "@/components/labor/RegisterWorkerModal";
 import { SimulateTurnstilePunchModal } from "@/components/labor/SimulateTurnstilePunchModal";
