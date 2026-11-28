@@ -32,6 +32,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL="" SUPABASE_SERVICE_ROLE_KEY="" NEXT_PUBLIC_SUPABASE_ANON_KEY="" npx --yes tsx scripts/chaos-stress-test.ts
           npx --yes tsx scripts/verify-forensic-dossier.ts
           npx --yes tsx scripts/verify-offline-verifier.ts
+          npx --yes tsx scripts/verify-cutover-readiness.ts
       - name: Next Typegen & TypeScript Strict Check
         run: |
           npx next typegen
