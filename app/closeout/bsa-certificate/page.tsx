@@ -141,6 +141,12 @@ export default function BsaSection63CertificatePage() {
             >
               Download Sealed JSON
             </a>
+            <Link
+              href="/closeout/verify-dossier"
+              className="min-h-[38px] inline-flex items-center rounded-lg border border-emerald-500/50 bg-emerald-950/60 hover:bg-emerald-900/70 px-3.5 text-xs font-mono font-bold text-emerald-200"
+            >
+              Verify JSON Offline
+            </Link>
             <button
               type="button"
               onClick={() => window.print()}
