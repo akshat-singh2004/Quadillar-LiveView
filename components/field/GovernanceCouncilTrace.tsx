@@ -72,7 +72,7 @@ export default function GovernanceCouncilTrace({ record }: GovernanceCouncilTrac
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-1.5 font-bold text-zinc-100 text-[11px]">
             <FileCheck2 className="w-3.5 h-3.5 text-emerald-500" />
-            3. SECTION 65B / BSA VAULT AGENT
+            3. BSA Section 63 / BSA VAULT AGENT
           </span>
           <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
             SEALED UTC

@@ -90,7 +90,7 @@ export default function DailyProgressReportPage() {
             DAILY PROGRESS REPORT (DPR #084) — {VANGUARD_GENOME.projectName.toUpperCase()}
           </h1>
           <p className="text-xs text-slate-400">
-            Shift: Day Shift (08:00 - 17:00 IST) • Synchronized with 6 Architectural Bits & Section 65B Ledger
+            Shift: Day Shift (08:00 - 17:00 IST) • Synchronized with 6 Architectural Bits & BSA Section 63 Ledger
           </p>
         </div>
 
@@ -208,7 +208,7 @@ export default function DailyProgressReportPage() {
           <div className="bg-slate-900/70 border border-purple-500/40 rounded-2xl p-4 flex flex-col justify-between gap-3">
             <div>
               <div className="text-xs font-bold text-purple-300 uppercase">
-                SECTION 65B TRIPARTITE DPR SEAL
+                BSA Section 63 TRIPARTITE DPR SEAL
               </div>
               <div className="text-[11px] text-slate-300 mt-1">
                 Jointly signed by L&T Project Manager, CBRE Resident Engineer, and Vanguard Safety Director.
@@ -226,7 +226,7 @@ export default function DailyProgressReportPage() {
                 disabled={isSealing}
                 className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold text-xs rounded-xl transition hover:opacity-95"
               >
-                {isSealing ? "SEALING LEDGER..." : "NOTARIZE DAILY PROGRESS REPORT (SEC 65B)"}
+                {isSealing ? "SEALING LEDGER..." : "NOTARIZE DAILY PROGRESS REPORT (BSA Sec 63)"}
               </button>
             )}
           </div>

@@ -48,7 +48,7 @@ a {
 
 button:hover,
 a:hover {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 ::selection {
@@ -532,4 +532,172 @@ html[data-theme="claude-light"] button.bg-purple-600 {
 html, body {
   max-width: 100vw;
   overflow-x: clip;
+}
+
+/* === QUADILLAR MATTE DESIGN SYSTEM (SPRINT 19C: LINEAR / STRIPE / APPLE) === */
+:root,
+html[data-theme="obsidian-dark"] {
+  --background: #0e1013;
+  --foreground: #f3f5f8;
+  --muted: #8b94a3;
+  --panel: #15181e;
+  --panel-strong: #111419;
+  --panel-elevated: #1c2028;
+  --border: #252a34;
+  --accent: #4f8cff;
+  --accent-soft: rgba(79, 140, 255, 0.12);
+}
+
+/* Tabular financial & engineering telemetry numerals globally */
+table, td, th, .font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Calm matte scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 148, 163, 0.28);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 148, 163, 0.45);
+}
+
+/* MATTE GRAPHITE DARK MODE REFINEMENTS — calm surfaces, crisp 1px hairlines, desaturated cobalt accents */
+html[data-theme="obsidian-dark"],
+html[data-theme="obsidian-dark"] body,
+html[data-theme="obsidian-dark"] main {
+  background-color: #0e1013 !important;
+  color: #f3f5f8 !important;
+}
+
+html[data-theme="obsidian-dark"] [class*="bg-zinc-950"],
+html[data-theme="obsidian-dark"] [class*="bg-slate-950"],
+html[data-theme="obsidian-dark"] [class*="bg-black"] {
+  background-color: #0e1013 !important;
+}
+
+html[data-theme="obsidian-dark"] [class*="bg-zinc-900"],
+html[data-theme="obsidian-dark"] [class*="bg-slate-900"] {
+  background-color: #15181e !important;
+}
+
+html[data-theme="obsidian-dark"] [class*="border-zinc-800"],
+html[data-theme="obsidian-dark"] [class*="border-slate-800"] {
+  border-color: #252a34 !important;
+}
+
+/* Tone down neon cyan glare to calm Stripe/Linear cobalt in dark mode */
+html[data-theme="obsidian-dark"] [class*="text-cyan-400"],
+html[data-theme="obsidian-dark"] [class*="text-cyan-300"] {
+  color: #6ea8fe !important;
+}
+
+html[data-theme="obsidian-dark"] [class*="border-cyan-500"],
+html[data-theme="obsidian-dark"] [class*="border-cyan-400"] {
+  border-color: rgba(110, 168, 254, 0.32) !important;
+}
+
+html[data-theme="obsidian-dark"] [class*="bg-cyan-500/1"],
+html[data-theme="obsidian-dark"] [class*="bg-cyan-950"] {
+  background-color: rgba(79, 140, 255, 0.1) !important;
+}
+
+/* Soften harsh neon card shadows & glows */
+html[data-theme="obsidian-dark"] [class*="shadow-cyan"],
+html[data-theme="obsidian-dark"] [class*="shadow-emerald"],
+html[data-theme="obsidian-dark"] [class*="shadow-rose"],
+html[data-theme="obsidian-dark"] [class*="shadow-amber"] {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* DAYLIGHT PORCELAIN LIGHT MODE REFINEMENTS — Apple/Stripe crisp hierarchy */
+html[data-theme="claude-light"] {
+  --background: #f8f9fa;
+  --foreground: #111418;
+  --muted: #5c6573;
+  --panel: #ffffff;
+  --panel-strong: #f1f3f5;
+  --border: #e2e5ea;
+  --accent: #1d4ed8;
+}
+
+html[data-theme="claude-light"],
+html[data-theme="claude-light"] body,
+html[data-theme="claude-light"] main {
+  background-color: #f8f9fa !important;
+  color: #111418 !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-zinc-950"],
+html[data-theme="claude-light"] [class*="bg-slate-950"],
+html[data-theme="claude-light"] [class*="bg-black"] {
+  background-color: #f8f9fa !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-zinc-900"],
+html[data-theme="claude-light"] [class*="bg-slate-900"] {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme="claude-light"] aside,
+html[data-theme="claude-light"] header {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-color: #e2e5ea !important;
+}
+
+html[data-theme="claude-light"] [class*="border-zinc-800"],
+html[data-theme="claude-light"] [class*="border-slate-800"],
+html[data-theme="claude-light"] [class*="border-zinc-700"],
+html[data-theme="claude-light"] [class*="border-slate-700"] {
+  border-color: #e2e5ea !important;
+}
+
+html[data-theme="claude-light"] [class*="text-cyan-400"],
+html[data-theme="claude-light"] [class*="text-cyan-300"],
+html[data-theme="claude-light"] [class*="text-sky-400"] {
+  color: #1d4ed8 !important;
+}
+
+html[data-theme="claude-light"] [class*="text-emerald-400"],
+html[data-theme="claude-light"] [class*="text-emerald-300"] {
+  color: #15803d !important;
+}
+
+html[data-theme="claude-light"] [class*="text-amber-400"],
+html[data-theme="claude-light"] [class*="text-amber-300"] {
+  color: #b45309 !important;
+}
+
+html[data-theme="claude-light"] [class*="text-rose-400"],
+html[data-theme="claude-light"] [class*="text-red-400"] {
+  color: #b91c1c !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-cyan-500/1"],
+html[data-theme="claude-light"] [class*="bg-cyan-950"] {
+  background-color: rgba(29, 78, 216, 0.08) !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-emerald-500/1"],
+html[data-theme="claude-light"] [class*="bg-emerald-950"] {
+  background-color: rgba(21, 128, 61, 0.08) !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-amber-500/1"],
+html[data-theme="claude-light"] [class*="bg-amber-950"] {
+  background-color: rgba(180, 83, 9, 0.08) !important;
+}
+
+html[data-theme="claude-light"] [class*="bg-rose-500/1"],
+html[data-theme="claude-light"] [class*="bg-rose-950"],
+html[data-theme="claude-light"] [class*="bg-red-950"] {
+  background-color: rgba(185, 28, 28, 0.08) !important;
 }

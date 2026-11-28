@@ -68,7 +68,7 @@ export function GovernorInterlockBanner({ module }: { module: GovernorModule }) 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-mono">
           <div className="rounded-lg bg-zinc-950 p-3 border border-zinc-800">
             <div className="text-zinc-400">LIVE GUST (IS 875 PT.3)</div>
-            <div className="mt-1 text-base font-bold text-white">{snapshot.windSafety.windSpeedKmh} km/h</div>
+            <div className="mt-1 text-base font-bold text-white">{(snapshot.windSafety.windSpeedKmh / 3.6).toFixed(1)} m/s</div>
             <input
               type="range"
               min={5}
@@ -149,7 +149,7 @@ export function GovernorInterlockBanner({ module }: { module: GovernorModule }) 
           <div className={`rounded-lg p-3 border ${snapshot.permits.craneLiftPtwAllowed ? "border-emerald-500/40 bg-emerald-950/30" : "border-red-500/50 bg-red-950/40"}`}>
             <div className="text-zinc-300">TOWER CRANE LIFT INTERLOCK (LOOP 3)</div>
             <div className="mt-1 text-base font-bold text-white">
-              {snapshot.permits.craneLiftPtwAllowed ? "CLEARED TO LIFT" : `LOCKED — WIND ${snapshot.windSafety.windSpeedKmh} km/h (FoS ${snapshot.windSafety.factorOfSafety})`}
+              {snapshot.permits.craneLiftPtwAllowed ? "CLEARED TO LIFT" : `LOCKED — WIND ${(snapshot.windSafety.windSpeedKmh / 3.6).toFixed(1)} m/s (FoS ${snapshot.windSafety.factorOfSafety})`}
             </div>
           </div>
         </div>

@@ -43,7 +43,7 @@ export default async function MaterialReconciliationPage() {
             Material Reconciliation &amp; 1D Rebar Nesting
           </h1>
           <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
-            {projectName} • Clause 42 penal recoveries, 1D billet cutting-stock optimization, and Section 65B notarized material manifests.
+            {projectName} • Clause 42 penal recoveries, 1D billet cutting-stock optimization, and BSA Section 63 notarized material manifests.
           </p>
         </div>
 

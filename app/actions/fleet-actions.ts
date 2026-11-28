@@ -101,7 +101,7 @@ export async function logAssetTelemetry(payload: LogAssetTelemetryPayload) {
 
     if (error) throw error;
 
-    // 4. Hermes Section 65B Notarization
+    // 4. Hermes BSA Section 63 Notarization
     const seal = await HermesAgent.notarizeTransaction({
       projectId: payload.projectId,
       actionTitle: `Plant Telematics Logged: ${payload.assetCode} (${evalResult.overallOeePct}% OEE)`,

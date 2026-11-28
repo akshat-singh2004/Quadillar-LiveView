@@ -1,5 +1,6 @@
 "use client";
 
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -117,7 +118,7 @@ function normalizeClaimRecord(d: any): ClaimDisputeRecord {
 
 export default function CanonicalClaimsDisputesPage() {
   const { project, role, tier } = useActiveRole();
-  const [claims, setClaims] = useState<ClaimDisputeRecord[]>([]);
+  const [claims, setClaims] = useState<ClaimDisputeRecord[]>([...VANGUARD_CORRELATED_DATASET.contractClaimsDisputes] as any);
   const [selectedClaim, setSelectedClaim] = useState<ClaimDisputeRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("ALL");

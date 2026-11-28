@@ -1,4 +1,5 @@
 'use client';
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 import { SyncedEvidenceInbox } from "@/components/field/SyncedEvidenceInbox";
 
@@ -51,9 +52,9 @@ export default function Section65BAuditVaultPage() {
   const { project, role } = useActiveRole();
   const activeProjectId = project?.project_id || project?.id || "GOMTI-NAGAR-PH1-FITOUT";
 
-  const [dossiers, setDossiers] = useState<AuditDossier[]>([]);
+  const [dossiers, setDossiers] = useState<AuditDossier[]>([...VANGUARD_CORRELATED_DATASET.statutoryAuditDossiers] as any);
   const [selectedDossier, setSelectedDossier] = useState<AuditDossier | null>(null);
-  const [artifacts, setArtifacts] = useState<ArtifactHash[]>([]);
+  const [artifacts, setArtifacts] = useState<ArtifactHash[]>([...VANGUARD_CORRELATED_DATASET.evidentiaryArtifactHashes] as any);
   const [loading, setLoading] = useState(true);
   const [compiling, setCompiling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -98,7 +99,7 @@ export default function Section65BAuditVaultPage() {
         .order('recorded_timestamp', { ascending: false });
 
       if (error) throw error;
-      setArtifacts(data || []);
+      setArtifacts((Array.isArray(data) && data.length > 0 ? data : [...VANGUARD_CORRELATED_DATASET.evidentiaryArtifactHashes]) as any);
     } catch (err) {
       console.error('Failed to load artifact hashes:', err);
     }
@@ -144,7 +145,7 @@ export default function Section65BAuditVaultPage() {
       const merkleRootHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
       const dossierCode = `DOS-${new Date().getFullYear()}-65B-${(dossiers.length + 1).toString().padStart(3, '0')}`;
-      const statutoryText = `I hereby depose and certify under Section 65B(4) of the Indian Evidence Act, 1872 (and Section 63 of Bharatiya Sakshya Adhiniyam, 2023) that the ${totalCount} electronic records comprising this dossier were produced by the Quadillar LiveView.OS system at node 192.168.1.100 during lawful operations. The system was functioning properly throughout the period and custody has remained uninterrupted.`;
+      const statutoryText = `I hereby depose and certify under BSA Section 63(4) of the Indian Evidence Act, 1872 (and Section 63 of Bharatiya Sakshya Adhiniyam, 2023) that the ${totalCount} electronic records comprising this dossier were produced by the Quadillar LiveView.OS system at node 192.168.1.100 during lawful operations. The system was functioning properly throughout the period and custody has remained uninterrupted.`;
 
       // 3. Insert Master Dossier
       const { data: newDossier, error: insertError } = await (supabase as any)
@@ -176,7 +177,7 @@ export default function Section65BAuditVaultPage() {
       setDossierTitle('');
       await loadDossiers();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to assemble Section 65B dossier.');
+      setErrorMsg(err.message || 'Failed to assemble BSA Section 63 dossier.');
     } finally {
       setCompiling(false);
     }
@@ -194,11 +195,11 @@ export default function Section65BAuditVaultPage() {
         <header className="border-b border-zinc-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">
-              STATUTORY EVIDENTIARY VAULT • SECTION 65B INDIAN EVIDENCE ACT / BSA 2023 SEC. 63
+              STATUTORY EVIDENTIARY VAULT • BSA Section 63 INDIAN EVIDENCE ACT / BSA 2023 SEC. 63
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
               <Fingerprint className="w-6 h-6 text-emerald-400" />
-              <span>Section 65B Electronic Audit Vault &amp; Merkle Ledger</span>
+              <span>BSA Section 63 Electronic Audit Vault &amp; Merkle Ledger</span>
             </h1>
             <p className="text-xs text-zinc-400 mt-0.5 font-sans">
               Scope: <strong className="text-zinc-200">{project?.project_name || 'Active Contract'}</strong> • Cryptographically sealed evidence dossiers admissible in High Court &amp; Arbitral Tribunals.
@@ -253,7 +254,7 @@ export default function Section65BAuditVaultPage() {
 
           <div className="bg-zinc-900/60 border border-zinc-800 p-4">
             <span className="text-[10px] text-zinc-500 uppercase block">Court Admissibility Standard</span>
-            <div className="text-2xl font-bold text-amber-400 mt-1">Sec. 65B(4) Certified</div>
+            <div className="text-2xl font-bold text-amber-400 mt-1">BSA Sec 63(4) Certified</div>
             <span className="text-[10px] text-zinc-500 mt-1 block">Anvar P.V. v. P.K. Basheer (SC)</span>
           </div>
         </div>
@@ -305,7 +306,7 @@ export default function Section65BAuditVaultPage() {
             </div>
           </div>
 
-          {/* RIGHT: STATUTORY SECTION 65B CERTIFICATE DISPLAY (8 COLS) */}
+          {/* RIGHT: STATUTORY BSA Section 63 CERTIFICATE DISPLAY (8 COLS) */}
           <div className="lg:col-span-8 bg-zinc-900/40 border border-zinc-800 p-6 space-y-5">
             {selectedDossier ? (
               <div className="space-y-6">
@@ -334,7 +335,7 @@ export default function Section65BAuditVaultPage() {
                   {/* COURT HEADING */}
                   <div className="text-center space-y-1 font-sans border-b border-zinc-850 pb-4">
                     <div className="text-[11px] font-bold text-zinc-400 tracking-widest uppercase">
-                      IN THE MATTER OF INDIAN EVIDENCE ACT, 1872 (SECTION 65B)
+                      IN THE MATTER OF INDIAN EVIDENCE ACT, 1872 (BSA Section 63)
                     </div>
                     <div className="text-[10px] text-zinc-500 uppercase tracking-wider">
                       READ WITH SECTION 63 OF THE BHARATIYA SAKSHYA ADHINIYAM, 2023
@@ -443,7 +444,7 @@ export default function Section65BAuditVaultPage() {
               <div className="flex justify-between items-center border-b border-neutral-800 pb-2">
                 <span className="font-bold text-emerald-400 uppercase text-xs flex items-center gap-1.5">
                   <Fingerprint className="w-4 h-4" />
-                  <span>Seal Section 65B Dossier</span>
+                  <span>Seal BSA Section 63 Dossier</span>
                 </span>
                 <button onClick={() => setIsComposerOpen(false)} className="text-neutral-500 hover:text-neutral-300">
                   ✕

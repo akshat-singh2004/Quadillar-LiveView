@@ -124,7 +124,7 @@ function normalizeGeminiPayload(raw: any, projectId: string, submitterId: string
       section_65b_vault_agent: {
         verdict:
           gc?.section_65b_vault_agent?.verdict ||
-          "Canonical SHA-256 record sealed under BSA 2023 Sec. 63 / Sec. 65B.",
+          "Canonical SHA-256 record sealed under BSA 2023 Sec. 63 / BSA Sec 63.",
         attestation_scope:
           gc?.section_65b_vault_agent?.attestation_scope || `${projectId} / ${zMeta.zoneId} / ${submitterId}`,
       },
@@ -426,7 +426,7 @@ export async function POST(req: NextRequest) {
             milestone_lock: isCritical ? "LOCKED" : "UNLOCKED",
           },
           section_65b_vault_agent: {
-            verdict: "SHA-256 record digest sealed under BSA 2023 Sec. 63 / Sec. 65B.",
+            verdict: "SHA-256 record digest sealed under BSA 2023 Sec. 63 / BSA Sec 63.",
             attestation_scope: `${projectMeta.projectId} / ${zMeta.zoneId} / ${submitterId}`,
           },
         },
@@ -541,7 +541,7 @@ export async function POST(req: NextRequest) {
       await supabase.from("section_65b_audit_ledger").insert({
         project_id: record.project_id,
         primary_governor: "QUADMAX-GEMINI-2.5",
-        synthesis_report: `[${record.linked_ncr_id}] ${record.zone_label} - ${record.engineering_summary} (BSA Sec. 63 / Sec. 65B)`,
+        synthesis_report: `[${record.linked_ncr_id}] ${record.zone_label} - ${record.engineering_summary} (BSA Sec. 63 / BSA Sec 63)`,
         merkle_root_hash: record.canonical_65b_sha256,
         timestamp: ingestedAt,
         notarized_by: "HERMES-CORE-V2",

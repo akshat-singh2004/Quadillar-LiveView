@@ -176,7 +176,7 @@ export default async function HindranceEotPage() {
 
                     <div className="flex justify-between text-[10px] text-zinc-500 border-t border-zinc-800/80 pt-1.5 font-mono">
                       <span>Clause: {claim.statutory_clause_ref}</span>
-                      <span className="text-cyan-400">Section 65B Certified ✓</span>
+                      <span className="text-cyan-400">BSA Section 63 Certified ✓</span>
                     </div>
                   </div>
                 );

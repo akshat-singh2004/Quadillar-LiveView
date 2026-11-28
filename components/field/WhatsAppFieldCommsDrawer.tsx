@@ -48,7 +48,7 @@ export default function WhatsAppFieldCommsDrawer({
       id: "entry-init",
       sender: "SYSTEM",
       time: "READY",
-      text: "Speak in Hindi, Hinglish, or English—or attach a photo. Gemini transcribes your audio directly, maps the building zone, runs IS 456 checks, and seals Section 65B proof.",
+      text: "Speak in Hindi, Hinglish, or English—or attach a photo. Gemini transcribes your audio directly, maps the building zone, runs IS 456 checks, and seals BSA Section 63 proof.",
     },
   ]);
 

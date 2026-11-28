@@ -11,7 +11,7 @@ export function GovernorGlobalBar() {
   const blocked = snapshot.escrow.httpStatus === 422;
 
   return (
-    <div className="print:hidden sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur px-3 lg:px-6 py-2">
+    <div className="print:hidden sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur pl-3 pr-24 lg:pl-6 lg:pr-28 py-2">
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
         <div className="flex items-center gap-2 min-w-0">
           <span

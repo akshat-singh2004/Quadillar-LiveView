@@ -68,7 +68,7 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
         {
           id: "tour-1",
           kind: "CLICK",
-          label: "Fire live IoT telemetry packet to trigger Hermes Sec. 65B seal",
+          label: "Fire live IoT telemetry packet to trigger Hermes BSA Sec 63 seal",
           selector: '[data-quadmax-target="iot-burst-btn"]',
           delayMs: 900,
         },
@@ -153,7 +153,7 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
       planId: `PLAN-${Date.now()}`,
       commandText: command,
       summaryOutcome:
-        "Trigger a live multi-ray LiDAR/IR/GPR edge telemetry burst from the top bar and seal its SHA-256 digest in the Section 65B ledger.",
+        "Trigger a live multi-ray LiDAR/IR/GPR edge telemetry burst from the top bar and seal its SHA-256 digest in the BSA Section 63 ledger.",
       steps: [
         {
           id: "s1",
@@ -256,7 +256,7 @@ function planUiActionsInternal(command: string): UiActionPlan | null {
     };
   }
 
-  // 7. Open Section 65B QR Compliance Certificate
+  // 7. Open BSA Section 63 QR Compliance Certificate
   if (q.includes("certificate") || q.includes("qr") || q.includes("65b")) {
     return {
       planId: `PLAN-${Date.now()}`,

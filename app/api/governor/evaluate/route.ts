@@ -5,6 +5,7 @@ import {
   evaluateMolecularGovernor,
   type MolecularInput,
 } from "@/lib/engines/molecularGovernor";
+import { evaluateWindLatch } from "@/lib/server/windLatchStore";
 
 export async function GET(req: NextRequest) {
   const mode = req.nextUrl.searchParams.get("mode") || "stress-test";
@@ -27,8 +28,25 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as Partial<MolecularInput> & { enforceHttp422?: boolean };
-    const { enforceHttp422 = true, ...overrides } = body;
+    const body = (await req.json()) as Partial<MolecularInput> & { enforceHttp422?: boolean; clearSafetyLatch?: boolean };
+    const { enforceHttp422 = true, clearSafetyLatch = false, ...overrides } = body;
+    const rawAny = overrides as Record<string, unknown>;
+    const projectKey = String(rawAny.projectId || EXTREME_TG03_FIXTURE.projectId || "VANGUARD-LKO-01");
+    const incomingWind =
+      typeof rawAny.windSpeedMs === "number"
+        ? rawAny.windSpeedMs
+        : typeof rawAny.windVelocityMs === "number"
+          ? rawAny.windVelocityMs
+          : undefined;
+    const { effectiveWindMs, latch: safetyLatch } = evaluateWindLatch(
+      projectKey,
+      incomingWind,
+      Boolean(clearSafetyLatch)
+    );
+    if (effectiveWindMs !== undefined) {
+      if ("windVelocityMs" in EXTREME_TG03_FIXTURE) rawAny.windVelocityMs = effectiveWindMs;
+      if ("windSpeedMs" in EXTREME_TG03_FIXTURE || incomingWind !== undefined) rawAny.windSpeedMs = effectiveWindMs;
+    }
 
     const merged: MolecularInput = {
       ...EXTREME_TG03_FIXTURE,

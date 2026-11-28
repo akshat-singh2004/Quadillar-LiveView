@@ -140,7 +140,7 @@ export default function RunningAccountBillsPage() {
             <span className="font-bold text-white uppercase text-xs">
               Statutory RA Bill History ({bills.length})
             </span>
-            <span className="text-zinc-500 text-[10px]">Section 65B Certified Certificates</span>
+            <span className="text-zinc-500 text-[10px]">BSA Section 63 Certified Certificates</span>
           </div>
 
           {bills.length === 0 ? (

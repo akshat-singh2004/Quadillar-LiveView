@@ -1,5 +1,6 @@
 "use client";
 
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -67,7 +68,7 @@ function formatInr(val: number) {
 
 export default function GovernedMilestonesPage() {
   const { project, role, tier } = useActiveRole();
-  const [milestones, setMilestones] = useState<GovernedMilestone[]>([]);
+  const [milestones, setMilestones] = useState<GovernedMilestone[]>([...VANGUARD_CORRELATED_DATASET.governedMilestoneLedger] as any);
   const [loading, setLoading] = useState(true);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 

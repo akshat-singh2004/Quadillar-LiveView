@@ -451,7 +451,7 @@ export default function VanguardWeighbridgePage() {
       <div className="bg-slate-900/70 border border-purple-500/40 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-[0_0_20px_rgba(168,85,247,0.12)]">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <ShieldCheckIcon className="w-4 h-4 text-purple-400" />
-          <span className="font-bold text-white">SEC 65B MATERIAL INWARD HASH:</span>
+          <span className="font-bold text-white">BSA Sec 63 MATERIAL INWARD HASH:</span>
           <span className="text-slate-300 select-all font-mono text-[10px]">{merkleRootHash}</span>
         </div>
         <span className="text-slate-500 text-[10px]">

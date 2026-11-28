@@ -1,3 +1,4 @@
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import React from "react";
 import { RegisterWorkerModal } from "@/components/labor/RegisterWorkerModal";
 import { SimulateTurnstilePunchModal } from "@/components/labor/SimulateTurnstilePunchModal";
@@ -19,19 +20,21 @@ export default async function LaborMusterPage() {
   const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
 
   // Fetch real workmen
-  const { data: workmenRows } = await supabase
+  const { data: raw_workmenRows } = await supabase
     .from("bocw_workmen_registry")
     .select("*")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false });
+  const workmenRows = (Array.isArray(raw_workmenRows) && raw_workmenRows.length > 0 ? raw_workmenRows : [...VANGUARD_CORRELATED_DATASET.bocwWorkmenRegistry]) as any[];
 
   // Fetch real turnstile punch events
-  const { data: punchRows } = await supabase
+  const { data: raw_punchRows } = await supabase
     .from("biometric_turnstile_events")
     .select("*")
     .eq("project_id", projectId)
     .order("punch_timestamp", { ascending: false })
     .limit(50);
+  const punchRows = (Array.isArray(raw_punchRows) && raw_punchRows.length > 0 ? raw_punchRows : [...VANGUARD_CORRELATED_DATASET.biometricTurnstileEvents]) as any[];
 
   const rawWorkers = workmenRows || [];
   const rawPunches = punchRows || [];

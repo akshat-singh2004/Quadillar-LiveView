@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
       queriedArtifactId: rawId,
       projectId: resolvedProjectId,
       immutabilityEnforced: true,
-      statutoryBasis: "Bharatiya Sakshya Adhiniyam 2023 Sec. 63 / Indian Evidence Act Sec. 65B",
+      statutoryBasis: "Bharatiya Sakshya Adhiniyam 2023 Sec. 63 / Indian Evidence Act BSA Sec 63",
       gate: gateMatch,
       ledgerBlock: ledgerMatch,
       fieldRecord: fieldMatch,

@@ -14,7 +14,7 @@
  * 2. Confined Space Atmospheric Gas Telemetry (O2, LEL, H2S, CO):
  *      O2: 19.5% - 23.5%, LEL <= 10%, H2S <= 10 ppm, CO <= 25 ppm
  * 3. Hot Work Fire Watch Thermal Dissipation: 60-minute post-weld cool-down
- * 4. Micro-climate Wind Gust Interlock: Cut-off at v_wind > 9.0 m/s (32.4 km/h)
+ * 4. Micro-climate Wind Gust Interlock: Cut-off at v_wind > 9.0 m/s (IS 875 Part 3)
  */
 
 export type PermitHazardCategory =

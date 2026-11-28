@@ -33,6 +33,7 @@ jobs:
           npx --yes tsx scripts/verify-forensic-dossier.ts
           npx --yes tsx scripts/verify-offline-verifier.ts
           npx --yes tsx scripts/verify-cutover-readiness.ts
+          npx --yes tsx scripts/verify-sprint19b-hardening.ts
       - name: Next Typegen & TypeScript Strict Check
         run: |
           npx next typegen

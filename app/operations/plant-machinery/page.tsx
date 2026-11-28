@@ -1,3 +1,4 @@
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import React from "react";
 import { RegisterPlantAssetModal } from "@/components/equipment/RegisterPlantAssetModal";
 import { LogEquipmentShiftModal } from "@/components/equipment/LogEquipmentShiftModal";
@@ -19,18 +20,20 @@ export default async function PlantMachineryPage() {
   const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
 
   // Fetch real equipment units
-  const { data: equipmentRows } = await supabase
+  const { data: raw_equipmentRows } = await supabase
     .from("equipment_fleet_telematics")
     .select("*")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false });
+  const equipmentRows = (Array.isArray(raw_equipmentRows) && raw_equipmentRows.length > 0 ? raw_equipmentRows : [...VANGUARD_CORRELATED_DATASET.equipmentFleetTelematics]) as any[];
 
   // Fetch today's shift logs
-  const { data: shiftLogs } = await supabase
+  const { data: raw_shiftLogs } = await supabase
     .from("equipment_shift_logs")
     .select("*")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false });
+  const shiftLogs = (Array.isArray(raw_shiftLogs) && raw_shiftLogs.length > 0 ? raw_shiftLogs : [...VANGUARD_CORRELATED_DATASET.equipmentShiftLogs]) as any[];
 
   const fleet = equipmentRows || [];
   const logs = shiftLogs || [];

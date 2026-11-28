@@ -4,7 +4,7 @@
  * Location: Gomti Nagar Extension, Lucknow, Uttar Pradesh (26.8467° N, 80.9462° E)
  *
  * Every view (Command Center, 3D BIM Twin, 360° LiDAR Reality Tour, DPR,
- * Agent Governors, and Section 65B Ledger) imports its baseline from here.
+ * Agent Governors, and BSA Section 63 Ledger) imports its baseline from here.
  */
 
 export type DisciplineId =
@@ -260,7 +260,7 @@ export const VANGUARD_GENOME = {
       id: "HERMES",
       role: "Notarization Core",
       status: "NOMINAL",
-      summary: "Section 65B tamper-evident Merkle hash log sealed for Gomti Nagar campus.",
+      summary: "BSA Section 63 tamper-evident Merkle hash log sealed for Gomti Nagar campus.",
       metric: "Block #18402",
     },
   ],
