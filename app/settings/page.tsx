@@ -56,7 +56,7 @@ interface SystemSettingsState {
   hermes_shift_start_time: string;
   hermes_ot_rate_multiplier: number;
 
-  // Evidentiary Vault & Section 65B
+  // Evidentiary Vault & BSA Section 63
   merkle_batch_interval: string;
   hash_algorithm: string;
   certifying_authority_name: string;
@@ -97,7 +97,7 @@ const DEFAULT_SETTINGS: SystemSettingsState = {
   merkle_batch_interval: "DAILY_SHIFT_END",
   hash_algorithm: "SHA-256 FIPS-180-4",
   certifying_authority_name: "Principal Architect & Quality Director",
-  certifying_authority_designation: "Authorized Section 65B Certifier",
+  certifying_authority_designation: "Authorized BSA Section 63 Certifier",
 
   rera_registration_no: "",
   rera_jurisdiction: "UP-RERA (Uttar Pradesh Real Estate Regulatory Authority)",
@@ -558,12 +558,12 @@ export default function SystemSettingsConsole() {
           </div>
         )}
 
-        {/* DOMAIN 4: EVIDENTIARY VAULT & SECTION 65B */}
+        {/* DOMAIN 4: EVIDENTIARY VAULT & BSA Section 63 */}
         {activeTab === "evidentiary_65b" && (
           <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
             <div className="flex items-center gap-2 border-b border-zinc-800 pb-2 text-cyan-400 font-bold uppercase text-[11px]">
               <FileCheck className="h-4 w-4" />
-              <span>Section 65B Indian Evidence Act / BSA 2023 Cryptographic Seal</span>
+              <span>BSA Section 63 Indian Evidence Act / BSA 2023 Cryptographic Seal</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

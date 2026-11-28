@@ -94,13 +94,13 @@ const GOVERNOR_DIRECTORY: GovernorCardSpec[] = [
   {
     id: "HERMES",
     name: "HERMES",
-    domain: "BSA Sec. 63 / Sec. 65B Notarization",
+    domain: "BSA Sec. 63 / BSA Sec 63 Notarization",
     status: "NOMINAL",
-    summary: "Section 65B tamper-evident hash chain sealed for Gomti Nagar campus.",
+    summary: "BSA Section 63 tamper-evident hash chain sealed for Gomti Nagar campus.",
     defaultHref: "/closeout/audit-vault",
     defaultMetric: "Block #18402",
     terminals: [
-      { label: "Section 65B / BSA Evidence Vault", href: "/closeout/audit-vault", metric: "Block #18402" },
+      { label: "BSA Section 63 / BSA Evidence Vault", href: "/closeout/audit-vault", metric: "Block #18402" },
       { label: "Hindrance & SCL EOT Register", href: "/commercial/hindrance-eot", metric: "₹0 LD Risk" },
       { label: "NCR & Defect Lien Register", href: "/quality/ncr", metric: "1 Active Hold" },
       { label: "Studio Workspace & Project Tokens", href: "/workspace", metric: "PRJ-01" },
@@ -179,8 +179,8 @@ export default function MasterCommandCenterPage() {
             id: `BLOCK-${18403 + idx}`,
             timeStr: new Date(row.timestamp || row.created_at || Date.now()).toTimeString().slice(0, 8),
             governor: row.primary_governor || "HERMES-65B",
-            provenance: "BSA Sec. 63 / Sec. 65B Vault",
-            title: (row.synthesis_report || "").split("•")[0] || "Section 65B Telemetry Attestation",
+            provenance: "BSA Sec. 63 / BSA Sec 63 Vault",
+            title: (row.synthesis_report || "").split("•")[0] || "BSA Section 63 Telemetry Attestation",
             detail: row.synthesis_report || "",
             hash: row.merkle_root_hash || "",
           }));
@@ -234,7 +234,7 @@ export default function MasterCommandCenterPage() {
                 timeStr: new Date(row.timestamp || Date.now()).toTimeString().slice(0, 8),
                 governor: row.primary_governor || "HERMES-65B",
                 provenance: "Live Supabase 65B Stream",
-                title: (row.synthesis_report || "").split("•")[0] || "Section 65B Telemetry Attestation",
+                title: (row.synthesis_report || "").split("•")[0] || "BSA Section 63 Telemetry Attestation",
                 detail: row.synthesis_report || "",
                 hash: row.merkle_root_hash || "",
               },
@@ -340,7 +340,7 @@ export default function MasterCommandCenterPage() {
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-900 text-zinc-200 font-bold flex items-center justify-between"
                 >
-                  <span className="inline-flex items-center gap-2"><FileCheck className="w-3.5 h-3.5" />Legal Proof Cert (Sec. 65B)</span>
+                  <span className="inline-flex items-center gap-2"><FileCheck className="w-3.5 h-3.5" />Legal Proof Cert (BSA Sec 63)</span>
                 </button>
                 <button
                   type="button"
@@ -504,7 +504,7 @@ export default function MasterCommandCenterPage() {
         }
       />
 
-      {/* 5. Reality Gateway + Section 65B Notarized Audit Stream */}
+      {/* 5. Reality Gateway + BSA Section 63 Notarized Audit Stream */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-6 bg-zinc-900/65 border border-zinc-800 rounded-2xl p-4 flex flex-col justify-between gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-2.5 text-xs">
@@ -647,9 +647,9 @@ export default function MasterCommandCenterPage() {
           <div className="flex flex-wrap justify-between items-center gap-2 border-b border-zinc-800 pb-2.5 text-xs">
             <span className="font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4" />
-              SECTION 65B / BSA NOTARIZED AUDIT STREAM
+              BSA Section 63 / BSA NOTARIZED AUDIT STREAM
             </span>
-            <ProvenancePill source="BSA Sec. 63 / Sec. 65B Vault" />
+            <ProvenancePill source="BSA Sec. 63 / BSA Sec 63 Vault" />
           </div>
 
           <div className="flex flex-col gap-2.5 overflow-y-auto max-h-64">

@@ -105,7 +105,7 @@ export default function PublicQrVerificationPage() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-4">
           <div className="flex items-center gap-2 text-emerald-400 font-semibold text-[11px] uppercase tracking-wider">
             <ShieldCheck className="w-4 h-4 shrink-0" />
-            <span>Section 65B / BSA Sec. 63 Public Proof Node</span>
+            <span>BSA Section 63 / BSA Sec. 63 Public Proof Node</span>
           </div>
           <span className="px-2.5 py-1 rounded-full bg-zinc-950 border border-zinc-800 text-[10.5px] font-mono text-zinc-300">
             {artifactId.length > 22 ? `${artifactId.slice(0, 18)}...` : artifactId}

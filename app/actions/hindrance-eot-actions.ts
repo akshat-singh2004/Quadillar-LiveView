@@ -64,7 +64,7 @@ export async function logContemporaneousHindrance(payload: LogHindrancePayload) 
 
     if (error) throw error;
 
-    // 3. Hermes Section 65B Notarization
+    // 3. Hermes BSA Section 63 Notarization
     const seal = await HermesAgent.notarizeTransaction({
       projectId: payload.projectId,
       actionTitle: `Site Hindrance Event Registered: ${hindranceCode} (+${payload.daysHindered}d Delay)`,
@@ -159,7 +159,7 @@ export async function adjudicateEotClaim(payload: AdjudicateEotPayload) {
       })
       .eq("id", payload.hindranceId);
 
-    // 5. Hermes Section 65B Notarization
+    // 5. Hermes BSA Section 63 Notarization
     const seal = await HermesAgent.notarizeTransaction({
       projectId: payload.projectId,
       actionTitle: `EOT Claim Adjudicated: ${claimNumber} [${status}]`,

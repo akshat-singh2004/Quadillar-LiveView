@@ -71,7 +71,14 @@ export default function CanonicalEvmScurvePage() {
   }, []);
 
   const activePoint = series[selectedMonthIndex] || series[series.length - 1];
-  const bac = evmSummary.bacCr; // 864.50 Cr
+  const maxSeriesCr = Math.max(
+    ...series.map((p) => Math.max(Number(p.pvCr) || 0, Number(p.evCr) || 0, Number(p.acCr) || 0)),
+    600
+  );
+  const bac =
+    Number.isFinite(Number(evmSummary?.bacCr)) && Number(evmSummary.bacCr) > 0
+      ? Math.max(Number(evmSummary.bacCr), maxSeriesCr)
+      : maxSeriesCr;
 
   // SVG S-Curve Coordinates (640 x 240 plot box)
   const plotW = 560;
@@ -81,7 +88,8 @@ export default function CanonicalEvmScurvePage() {
 
   const toChartCoords = (idx: number, valCr: number): [number, number] => {
     const x = padL + (idx / Math.max(series.length - 1, 1)) * plotW;
-    const y = padT + plotH - (Math.min(valCr, bac) / bac) * plotH;
+    const safeVal = Number.isFinite(Number(valCr)) ? Number(valCr) : 0;
+    const y = padT + plotH - (Math.min(safeVal, bac) / bac) * plotH;
     return [x, y];
   };
 

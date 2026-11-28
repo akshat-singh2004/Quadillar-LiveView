@@ -158,7 +158,7 @@ export async function issuePermitToWork(payload: CreatePermitPayload) {
 
     if (error) throw error;
 
-    // 3. HERMES SECTION 65B NOTARIZATION
+    // 3. HERMES BSA Section 63 NOTARIZATION
     const seal = await HermesAgent.notarizeTransaction({
       projectId: targetProjectId,
       actionTitle: `Permit to Work Authorized: ${permitNumber} [${payload.permitType}]`,

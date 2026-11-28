@@ -1,7 +1,8 @@
 "use client";
 import { GovernorInterlockBanner } from "@/components/governor/GovernorInterlockBanner";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useGovernor } from "@/context/GovernorContext";
 import { supabase } from "@/lib/supabaseClient";
 import {
   calculateFallArrestImpactForceKn,
@@ -58,7 +59,20 @@ async function generateSHA256(str: string): Promise<string> {
 
 export default function PermitToWorkPage() {
   // Live Environmental Sensor Inputs
-  const [liveWindSpeedMs, setLiveWindSpeedMs] = useState<number>(4.8); // Anemometer reading
+  const { snapshot: governorSnapshot } = useGovernor();
+  const [liveWindSpeedMs, setLiveWindSpeedMs] = useState<number>(4.8); // Synced with Governor anemometer
+
+  useEffect(() => {
+    const govAny = governorSnapshot as unknown as Record<string, any>;
+    const govWind =
+      govAny?.telemetry?.windSpeedMs ??
+      govAny?.telemetry?.windVelocityMs ??
+      govAny?.input?.windSpeedMs ??
+      govAny?.input?.windVelocityMs;
+    if (typeof govWind === "number" && Number.isFinite(govWind) && govWind >= 0) {
+      setLiveWindSpeedMs(govWind);
+    }
+  }, [governorSnapshot]);
   const [selectedPermitId, setSelectedPermitId] = useState<string>("PTW-VGD-01");
 
   // Dynamic Confined Space Gas Sensor Adjustments (for Lift Pit PTW-03)
@@ -269,7 +283,7 @@ export default function PermitToWorkPage() {
             onChange={e => setLiveWindSpeedMs(parseFloat(e.target.value))}
             className="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-cyan-400"
           />
-          <div className="text-[10px] text-slate-500 mt-1">Permissible Cut-off Limit: 9.0 m/s (32.4 km/h)</div>
+          <div className="text-[10px] text-slate-500 mt-1">Permissible Cut-off Limit: 9.0 m/s (Tower Crane Interlock: 15.0 m/s)</div>
         </div>
 
         <div>
@@ -518,7 +532,7 @@ export default function PermitToWorkPage() {
             </div>
           </div>
 
-          {/* Action Footer & Section 65B Notarization */}
+          {/* Action Footer & BSA Section 63 Notarization */}
           <div className="p-4 bg-slate-900/60 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-3">
             <div className="text-[10px] text-slate-500">
               Authority: <strong className="text-amber-400">AEGIS-SAFETY-GOVERNOR</strong> • DGFASLI Statutory Attestation

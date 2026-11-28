@@ -69,7 +69,7 @@ export async function reconcileMaterialConsumption(payload: ReconcileMaterialPay
 
     if (error) throw error;
 
-    // 3. Cryptographic Section 65B Notarization via Hermes
+    // 3. Cryptographic BSA Section 63 Notarization via Hermes
     const seal = await HermesAgent.notarizeTransaction({
       projectId: payload.projectId,
       actionTitle: `CPWD Cl. 42 Reconciliation: ${reconciliationCode} [${payload.materialType}]`,
@@ -130,7 +130,7 @@ export async function optimizeRebarCuttingSchedule(payload: OptimizeBbsPayload) 
 
     if (error) throw error;
 
-    // 3. Cryptographic Section 65B Notarization via Hermes
+    // 3. Cryptographic BSA Section 63 Notarization via Hermes
     const seal = await HermesAgent.notarizeTransaction({
       projectId: payload.projectId,
       actionTitle: `Rebar BBS 1D Nesting Certified: ${scheduleCode} (${nesting.billetsNeeded} Billets)`,

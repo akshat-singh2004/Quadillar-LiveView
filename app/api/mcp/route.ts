@@ -101,7 +101,7 @@ const MCP_TOOLS = [
   {
     name: "verify_section_65b_hash",
     description:
-      "Verify a SHA-256 Merkle/record hash against Quadillar LiveView's trigger-locked Postgres Section 65B / BSA Sec. 63 statutory audit ledger.",
+      "Verify a SHA-256 Merkle/record hash against Quadillar LiveView's trigger-locked Postgres BSA Section 63 / BSA Sec. 63 statutory audit ledger.",
     inputSchema: {
       type: "object",
       properties: {
@@ -325,7 +325,7 @@ async function executeTool(name: string, args: Record<string, any>) {
         (packetRows?.length || 0);
       return {
         verified: totalMatches > 0,
-        statutory_basis: "Bharatiya Sakshya Adhiniyam 2023 Sec. 63 / Indian Evidence Act Sec. 65B",
+        statutory_basis: "Bharatiya Sakshya Adhiniyam 2023 Sec. 63 / Indian Evidence Act BSA Sec 63",
         postgres_immutability_enforced: true,
         match_count: totalMatches,
         ledger_matches: ledgerRows || [],

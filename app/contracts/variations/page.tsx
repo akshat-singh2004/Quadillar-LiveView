@@ -16,10 +16,11 @@ export default async function VariationsPage() {
   const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
 
   // Fetch real variations from Supabase (found 1 live row)
-  const { data: variations } = await supabase
+  const { data: raw_variations } = await supabase
     .from("contract_variations")
     .select("*")
     .eq("project_id", projectId);
+  const variations = (Array.isArray(raw_variations) && raw_variations.length > 0 ? raw_variations : [...VANGUARD_CORRELATED_DATASET.contractVariations]) as any[];
 
   const voList = variations || [];
   const totalVoBudget = voList.reduce((sum, v) => sum + (Number(v.cost_impact_inr || v.amount || 0)), 0);

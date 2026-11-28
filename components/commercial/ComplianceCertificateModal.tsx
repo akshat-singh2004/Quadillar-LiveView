@@ -113,7 +113,7 @@ export default function ComplianceCertificateModal({
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span className="font-semibold text-xs text-white uppercase tracking-wider">
-              Legal Proof Certificate (BSA Sec. 63 / Sec. 65B)
+              Legal Proof Certificate (BSA Sec. 63 / BSA Sec 63)
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ export default function ComplianceCertificateModal({
               {qrDataUrl ? (
                 <img
                   src={qrDataUrl}
-                  alt="Scan to verify live Section 65B record"
+                  alt="Scan to verify live BSA Section 63 record"
                   className="w-28 h-28 rounded"
                 />
               ) : (

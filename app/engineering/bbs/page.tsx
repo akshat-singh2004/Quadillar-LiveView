@@ -383,13 +383,13 @@ export default function JpnicBbsNestingPage() {
         </div>
       </div>
 
-      {/* Section 65B Bar Bending Authorization Deck */}
+      {/* BSA Section 63 Bar Bending Authorization Deck */}
       <div className="bg-slate-900/70 border border-purple-500/40 rounded-2xl p-5 flex flex-col gap-4 shadow-[0_0_20px_rgba(168,85,247,0.12)]">
         <div className="flex flex-col md:flex-row md:items-center justify-between pb-3 border-b border-slate-800 gap-3">
           <div>
             <div className="text-sm font-bold text-white flex items-center gap-2">
               <ShieldCheckIcon className="w-5 h-5 text-purple-400" />
-              <span>SECTION 65B BAR BENDING & CUTTING RELEASE CERTIFICATE</span>
+              <span>BSA Section 63 BAR BENDING & CUTTING RELEASE CERTIFICATE</span>
             </div>
             <div className="text-xs text-slate-400 mt-0.5">
               Statutory Rebar Tag Generation • Automatic Scrap Compliance Lock (&le; 3.8%)
@@ -418,7 +418,7 @@ export default function JpnicBbsNestingPage() {
         {/* Notarization Provenance Strip */}
         <div className="bg-black/60 border border-slate-800 p-3 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-2 text-[10px]">
           <div className="flex items-center gap-2">
-            <span className="text-purple-400 font-bold uppercase">SECTION 65B MERKLE ROOT:</span>
+            <span className="text-purple-400 font-bold uppercase">BSA Section 63 MERKLE ROOT:</span>
             <span className="text-slate-300 select-all font-mono">
               {notarizedHash || "8602a21acb4ebb84334f603aebfe99933a40bbb0d235d818bcc0504cab1089d4"}
             </span>

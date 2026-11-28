@@ -382,12 +382,12 @@ export default function ScanVsBimDeviationPage() {
             </div>
           </div>
 
-          {/* Section 65B Scan-vs-BIM Notarization */}
+          {/* BSA Section 63 Scan-vs-BIM Notarization */}
           <div className="bg-slate-900/70 border border-purple-500/40 rounded-2xl p-4 flex flex-col justify-between flex-1 gap-3 shadow-[0_0_20px_rgba(168,85,247,0.12)]">
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-purple-300 uppercase tracking-wider mb-1">
                 <ShieldCheckIcon className="w-4 h-4 text-purple-400" />
-                <span>SECTION 65B AS-BUILT GEODETIC SEAL</span>
+                <span>BSA Section 63 AS-BUILT GEODETIC SEAL</span>
               </div>
               <div className="text-[11px] text-slate-300 leading-relaxed">
                 Legally seals raw spatial point-cloud scan deltas, column verticality deviations, and ASTM E1155 surface numbers into the immutable audit chain.
@@ -412,7 +412,7 @@ export default function ScanVsBimDeviationPage() {
                   className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:opacity-50"
                 >
                   {isNotarizing ? <RefreshIcon className="w-4 h-4 animate-spin text-slate-950" /> : <ShieldCheckIcon className="w-4 h-4 text-slate-950" />}
-                  <span>NOTARIZE SCAN-VS-BIM AUDIT (SEC 65B)</span>
+                  <span>NOTARIZE SCAN-VS-BIM AUDIT (BSA Sec 63)</span>
                 </button>
               )}
             </div>

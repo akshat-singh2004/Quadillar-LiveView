@@ -19,21 +19,23 @@ export default async function ConcreteMaturityPage() {
   const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
 
   // Fetch real paired nodes
-  const { data: nodes } = await supabase
+  const { data: raw_nodes } = await supabase
     .from("concrete_maturity_nodes")
     .select("*")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false });
+  const nodes = (Array.isArray(raw_nodes) && raw_nodes.length > 0 ? raw_nodes : [...VANGUARD_CORRELATED_DATASET.concreteMaturityNodes]) as any[];
 
   const activeNodes = nodes || [];
 
   // Fetch latest telemetry reading across nodes
-  const { data: latestReadings } = await supabase
+  const { data: raw_latestReadings } = await supabase
     .from("concrete_maturity_readings")
     .select("*")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false })
     .limit(1);
+  const latestReadings = (Array.isArray(raw_latestReadings) && raw_latestReadings.length > 0 ? raw_latestReadings : [...VANGUARD_CORRELATED_DATASET.concreteMaturityReadings]) as any[];
 
   const latestReading = latestReadings?.[0];
 

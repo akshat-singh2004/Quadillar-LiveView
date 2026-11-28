@@ -124,7 +124,7 @@ export async function authorizeFormworkStripping(payload: AuthorizeStrippingPayl
       ((latestReading.estimated_strength_mpa / payload.targetFckMpa) * 100).toFixed(1)
     );
 
-    // 2. Cryptographic Section 65B Notarization via Hermes
+    // 2. Cryptographic BSA Section 63 Notarization via Hermes
     const seal = await HermesAgent.notarizeTransaction({
       projectId: payload.projectId,
       actionTitle: `Formwork Stripping Authorized: ${permitNumber} [${strengthRatioPct}% f_ck]`,

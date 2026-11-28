@@ -789,7 +789,7 @@ export default function StudioWorkspacePage() {
               {[
                 { label: "Master Portfolio Command Center (10 Sites)", href: "/" },
                 { label: "Federated 3D BIM & Multi-Ray Digital Twin", href: "/site/digital-twin" },
-                { label: "BSA Sec. 63 / Sec. 65B Notarized Evidence Vault", href: "/closeout/audit-vault" },
+                { label: "BSA Sec. 63 / BSA Sec 63 Notarized Evidence Vault", href: "/closeout/audit-vault" },
                 { label: "Structural IS 456 / SonReb NDT Register", href: "/site/ndt" },
                 { label: "Commercial RA Billing & UP-LDA Escrow Ledger", href: "/finance/ra-bills" },
               ].map((link) => (

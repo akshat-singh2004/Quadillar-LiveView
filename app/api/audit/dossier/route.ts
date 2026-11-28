@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonOk } from "@/lib/server/http";
+import { jsonError, jsonOk } from "@/lib/server/http";
 import {
   buildRateLimitHeaders,
   checkRateLimit,
@@ -34,6 +34,15 @@ export async function GET(req: NextRequest) {
   const requestedProjectId = req.nextUrl.searchParams.get("projectId");
   const downloadFlag = req.nextUrl.searchParams.get("download");
   const simulateTamper = req.nextUrl.searchParams.get("simulateTamper") === "1";
+
+  if (requestedProjectId !== null && requestedProjectId.trim() !== "") {
+    if (!/^[A-Za-z0-9_-]{2,64}$/.test(requestedProjectId.trim())) {
+      return jsonError("Invalid projectId format", 400, {
+        code: "INVALID_PROJECT_ID",
+        expectedPattern: "^[A-Za-z0-9_-]{2,64}$",
+      });
+    }
+  }
 
   const project = resolvePortfolioProject(requestedProjectId);
 

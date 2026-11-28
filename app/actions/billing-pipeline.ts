@@ -206,7 +206,7 @@ export async function generateRABillFromMB(
 
         const netPayable = Math.max(0, calculatedCurrentGross - totalStatutoryDeductions);
 
-        // 10. Generate Server-Side Cryptographic Checksum (Section 65B Audit Trail)
+        // 10. Generate Server-Side Cryptographic Checksum (BSA Section 63 Audit Trail)
         const deedPayload = `${projectId}|${billNumber}|${calculatedCurrentGross}|${netPayable}|${timestamp}`;
         const sha256DeedHash = crypto
             .createHash("sha256")

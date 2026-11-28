@@ -123,7 +123,7 @@ export default function QuadmaxKernelFloatingWidget() {
         ],
         citations: [
           { label: "Focus TG-03 in 3D BIM", href: "/site/digital-twin?zone=BIT-4-TG03&ncr=NCR-2026-STR-042", tag: "3D BIM" },
-          { label: "Section 65B Vault", href: "/closeout/audit-vault", tag: "65B VAULT" },
+          { label: "BSA Section 63 Vault", href: "/closeout/audit-vault", tag: "65B VAULT" },
         ],
         followUps: [
           "What did the site engineer report a moment ago?",
@@ -554,7 +554,7 @@ export default function QuadmaxKernelFloatingWidget() {
                 <div
                   key={i}
                   style={{
-                    backgroundColor: isLight ? "#FDFCF9" : "#09090B",
+                    backgroundColor: isLight ? "#FFFFFF" : "#15181E",
                     borderColor: isCritical ? "rgba(239, 68, 68, 0.45)" : borderSubtle,
                   }}
                   className="p-2.5 rounded-xl border flex flex-col gap-1"
@@ -1121,10 +1121,10 @@ export default function QuadmaxKernelFloatingWidget() {
           height: `${PILL_HEIGHT}px`,
           touchAction: "none",
           backgroundColor: isLight ? "#FDFCF9" : "#09090B",
-          borderColor: isLight ? "rgba(201, 100, 66, 0.55)" : "rgba(161, 161, 170, 0.45)",
+          borderColor: isLight ? "#E2E5EA" : "#252A34",
           color: isLight ? "#1F1E1B" : "#FAFAFA",
         }}
-        className={`flex items-center justify-between px-2.5 rounded-full border shadow-lg backdrop-blur-md transition-shadow select-none ${
+        className={`${isOpen ? "hidden" : "flex"} items-center justify-between px-2.5 rounded-full border shadow-md backdrop-blur-md transition-shadow select-none ${
           isDragging ? "cursor-grabbing scale-105 shadow-xl" : "cursor-grab hover:shadow-md"
         }`}
       >

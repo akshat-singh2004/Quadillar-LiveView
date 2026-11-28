@@ -67,7 +67,7 @@ export default function MasterCpmAndEvmPage() {
         <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl">
           <div className="text-[10px] text-slate-400">COST PERF. INDEX (CPI)</div>
           <div className="text-lg font-bold text-emerald-400 mt-1">{evm.cpi.toFixed(3)}</div>
-          <div className="text-[10px] text-slate-500">SPI: {evm.spi.toFixed(3)} (On Baseline)</div>
+          <div className="text-[10px] text-slate-500">SPI: {evm.spi.toFixed(3)} ({evm.spi < 0.95 ? "Behind Schedule" : evm.spi > 1.02 ? "Ahead of Baseline" : "On Baseline"})</div>
         </div>
         <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl">
           <div className="text-[10px] text-slate-400">EST. AT COMPLETION (EAC)</div>
@@ -76,7 +76,9 @@ export default function MasterCpmAndEvmPage() {
         </div>
         <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl">
           <div className="text-[10px] text-slate-400">CRITICAL PATH FLOAT</div>
-          <div className="text-lg font-bold text-emerald-400 mt-1">On Baseline (0d)</div>
+          <div className={`text-lg font-bold mt-1 ${evm.spi < 0.95 ? "text-amber-400" : "text-emerald-400"}`}>
+            {evm.spi < 0.95 ? `Slippage (-${Math.max(1, Math.round((1 - evm.spi) * 60))}d)` : "Baseline Nominal (0d)"}
+          </div>
           <div className="text-[10px] text-slate-500">TCPI: {evm.tcpi.toFixed(3)}</div>
         </div>
       </div>

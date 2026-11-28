@@ -132,7 +132,7 @@ export default function NcrQualityDebitLiensPage() {
         </div>
       </div>
 
-      {/* Interactive SonReb Calculator & Sec 65B Seal */}
+      {/* Interactive SonReb Calculator & BSA Sec 63 Seal */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-7 bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col gap-4 text-xs">
           <div className="font-bold text-white uppercase border-b border-slate-800 pb-2">
@@ -233,7 +233,7 @@ export default function NcrQualityDebitLiensPage() {
 
           {sealedHash ? (
             <div className="p-2.5 bg-emerald-950/60 border border-emerald-500/40 rounded-xl text-center">
-              <div className="font-bold text-emerald-300">✔ SONREB CERTIFICATE SEALED (SEC 65B)</div>
+              <div className="font-bold text-emerald-300">✔ SONREB CERTIFICATE SEALED (BSA Sec 63)</div>
               <div className="text-[9px] text-slate-400 mt-1 truncate select-all">{sealedHash}</div>
             </div>
           ) : (

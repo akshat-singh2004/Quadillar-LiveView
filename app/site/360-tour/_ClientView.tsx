@@ -573,7 +573,7 @@ export default function VolumetricRealityTourPage() {
         })}
       </div>
 
-      {/* Main Split Grid: Volumetric LiDAR Viewport + Surface Snags & Sec 65B Stamp */}
+      {/* Main Split Grid: Volumetric LiDAR Viewport + Surface Snags & BSA Sec 63 Stamp */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
         {/* Left: Geometry-Matched Volumetric LiDAR Point Cloud Canvas */}
         <div className="lg:col-span-8 bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden flex flex-col min-h-[470px]">
@@ -626,7 +626,7 @@ export default function VolumetricRealityTourPage() {
           </div>
         </div>
 
-        {/* Right: Surface As-Built Snags & Section 65B Evidence Stamp */}
+        {/* Right: Surface As-Built Snags & BSA Section 63 Evidence Stamp */}
         <div className="lg:col-span-4 flex flex-col gap-4">
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
             <div className="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -674,12 +674,12 @@ export default function VolumetricRealityTourPage() {
             )}
           </div>
 
-          {/* Section 65B Evidence Stamp */}
+          {/* BSA Section 63 Evidence Stamp */}
           {activeSnag && (
             <div className="bg-slate-900/70 border border-purple-500/40 rounded-2xl p-4 flex flex-col justify-between flex-1 gap-3">
               <div>
                 <div className="flex justify-between items-center text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">
-                  <span>SECTION 65B EVIDENCE STAMP</span>
+                  <span>BSA Section 63 EVIDENCE STAMP</span>
                   <span className="px-2 py-0.5 rounded bg-purple-500/20 text-[10px]">
                     SURFACE ANCHORED
                   </span>

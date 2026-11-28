@@ -93,7 +93,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
       { label: "Claims & Dispute Board (DAB)", href: "/contracts/claims-disputes", icon: Scale },
       { label: "RERA QPR Form 1 & 2", href: "/compliance/rera", icon: FileSpreadsheet },
       { label: "TOC & Snag Clearance", href: "/handover/punch-list", icon: ClipboardCheck },
-      { label: "Section 65B Audit Vault", href: "/closeout/audit-vault", icon: Fingerprint },
+      { label: "BSA Section 63 Audit Vault", href: "/closeout/audit-vault", icon: Fingerprint },
     ],
   },
 ];

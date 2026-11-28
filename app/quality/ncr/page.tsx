@@ -471,12 +471,12 @@ export default function NcrQualityDefectLiensPage() {
             )}
           </div>
 
-          {/* Section 65B Statutory Quality Notarization */}
+          {/* BSA Section 63 Statutory Quality Notarization */}
           <div className="bg-slate-900/70 border border-purple-500/40 rounded-2xl p-4 flex flex-col justify-between flex-1 gap-3">
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-purple-300 uppercase tracking-wider mb-1">
                 <ShieldCheckIcon className="w-4 h-4 text-purple-400" />
-                <span>SECTION 65B QUALITY AUDIT SEAL</span>
+                <span>BSA Section 63 QUALITY AUDIT SEAL</span>
               </div>
               <div className="text-[11px] text-slate-300 leading-relaxed">
                 Legally records the non-conformance lifecycle, NDT ultrasonic testing velocities, and contractual financial lien withholdings.

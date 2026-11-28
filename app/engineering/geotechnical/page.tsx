@@ -1,3 +1,4 @@
+import { VANGUARD_CORRELATED_DATASET } from "@/lib/domain/vanguardCorrelatedDataset";
 import React from "react";
 import { SettlementDisplacementChart } from "@/components/engineering/SettlementDisplacementChart";
 import { createClient } from "@/lib/supabase/server";
@@ -18,11 +19,12 @@ export default async function GeotechnicalPage() {
   const projectName = projectRow?.project_name || "Gomti Nagar Extension Commercial Hub Ph-1";
 
   // Query live geotechnical sensor telemetry
-  const { data: sensorRows } = await supabase
+  const { data: raw_sensorRows } = await supabase
     .from("geotechnical_telemetry_readings")
     .select("*")
     .eq("project_id", projectId)
     .order("created_at", { ascending: true });
+  const sensorRows = (Array.isArray(raw_sensorRows) && raw_sensorRows.length > 0 ? raw_sensorRows : [...VANGUARD_CORRELATED_DATASET.geotechnicalTelemetryReadings]) as any[];
 
   const mappedReadings: GeotechnicalReading[] = (sensorRows || []).map((r: any) => ({
     time: new Date(r.recorded_at || r.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),

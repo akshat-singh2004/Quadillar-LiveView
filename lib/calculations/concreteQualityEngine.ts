@@ -5,7 +5,7 @@
  * - IS 456:2000 Clause 16 & Table 11 (Characteristic Compressive Strength Acceptance Criteria)
  * - IS 516:2021 / 1959 (Hardened Concrete - Methods of Determination of Strength)
  * - IS 1199 (Fresh Concrete - Sampling, Slump, and Temperature Testing)
- * - Indian Evidence Act Section 65B (Calibrated Digital CTM Testing Attestation)
+ * - Bharatiya Sakshya Adhiniyam (BSA) Section 63 (Calibrated Digital CTM Testing Attestation)
  *
  * Project Vanguard Concrete Baseline:
  * - Design Grade: M35 (Characteristic 28-day target f_ck = 35.0 N/mm2)

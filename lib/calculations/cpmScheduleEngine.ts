@@ -44,7 +44,7 @@ export function computeVanguardCpmNetwork(): WbsCpmActivity[] {
     { wbsId: "WBS-05", bitId: "BIT-5", name: "East Composite Steel-Concrete Wing (+28.0m RL)", durationDays: 170, predecessors: ["WBS-01"], budgetCr: 108.60, percentComplete: 58 },
     { wbsId: "WBS-06", bitId: "BIT-6", name: "Cantilevered Steel Helipad Deck (+23.0m RL)", durationDays: 75, predecessors: ["WBS-05"], budgetCr: 54.00, percentComplete: 72 },
     { wbsId: "WBS-07", bitId: "BIT-3", name: "4-Car Lift Bank, 14F HVAC Risers & 2,400 TR Chiller Integration", durationDays: 130, predecessors: ["WBS-02", "WBS-04"], budgetCr: 52.00, percentComplete: 42 },
-    { wbsId: "WBS-08", bitId: "BIT-4", name: "Integrated Commissioning, Statutory NOC & Section 65B Handover", durationDays: 60, predecessors: ["WBS-03", "WBS-06", "WBS-07"], budgetCr: 24.00, percentComplete: 15 },
+    { wbsId: "WBS-08", bitId: "BIT-4", name: "Integrated Commissioning, Statutory NOC & BSA Section 63 Handover", durationDays: 60, predecessors: ["WBS-03", "WBS-06", "WBS-07"], budgetCr: 24.00, percentComplete: 15 },
   ];
 
   const map = new Map<string, WbsCpmActivity>();

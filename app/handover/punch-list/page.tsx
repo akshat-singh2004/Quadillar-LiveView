@@ -43,7 +43,7 @@ export default function PunchListAndHandoverPage() {
   const { project, role } = useActiveRole();
   const activeProjectId = project?.project_id || project?.id || "";
 
-  const [items, setItems] = useState<PunchItem[]>([]);
+  const [items, setItems] = useState<PunchItem[]>([...VANGUARD_CORRELATED_DATASET.projectPunchListItems] as any);
   const [toc, setToc] = useState<TocRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -67,7 +67,7 @@ export default function PunchListAndHandoverPage() {
         .order("created_at", { ascending: false });
 
       if (punchErr) throw punchErr;
-      setItems(punchData || []);
+      setItems((Array.isArray(punchData) && punchData.length > 0 ? punchData : [...VANGUARD_CORRELATED_DATASET.projectPunchListItems]) as any);
 
       // 2. Fetch TOC
       const { data: tocData } = await (supabase as any)

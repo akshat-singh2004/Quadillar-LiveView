@@ -8,7 +8,7 @@ export type ProvenanceKind =
   | "Verified Field Audio + Photo"
   | "Lab Core Certificate"
   | "Live IoT Feed"
-  | "BSA Sec. 63 / Sec. 65B Vault"
+  | "BSA Sec. 63 / BSA Sec 63 Vault"
   | "LOD-400 BIM Sync"
   | "UP-LDA Escrow Ledger";
 
